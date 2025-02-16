@@ -40,5 +40,5 @@ This project dedicates to the development of a library for tiny agent related co
 
 ## DEVELOPMENT HOST MCU HARDWARE
 
-- DNESP32S3M from Alientek (ESP32-S3)
+- DNESP32S3 from Alientek (ESP32-S3)
 - FK743M2-IIT6 from FANKE (STM32H743)

@@ -115,6 +115,7 @@ plugins:
           build: true
           nav_translations: # note that all titles and subtitles in the navigation bar that need to be translated can be put here, but with no indentation
             ABOUT: 关于
+            DEVKITS: 开发载体
 
 
 
@@ -243,7 +244,9 @@ markdown_extensions:
 # Page Navigation Tree
 nav:
   - ABOUT: 
-       "index.md"
+      "index.md"
+  - DEVKITS:
+      "DEVKITS/devkits.md"
 
 
 

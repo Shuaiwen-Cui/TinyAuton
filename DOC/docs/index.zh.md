@@ -40,5 +40,5 @@
 
 ## 开发使用的 MCU 硬件
 
-- Alientek 的 DNESP32S3M（ESP32-S3）
+- Alientek 的 DNESP32S3（ESP32-S3）
 - FANKE 的 FK743M2-IIT6（STM32H743）
