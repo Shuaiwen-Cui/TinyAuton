@@ -8,6 +8,13 @@
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/"/>
     </url>
     <url>
+        <loc>https://localhost:8000/DEVKITS/devkits/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/DEVKITS/devkits/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/DEVKITS/devkits/"/>
+    </url>
+    <url>
         <loc>https://localhost:8000/blog/</loc>
         <lastmod>2025-02-16</lastmod>
         <changefreq>daily</changefreq>
@@ -20,6 +27,13 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/DEVKITS/devkits/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/DEVKITS/devkits/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/DEVKITS/devkits/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/blog/</loc>
