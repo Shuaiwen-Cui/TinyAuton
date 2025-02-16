@@ -8,11 +8,46 @@
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/"/>
     </url>
     <url>
+        <loc>https://localhost:8000/ADAPTATION/adaptation/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/ADAPTATION/adaptation/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/ADAPTATION/adaptation/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/ai/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/ai/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/ai/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/ARCHITECTURE/architecture/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/ARCHITECTURE/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/ARCHITECTURE/architecture/"/>
+    </url>
+    <url>
         <loc>https://localhost:8000/DEVKITS/devkits/</loc>
         <lastmod>2025-02-16</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/DEVKITS/devkits/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/DEVKITS/devkits/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/DSP/dsp/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/DSP/dsp/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/DSP/dsp/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/MATH/math/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/math/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/math/"/>
     </url>
     <url>
         <loc>https://localhost:8000/blog/</loc>
@@ -29,11 +64,46 @@
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/"/>
     </url>
     <url>
+        <loc>https://localhost:8000/zh/ADAPTATION/adaptation/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/ADAPTATION/adaptation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/ADAPTATION/adaptation/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/ai/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/ai/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/ai/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/ARCHITECTURE/architecture/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/ARCHITECTURE/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/ARCHITECTURE/architecture/"/>
+    </url>
+    <url>
         <loc>https://localhost:8000/zh/DEVKITS/devkits/</loc>
         <lastmod>2025-02-16</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/DEVKITS/devkits/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/DEVKITS/devkits/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/DSP/dsp/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/DSP/dsp/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/DSP/dsp/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/MATH/math/</loc>
+        <lastmod>2025-02-16</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/math/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/math/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/blog/</loc>
