@@ -116,8 +116,11 @@ plugins:
           nav_translations: # note that all titles and subtitles in the navigation bar that need to be translated can be put here, but with no indentation
             ABOUT: 关于
             DEVKITS: 开发载体
-
-
+            ARCHITECTURE: 架构
+            ADAPTATION: 适配
+            MATH: 数学运算
+            DSP: 信号处理
+            AI: 人工智能
 
 # # Hooks
 # hooks:
@@ -247,7 +250,16 @@ nav:
       "index.md"
   - DEVKITS:
       "DEVKITS/devkits.md"
-
+  - ARCHITECTURE:
+      - "ARCHITECTURE/architecture.md"
+  - ADAPTATION:
+      - "ADAPTATION/adaptation.md"
+  - MATH:
+      - "MATH/math.md"
+  - DSP:
+      - "DSP/dsp.md"
+  - AI:
+      - "AI/ai.md"
 
 
     

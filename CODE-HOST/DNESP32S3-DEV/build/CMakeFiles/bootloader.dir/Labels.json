@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/CMakeFiles/bootloader"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/CMakeFiles/bootloader.rule"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/CMakeFiles/bootloader-complete.rule"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+		},
+		{
+			"file" : "/home/cshwstem/CSW/Development/TinyAuton/CODE-HOST/DNESP32S3-DEV/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"bootloader"
+		],
+		"name" : "bootloader"
+	}
+}

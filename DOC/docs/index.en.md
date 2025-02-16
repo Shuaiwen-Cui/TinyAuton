@@ -28,13 +28,13 @@ This project dedicates to the development of a library for tiny agent related co
 
 ```txt
 +------------------------------+
-| TinyML                       | <-- AI/ML Functions for Edge Devices based on Low Level Functions
+| AI                           | <-- AI/ML Functions for Edge Devices based on Low Level Functions
 +------------------------------+
 | DSP                          | <-- Digital Signal Processing Functions
 +------------------------------+
 | Math Operations              | <-- Commonly Used Math Functions for Various Applications
 +------------------------------+
-| Adaptation Layer (AL)        | <-- To Replace Functions in Standard C with Platform Optimized/Specific Functions
+| Adaptation Layer             | <-- To Replace Functions in Standard C with Platform Optimized/Specific Functions
 +------------------------------+
 ```
 
