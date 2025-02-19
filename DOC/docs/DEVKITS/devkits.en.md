@@ -2,6 +2,12 @@
 
 ## HOST MCU HARDWARES
 
+- DNESP32S3M from Alientek (ESP32-S3)
+
+![DNESP32S3M](DNESP32S3M.png){width=800px}
+
+![DNESP32S3M-BACK](DNESP32S3M-BACK.png){width=800px}
+
 - DNESP32S3 from Alientek (ESP32-S3)
 
 ![DNESP32S3](DNESP32S3.png){width=70%}
@@ -19,20 +25,13 @@
 
 <div class="grid cards" markdown>
 
--   :simple-github:{ .lg .middle } __STM32__
+-   :simple-github:{ .lg .middle } __NexNode__
 
     ---
 
-    [:octicons-arrow-right-24: <a href="https://github.com/Shuaiwen-Cui/MCU_NODE_ESP32.git" target="_blank"> Repo </a>](#)
+    [:octicons-arrow-right-24: <a href="https://github.com/Shuaiwen-Cui/NexNode.git" target="_blank"> Repo </a>](#)
 
-    [:octicons-arrow-right-24: <a href="https://shuaiwen-cui.github.io/MCU_NODE_STM32/" target="_blank"> Online Doc </a>](#)
+    [:octicons-arrow-right-24: <a href="https://shuaiwen-cui.github.io/NexNode/" target="_blank"> Online Doc </a>](#)
 
--   :simple-github:{ .lg .middle } __ESP32__
-
-    ---
-
-    [:octicons-arrow-right-24: <a href="https://github.com/Shuaiwen-Cui/MCU_NODE_ESP32.git" target="_blank"> Repo </a>](#)
-
-    [:octicons-arrow-right-24: <a href="https://shuaiwen-cui.github.io/MCU_NODE_ESP32/" target="_blank"> Online Doc </a>](#)
 
 </div>

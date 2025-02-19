@@ -1,0 +1,3 @@
+<DEVKITNAME>-<BRANCH>-AI 
+
+DNESP32S3M-CORE-AI is based on DNESP32S3M-CORE from NexNode project. 
