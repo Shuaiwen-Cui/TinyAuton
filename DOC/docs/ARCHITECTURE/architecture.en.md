@@ -1,5 +1,7 @@
 # ARCHITECTURE
 
+## LAYERED ARCHITECTURE
+
 ```txt
 +------------------------------+
 | AI                           | <-- AI/ML Functions for Edge Devices based on Low Level Functions
@@ -10,4 +12,25 @@
 +------------------------------+
 | Adaptation Layer             | <-- To Replace Functions in Standard C with Platform Optimized/Specific Functions
 +------------------------------+
+```
+
+## CODE ORGANIZATION
+
+```txt
+
++------------------------------+
+| APPLICATION                  |
++------------------------------+
+| MIDDLEWARE                   |
+|   - TinyAdaptor              | <-- To shield HW differences and provide a unified API
+|   - TinyMath                 | <-- Common Math Functions
+|   - TinyDSP                  | <-- DSP Functions
+|   - TinyAI                   | <-- AI Functions
+|   - TinyEvaluator            | <-- To Evaluate the Performance of the Functions
++------------------------------+
+| DRIVERS                      |
++------------------------------+
+| HARDWARE                     |
++------------------------------+
+
 ```

@@ -117,10 +117,11 @@ plugins:
             ABOUT: 关于
             DEVKITS: 开发载体
             ARCHITECTURE: 架构
-            ADAPTATION: 适配
+            ADAPTATION: 适配层
             MATH: 数学运算
             DSP: 信号处理
             AI: 人工智能
+            EVALUATION: 性能评估
 
 # # Hooks
 # hooks:
@@ -260,6 +261,8 @@ nav:
       - "DSP/dsp.md"
   - AI:
       - "AI/ai.md"
+  - EVALUATION:
+      - "EVALUATION/evaluation.md"
 
 
     
