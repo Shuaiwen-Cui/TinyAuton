@@ -34,9 +34,12 @@
 // Middleware
 
 // TinyAuton
+#include "TinyAdapter.h"
+#include "TinyEvaluator.h"
 
 /* Variables */
 const char *TAG = "TINYAUTON";
+TinyTimeMark_t tic, toc;
 
 /**
  * @brief Entry point of the program
@@ -45,12 +48,25 @@ const char *TAG = "TINYAUTON";
  */
 void app_main(void)
 {
-    esp_err_t ret;
-    uint32_t flash_size;
-    esp_chip_info_t chip_info;
+    /* Variables */
 
-    char mqtt_pub_buff[64];
-    int count = 0;
+    // General Variables
+    esp_err_t ret; // ESP32 Error Return
+    uint32_t flash_size; // ESP32 Flash Size
+    esp_chip_info_t chip_info; // ESP32 Chip Info
+
+    // IoT (e.g. wifi) & MQTT Variables 
+    EventBits_t ev = 0;
+    char mqtt_pub_buff[64]; // MQTT Publish Buffer
+
+    // Sensing Variables
+    uint8_t mpu6050_deviceid; // MPU6050 Device ID
+    mpu6050_acce_value_t acce; // MPU6050 Accelerometer Value
+    mpu6050_gyro_value_t gyro; // MPU6050 Gyroscope Value
+    mpu6050_temp_value_t temp; // MPU6050 Temperature Value
+    complimentary_angle_t angle; // Complimentary Angle
+
+    /* Initialization */
 
     // Initialize NVS
     ret = nvs_flash_init();
@@ -79,7 +95,7 @@ void app_main(void)
     spi2_init();
     lcd_init();
     i2c_bus_init();
-    i2c_sensor_mpu6050_init();
+    // i2c_sensor_mpu6050_init();
 
     // spiffs_test();                                                  /* Run SPIFFS test */
     while (sd_card_init()) /* SD card not detected */
@@ -105,67 +121,69 @@ void app_main(void)
 
     lcd_show_string(0, 0, lcd_self.width, 16, 16, "WiFi STA Test  ", RED);
 
-    ret = wifi_sta_wpa2_init();
-    if (ret == ESP_OK)
-    {
-        ESP_LOGI(TAG_WIFI, "WiFi STA Init OK");
-        lcd_show_string(0, 0, lcd_self.width, 16, 16, "WiFi STA Test OK", RED);
-    }
-    else
-    {
-        ESP_LOGE(TAG_WIFI, "WiFi STA Init Failed");
-    }
+    // wifi init
+    // ret = wifi_sta_wpa2_init();
+    // if (ret == ESP_OK)
+    // {
+    //     ESP_LOGI(TAG_WIFI, "WiFi STA Init OK");
+    //     lcd_show_string(0, 0, lcd_self.width, 16, 16, "WiFi STA Test OK", RED);
+    // }
+    // else
+    // {
+    //     ESP_LOGE(TAG_WIFI, "WiFi STA Init Failed");
+    // }
 
     // only when the ip is obtained, start mqtt
-    EventBits_t ev = 0;
-    ev = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
-    if (ev & CONNECTED_BIT)
-    {
-        mqtt_app_start();
-    }
+    // ev = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
+    // if (ev & CONNECTED_BIT)
+    // {
+    //     mqtt_app_start();
+    // }
 
-    uint8_t mpu6050_deviceid;
-    mpu6050_acce_value_t acce;
-    mpu6050_gyro_value_t gyro;
-    mpu6050_temp_value_t temp;
-    complimentary_angle_t angle;
-
-    ret = mpu6050_get_deviceid(mpu6050, &mpu6050_deviceid);
-    TEST_ASSERT_EQUAL(ESP_OK, ret);
-    TEST_ASSERT_EQUAL_UINT8_MESSAGE(MPU6050_WHO_AM_I_VAL, mpu6050_deviceid, "Who Am I register does not contain expected data");
+    // mpu6050 init
+    // ret = mpu6050_get_deviceid(mpu6050, &mpu6050_deviceid);
+    // TEST_ASSERT_EQUAL(ESP_OK, ret);
+    // TEST_ASSERT_EQUAL_UINT8_MESSAGE(MPU6050_WHO_AM_I_VAL, mpu6050_deviceid, "Who Am I register does not contain expected data");
 
     while (1)
     {
         // led test
         led_toggle();
 
+        // tic
+        tic = tiny_get_time();
+
         // hellow world test
         ESP_LOGI(TAG, "Hello World!");
 
-        // mpu6050 test
-        ret = mpu6050_get_acce(mpu6050, &acce);
-        // TEST_ASSERT_EQUAL(ESP_OK, ret);
-        ESP_LOGI(TAG, "acce_x:%.6f, acce_y:%.6f, acce_z:%.6f\n", acce.acce_x, acce.acce_y, acce.acce_z);
+        // time evaluation
+        toc = tiny_get_time();
+        ESP_LOGI("TIMER", "Elapsed time: %.3f ms", (toc - tic) / 1000.0);
 
-        ret = mpu6050_get_gyro(mpu6050, &gyro);
-        // TEST_ASSERT_EQUAL(ESP_OK, ret);
-        ESP_LOGI(TAG, "gyro_x:%.6f, gyro_y:%.6f, gyro_z:%.6f\n", gyro.gyro_x, gyro.gyro_y, gyro.gyro_z);
+        // // mpu6050 test
+        // ret = mpu6050_get_acce(mpu6050, &acce);
+        // // TEST_ASSERT_EQUAL(ESP_OK, ret);
+        // ESP_LOGI(TAG, "acce_x:%.6f, acce_y:%.6f, acce_z:%.6f\n", acce.acce_x, acce.acce_y, acce.acce_z);
 
-        ret = mpu6050_get_temp(mpu6050, &temp);
-        // TEST_ASSERT_EQUAL(ESP_OK, ret);
-        ESP_LOGI(TAG, "t:%.6f \n", temp.temp);
+        // ret = mpu6050_get_gyro(mpu6050, &gyro);
+        // // TEST_ASSERT_EQUAL(ESP_OK, ret);
+        // ESP_LOGI(TAG, "gyro_x:%.6f, gyro_y:%.6f, gyro_z:%.6f\n", gyro.gyro_x, gyro.gyro_y, gyro.gyro_z);
 
-        ret = mpu6050_complimentory_filter(mpu6050, &acce, &gyro, &angle);
-        // TEST_ASSERT_EQUAL(ESP_OK, ret);
-        ESP_LOGI(TAG, "pitch:%.6f roll:%.6f \n", angle.pitch, angle.roll);
+        // ret = mpu6050_get_temp(mpu6050, &temp);
+        // // TEST_ASSERT_EQUAL(ESP_OK, ret);
+        // ESP_LOGI(TAG, "t:%.6f \n", temp.temp);
 
-        // mqtt test publish acc data
-        if (s_is_mqtt_connected)
-        {
-            snprintf(mqtt_pub_buff, 64, "{\"acce_x\":\"%.6f\",\"acce_y\":\"%.6f\",\"acce_z\":\"%.6f\"}", acce.acce_x, acce.acce_y, acce.acce_z);
-            esp_mqtt_client_publish(s_mqtt_client, MQTT_PUBLIC_TOPIC,
-                                    mqtt_pub_buff, strlen(mqtt_pub_buff), 1, 0);
-        }
+        // ret = mpu6050_complimentory_filter(mpu6050, &acce, &gyro, &angle);
+        // // TEST_ASSERT_EQUAL(ESP_OK, ret);
+        // ESP_LOGI(TAG, "pitch:%.6f roll:%.6f \n", angle.pitch, angle.roll);
+
+        // // mqtt test publish acc data
+        // if (s_is_mqtt_connected)
+        // {
+        //     snprintf(mqtt_pub_buff, 64, "{\"acce_x\":\"%.6f\",\"acce_y\":\"%.6f\",\"acce_z\":\"%.6f\"}", acce.acce_x, acce.acce_y, acce.acce_z);
+        //     esp_mqtt_client_publish(s_mqtt_client, MQTT_PUBLIC_TOPIC,
+        //                             mqtt_pub_buff, strlen(mqtt_pub_buff), 1, 0);
+        // }
 
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }

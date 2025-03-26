@@ -22,11 +22,11 @@
 | APPLICATION                  |
 +------------------------------+
 | MIDDLEWARE                   |
-|   - TinyAdaptor              | <-- To shield HW differences and provide a unified API
+|   - TinyAdapter              | <-- To shield HW differences and provide a unified API
 |   - TinyMath                 | <-- Common Math Functions
 |   - TinyDSP                  | <-- DSP Functions
 |   - TinyAI                   | <-- AI Functions
-|   - TinyEvaluator            | <-- To Evaluate the Performance of the Functions
+|   - TinyEvaluator            | <-- To Evaluate Performance
 +------------------------------+
 | DRIVERS                      |
 +------------------------------+

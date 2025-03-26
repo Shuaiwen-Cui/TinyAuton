@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/CMakeFiles/bootloader
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/CMakeFiles/bootloader.rule
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/CMakeFiles/bootloader-complete.rule
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/Users/shuaiwencui/Desktop/Repo/TinyAuton/CODE-HOST/DNESP32S3M-TESTBED/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
