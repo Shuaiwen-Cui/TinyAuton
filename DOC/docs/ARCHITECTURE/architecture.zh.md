@@ -22,7 +22,7 @@
 | 应用层                        |
 +------------------------------+
 | 中间件                        |
-|   - TinyAdapter              | <-- 用于屏蔽硬件差异并提供统一 API
+|   - TinyAdapter              | <-- 平台底层优化
 |   - TinyMath                 | <-- 常用数学函数
 |   - TinyDSP                  | <-- DSP 函数
 |   - TinyAI                   | <-- AI 函数

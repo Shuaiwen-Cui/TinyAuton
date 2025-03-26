@@ -22,7 +22,7 @@
 | APPLICATION                  |
 +------------------------------+
 | MIDDLEWARE                   |
-|   - TinyAdapter              | <-- To shield HW differences and provide a unified API
+|   - TinyAdapter              | <-- Platform-specific Low-level Optimization
 |   - TinyMath                 | <-- Common Math Functions
 |   - TinyDSP                  | <-- DSP Functions
 |   - TinyAI                   | <-- AI Functions

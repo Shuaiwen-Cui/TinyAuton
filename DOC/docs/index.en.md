@@ -18,6 +18,9 @@ This project dedicates to the development of a library for tiny agent related co
 - ARM Cortex Series
 - ESP32 Series
 
+!!! warning
+    For different MCU platforms, the code is managed in different branches. In development, we strive for cross-platform consistency.
+
 ## SCOPE
 
 - Basic Math Operations
@@ -42,3 +45,13 @@ This project dedicates to the development of a library for tiny agent related co
 
 - DNESP32S3 from Alientek (ESP32-S3)
 - FK743M2-IIT6 from FANKE (STM32H743)
+
+## VERSIONS AND PROGRESS
+
+### ESP32
+
+In Development
+
+### STM32
+
+Not Started Yet
