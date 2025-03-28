@@ -19,6 +19,8 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_heap_caps.h"
+#include "esp_dsp.h"
+#include "esp_dl.h"
 
 /* DEFINITIONS */
 typedef TickType_t TinyTimeMark_t;
