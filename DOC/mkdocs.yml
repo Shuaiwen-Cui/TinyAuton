@@ -121,7 +121,6 @@ plugins:
             MATH: 数学运算
             DSP: 信号处理
             AI: 人工智能
-            EVALUATION: 性能评估
 
 # # Hooks
 # hooks:
@@ -261,8 +260,6 @@ nav:
       - "DSP/dsp.md"
   - AI:
       - "AI/ai.md"
-  - EVALUATION:
-      - "EVALUATION/evaluation.md"
 
 
     

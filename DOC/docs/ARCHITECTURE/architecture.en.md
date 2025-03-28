@@ -26,7 +26,6 @@
 |   - TinyMath                 | <-- Common Math Functions
 |   - TinyDSP                  | <-- DSP Functions
 |   - TinyAI                   | <-- AI Functions
-|   - TinyEvaluator            | <-- To Evaluate Performance
 +------------------------------+
 | DRIVERS                      |
 +------------------------------+
