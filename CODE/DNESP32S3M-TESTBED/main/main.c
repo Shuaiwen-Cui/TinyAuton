@@ -33,6 +33,9 @@
 
 // Middleware
 
+// Application
+#include "measurement.h" // Measurement Module
+
 // TinyAuton
 #include "TinyAdapter.h"
 #include "TinyEvaluator.h"
@@ -60,11 +63,11 @@ void app_main(void)
     char mqtt_pub_buff[64]; // MQTT Publish Buffer
 
     // Sensing Variables
-    uint8_t mpu6050_deviceid; // MPU6050 Device ID
-    mpu6050_acce_value_t acce; // MPU6050 Accelerometer Value
-    mpu6050_gyro_value_t gyro; // MPU6050 Gyroscope Value
-    mpu6050_temp_value_t temp; // MPU6050 Temperature Value
-    complimentary_angle_t angle; // Complimentary Angle
+    // uint8_t mpu6050_deviceid; // MPU6050 Device ID
+    // mpu6050_acce_value_t acce; // MPU6050 Accelerometer Value
+    // mpu6050_gyro_value_t gyro; // MPU6050 Gyroscope Value
+    // mpu6050_temp_value_t temp; // MPU6050 Temperature Value
+    // complimentary_angle_t angle; // Complimentary Angle
 
     /* Initialization */
 
@@ -95,7 +98,7 @@ void app_main(void)
     spi2_init();
     lcd_init();
     i2c_bus_init();
-    // i2c_sensor_mpu6050_init();
+    i2c_sensor_mpu6050_init();
 
     // spiffs_test();                                                  /* Run SPIFFS test */
     while (sd_card_init()) /* SD card not detected */
@@ -145,20 +148,22 @@ void app_main(void)
     // TEST_ASSERT_EQUAL(ESP_OK, ret);
     // TEST_ASSERT_EQUAL_UINT8_MESSAGE(MPU6050_WHO_AM_I_VAL, mpu6050_deviceid, "Who Am I register does not contain expected data");
 
+    sense_test();
+
     while (1)
     {
         // led test
         led_toggle();
 
         // tic
-        tic = tiny_get_time();
+        // tic = tiny_get_time();
 
         // hellow world test
-        ESP_LOGI(TAG, "Hello World!");
+        // ESP_LOGI(TAG, "Hello World!");
 
-        // time evaluation
-        toc = tiny_get_time();
-        ESP_LOGI("TIMER", "Elapsed time: %.3f ms", (toc - tic) / 1000.0);
+        // // time evaluation
+        // toc = tiny_get_time();
+        // ESP_LOGI("TIMER", "Elapsed time: %.3f ms", (toc - tic) / 1000.0);
 
         // // mpu6050 test
         // ret = mpu6050_get_acce(mpu6050, &acce);
@@ -185,6 +190,6 @@ void app_main(void)
         //                             mqtt_pub_buff, strlen(mqtt_pub_buff), 1, 0);
         // }
 
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
