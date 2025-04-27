@@ -12,6 +12,11 @@
 #ifndef __TIM_H__
 #define __TIM_H__
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* Dependencies */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -35,5 +40,9 @@ void esptim_int_init(uint64_t tps);
  * @retval      None
  */
 void esptim_callback(void *arg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*__TIM_H__*/

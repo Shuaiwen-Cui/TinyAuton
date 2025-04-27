@@ -12,6 +12,11 @@
 #ifndef __I2C_H__
 #define __I2C_H__
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdio.h>
 #include "esp_log.h"
 #include "unity.h" // This is for unity testing
@@ -27,5 +32,9 @@
  * @brief i2c master initialization
  */
 void i2c_bus_init(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __I2C_H__ */

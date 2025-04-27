@@ -115,12 +115,33 @@ plugins:
           build: true
           nav_translations: # note that all titles and subtitles in the navigation bar that need to be translated can be put here, but with no indentation
             ABOUT: 关于
-            DEVKITS: 开发载体
             ARCHITECTURE: 架构
-            ADAPTATION: 适配层
+            TOOLBOX: 工具箱
+            TIME: 时间
             MATH: 数学运算
+            HEADER-FILE: 头文件
+            CONSTANTS: 常量
+            ERROR-TYPE: 错误类型
+            CONFIGURATION: 配置
+            TINYMATH: TinyMath库头文件
+            ESP-DSP: ESP数字信号处理
+            VECTOR: 向量操作
+            API: 应用程序接口
+            TEST: 测试
+            MATRIX: 矩阵操作
+            TINY_MAT-API: TINY_MAT-接口
+            TINY_MAT-CODE: TINY_MAT-代码
+            TINY_MAT-TEST: TINY_MAT-测试
+            TINY_MATRIX-API: TINY_MATRIX-接口
+            TINY_MATRIX-CODE: TINY_MATRIX-代码
+            TINY_MATRIX-TEST: TINY_MATRIX-测试
+            USAGE: 使用方法
+            EXAMPLES: 示例
             DSP: 信号处理
             AI: 人工智能
+            NOTES: 说明
+            CODE: 代码
+            LOG: 日志
 
 # # Hooks
 # hooks:
@@ -248,14 +269,36 @@ markdown_extensions:
 nav:
   - ABOUT: 
       "index.md"
-  - DEVKITS:
-      "DEVKITS/devkits.md"
   - ARCHITECTURE:
       - "ARCHITECTURE/architecture.md"
-  - ADAPTATION:
-      - "ADAPTATION/adaptation.md"
+  - TOOLBOX:
+      - TOOLBOX: "TOOLBOX/toolbox.md"
+      - TIME: 
+          - NOTES: "TOOLBOX/TIME/notes.md"
+          - CODE: "TOOLBOX/TIME/code.md"
+          - LOG: "TOOLBOX/TIME/log.md"
   - MATH:
       - "MATH/math.md"
+      # - ESP-DSP: 
+      #     - ESP-DSP: "MATH/ESP-DSP/esp-dsp.md"
+      #     - EXAMPLES: "MATH/ESP-DSP/examples.md"
+      - USAGE: "MATH/USAGE/usage.md"
+      - HEADER-FILE:
+          - CONSTANTS: "MATH/HEADER-FILE/tiny_constants.md"
+          - ERROR-TYPE: "MATH/HEADER-FILE/tiny_error_type.md"
+          - CONFIGURATION: "MATH/HEADER-FILE/tiny_math_config.md"
+          - TINYMATH: "MATH/HEADER-FILE/tiny_math.md"
+      - VECTOR: 
+          - API: "MATH/VECTOR/api.md"
+          - CODE: "MATH/VECTOR/code.md"
+          - TEST: "MATH/VECTOR/test.md"
+      - MATRIX:
+          - TINY_MAT-API: "MATH/MATRIX/tiny-mat-api.md"
+          - TINY_MAT-CODE: "MATH/MATRIX/tiny-mat-code.md"
+          - TINY_MAT-TEST: "MATH/MATRIX/tiny-mat-test.md"
+          - TINY_MATRIX-API: "MATH/MATRIX/tiny-matrix-api.md"
+          - TINY_MATRIX-CODE: "MATH/MATRIX/tiny-matrix-code.md"
+          - TINY_MATRIX-TEST: "MATH/MATRIX/tiny-matrix-test.md"
   - DSP:
       - "DSP/dsp.md"
   - AI:

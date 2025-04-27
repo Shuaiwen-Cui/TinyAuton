@@ -2,7 +2,7 @@ dependencies:
   espressif/esp_jpeg:
     dependencies: []
     source:
-      path: /home/cshwstem/CSW/Development/TinyAuton/CODE/DNESP32S3M-PRODUCTION/middleware/espressif__esp_jpeg
+      path: /home/cshwstem/CSW/Development/TinySHM/CODE/DNESP32S3M-BASE/middleware/espressif__esp_jpeg
       type: local
     version: 1.2.1
   idf:

@@ -10,26 +10,6 @@
 +------------------------------+
 | Math Operations              | <-- Commonly Used Math Functions for Various Applications
 +------------------------------+
-| Adaptation Layer             | <-- To Replace Functions in Standard C with Platform Optimized/Specific Functions
+| Adaptation/Toolbox Layer     | <-- To Replace Functions in Standard C with Platform Optimized/Specific Functions
 +------------------------------+
-```
-
-## CODE ORGANIZATION
-
-```txt
-
-+------------------------------+
-| APPLICATION                  |
-+------------------------------+
-| MIDDLEWARE                   |
-|   - TinyAdapter              | <-- Platform-specific Low-level Optimization
-|   - TinyMath                 | <-- Common Math Functions
-|   - TinyDSP                  | <-- DSP Functions
-|   - TinyAI                   | <-- AI Functions
-+------------------------------+
-| DRIVERS                      |
-+------------------------------+
-| HARDWARE                     |
-+------------------------------+
-
 ```

@@ -21,6 +21,11 @@
 #ifndef __EXFUNS_H
 #define __EXFUNS_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -53,6 +58,10 @@ uint32_t exfuns_get_folder_size(uint8_t *fdname);       /* 得到文件夹大小
 uint8_t *exfuns_get_src_dname(uint8_t *dpfn);
 uint8_t exfuns_file_copy(uint8_t(*fcpymsg)(uint8_t *pname, uint8_t pct, uint8_t mode), uint8_t *psrc, uint8_t *pdst, uint32_t totsize, uint32_t cpdsize, uint8_t fwmode);       /* 文件复制 */
 uint8_t exfuns_folder_copy(uint8_t(*fcpymsg)(uint8_t *pname, uint8_t pct, uint8_t mode), uint8_t *psrc, uint8_t *pdst, uint32_t *totsize, uint32_t *cpdsize, uint8_t fwmode);   /* 文件夹复制 */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

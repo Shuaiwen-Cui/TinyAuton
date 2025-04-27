@@ -12,6 +12,11 @@
 #ifndef __EXIT_H__
 #define __EXIT_H__
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "esp_system.h"
 #include "driver/gpio.h"
 #include "led.h"
@@ -29,5 +34,9 @@
  * @retval      None
  */
 void exit_init(void); /* External interrupt initialization function */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

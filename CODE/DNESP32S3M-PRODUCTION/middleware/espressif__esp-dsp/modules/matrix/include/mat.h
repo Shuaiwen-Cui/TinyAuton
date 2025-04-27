@@ -420,6 +420,7 @@ public:
      *      - matrix [N]x[1] with roots
      */
     static Mat solve(Mat A, Mat b);
+
     /**
      * @brief   Band solve the matrix
      *
@@ -433,6 +434,7 @@ public:
      *      - matrix [N]x[1] with roots
      */
     static Mat bandSolve(Mat A, Mat b, int k);
+
     /**
      * @brief   Solve the matrix
      *
@@ -471,6 +473,7 @@ public:
      *      - Augmented matrix Mx(N+K)
      */
     static Mat augment(Mat A, Mat B);
+
     /**
      * @brief   Gaussian Elimination
      *
@@ -520,6 +523,7 @@ private:
     void allocate(); // Allocate buffer
     Mat expHelper(const Mat &m, int num);
 };
+
 /**
  * Print matrix to the standard iostream.
  * @param[in] os: output stream

@@ -11,6 +11,11 @@
 #ifndef __LCD_H__
 #define __LCD_H__
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -125,5 +130,9 @@ void lcd_draw_hline(uint16_t x, uint16_t y, uint16_t len, uint16_t color);      
 void lcd_draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color);                               /* Draw a straight or slanted line */
 void lcd_draw_pixel(uint16_t x, uint16_t y, uint16_t color);                                                          /* Draw a pixel */
 void lcd_show_char(uint16_t x, uint16_t y, uint8_t chr, uint8_t size, uint8_t mode, uint16_t color);                  /* Display a character at a specified position */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __LCD_H__ */
