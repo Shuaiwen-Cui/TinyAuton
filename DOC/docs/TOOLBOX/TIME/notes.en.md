@@ -13,22 +13,19 @@ In MCU, time can be divided into the following types:
 
 ESP has its own function to get the running time, `esp_timer_get_time`, which depends on the `esp_timer` library. This function returns the time from power-on to now, in microseconds.
 
-To facilitate usage, TinyToolbox redefines the data type `TinyTimeMark_t` and provides a function `tiny_get_running_time` to get the running time. The time returned by this function is in the unit of TickType_t, which is the time unit defined in FreeRTOS.
+To facilitate usage, TinyToolbox redefines the data type `TinyTimeMark_t` and provides a function `tiny_get_running_time` to get the running time. The time returned by this function is in the unit of int64_t, which is long enough to avoid overflow.
 
 ```c
-typedef TickType_t TinyTimeMark_t;
+typedef int64_t TinyTimeMark_t;
 ```
 
-```c
 
+```c
 /**
  * @brief Get the running time in microseconds
  * @return TinyTimeMark_t
  */
-TinyTimeMark_t tiny_get_running_time(void)
-{
-    return esp_timer_get_time();
-}
+TinyTimeMark_t tiny_get_running_time(void) { return esp_timer_get_time(); }
 ```
 
 Usage reference:
@@ -78,43 +75,60 @@ First, define a callback function to receive time synchronization notifications:
  * @param tv Pointer to the timeval structure containing the synchronized time
  * @return None
  */
-void time_sync_notification_cb(struct timeval *tv)
+static void time_sync_notification_cb(struct timeval *tv)
 {
     ESP_LOGI(TAG_SNTP, "Time synchronized!");
 }
 
 ```
+
 Next is the SNTP initialization function, which is also the core function of time synchronization. It is usually called when the system is initialized and the network is connected. Note that the time synchronization server address can be modified as needed. After the time synchronization is completed, ESP32 will set the local time at the bottom layer.
 
 ```c
+
 /**
  * @brief Initialize SNTP
+ * @note This function can be called multiple times if needed
  * @return None
  */
-void initialize_sntp(void)
+static void initialize_sntp(void)
 {
     ESP_LOGI(TAG_SNTP, "Initializing SNTP");
-    sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "pool.ntp.org"); // NTP server // pool.ntp.org // ntp.aliyun.com
-    sntp_set_time_sync_notification_cb(time_sync_notification_cb);
-    sntp_init();
+    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, "pool.ntp.org"); // NTP server // pool.ntp.org // ntp.aliyun.com
+    esp_sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+    esp_sntp_init();
 }
 ```
 
 Next is a further encapsulation of the above functions, including time zone settings. Note that the following function includes the RTC setting `rtc_set_time`, which depends on the RTC driver at the driver layer. Here I use my custom rtc driver, if there is no related function, you can comment it out directly.
 
 ```c
+
 /**
  * @brief Obtain the current time with timezone
- * @param timezone_str Timezone string (e.g., "CST-8")
- * @note The timezone string should be in the format "TZ=GMT+/-HH:MM"
- * @note To use this function, in application, after internet connection, insert "sync_time_with_timezone("CST-8");" will do
+ * @param timezone_str Timezone string (e.g., "CST-8" or "GMT+8")
+ * @note The timezone string format should be compatible with POSIX TZ format
+ * (e.g., "CST-8", "GMT+8")
+ * @note To use this function, in application, after internet connection, call
+ * sync_time_with_timezone("CST-8")
  * @return None
  */
 void sync_time_with_timezone(const char *timezone_str)
 {
+    // Validate input parameter
+    if (timezone_str == NULL)
+    {
+        ESP_LOGE(TAG_SNTP, "timezone_str is NULL");
+        return;
+    }
+
     // Set system timezone
-    setenv("TZ", timezone_str, 1);
+    if (setenv("TZ", timezone_str, 1) != 0)
+    {
+        ESP_LOGE(TAG_SNTP, "Failed to set timezone environment variable");
+        return;
+    }
     tzset();
 
     // Initialize SNTP and start time sync
@@ -122,42 +136,62 @@ void sync_time_with_timezone(const char *timezone_str)
 
     // Wait for system time to be set
     time_t now = 0;
-    struct tm timeinfo = { 0 };
+    struct tm timeinfo = {0};
     int retry = 0;
     const int retry_count = 15;
 
-    while (timeinfo.tm_year < (2020 - 1900) && ++retry < retry_count) {
-        ESP_LOGI(TAG_SNTP, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+    while (timeinfo.tm_year < MIN_VALID_YEAR_OFFSET && ++retry < retry_count)
+    {
+        ESP_LOGI(TAG_SNTP, "Waiting for system time to be set... (%d/%d)", retry,
+                 retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
         time(&now);
-        localtime_r(&now, &timeinfo);
+        if (localtime_r(&now, &timeinfo) == NULL)
+        {
+            ESP_LOGW(TAG_SNTP, "Failed to convert time to local time");
+            continue;
+        }
     }
 
-    if (timeinfo.tm_year >= (2020 - 1900)) {
+    if (timeinfo.tm_year >= MIN_VALID_YEAR_OFFSET)
+    {
         rtc_set_time(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-                    timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec); // defined in esp_rtc.c
+                     timeinfo.tm_hour, timeinfo.tm_min,
+                     timeinfo.tm_sec); // defined in esp_rtc.c
         ESP_LOGI(TAG_SNTP, "System time is set.");
-    } else {
+    }
+    else
+    {
         ESP_LOGW(TAG_SNTP, "Failed to sync time.");
         return;
     }
 
-    // Log current local time
-    ESP_LOGI(TAG_SNTP, "Current time: %s", asctime(&timeinfo));
+    // Log current local time (using thread-safe formatting)
+    char time_str[64];
+    if (strftime(time_str, sizeof(time_str), "%a %b %d %H:%M:%S %Y", &timeinfo) ==
+        0)
+    {
+        ESP_LOGW(TAG_SNTP, "Failed to format time string");
+    }
+    else
+    {
+        ESP_LOGI(TAG_SNTP, "Current time: %s", time_str);
+    }
 
     // vTaskDelay(10000 / portTICK_PERIOD_MS); // Wait for 10 second
     // rtc_get_time(); // uncomment to check the RTC time
     // ESP_LOGI(TAG_SNTP, "Current RTC time: %04d-%02d-%02d %02d:%02d:%02d",
     //          calendar.year, calendar.month, calendar.date,
-    //          calendar.hour, calendar.min, calendar.sec); // uncomment to check the RTC time
-
+    //          calendar.hour, calendar.min, calendar.sec); // uncomment to check
+    //          the RTC time
 }
+
 
 ```
 
 ### WORLD TIME GETTING
 
-In order to facilitate the acquisition of world time, we first define a data structure `DateTime_t` to store information such as year, month, day, hour, minute, and second. Then we define a function `tiny_get_current_time` to obtain the current world time. This function returns a `DateTime_t` structure, which contains the current year, month, day, hour, minute, and second information. When using it, pass in a Boolean value `print_flag` to control whether to print the current time.
+In order to facilitate the acquisition of world time, we first define a data structure `DateTime_t` to store information such as year, month, day, hour, minute, and second. Then we define a function `tiny_get_current_datetime` to obtain the current world time. This function returns a `DateTime_t` structure, which contains the current year, month, day, hour, minute, and second information. When using it, pass in a Boolean value `print_flag` to control whether to print the current time.
 
 ```c
 /**
@@ -178,34 +212,44 @@ typedef struct TinyDateTime_t
 ```c
 /* WORLD CURRENT TIME - GET TIME */
 /**
- * @name tiny_get_current_time
+ * @name tiny_get_current_datetime
  * @brief Get the current time as a TinyDateTime_t struct
  * @param print_flag Flag to indicate whether to print the time
  * @return TinyDateTime_t structure containing the current date and time
  */
-TinyDateTime_t tiny_get_current_time(bool print_flag)
+TinyDateTime_t tiny_get_current_datetime(bool print_flag)
 {
+    TinyDateTime_t result = {0}; // Initialize to zero
     struct timeval tv;
-    gettimeofday(&tv, NULL);  // Get current time (seconds + microseconds)
+
+    // Get current time (seconds + microseconds)
+    if (gettimeofday(&tv, NULL) != 0)
+    {
+        ESP_LOGE(TAG_TIME, "Failed to get time of day");
+        return result; // Return zero-initialized structure on error
+    }
 
     time_t now = tv.tv_sec;
     struct tm timeinfo;
-    localtime_r(&now, &timeinfo);  // Convert to local time
+    if (localtime_r(&now, &timeinfo) == NULL)
+    {
+        ESP_LOGE(TAG_TIME, "Failed to convert time to local time");
+        return result; // Return zero-initialized structure on error
+    }
 
-    TinyDateTime_t result;
-    result.year   = timeinfo.tm_year + 1900;
-    result.month  = timeinfo.tm_mon + 1;
-    result.day    = timeinfo.tm_mday;
-    result.hour   = timeinfo.tm_hour;
+    result.year = timeinfo.tm_year + 1900;
+    result.month = timeinfo.tm_mon + 1;
+    result.day = timeinfo.tm_mday;
+    result.hour = timeinfo.tm_hour;
     result.minute = timeinfo.tm_min;
     result.second = timeinfo.tm_sec;
-    result.microsecond = tv.tv_usec;
+    result.microsecond = (int32_t)tv.tv_usec; // Explicit cast for portability
 
     if (print_flag)
     {
-        ESP_LOGI(TAG_TIME, "Current Time: %04d-%02d-%02d %02d:%02d:%02d.%06ld",
-                 result.year, result.month, result.day,
-                 result.hour, result.minute, result.second, tv.tv_usec);
+        ESP_LOGI(TAG_TIME, "Current Time: %04d-%02d-%02d %02d:%02d:%02d.%06d",
+                 result.year, result.month, result.day, result.hour, result.minute,
+                 result.second, result.microsecond);
     }
 
     return result;
@@ -221,7 +265,7 @@ void app_main(void)
     sync_time_with_timezone("CST-8");
 
     // Get current time
-    TinyDateTime_t current_time = tiny_get_current_time(true);
+    TinyDateTime_t current_time = tiny_get_current_datetime(true);
 
     // Print current time
     ESP_LOGI(TAG_TIME, "Current Time: %04d-%02d-%02d %02d:%02d:%02d.%06ld",
@@ -235,4 +279,4 @@ Example Output
 ![](SNTP.png)
 
 !!! danger
-    The SNTP accuracy is at **ms** level.
+    The SNTP accuracy when syncing to RTC is at the second level, so the microsecond part when obtaining world time may not be accurate and is for reference only.

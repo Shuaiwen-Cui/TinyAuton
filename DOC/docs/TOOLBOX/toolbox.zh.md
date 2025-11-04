@@ -6,31 +6,6 @@
 !!! warning     
     目前开发以ESP32为基础，向STM32等平台的迁移需要对适配层进行一定的修改。
 
-## 组件依赖
-
-```c
-set(src_dirs
-    .
-    time
-)
-
-set(include_dirs
-    .
-    time
-)
-
-set(requires
-    esp_timer
-    esp_rtc
-    espressif__esp-dsp
-    espressif__esp_jpeg
-    espressif__esp-dl
-)
-
-idf_component_register(SRC_DIRS ${src_dirs} INCLUDE_DIRS ${include_dirs} REQUIRES ${requires})
-
-
-```
 
 ## 架构与功能目录
 
@@ -49,7 +24,7 @@ idf_component_register(SRC_DIRS ${src_dirs} INCLUDE_DIRS ${include_dirs} REQUIRE
 
 - 获取运行时间： `tiny_get_running_time()`
 - SNTP对时： `sync_time_with_timezone("CST-8")`
-- 获取世界时间： `tiny_get_current_time(1)`
+- 获取世界时间： `tiny_get_current_datetime(1)`
 
 待开发:
 
@@ -65,20 +40,26 @@ idf_component_register(SRC_DIRS ${src_dirs} INCLUDE_DIRS ${include_dirs} REQUIRE
 ```cmake
 set(src_dirs
     .
+    time
 )
 
 set(include_dirs
-    include
+    .
+    time
 )
 
 set(requires
     esp_timer
+    node_rtc
     espressif__esp-dsp
-    espressif__esp_jpeg
+    espressif__esp_new_jpeg
+    espressif__dl_fft
     espressif__esp-dl
 )
 
 idf_component_register(SRC_DIRS ${src_dirs} INCLUDE_DIRS ${include_dirs} REQUIRES ${requires})
+
+
 ```
 
 ### tiny_toolbox.h
@@ -94,8 +75,7 @@ idf_component_register(SRC_DIRS ${src_dirs} INCLUDE_DIRS ${include_dirs} REQUIRE
  *
  */
 
-#ifndef __TINY_TOOLBOX__
-#define __TINY_TOOLBOX__
+#pragma once
 
 #ifdef __cplusplus
 extern "C"
@@ -111,7 +91,7 @@ extern "C"
 #include "esp_heap_caps.h"
 
 // customized drivers
-#include "esp_rtc.h"
+#include "node_rtc.h"
 
 /* SUBMODULES */
 #include "tiny_time.h" // Time
@@ -119,6 +99,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __TINY_TOOLBOX__ */
 ```

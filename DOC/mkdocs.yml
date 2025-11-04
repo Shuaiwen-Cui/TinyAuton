@@ -116,6 +116,7 @@ plugins:
           nav_translations: # note that all titles and subtitles in the navigation bar that need to be translated can be put here, but with no indentation
             ABOUT: 关于
             ARCHITECTURE: 架构
+            PREREQUISITE: 前置条件
             TOOLBOX: 工具箱
             TIME: 时间
             MATH: 数学运算
@@ -271,6 +272,8 @@ nav:
       "index.md"
   - ARCHITECTURE:
       - "ARCHITECTURE/architecture.md"
+  - PREREQUISITE:
+      - "PREREQUISITE/prerequisite.md"
   - TOOLBOX:
       - TOOLBOX: "TOOLBOX/toolbox.md"
       - TIME: 
