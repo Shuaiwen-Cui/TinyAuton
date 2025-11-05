@@ -1,4 +1,4 @@
-# TINYAUTON
+# TINYAUTON: Microcontroller-oriented Distributed Intelligence Enabling Framework
 
 ![cover](cover.jpg)
 
