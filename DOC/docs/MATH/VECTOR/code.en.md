@@ -6,18 +6,24 @@
 /**
  * @file tiny_vec.h
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
- * @brief This file is the header file for the submodule vec of the tiny_math middleware.
+ * @brief This file is the header file for the submodule vec of the tiny_math middleware. This module is correspondign to the math & dotprod functions in the ESP-DSP library.
  * @version 1.0
  * @date 2025-04-15
  * @copyright Copyright (c) 2025
  *
  */
 
-#ifndef __TINY__VEC__
-#define __TINY__VEC__
+#pragma once
 
 /* DEPENDENCIES */
 #include "tiny_math_config.h"
+
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32 // ESP32 DSP library
+
+#include "dsps_math.h" // math operations
+#include "dsps_dotprod.h" // dot product
+
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -43,7 +49,6 @@ tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *
 }
 #endif
 
-#endif /* __TINY__VEC__ */
 ```
 
 ## tiny_vec.c
@@ -52,11 +57,18 @@ tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *
 /**
  * @file tiny_vec.c
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
- * @brief This file is the source file for the submodule vec of the tiny_math middleware.
+ * @brief This file is the source file for the submodule vec of the tiny_math middleware. This module is correspondign to the math & dotprod functions in the ESP-DSP library.
  * @version 1.0
  * @date 2025-04-15
  * @copyright Copyright (c) 2025
  *
+ * @note IMPORTANT: Buffer Overflow Prevention
+ *       When using step parameters, ensure that array bounds are respected:
+ *       - For input arrays: (len-1) * step < array_size
+ *       - For output arrays: (len-1) * step_out < array_size
+ *       Example: If array has 10 elements and step=2, max safe len is 5.
+ *       The library does not perform runtime bounds checking for performance reasons.
+ *       Users must ensure valid array sizes before calling these functions.
  */
 
 #include "tiny_vec.h"
@@ -254,7 +266,7 @@ tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *o
         output[i * step_out] = input1[i * step1] * input2[i * step2];
     }
 #endif
-        return TINY_OK;
+    return TINY_OK;
 }
 
 // vector * constant | float
@@ -337,35 +349,40 @@ tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *o
     }
 
     // Step 2: Perform element-wise division
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+    // Note: If allow_divide_by_zero=false, pre-check already passed, but we double-check for safety
     for (int i = 0; i < len; i++)
     {
         float denom = input2[i * step2];
         float numer = input1[i * step1];
+        
         if (fabsf(denom) < epsilon)
         {
-            output[i * step_out] = allow_divide_by_zero ? 0.0f : numer / denom; // fallback if user forced it
+            if (allow_divide_by_zero)
+            {
+                // Handle division by near-zero: mathematically correct behavior
+                if (fabsf(numer) < epsilon)
+                {
+                    // 0/0 case: undefined, return 0.0f as safe fallback
+                    output[i * step_out] = 0.0f;
+                }
+                else
+                {
+                    // Non-zero divided by near-zero: return signed infinity
+                    // Use large number instead of INFINITY for compatibility
+                    output[i * step_out] = (numer > 0.0f) ? TINY_MATH_LARGE_VALUE_F32 : -TINY_MATH_LARGE_VALUE_F32;
+                }
+            }
+            else
+            {
+                // This should not happen if pre-check passed, but return error for safety
+                return TINY_ERR_MATH_ZERO_DIVISION;
+            }
         }
         else
         {
             output[i * step_out] = numer / denom;
         }
     }
-#else
-    for (int i = 0; i < len; i++)
-    {
-        float denom = input2[i * step2];
-        float numer = input1[i * step1];
-        if (fabsf(denom) < epsilon)
-        {
-            output[i * step_out] = allow_divide_by_zero ? 0.0f : numer / denom;
-        }
-        else
-        {
-            output[i * step_out] = numer / denom;
-        }
-    }
-#endif
 
     return TINY_OK;
 }
@@ -408,10 +425,21 @@ tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float
             return TINY_ERR_MATH_ZERO_DIVISION;
         }
 
-        // Safe fallback: set all outputs to 0
+        // Handle division by near-zero constant: mathematically correct behavior
+        // For vector / near-zero, each element should approach infinity
         for (int i = 0; i < len; i++)
         {
-            output[i * step_out] = 0.0f;
+            float val = input[i * step_in];
+            if (fabsf(val) < epsilon)
+            {
+                // 0 / near-zero: undefined, return 0.0f as safe fallback
+                output[i * step_out] = 0.0f;
+            }
+            else
+            {
+                // Non-zero divided by near-zero: return signed large value
+                output[i * step_out] = (val > 0.0f) ? TINY_MATH_LARGE_VALUE_F32 : -TINY_MATH_LARGE_VALUE_F32;
+            }
         }
         return TINY_OK;
     }
@@ -456,15 +484,19 @@ tiny_error_t tiny_vec_sqrt_f32(const float *input, float *output, int len)
         return TINY_ERR_INVALID_ARG;
     }
 
+    // Pre-check: validate all inputs before processing to avoid partial results
     for (int i = 0; i < len; i++)
     {
-        float x = input[i];
-        if (x < 0.0f)
+        if (input[i] < 0.0f)
         {
             return TINY_ERR_MATH_NEGATIVE_SQRT;
         }
+    }
 
-        output[i] = sqrtf(x);  // high-precision sqrt
+    // All inputs validated, now perform computation
+    for (int i = 0; i < len; i++)
+    {
+        output[i] = sqrtf(input[i]);  // high-precision sqrt
     }
 
     return TINY_OK;
@@ -478,6 +510,8 @@ tiny_error_t tiny_vec_sqrt_f32(const float *input, float *output, int len)
  * @return Square root of the input value.
  * @note This function uses bit manipulation to compute the square root of a float value.
  *       It returns 0.0f for negative inputs to prevent sqrt of negative values.
+ *       WARNING: This is a fast approximation algorithm. Typical relative error is < 1%.
+ *       For high-precision applications, use tiny_vec_sqrt_f32() instead.
  */
 inline float tiny_sqrtf_f32(float f)
 {
@@ -485,24 +519,35 @@ inline float tiny_sqrtf_f32(float f)
         return 0.0f;  // Prevent sqrt of negative values
     }
 
-    int result;
-    int *f_ptr = (int *)&f;
-    result = 0x1fbb4000 + (*f_ptr >> 1);
-    const int *p = &result;
-    float *f_result = (float *)p;
-    return *f_result;
+    // Use union to avoid strict aliasing violation
+    union {
+        float f;
+        uint32_t i;
+    } input_conv = {f};
+    
+    union {
+        float f;
+        uint32_t i;
+    } result_conv;
+    
+    result_conv.i = 0x1fbb4000 + (input_conv.i >> 1);
+    return result_conv.f;
 }
 
 // vector ^ 0.5 (sqrtf-based)| float
 /**
  * @name tiny_vec_sqrtf_f32
- * @brief Computes the square root of each element in a vector.
+ * @brief Computes the square root of each element in a vector using fast approximation.
  * @param input Pointer to the input vector.
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function computes the square root of each element in the input vector and stores the result in the output vector.
+ * @note This function computes the square root of each element using fast bit manipulation.
  *       It returns TINY_ERR_MATH_NEGATIVE_SQRT immediately if any element is negative.
+ *       WARNING: This is a fast approximation. Typical relative error is < 1%.
+ *       For high-precision applications, use tiny_vec_sqrt_f32() instead.
+ *       NOTE: Ensure input/output arrays have sufficient size: at least len elements.
+ *       When using step parameters, ensure: (len-1)*step < array_size to avoid buffer overflow.
  */
 tiny_error_t tiny_vec_sqrtf_f32(const float *input, float *output, int len)
 {
@@ -516,15 +561,19 @@ tiny_error_t tiny_vec_sqrtf_f32(const float *input, float *output, int len)
         return TINY_ERR_INVALID_ARG;
     }
 
+    // Pre-check: validate all inputs before processing to avoid partial results
     for (int i = 0; i < len; i++)
     {
-        float x = input[i];
-        if (x < 0.0f)
+        if (input[i] < 0.0f)
         {
             return TINY_ERR_MATH_NEGATIVE_SQRT;
         }
+    }
 
-        output[i] = tiny_sqrtf_f32(x);
+    // All inputs validated, now perform computation
+    for (int i = 0; i < len; i++)
+    {
+        output[i] = tiny_sqrtf_f32(input[i]);
     }
 
     return TINY_OK;
@@ -553,15 +602,19 @@ tiny_error_t tiny_vec_inv_sqrt_f32(const float *input, float *output, int len)
         return TINY_ERR_INVALID_ARG;
     }
 
+    // Pre-check: validate all inputs before processing to avoid partial results
     for (int i = 0; i < len; i++)
     {
-        float x = input[i];
-        if (x < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+        if (input[i] < TINY_MATH_MIN_POSITIVE_INPUT_F32)
         {
             return TINY_ERR_NOT_ALLOWED;
         }
+    }
 
-        output[i] = 1.0f / sqrtf(x);  // Accurate inverse square root
+    // All inputs validated, now perform computation
+    for (int i = 0; i < len; i++)
+    {
+        output[i] = 1.0f / sqrtf(input[i]);  // Accurate inverse square root
     }
 
     return TINY_OK;
@@ -571,11 +624,13 @@ tiny_error_t tiny_vec_inv_sqrt_f32(const float *input, float *output, int len)
 // single value inv sqrt
 /**
  * @name tiny_inverted_sqrtf_f32
- * @brief Computes the inverse square root of a single float value using bit manipulation.
+ * @brief Computes the inverse square root of a single float value using bit manipulation (Quake algorithm).
  * @param data Input float value.
  * @return Inverse square root of the input value.
- * @note This function uses bit manipulation to compute the inverse square root of a float value.
+ * @note This function uses the famous Quake III fast inverse square root algorithm.
  *       It returns 0.0f for negative or near-zero inputs to prevent division by zero.
+ *       WARNING: This is a fast approximation. Typical relative error is < 0.2%.
+ *       For high-precision applications, use tiny_vec_inv_sqrt_f32() instead.
  */
 float tiny_inverted_sqrtf_f32(float data)
 {
@@ -600,13 +655,17 @@ float tiny_inverted_sqrtf_f32(float data)
 // vector ^ -0.5 (sqrtf-based) | float
 /**
  * @name tiny_vec_inv_sqrtf_f32
- * @brief Computes the inverse square root of each element in a vector.
+ * @brief Computes the inverse square root of each element in a vector using fast approximation.
  * @param input Pointer to the input vector.
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function computes the inverse square root of each element in the input vector and stores the result in the output vector.
+ * @note This function computes the inverse square root using the Quake III fast algorithm.
  *       If any element is less than TINY_MATH_MIN_POSITIVE_INPUT_F32, the function returns TINY_ERR_NOT_ALLOWED.
+ *       WARNING: This is a fast approximation. Typical relative error is < 0.2%.
+ *       For high-precision applications, use tiny_vec_inv_sqrt_f32() instead.
+ *       NOTE: Ensure input/output arrays have sufficient size: at least len elements.
+ *       When using step parameters, ensure: (len-1)*step < array_size to avoid buffer overflow.
  */
 tiny_error_t tiny_vec_inv_sqrtf_f32(const float *input, float *output, int len)
 {
@@ -620,15 +679,19 @@ tiny_error_t tiny_vec_inv_sqrtf_f32(const float *input, float *output, int len)
         return TINY_ERR_INVALID_ARG;
     }
 
+    // Pre-check: validate all inputs before processing to avoid partial results
     for (int i = 0; i < len; i++)
     {
-        float x = input[i];
-        if (x < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+        if (input[i] < TINY_MATH_MIN_POSITIVE_INPUT_F32)
         {
             return TINY_ERR_NOT_ALLOWED;
         }
+    }
 
-        output[i] = tiny_inverted_sqrtf_f32(x);
+    // All inputs validated, now perform computation
+    for (int i = 0; i < len; i++)
+    {
+        output[i] = tiny_inverted_sqrtf_f32(input[i]);
     }
 
     return TINY_OK;

@@ -1,4 +1,4 @@
-# TINYAUTON: 面向微控制器的布式智能赋能框架
+# TINYAUTON: 面向微控制器的分布式智能赋能框架
 
 ![封面](cover.jpg)
 

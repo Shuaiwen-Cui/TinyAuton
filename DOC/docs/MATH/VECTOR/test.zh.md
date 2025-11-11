@@ -17,8 +17,7 @@
  * @copyright Copyright (c) 2025
  */
 
-#ifndef __TINY_VEC_TEST_H__
-#define __TINY_VEC_TEST_H__
+#pragma once
 
 #include "tiny_math_config.h"
 #include "tiny_vec.h"
@@ -38,8 +37,7 @@ extern "C"
 }
 #endif
 
-/** End of __TINY_VEC_TEST_H__ */
-#endif /* __TINY_VEC_TEST_H__ */
+
 ```
 
 ### tiny_vec_test.c
@@ -128,6 +126,18 @@ void tiny_vec_test(void)
 
     printf("============ [test complete] ============\n\r");
 }
+```
+
+### main.cpp
+
+```cpp
+#include "tiny_vec_test.h"
+
+extern "C" void app_main(void)
+{
+    tiny_vec_test();
+}
+
 ```
 
 ## 测试结果

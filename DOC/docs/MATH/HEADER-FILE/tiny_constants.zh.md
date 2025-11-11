@@ -13,8 +13,7 @@
  * @copyright Copyright (c) 2025
  */
 
-#ifndef __TINY_CONSTANTS_H__
-#define __TINY_CONSTANTS_H__
+#pragma once
 
 #ifdef __cplusplus
 extern "C"
@@ -76,16 +75,12 @@ extern "C"
 // =======================================
 //  User-Defined Constants (Optional)
 // =======================================
-#define TINY_MATH_MIN_DENOMINATOR 1e-6f // Minimum denominator for safe division
+#define TINY_MATH_MIN_DENOMINATOR 1e-6f         // Minimum denominator for safe division
 #define TINY_MATH_MIN_POSITIVE_INPUT_F32 1e-12f // Minimum positive input for float operations
-
-
+#define TINY_MATH_LARGE_VALUE_F32 1e38f         // Large value used to represent infinity-like results (safe for IEEE 754 float, max ~3.4e38)
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __TINY_CONSTANTS_H__ */
-
 
 ```

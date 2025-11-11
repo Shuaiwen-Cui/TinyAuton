@@ -14,8 +14,7 @@
  *
  */
 
-#ifndef __TINY_MATH__
-#define __TINY_MATH__
+#pragma once
 
 /* DEPENDENCIES */
 
@@ -60,6 +59,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __TINY_MATH__ */
 ```
