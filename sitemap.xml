@@ -2,378 +2,378 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
         <loc>https://localhost:8000/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/"/>
     </url>
     <url>
         <loc>https://localhost:8000/AI/ai/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/ai/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/ai/"/>
     </url>
     <url>
         <loc>https://localhost:8000/ARCHITECTURE/architecture/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/ARCHITECTURE/architecture/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/ARCHITECTURE/architecture/"/>
     </url>
     <url>
         <loc>https://localhost:8000/DSP/dsp/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/DSP/dsp/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/DSP/dsp/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/math/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/math/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/math/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/ESP-DSP/esp-dsp/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/ESP-DSP/esp-dsp/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/ESP-DSP/esp-dsp/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/ESP-DSP/examples/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/ESP-DSP/examples/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/ESP-DSP/examples/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/HEADER-FILE/tiny_constants/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/HEADER-FILE/tiny_constants/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/HEADER-FILE/tiny_constants/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/HEADER-FILE/tiny_error_type/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/HEADER-FILE/tiny_error_type/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/HEADER-FILE/tiny_error_type/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/HEADER-FILE/tiny_math/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/HEADER-FILE/tiny_math/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/HEADER-FILE/tiny_math/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/HEADER-FILE/tiny_math_config/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/HEADER-FILE/tiny_math_config/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/HEADER-FILE/tiny_math_config/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/MATRIX/tiny-mat-api/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-mat-api/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-mat-api/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/MATRIX/tiny-mat-code/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-mat-code/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-mat-code/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/MATRIX/tiny-mat-test/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-mat-test/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-mat-test/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/MATRIX/tiny-matrix-api/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-matrix-api/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-api/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/MATRIX/tiny-matrix-code/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-matrix-code/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-code/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/MATRIX/tiny-matrix-test/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-matrix-test/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-test/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/USAGE/usage/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/USAGE/usage/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/USAGE/usage/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/VECTOR/api/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/VECTOR/api/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/VECTOR/api/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/VECTOR/code/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/VECTOR/code/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/VECTOR/code/"/>
     </url>
     <url>
         <loc>https://localhost:8000/MATH/VECTOR/test/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/VECTOR/test/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/VECTOR/test/"/>
     </url>
     <url>
         <loc>https://localhost:8000/PREREQUISITE/prerequisite/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/PREREQUISITE/prerequisite/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/PREREQUISITE/prerequisite/"/>
     </url>
     <url>
         <loc>https://localhost:8000/TOOLBOX/toolbox/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/TOOLBOX/toolbox/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/TOOLBOX/toolbox/"/>
     </url>
     <url>
         <loc>https://localhost:8000/TOOLBOX/TIME/code/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/TOOLBOX/TIME/code/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/TOOLBOX/TIME/code/"/>
     </url>
     <url>
         <loc>https://localhost:8000/TOOLBOX/TIME/log/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/TOOLBOX/TIME/log/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/TOOLBOX/TIME/log/"/>
     </url>
     <url>
         <loc>https://localhost:8000/TOOLBOX/TIME/notes/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/TOOLBOX/TIME/notes/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/TOOLBOX/TIME/notes/"/>
     </url>
     <url>
         <loc>https://localhost:8000/blog/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/blog/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/blog/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/AI/ai/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/ai/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/ai/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/ARCHITECTURE/architecture/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/ARCHITECTURE/architecture/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/ARCHITECTURE/architecture/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/DSP/dsp/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/DSP/dsp/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/DSP/dsp/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/math/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/math/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/math/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/ESP-DSP/esp-dsp/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/ESP-DSP/esp-dsp/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/ESP-DSP/esp-dsp/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/ESP-DSP/examples/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/ESP-DSP/examples/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/ESP-DSP/examples/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/HEADER-FILE/tiny_constants/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/HEADER-FILE/tiny_constants/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/HEADER-FILE/tiny_constants/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/HEADER-FILE/tiny_error_type/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/HEADER-FILE/tiny_error_type/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/HEADER-FILE/tiny_error_type/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/HEADER-FILE/tiny_math/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/HEADER-FILE/tiny_math/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/HEADER-FILE/tiny_math/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/HEADER-FILE/tiny_math_config/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/HEADER-FILE/tiny_math_config/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/HEADER-FILE/tiny_math_config/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/MATRIX/tiny-mat-api/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-mat-api/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-mat-api/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/MATRIX/tiny-mat-code/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-mat-code/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-mat-code/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/MATRIX/tiny-mat-test/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-mat-test/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-mat-test/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-api/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-api/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-matrix-api/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-code/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-code/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-matrix-code/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-test/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/MATRIX/tiny-matrix-test/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/MATRIX/tiny-matrix-test/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/USAGE/usage/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/USAGE/usage/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/USAGE/usage/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/VECTOR/api/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/VECTOR/api/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/VECTOR/api/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/VECTOR/code/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/VECTOR/code/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/VECTOR/code/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/MATH/VECTOR/test/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/MATH/VECTOR/test/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/MATH/VECTOR/test/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/PREREQUISITE/prerequisite/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/PREREQUISITE/prerequisite/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/PREREQUISITE/prerequisite/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/TOOLBOX/toolbox/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/TOOLBOX/toolbox/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/TOOLBOX/toolbox/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/TOOLBOX/TIME/code/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/TOOLBOX/TIME/code/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/TOOLBOX/TIME/code/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/TOOLBOX/TIME/log/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/TOOLBOX/TIME/log/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/TOOLBOX/TIME/log/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/TOOLBOX/TIME/notes/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/TOOLBOX/TIME/notes/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/TOOLBOX/TIME/notes/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/blog/</loc>
-        <lastmod>2025-11-05</lastmod>
+        <lastmod>2025-11-11</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/blog/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/blog/"/>
