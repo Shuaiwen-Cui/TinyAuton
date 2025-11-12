@@ -1985,6 +1985,18 @@ void tiny_mat_test(void)
 
 ```
 
+### main.cpp
+
+```c
+
+#include "tiny_mat_test.hpp"
+
+extern "C" void app_main(void)
+{
+    tiny_mat_test();
+}
+
+
 ## TEST RESULTS
 
 ```bash

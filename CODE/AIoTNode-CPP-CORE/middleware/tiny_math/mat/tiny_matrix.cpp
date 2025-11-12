@@ -16,10 +16,8 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <string.h>
-#include <math.h>
 #include <cmath>
-#include <inttypes.h>
+#include <cinttypes>
 #include <iomanip>
 
 /* LIBRARIE CONTENTS */
@@ -134,6 +132,12 @@ namespace tiny
      */
     void Mat::print_matrix(bool show_padding)
     {
+        if (this->data == nullptr)
+        {
+            std::cout << "[Error] Cannot print matrix: data pointer is null.\n";
+            return;
+        }
+        
         std::cout << "Matrix Elements >>>\n";
         for (int i = 0; i < this->row; ++i)
         {
@@ -205,6 +209,9 @@ namespace tiny
         if (this->data == nullptr)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
+            // Memory allocation failed, object is in invalid state (data = nullptr)
+            // Caller should check data pointer before using the matrix
+            return;
         }
         std::memset(this->data, 0, this->memory * sizeof(float));
     }
@@ -232,6 +239,9 @@ namespace tiny
         if (this->data == nullptr)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
+            // Memory allocation failed, object is in invalid state (data = nullptr)
+            // Caller should check data pointer before using the matrix
+            return;
         }
         std::memset(this->data, 0, this->memory * sizeof(float));
     }
@@ -259,6 +269,9 @@ namespace tiny
         if (this->data == nullptr)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
+            // Memory allocation failed, object is in invalid state (data = nullptr)
+            // Caller should check data pointer before using the matrix
+            return;
         }
         std::memset(this->data, 0, this->memory * sizeof(float));
     }
@@ -345,6 +358,9 @@ namespace tiny
                 if (this->data == nullptr)
                 {
                     std::cerr << "[Error] Memory allocation failed in alloc_mem()\n";
+                    // Memory allocation failed, object is in invalid state (data = nullptr)
+                    // Caller should check data pointer before using the matrix
+                    return;
                 }
                 std::memcpy(this->data, src.data, this->memory * sizeof(float));
             }
@@ -395,7 +411,7 @@ namespace tiny
         }
         for (size_t r = 0; r < src.row; r++)
         {
-            memcpy(&this->data[(r + row_pos) * this->stride + col_pos], &src.data[r * src.col], src.col * sizeof(float));
+            memcpy(&this->data[(r + row_pos) * this->stride + col_pos], &src.data[r * src.stride], src.col * sizeof(float));
         }
 
         return TINY_OK;
@@ -506,7 +522,7 @@ namespace tiny
         // deep copy the data from the source matrix
         for (size_t r = 0; r < result.row; r++)
         {
-            memcpy(&result.data[r * result.col], &this->data[(r + start_row) * this->stride + start_col], result.col * sizeof(float));
+            memcpy(&result.data[r * result.stride], &this->data[(r + start_row) * this->stride + start_col], result.col * sizeof(float));
         }
 
         // return result;
@@ -538,6 +554,18 @@ namespace tiny
      */
     Mat Mat::block(int start_row, int start_col, int block_rows, int block_cols)
     {
+        // Boundary check
+        if (start_row < 0 || start_col < 0 || block_rows <= 0 || block_cols <= 0)
+        {
+            std::cerr << "[Error] Invalid block parameters: negative start position or non-positive block size.\n";
+            return Mat();
+        }
+        if ((start_row + block_rows) > this->row || (start_col + block_cols) > this->col)
+        {
+            std::cerr << "[Error] Block exceeds matrix boundaries.\n";
+            return Mat();
+        }
+        
         Mat result(block_rows, block_cols);
         for (int i = 0; i < block_rows; ++i)
         {
@@ -558,18 +586,17 @@ namespace tiny
      */
     void Mat::swap_rows(int row1, int row2)
     {
-        if ((this->row <= row1) || (this->row <= row2))
+        if (row1 < 0 || row1 >= this->row || row2 < 0 || row2 >= this->row)
         {
             std::cerr << "Error: row index out of range" << std::endl;
+            return;
         }
-        else
-        {
-            float *temp_row = new float[this->col];
-            memcpy(temp_row, &this->data[row1 * this->stride], this->col * sizeof(float));
-            memcpy(&this->data[row1 * this->stride], &this->data[row2 * this->stride], this->col * sizeof(float));
-            memcpy(&this->data[row2 * this->stride], temp_row, this->col * sizeof(float));
-            delete[] temp_row;
-        }
+        
+        float *temp_row = new float[this->col];
+        memcpy(temp_row, &this->data[row1 * this->stride], this->col * sizeof(float));
+        memcpy(&this->data[row1 * this->stride], &this->data[row2 * this->stride], this->col * sizeof(float));
+        memcpy(&this->data[row2 * this->stride], temp_row, this->col * sizeof(float));
+        delete[] temp_row;
     }
 
     /**
@@ -943,11 +970,12 @@ namespace tiny
 
         // 2. Zero division check
         bool zero_found = false;
+        const float epsilon = 1e-9f;
         for (int i = 0; i < B.row; ++i)
         {
             for (int j = 0; j < B.col; ++j)
             {
-                if (B(i, j) == 0.0f)
+                if (fabs(B(i, j)) < epsilon)
                 {
                     zero_found = true;
                     break;
@@ -1153,11 +1181,12 @@ namespace tiny
 
         // Base case: 1x1 matrix
         if (n == 1)
-            return this->data[0];
+            return this->data[0 * this->stride + 0];
 
         // Base case: 2x2 matrix (optimized)
         if (n == 2)
-            return this->data[0] * this->data[3] - this->data[1] * this->data[2];
+            return this->data[0 * this->stride + 0] * this->data[1 * this->stride + 1] - 
+                   this->data[0 * this->stride + 1] * this->data[1 * this->stride + 0];
 
         float D = 0.0f;
         int sign = 1;
@@ -1716,9 +1745,9 @@ namespace tiny
                 if (A(j, i) != 0)
                 {
                     float factor = A(j, i) * a_ii;
-                    for (int k = i; k < A.col; ++k)
+                    for (int col_idx = i; col_idx < A.col; ++col_idx)
                     {
-                        A(j, k) -= A(i, k) * factor; // Eliminate the element
+                        A(j, col_idx) -= A(i, col_idx) * factor; // Eliminate the element
                     }
                     b(j, 0) -= b(i, 0) * factor; // Update the result vector
                     A(j, i) = 0;                 // Set the element to zero as it has been eliminated
@@ -1757,7 +1786,14 @@ namespace tiny
      */
     Mat Mat::roots(Mat A, Mat y)
     {
-        int n = A.col; // Number of rows and columns in A (assuming A is square)
+        // Check if A is square
+        if (A.row != A.col)
+        {
+            std::cerr << "[Error] Matrix A must be square for solving.\n";
+            return Mat();
+        }
+        
+        int n = A.row; // Number of rows and columns in A (A is square)
 
         // Create augmented matrix [A | y]
         Mat augmentedMatrix = Mat::augment(A, y);
@@ -1819,6 +1855,12 @@ namespace tiny
      */
     std::ostream &operator<<(std::ostream &os, const Mat &m)
     {
+        if (m.data == nullptr)
+        {
+            os << "[Error] Cannot print matrix: data pointer is null.\n";
+            return os;
+        }
+        
         for (int i = 0; i < m.row; ++i)
         {
             os << m(i, 0);
@@ -1899,7 +1941,7 @@ namespace tiny
 
         if (m1.sub_matrix || m2.sub_matrix)
         {
-            Mat temp(m1.row, m2.col);
+            Mat temp(m1.row, m1.col);
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
             dspm_add_f32(m1.data, m2.data, temp.data, m1.row, m1.col, m1.pad, m2.pad, temp.pad, 1, 1, 1);
 #else
@@ -2106,13 +2148,22 @@ namespace tiny
      */
     Mat operator/(const Mat &m, float num)
     {
+        // Check division by zero
+        if (num == 0.0f)
+        {
+            std::cerr << "[Error] Division by zero in operator/.\n";
+            Mat err_ret;
+            return err_ret;
+        }
+        
         if (m.sub_matrix)
         {
             Mat temp(m.row, m.col);
+            float inv_num = 1.0f / num;
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-            dspm_mulc_f32(m.data, temp.data, 1 / num, m.row, m.col, m.pad, temp.pad, 1, 1);
+            dspm_mulc_f32(m.data, temp.data, inv_num, m.row, m.col, m.pad, temp.pad, 1, 1);
 #else
-            tiny_mat_multc_f32(m.data, temp.data, 1 / num, m.row, m.col, m.pad, temp.pad, 1, 1);
+            tiny_mat_multc_f32(m.data, temp.data, inv_num, m.row, m.col, m.pad, temp.pad, 1, 1);
 #endif
             return temp;
         }
@@ -2171,13 +2222,15 @@ namespace tiny
             return false;
         }
 
+        const float epsilon = 1e-5f;
         for (int row = 0; row < m1.row; row++)
         {
             for (int col = 0; col < m1.col; col++)
             {
-                if (m1(row, col) != m2(row, col))
+                float diff = fabs(m1(row, col) - m2(row, col));
+                if (diff > epsilon)
                 {
-                    std::cout << "operator == Error: " << row << " " << col << ", m1.data=" << m1(row, col) << ", m2.data=" << m2(row, col) << std::endl;
+                    std::cout << "operator == Error: " << row << " " << col << ", m1.data=" << m1(row, col) << ", m2.data=" << m2(row, col) << ", diff=" << diff << std::endl;
                     return false;
                 }
             }

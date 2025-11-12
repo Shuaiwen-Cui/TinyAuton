@@ -10,9 +10,116 @@
 
 /* DEPENDENCIES */
 #include "tiny_matrix_test.hpp" // TinyMatrix Test Header
+#include "tiny_time.h"           // For performance testing
 
 #include <iostream>
 #include <iomanip>
+#include <cmath>
+
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+#include "esp_task_wdt.h"       // For FreeRTOS task watchdog
+#endif
+
+/* PERFORMANCE TESTING MACROS */
+// Reduced matrix sizes and iterations to prevent watchdog timeout and memory issues
+#define PERFORMANCE_TEST_ITERATIONS 100        // Reduced from 1000 to prevent timeout
+#define PERFORMANCE_TEST_ITERATIONS_HEAVY 10   // Reduced from 100 for compute-intensive operations
+#define PERFORMANCE_TEST_WARMUP 3              // Reduced from 10
+
+// Macro for timing a single operation
+#define TIME_OPERATION(operation, description) \
+    do { \
+        TinyTimeMark_t t0 = tiny_get_running_time(); \
+        operation; \
+        TinyTimeMark_t t1 = tiny_get_running_time(); \
+        double dt_us = (double)(t1 - t0); \
+        std::cout << "[Performance] " << description << ": " << std::fixed << std::setprecision(2) << dt_us << " us\n"; \
+    } while(0)
+
+// Helper function to feed watchdog (inline to avoid function call overhead in tight loops)
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+// Static flag to track if task has been added to watchdog
+static bool task_wdt_added = false;
+
+inline void ensure_task_wdt_added()
+{
+    if (!task_wdt_added)
+    {
+        esp_task_wdt_add(NULL);  // Add current task to watchdog (NULL = current task)
+        task_wdt_added = true;
+    }
+}
+
+inline void feed_watchdog()
+{
+    ensure_task_wdt_added();
+    esp_task_wdt_reset();
+}
+
+inline void feed_watchdog_if_needed(int iteration, int interval)
+{
+    if ((iteration + 1) % interval == 0)
+    {
+        feed_watchdog();
+    }
+}
+#else
+inline void feed_watchdog()
+{
+    // No-op for non-ESP32 platforms
+}
+
+inline void feed_watchdog_if_needed(int iteration, int interval)
+{
+    // No-op for non-ESP32 platforms
+    (void)iteration;
+    (void)interval;
+}
+#endif
+
+// Macro for timing repeated operations
+#define TIME_REPEATED_OPERATION(operation, iterations, description) \
+    do { \
+        /* Feed watchdog before starting */ \
+        feed_watchdog(); \
+        /* Warmup */ \
+        for (int w = 0; w < PERFORMANCE_TEST_WARMUP; ++w) { \
+            feed_watchdog();  /* Feed watchdog before each operation */ \
+            operation; \
+            feed_watchdog();  /* Feed watchdog after each operation */ \
+        } \
+        /* Actual test */ \
+        TinyTimeMark_t perf_t0 = tiny_get_running_time(); \
+        for (int i = 0; i < iterations; ++i) { \
+            /* Feed watchdog every 10 iterations (increased interval to reduce overhead) */ \
+            if (i % 10 == 0) feed_watchdog(); \
+            operation; \
+        } \
+        feed_watchdog();  /* Final feed after loop */ \
+        TinyTimeMark_t perf_t1 = tiny_get_running_time(); \
+        double perf_dt_total_us = (double)(perf_t1 - perf_t0); \
+        double perf_dt_avg_us = perf_dt_total_us / iterations; \
+        std::cout << "[Performance] " << description << " (" << iterations << " iterations): " \
+                  << std::fixed << std::setprecision(2) << perf_dt_total_us << " us total, " \
+                  << perf_dt_avg_us << " us avg\n"; \
+    } while(0)
+
+// Helper function to check if two matrices are approximately equal
+bool matrices_approximately_equal(const tiny::Mat &m1, const tiny::Mat &m2, float epsilon = 1e-5f)
+{
+    if (m1.row != m2.row || m1.col != m2.col)
+        return false;
+    
+    for (int i = 0; i < m1.row; ++i)
+    {
+        for (int j = 0; j < m1.col; ++j)
+        {
+            if (std::fabs(m1(i, j) - m2(i, j)) > epsilon)
+                return false;
+        }
+    }
+    return true;
+}
 
 // Group 1: constructor & destructor
 void test_constructor_destructor()
@@ -1694,49 +1801,324 @@ void test_matrix_operations()
     std::cout << "matE == matF after modification: " << (isEqual ? "True" : "False") << std::endl;  // Expected: False
 }
 
+// Group 8: Boundary Conditions and Error Handling
+void test_boundary_conditions()
+{
+    std::cout << "\n--- Test: Boundary Conditions and Error Handling ---\n";
+
+    // Test 1: Null pointer handling in print functions
+    std::cout << "\n[Test 1] Null Pointer Handling in print_matrix\n";
+    tiny::Mat null_mat;
+    null_mat.data = nullptr;  // Simulate null pointer
+    null_mat.print_matrix(true);  // Should handle gracefully
+
+    // Test 2: Null pointer handling in operator<<
+    std::cout << "\n[Test 2] Null Pointer Handling in operator<<\n";
+    tiny::Mat null_mat2;
+    null_mat2.data = nullptr;
+    std::cout << null_mat2 << std::endl;  // Should handle gracefully
+
+    // Test 3: Invalid block parameters
+    std::cout << "\n[Test 3] Invalid Block Parameters\n";
+    tiny::Mat mat(3, 3);
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            mat(i, j) = i * 3 + j + 1;
+    
+    // Negative start position
+    tiny::Mat block1 = mat.block(-1, 0, 2, 2);
+    std::cout << "block(-1, 0, 2, 2): " << (block1.data == nullptr ? "Empty (correct)" : "Error") << "\n";
+    
+    // Block exceeds boundaries
+    tiny::Mat block2 = mat.block(2, 2, 2, 2);
+    std::cout << "block(2, 2, 2, 2) on 3x3 matrix: " << (block2.data == nullptr ? "Empty (correct)" : "Error") << "\n";
+    
+    // Zero or negative block size
+    tiny::Mat block3 = mat.block(0, 0, 0, 2);
+    std::cout << "block(0, 0, 0, 2): " << (block3.data == nullptr ? "Empty (correct)" : "Error") << "\n";
+
+    // Test 4: Invalid swap_rows parameters
+    std::cout << "\n[Test 4] Invalid swap_rows Parameters\n";
+    tiny::Mat mat2(3, 3);
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            mat2(i, j) = i * 3 + j + 1;
+    
+    std::cout << "Before invalid swap:\n";
+    mat2.print_matrix(true);
+    
+    // Negative index
+    mat2.swap_rows(-1, 1);
+    std::cout << "After swap_rows(-1, 1):\n";
+    mat2.print_matrix(true);
+    
+    // Index out of range
+    mat2.swap_rows(0, 5);
+    std::cout << "After swap_rows(0, 5):\n";
+    mat2.print_matrix(true);
+
+    // Test 5: Division by zero
+    std::cout << "\n[Test 5] Division by Zero\n";
+    tiny::Mat mat3(2, 2);
+    mat3(0, 0) = 1; mat3(0, 1) = 2;
+    mat3(1, 0) = 3; mat3(1, 1) = 4;
+    
+    tiny::Mat result = mat3 / 0.0f;
+    std::cout << "mat3 / 0.0f: " << (result.data == nullptr ? "Empty (correct)" : "Error") << "\n";
+
+    // Test 6: Matrix division with zero elements
+    std::cout << "\n[Test 6] Matrix Division with Zero Elements\n";
+    tiny::Mat mat4(2, 2);
+    mat4(0, 0) = 1; mat4(0, 1) = 2;
+    mat4(1, 0) = 3; mat4(1, 1) = 4;
+    
+    tiny::Mat divisor(2, 2);
+    divisor(0, 0) = 1; divisor(0, 1) = 0;  // Contains zero
+    divisor(1, 0) = 3; divisor(1, 1) = 4;
+    
+    mat4 /= divisor;
+    std::cout << "mat4 /= divisor (with zero):\n";
+    mat4.print_matrix(true);
+
+    // Test 7: Empty matrix operations
+    std::cout << "\n[Test 7] Empty Matrix Operations\n";
+    tiny::Mat empty1, empty2;
+    tiny::Mat empty_sum = empty1 + empty2;
+    std::cout << "Empty matrix addition: " << (empty_sum.data == nullptr ? "Empty (correct)" : "Error") << "\n";
+}
+
+// Group 9: Performance Benchmarks
+void test_performance_benchmarks()
+{
+    std::cout << "\n--- Test: Performance Benchmarks ---\n";
+    
+    // Ensure current task is added to watchdog before starting performance tests
+    #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+    ensure_task_wdt_added();
+    #endif
+
+    // Test 1: Matrix Addition Performance (reduced size to prevent timeout)
+    std::cout << "\n[Performance Test 1] Matrix Addition\n";
+    tiny::Mat A(50, 50);  // Reduced from 100x100 to 50x50
+    tiny::Mat B(50, 50);
+    for (int i = 0; i < 50; ++i)
+    {
+        for (int j = 0; j < 50; ++j)
+        {
+            A(i, j) = static_cast<float>(i * 50 + j);
+            B(i, j) = static_cast<float>(i * 50 + j + 1);
+        }
+    }
+    TIME_REPEATED_OPERATION(tiny::Mat C = A + B;, PERFORMANCE_TEST_ITERATIONS, "50x50 Matrix Addition");
+
+    // Test 2: Matrix Multiplication Performance (reduced size)
+    std::cout << "\n[Performance Test 2] Matrix Multiplication\n";
+    tiny::Mat D(30, 30);  // Reduced from 50x50 to 30x30
+    tiny::Mat E(30, 30);
+    for (int i = 0; i < 30; ++i)
+    {
+        for (int j = 0; j < 30; ++j)
+        {
+            D(i, j) = static_cast<float>(i * 30 + j);
+            E(i, j) = static_cast<float>(i * 30 + j + 1);
+        }
+    }
+    TIME_REPEATED_OPERATION(tiny::Mat F = D * E;, PERFORMANCE_TEST_ITERATIONS, "30x30 Matrix Multiplication");
+
+    // Test 3: Matrix Transpose Performance (reduced size)
+    std::cout << "\n[Performance Test 3] Matrix Transpose\n";
+    tiny::Mat G(50, 30);  // Reduced from 100x50 to 50x30
+    for (int i = 0; i < 50; ++i)
+        for (int j = 0; j < 30; ++j)
+            G(i, j) = static_cast<float>(i * 30 + j);
+    TIME_REPEATED_OPERATION(tiny::Mat H = G.transpose();, PERFORMANCE_TEST_ITERATIONS, "50x30 Matrix Transpose");
+
+    // Test 4: Determinant Performance (reduced size significantly due to recursive nature)
+    // Note: Determinant calculation uses recursive Laplace expansion which is O(n!) complexity
+    // For performance testing, we use smaller matrices (5x5) to avoid timeout
+    std::cout << "\n[Performance Test 4] Determinant Calculation\n";
+    tiny::Mat I(5, 5);  // Reduced to 5x5 to prevent timeout (8x8 was too slow)
+    for (int i = 0; i < 5; ++i)
+        for (int j = 0; j < 5; ++j)
+            I(i, j) = static_cast<float>(i * 5 + j + 1);
+    
+    // Skip warmup for determinant (too slow), test directly
+    std::cout << "[Performance] Computing determinant (no warmup due to recursive nature)...\n";
+    feed_watchdog();  // Feed watchdog before starting
+    
+    TinyTimeMark_t det_t0 = tiny_get_running_time();
+    for (int i = 0; i < PERFORMANCE_TEST_ITERATIONS_HEAVY; ++i)
+    {
+        feed_watchdog();  // Feed watchdog before each operation
+        float det = I.determinant();
+        (void)det;  // Suppress unused variable warning
+        feed_watchdog();  // Feed watchdog after each operation
+    }
+    TinyTimeMark_t det_t1 = tiny_get_running_time();
+    double det_dt_total_us = (double)(det_t1 - det_t0);
+    double det_dt_avg_us = det_dt_total_us / PERFORMANCE_TEST_ITERATIONS_HEAVY;
+    std::cout << "[Performance] 5x5 Determinant (" << PERFORMANCE_TEST_ITERATIONS_HEAVY << " iterations): "
+              << std::fixed << std::setprecision(2) << det_dt_total_us << " us total, "
+              << det_dt_avg_us << " us avg\n";
+    std::cout << "[Note] Determinant uses recursive Laplace expansion (O(n!)), suitable only for small matrices.\n";
+
+    // Test 5: Matrix Copy Performance (with padding, reduced size)
+    std::cout << "\n[Performance Test 5] Matrix Copy with Padding\n";
+    float data[80] = {0};  // Reduced from 150 to 80
+    for (int i = 0; i < 80; ++i) data[i] = static_cast<float>(i);
+    tiny::Mat J(data, 8, 8, 10);  // Reduced from 10x10 stride 15 to 8x8 stride 10
+    TIME_REPEATED_OPERATION(tiny::Mat K = J.copy_roi(0, 0, 8, 8);, PERFORMANCE_TEST_ITERATIONS, "8x8 Copy ROI (with padding)");
+
+    // Test 6: Element Access Performance (reduced size)
+    std::cout << "\n[Performance Test 6] Element Access\n";
+    tiny::Mat L(50, 50);  // Reduced from 100x100 to 50x50
+    for (int i = 0; i < 50; ++i)
+        for (int j = 0; j < 50; ++j)
+            L(i, j) = static_cast<float>(i * 50 + j);
+    
+    // Test 6: Element Access Performance (custom implementation for multi-line operation)
+    float sum = 0.0f;
+    std::cout << "[Performance] Computing element access (warmup)...\n";
+    feed_watchdog();  // Feed watchdog before starting
+    for (int w = 0; w < PERFORMANCE_TEST_WARMUP; ++w)
+    {
+        feed_watchdog();  // Feed watchdog before each warmup
+        sum = 0.0f;
+        for (int i = 0; i < 50; ++i)
+            for (int j = 0; j < 50; ++j)
+                sum += L(i, j);
+        feed_watchdog();  // Feed watchdog after each warmup
+    }
+    
+    TinyTimeMark_t elem_t0 = tiny_get_running_time();
+    for (int i = 0; i < PERFORMANCE_TEST_ITERATIONS; ++i)
+    {
+        if (i % 20 == 0) feed_watchdog();  // Feed watchdog every 20 iterations (element access is fast)
+        sum = 0.0f;
+        for (int row = 0; row < 50; ++row)
+            for (int col = 0; col < 50; ++col)
+                sum += L(row, col);
+    }
+    feed_watchdog();  // Final feed after loop
+    TinyTimeMark_t elem_t1 = tiny_get_running_time();
+    double elem_dt_total_us = (double)(elem_t1 - elem_t0);
+    double dt_avg_us = elem_dt_total_us / PERFORMANCE_TEST_ITERATIONS;
+    std::cout << "[Performance] 50x50 Element Access (all elements) (" << PERFORMANCE_TEST_ITERATIONS << " iterations): "
+              << std::fixed << std::setprecision(2) << elem_dt_total_us << " us total, "
+              << dt_avg_us << " us avg\n";
+}
+
+// Group 10: Memory Layout Tests (Padding and Stride)
+void test_memory_layout()
+{
+    std::cout << "\n--- Test: Memory Layout (Padding and Stride) ---\n";
+
+    // Test 1: Contiguous memory (pad=0, step=1)
+    std::cout << "\n[Test 1] Contiguous Memory (no padding)\n";
+    tiny::Mat mat1(3, 4);
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 4; ++j)
+            mat1(i, j) = static_cast<float>(i * 4 + j);
+    std::cout << "Matrix 3x4 (stride=4, pad=0):\n";
+    mat1.print_info();
+    mat1.print_matrix(true);
+
+    // Test 2: Padded memory (stride > col)
+    std::cout << "\n[Test 2] Padded Memory (stride > col)\n";
+    float data[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
+    tiny::Mat mat2(data, 3, 4, 5);
+    std::cout << "Matrix 3x4 (stride=5, pad=1):\n";
+    mat2.print_info();
+    mat2.print_matrix(true);
+
+    // Test 3: Operations with padded matrices
+    std::cout << "\n[Test 3] Addition with Padded Matrices\n";
+    float data1[15] = {1, 2, 3, 4, 0, 5, 6, 7, 8, 0, 9, 10, 11, 12, 0};
+    float data2[15] = {10, 20, 30, 40, 0, 50, 60, 70, 80, 0, 90, 100, 110, 120, 0};
+    tiny::Mat mat3(data1, 3, 4, 5);
+    tiny::Mat mat4(data2, 3, 4, 5);
+    tiny::Mat mat5 = mat3 + mat4;
+    std::cout << "Result of padded matrix addition:\n";
+    mat5.print_info();
+    mat5.print_matrix(true);
+
+    // Test 4: ROI operations with padded matrices
+    std::cout << "\n[Test 4] ROI Operations with Padded Matrices\n";
+    tiny::Mat roi = mat2.view_roi(1, 1, 2, 2);
+    std::cout << "ROI (1,1,2,2) from padded matrix:\n";
+    roi.print_info();
+    roi.print_matrix(true);
+
+    // Test 5: Copy operations preserve stride
+    std::cout << "\n[Test 5] Copy Operations Preserve Stride\n";
+    tiny::Mat copied = mat2.copy_roi(0, 0, 3, 4);
+    std::cout << "Copied matrix (should have stride=4, no padding):\n";
+    copied.print_info();
+    copied.print_matrix(true);
+}
+
 void tiny_matrix_test()
 {
     std::cout << "============ [tiny_matrix_test start] ============\n";
 
     // Group 1: constructor & destructor
-    // test_constructor_destructor();
+    test_constructor_destructor();
 
     // Group 2: element access
-    // test_element_access();
+    test_element_access();
 
     // Group 3: ROI operations
-    // test_roi_operations();
+    test_roi_operations();
 
     // Group 4: arithmetic operators
-    // test_assignment_operator();
-    // test_matrix_addition();
-    // test_constant_addition();
-    // test_matrix_subtraction();
-    // test_constant_subtraction();
-    // test_matrix_division();
-    // test_constant_division();
-    // test_matrix_exponentiation();
+    test_assignment_operator();
+    test_matrix_addition();
+    test_constant_addition();
+    test_matrix_subtraction();
+    test_constant_subtraction();
+    test_matrix_division();
+    test_constant_division();
+    test_matrix_exponentiation();
 
     // Group 5: Linear algebra tests
-    // test_matrix_transpose();
-    // test_matrix_cofactor();
-    // test_matrix_determinant();
-    // test_matrix_adjoint();
-    // test_matrix_normalize();
-    // test_matrix_norm();
-    // test_inverse_adjoint();
-    // test_matrix_utilities();
-    // test_gaussian_eliminate();
-    // test_row_reduce_from_gaussian();
-    // test_inverse_gje();
-    // test_dotprod();
-    // test_solve();
-    // test_band_solve();
-    // test_roots();
+    test_matrix_transpose();
+    test_matrix_cofactor();
+    test_matrix_determinant();
+    test_matrix_adjoint();
+    test_matrix_normalize();
+    test_matrix_norm();
+    test_inverse_adjoint_adjoint();
+    test_matrix_utilities();
+    test_gaussian_eliminate();
+    test_row_reduce_from_gaussian();
+    test_inverse_gje();
+    test_dotprod();
+    test_solve();
+    test_band_solve();
+    test_roots();
 
     // Group 6: Stream operators
-    // test_stream_operators();
+    test_stream_operators();
     test_matrix_operations();
 
+    // Group 8: Boundary conditions and error handling
+    test_boundary_conditions();
+
+    // Group 9: Performance benchmarks
+    test_performance_benchmarks();
+
+    // Group 10: Memory layout tests
+    test_memory_layout();
+
     std::cout << "============ [tiny_matrix_test end] ============\n";
+    
+    // Remove current task from watchdog after all tests complete
+    // This prevents watchdog timeout after app_main() returns
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+    if (task_wdt_added)
+    {
+        esp_task_wdt_delete(NULL);  // Remove current task from watchdog
+        task_wdt_added = false;
+    }
+#endif
 }

@@ -1,6 +1,6 @@
-#include "tiny_mat_test.h"
+#include "tiny_matrix_test.hpp"
 
 extern "C" void app_main(void)
 {
-    tiny_mat_test();
+    tiny_matrix_test();
 }
