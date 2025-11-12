@@ -1,6 +1,6 @@
-#include "tiny_vec_test.h"
+#include "tiny_mat_test.h"
 
 extern "C" void app_main(void)
 {
-    tiny_vec_test();
+    tiny_mat_test();
 }

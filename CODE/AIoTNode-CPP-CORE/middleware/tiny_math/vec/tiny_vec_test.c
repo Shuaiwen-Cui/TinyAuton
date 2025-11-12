@@ -10,20 +10,31 @@
 #include "tiny_vec_test.h"
 
 #define LEN 6
+#define ITERATIONS 10000 // Number of iterations for performance benchmarking
 
-#define RUN_VEC_TEST(FUNC, ...)                              \
-    do                                                       \
-    {                                                        \
-        TinyTimeMark_t t0 = tiny_get_running_time();         \
-        tiny_error_t err = FUNC(__VA_ARGS__);                \
-        TinyTimeMark_t t1 = tiny_get_running_time();         \
-        double dt = (double)(t1 - t0);                       \
-        printf("%-24s | Output: ", #FUNC);                   \
-        for (int i = 0; i < LEN; i++)                        \
-        {                                                    \
-            printf("%10.6f ", out[i]);                       \
-        }                                                    \
-        printf("| Time: %6.2f us | Error: %d\n\r", dt, err); \
+#define RUN_VEC_TEST(FUNC, ...)                                                \
+    do                                                                         \
+    {                                                                          \
+        tiny_error_t err = TINY_OK;                                            \
+        int actual_iter = 0;                                                   \
+        TinyTimeMark_t t0 = tiny_get_running_time();                           \
+        for (int iter = 0; iter < ITERATIONS; iter++)                          \
+        {                                                                      \
+            err = FUNC(__VA_ARGS__);                                           \
+            actual_iter++;                                                     \
+            if (err != TINY_OK)                                                \
+                break;                                                         \
+        }                                                                      \
+        TinyTimeMark_t t1 = tiny_get_running_time();                           \
+        double dt_total = (double)(t1 - t0);                                   \
+        double dt_avg = (actual_iter > 0) ? dt_total / actual_iter : 0.0;     \
+        printf("%-24s | Output: ", #FUNC);                                     \
+        for (int i = 0; i < LEN; i++)                                          \
+        {                                                                      \
+            printf("%10.6f ", out[i]);                                         \
+        }                                                                      \
+        printf("| Total: %8.2f us | Avg: %6.2f us | Iter: %d | Error: %d\n\r", \
+               dt_total, dt_avg, actual_iter, err);                            \
     } while (0)
 
 void tiny_vec_test(void)
@@ -35,6 +46,7 @@ void tiny_vec_test(void)
     float dot_result = 0.0f;
 
     printf("============ [tiny_vec_test] ============\n\r");
+    printf("Benchmark Settings: %d iterations per test\n\r", ITERATIONS);
 
     printf("Input Vector a:        ");
     for (int i = 0; i < LEN; i++)
@@ -63,20 +75,40 @@ void tiny_vec_test(void)
 
     // Dot product (non-strided)
     {
+        tiny_error_t err = TINY_OK;
+        int actual_iter = 0;
         TinyTimeMark_t t0 = tiny_get_running_time();
-        tiny_error_t err = tiny_vec_dotprod_f32(a, b, &dot_result, LEN);
+        for (int iter = 0; iter < ITERATIONS; iter++)
+        {
+            err = tiny_vec_dotprod_f32(a, b, &dot_result, LEN);
+            actual_iter++;
+            if (err != TINY_OK)
+                break;
+        }
         TinyTimeMark_t t1 = tiny_get_running_time();
-        double dt = (double)(t1 - t0);
-        printf("%-24s | Output: %10.6f | Time: %6.2f us | Error: %d\n\r", "tiny_vec_dotprod_f32", dot_result, dt, err);
+        double dt_total = (double)(t1 - t0);
+        double dt_avg = (actual_iter > 0) ? dt_total / actual_iter : 0.0;
+        printf("%-24s | Output: %10.6f | Total: %8.2f us | Avg: %6.2f us | Iter: %d | Error: %d\n\r",
+               "tiny_vec_dotprod_f32", dot_result, dt_total, dt_avg, actual_iter, err);
     }
 
     // Dot product (strided)
     {
+        tiny_error_t err = TINY_OK;
+        int actual_iter = 0;
         TinyTimeMark_t t0 = tiny_get_running_time();
-        tiny_error_t err = tiny_vec_dotprode_f32(a, b, &dot_result, LEN, 1, 1);
+        for (int iter = 0; iter < ITERATIONS; iter++)
+        {
+            err = tiny_vec_dotprode_f32(a, b, &dot_result, LEN, 1, 1);
+            actual_iter++;
+            if (err != TINY_OK)
+                break;
+        }
         TinyTimeMark_t t1 = tiny_get_running_time();
-        double dt = (double)(t1 - t0);
-        printf("%-24s | Output: %10.6f | Time: %6.2f us | Error: %d\n\r", "tiny_vec_dotprode_f32", dot_result, dt, err);
+        double dt_total = (double)(t1 - t0);
+        double dt_avg = (actual_iter > 0) ? dt_total / actual_iter : 0.0;
+        printf("%-24s | Output: %10.6f | Total: %8.2f us | Avg: %6.2f us | Iter: %d | Error: %d\n\r",
+               "tiny_vec_dotprode_f32", dot_result, dt_total, dt_avg, actual_iter, err);
     }
 
     printf("============ [test complete] ============\n\r");

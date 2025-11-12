@@ -8,8 +8,7 @@
  *
  */
 
-#ifndef __TINY_MAT_TEST__
-#define __TINY_MAT_TEST__
+#pragma once
 
 /* DEPENDENCIES */
 #include "tiny_math_config.h"
@@ -25,5 +24,3 @@ void tiny_mat_test(void);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __TINY_MAT_TEST__ */

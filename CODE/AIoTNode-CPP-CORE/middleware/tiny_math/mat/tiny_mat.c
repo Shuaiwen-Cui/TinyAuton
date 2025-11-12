@@ -28,7 +28,7 @@ void print_matrix(const char *name, const float *mat, int rows, int cols)
     {
         for (int j = 0; j < cols; j++)
         {
-            printf("%10.6f ", mat[i + j]); // padding not considered
+            printf("%10.6f ", mat[i * cols + j]); // padding not considered, row-major order
         }
         printf("\n\r");
     }
@@ -87,33 +87,47 @@ tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *o
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
+    // paddings must be non-negative, steps must be at least 1.
     if (rows <= 0 || cols <= 0 || padd1 < 0 || padd2 < 0 || padd_out < 0 || step1 <= 0 || step2 <= 0 || step_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
 
     // pad refers to the columns that are not used in the matrix operation
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Use the ESP-DSP library for optimized matrix addition
-    dspm_add_f32(input1, input2, output, rows, cols, padd1, padd2, padd_out, step1, step2, step_out);
-#else
-    const int ptr_input1_step = cols + padd1;
-    const int ptr_input2_step = cols + padd2;
-    const int ptr_output_step = cols + padd_out;
-    float *ptr_input1 = (float *)input1;
-    float *ptr_input2 = (float *)input2;
 
-    for (int row = 0; row < rows; row++)
-    {
-        for (int col = 0; col < cols; col++)
-        {
-            output[col * step_out] = ptr_input1[col * step1] + ptr_input2[col * step2];
-        }
-        ptr_input1 += ptr_input1_step; // move to the next row of input1
-        ptr_input2 += ptr_input2_step; // move to the next row of input2
-        output += ptr_output_step;     // move to the next row of output
+    /* Use explicit index math instead of mutating the caller pointers.
+       This keeps input pointers const and avoids surprises from pointer
+       arithmetic. The storage model is row-major with per-row reserved
+       length = cols + padd. Logical column c is at base + c * step. */
+    const int in1_row_stride = cols + padd1;
+    const int in2_row_stride = cols + padd2;
+    const int out_row_stride = cols + padd_out;
+
+    // If we're on ESP32 and all paddings are 0 and all steps are 1 (contiguous),
+    // prefer to call the optimized ESP-DSP implementation.
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+    if (padd1 == 0 && padd2 == 0 && padd_out == 0 && step1 == 1 && step2 == 1 && step_out == 1) {
+        dspm_add_f32(input1, input2, output, rows, cols, 0, 0, 0, 1, 1, 1);
+        return TINY_OK;
     }
 #endif
+
+    for (int row = 0; row < rows; row++) {
+        int base_in1 = row * in1_row_stride;
+        int base_in2 = row * in2_row_stride;
+        int base_out = row * out_row_stride;
+
+        for (int col = 0; col < cols; col++) {
+            int idx_in1 = base_in1 + col * step1;
+            int idx_in2 = base_in2 + col * step2;
+            int idx_out = base_out + col * step_out;
+
+            /* bounds are the caller's responsibility, but avoid undefined
+               behavior by checking indices minimally in debug builds if
+               needed (not enforced here for performance). */
+            output[idx_out] = input1[idx_in1] + input2[idx_in2];
+        }
+    }
     return TINY_OK;
 }
 
@@ -141,29 +155,35 @@ tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int r
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
+    // paddings must be non-negative, steps must be at least 1.
     if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || step_in <= 0 || step_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
     // pad refers to the columns that are not used in the matrix operation
+    // If running on ESP32 and all paddings are 0 and all steps are 1 (contiguous),
+    // prefer the optimized ESP-DSP implementation.
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Use the ESP-DSP library for optimized matrix addition with a constant
-    dspm_addc_f32(input, output, C, rows, cols, padd_in, padd_out, step_in, step_out);
-#else
-    const int ptr_input_step = cols + padd_in;
-    const int ptr_output_step = cols + padd_out;
-    float *ptr_input = (float *)input;
-
-    for (int row = 0; row < rows; row++)
-    {
-        for (int col = 0; col < cols; col++)
-        {
-            output[col * step_out] = ptr_input[col * step_in] + C;
-        }
-        ptr_input += ptr_input_step; // move to the next row of input
-        output += ptr_output_step;   // move to the next row of output
+    if (padd_in == 0 && padd_out == 0 && step_in == 1 && step_out == 1) {
+        dspm_addc_f32(input, output, C, rows, cols, 0, 0, 1, 1);
+        return TINY_OK;
     }
 #endif
+
+    const int in_row_stride = cols + padd_in;
+    const int out_row_stride = cols + padd_out;
+
+    for (int row = 0; row < rows; row++) {
+        int base_in = row * in_row_stride;
+        int base_out = row * out_row_stride;
+
+        for (int col = 0; col < cols; col++) {
+            int idx_in = base_in + col * step_in;
+            int idx_out = base_out + col * step_out;
+
+            output[idx_out] = input[idx_in] + C;
+        }
+    }
     return TINY_OK;
 }
 
@@ -195,32 +215,37 @@ tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *o
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
+    // paddings must be non-negative, steps must be at least 1.
     if (rows <= 0 || cols <= 0 || padd1 < 0 || padd2 < 0 || padd_out < 0 || step1 <= 0 || step2 <= 0 || step_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
     // pad refers to the columns that are not used in the matrix operation
+    // Prefer ESP-DSP only when all paddings are 0 and all steps are 1 (contiguous)
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Use the ESP-DSP library for optimized matrix subtraction
-    dspm_sub_f32(input1, input2, output, rows, cols, padd1, padd2, padd_out, step1, step2, step_out);
-#else
-    const int ptr_input1_step = cols + padd1;
-    const int ptr_input2_step = cols + padd2;
-    const int ptr_output_step = cols + padd_out;
-    float *ptr_input1 = (float *)input1;
-    float *ptr_input2 = (float *)input2;
-
-    for (int row = 0; row < rows; row++)
-    {
-        for (int col = 0; col < cols; col++)
-        {
-            output[col * step_out] = ptr_input1[col * step1] - ptr_input2[col * step2];
-        }
-        ptr_input1 += ptr_input1_step; // move to the next row of input1
-        ptr_input2 += ptr_input2_step; // move to the next row of input2
-        output += ptr_output_step;     // move to the next row of output
+    if (padd1 == 0 && padd2 == 0 && padd_out == 0 && step1 == 1 && step2 == 1 && step_out == 1) {
+        dspm_sub_f32(input1, input2, output, rows, cols, 0, 0, 0, 1, 1, 1);
+        return TINY_OK;
     }
 #endif
+
+    const int in1_row_stride = cols + padd1;
+    const int in2_row_stride = cols + padd2;
+    const int out_row_stride = cols + padd_out;
+
+    for (int row = 0; row < rows; row++) {
+        int base_in1 = row * in1_row_stride;
+        int base_in2 = row * in2_row_stride;
+        int base_out = row * out_row_stride;
+
+        for (int col = 0; col < cols; col++) {
+            int idx_in1 = base_in1 + col * step1;
+            int idx_in2 = base_in2 + col * step2;
+            int idx_out = base_out + col * step_out;
+
+            output[idx_out] = input1[idx_in1] - input2[idx_in2];
+        }
+    }
     return TINY_OK;
 }
 
@@ -248,29 +273,35 @@ tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int r
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
+    // paddings must be non-negative, steps must be at least 1.
     if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || step_in <= 0 || step_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
     // pad refers to the columns that are not used in the matrix operation
+    // Prefer ESP-DSP only when all paddings are 0 and all steps are 1 (contiguous)
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Use the ESP-DSP library for optimized matrix subtraction with a constant
-    dspm_addc_f32(input, output, -C, rows, cols, padd_in, padd_out, step_in, step_out);
-#else
-    const int ptr_input_step = cols + padd_in;
-    const int ptr_output_step = cols + padd_out;
-    float *ptr_input = (float *)input;
-
-    for (int row = 0; row < rows; row++)
-    {
-        for (int col = 0; col < cols; col++)
-        {
-            output[col * step_out] = ptr_input[col * step_in] - C;
-        }
-        ptr_input += ptr_input_step; // move to the next row of input
-        output += ptr_output_step;   // move to the next row of output
+    if (padd_in == 0 && padd_out == 0 && step_in == 1 && step_out == 1) {
+        // dspm_addc_f32 performs addition; pass -C to implement subtraction-constant
+        dspm_addc_f32(input, output, -C, rows, cols, 0, 0, 1, 1);
+        return TINY_OK;
     }
 #endif
+
+    const int in_row_stride = cols + padd_in;
+    const int out_row_stride = cols + padd_out;
+
+    for (int row = 0; row < rows; row++) {
+        int base_in = row * in_row_stride;
+        int base_out = row * out_row_stride;
+
+        for (int col = 0; col < cols; col++) {
+            int idx_in = base_in + col * step_in;
+            int idx_out = base_out + col * step_out;
+
+            output[idx_out] = input[idx_in] - C;
+        }
+    }
     return TINY_OK;
 }
 
@@ -349,13 +380,17 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
+    // Prefer ESP-DSP only when paddings are zero (contiguous storage)
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Use the ESP-DSP library for optimized matrix multiplication
-    dspm_mult_ex_f32(A, B, C, A_rows, A_cols, B_cols, A_padding, B_padding, C_padding);
-#else
-    // Matrix A(m,n), m - amount or rows, n - amount of columns
+    if (A_padding == 0 && B_padding == 0 && C_padding == 0) {
+        dspm_mult_ex_f32(A, B, C, A_rows, A_cols, B_cols, 0, 0, 0);
+        return TINY_OK;
+    }
+#endif
+
+    // Matrix A(m,n), m - amount of rows, n - amount of columns
     // C(m,k) = A(m,n)*B(n,k)
-    // c(i * c_step,j) = sum(a(i * a_step,s)*b(s * b_step,j)) , s=1..n
+    // C[i][j] = sum_{s=0}^{n-1} A[i][s] * B[s][j]
     const int A_step = A_cols + A_padding;
     const int B_step = B_cols + B_padding;
     const int C_step = B_cols + C_padding;
@@ -364,14 +399,14 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
     {
         for (int j = 0; j < B_cols; j++)
         {
-            C[i * C_step + j] = A[i * A_step] * B[j];
-            for (int s = 1; s < A_cols; s++)
+            float sum = 0.0f;
+            for (int s = 0; s < A_cols; s++)
             {
-                C[i * C_step + j] += A[i * A_step + s] * B[s * B_step + j];
+                sum += A[i * A_step + s] * B[s * B_step + j];
             }
+            C[i * C_step + j] = sum;
         }
     }
-#endif
     return TINY_OK;
 }
 
@@ -398,28 +433,33 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
+    // paddings must be non-negative, steps must be at least 1.
     if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || step_in <= 0 || step_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
     // pad refers to the columns that are not used in the matrix operation
+    // Prefer ESP-DSP only when all paddings are 0 and all steps are 1 (contiguous)
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Use the ESP-DSP library for optimized matrix multiplication with a constant
-    dspm_mulc_f32(input, output, C, rows, cols, padd_in, padd_out, step_in, step_out);
-#else
-    const int ptr_input_step = cols + padd_in;
-    const int ptr_output_step = cols + padd_out;
-    float *ptr_input = (float *)input;
-
-    for (int row = 0; row < rows; row++)
-    {
-        for (int col = 0; col < cols; col++)
-        {
-            output[col * step_out] = ptr_input[col * step_in] * C;
-        }
-        ptr_input += ptr_input_step; // move to the next row of input
-        output += ptr_output_step;   // move to the next row of output
+    if (padd_in == 0 && padd_out == 0 && step_in == 1 && step_out == 1) {
+        dspm_mulc_f32(input, output, C, rows, cols, 0, 0, 1, 1);
+        return TINY_OK;
     }
 #endif
+
+    const int in_row_stride = cols + padd_in;
+    const int out_row_stride = cols + padd_out;
+
+    for (int row = 0; row < rows; row++) {
+        int base_in = row * in_row_stride;
+        int base_out = row * out_row_stride;
+
+        for (int col = 0; col < cols; col++) {
+            int idx_in = base_in + col * step_in;
+            int idx_out = base_out + col * step_out;
+
+            output[idx_out] = input[idx_in] * C;
+        }
+    }
     return TINY_OK;
 }

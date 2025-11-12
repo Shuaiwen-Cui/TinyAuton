@@ -8,8 +8,7 @@
  *
  */
 
-#ifndef __TINY_MAT__
-#define __TINY_MAT__
+#pragma once
 
 /* DEPENDENCIES */
 #include "tiny_math_config.h"
@@ -43,5 +42,3 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __TINY__MAT__ */

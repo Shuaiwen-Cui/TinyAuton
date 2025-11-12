@@ -42,6 +42,7 @@ extern "C"
 
 // choose one platform
 #define MCU_PLATFORM_SELECTED MCU_PLATFORM_ESP32
+// #define MCU_PLATFORM_SELECTED MCU_PLATFORM_GENERIC
 
 #ifdef __cplusplus
 }
