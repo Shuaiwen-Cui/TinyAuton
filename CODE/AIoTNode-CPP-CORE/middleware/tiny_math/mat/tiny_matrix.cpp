@@ -1840,6 +1840,542 @@ namespace tiny
         return result;
     }
 
+    /* === Eigenvalue & Eigenvector Decomposition === */
+    /**
+     * @name Mat::EigenPair::EigenPair()
+     * @brief Default constructor for EigenPair structure
+     */
+    Mat::EigenPair::EigenPair() : eigenvalue(0.0f), iterations(0), status(TINY_OK)
+    {
+    }
+
+    /**
+     * @name Mat::EigenDecomposition::EigenDecomposition()
+     * @brief Default constructor for EigenDecomposition structure
+     */
+    Mat::EigenDecomposition::EigenDecomposition() : iterations(0), status(TINY_OK)
+    {
+    }
+
+    /**
+     * @name Mat::is_symmetric()
+     * @brief Check if the matrix is symmetric within a given tolerance.
+     * @note Essential for SHM applications where structural matrices are typically symmetric.
+     *
+     * @param tolerance Maximum allowed difference between A(i,j) and A(j,i)
+     * @return true if matrix is symmetric, false otherwise
+     */
+    bool Mat::is_symmetric(float tolerance) const
+    {
+        // Only square matrices can be symmetric
+        if (this->row != this->col)
+        {
+            return false;
+        }
+
+        // Check symmetry: A(i,j) should equal A(j,i) within tolerance
+        for (int i = 0; i < this->row; ++i)
+        {
+            for (int j = i + 1; j < this->col; ++j)
+            {
+                float diff = fabsf((*this)(i, j) - (*this)(j, i));
+                if (diff > tolerance)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @name Mat::power_iteration()
+     * @brief Compute the dominant (largest magnitude) eigenvalue and eigenvector using power iteration.
+     * @note Fast method suitable for real-time SHM applications to quickly identify primary frequency.
+     *
+     * @param max_iter Maximum number of iterations (default: 1000)
+     * @param tolerance Convergence tolerance (default: 1e-6)
+     * @return EigenPair containing the dominant eigenvalue, eigenvector, and status
+     */
+    Mat::EigenPair Mat::power_iteration(int max_iter, float tolerance) const
+    {
+        EigenPair result;
+
+        // Validation: must be square matrix
+        if (this->row != this->col)
+        {
+            std::cerr << "[Error] Power iteration requires a square matrix.\n";
+            result.status = TINY_ERR_INVALID_ARG;
+            return result;
+        }
+
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] Matrix data pointer is null.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
+
+        int n = this->row;
+
+        // Initialize eigenvector with better strategy to avoid convergence to smaller eigenvalues
+        // Strategy: Use sum of columns (or rows) to get a vector with components in all directions
+        result.eigenvector = Mat(n, 1);
+        float norm_sq = 0.0f;
+        
+        // Method 1: Use sum of absolute values of columns (more robust)
+        for (int i = 0; i < n; ++i)
+        {
+            float col_sum = 0.0f;
+            for (int j = 0; j < n; ++j)
+            {
+                col_sum += fabsf((*this)(j, i));
+            }
+            result.eigenvector(i, 0) = col_sum + 1.0f; // Add 1 to avoid zero
+            norm_sq += result.eigenvector(i, 0) * result.eigenvector(i, 0);
+        }
+        
+        // If all components are too similar, use a different initialization
+        if (norm_sq < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+        {
+            // Fallback: use values based on index with some variation
+            for (int i = 0; i < n; ++i)
+            {
+                result.eigenvector(i, 0) = 1.0f + 0.1f * static_cast<float>(i);
+                norm_sq += result.eigenvector(i, 0) * result.eigenvector(i, 0);
+            }
+        }
+        
+        float inv_norm = 1.0f / sqrtf(norm_sq);
+        for (int i = 0; i < n; ++i)
+        {
+            result.eigenvector(i, 0) *= inv_norm;
+        }
+
+        // Power iteration loop
+        Mat temp_vec(n, 1);
+        float prev_eigenvalue = 0.0f;
+
+        for (int iter = 0; iter < max_iter; ++iter)
+        {
+            // Compute A * v
+            for (int i = 0; i < n; ++i)
+            {
+                temp_vec(i, 0) = 0.0f;
+                for (int j = 0; j < n; ++j)
+                {
+                    temp_vec(i, 0) += (*this)(i, j) * result.eigenvector(j, 0);
+                }
+            }
+
+            // Compute Rayleigh quotient: lambda = v^T * A * v / (v^T * v)
+            float numerator = 0.0f;
+            float denominator = 0.0f;
+            for (int i = 0; i < n; ++i)
+            {
+                numerator += result.eigenvector(i, 0) * temp_vec(i, 0);
+                denominator += result.eigenvector(i, 0) * result.eigenvector(i, 0);
+            }
+
+            if (fabsf(denominator) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                std::cerr << "[Error] Power iteration: eigenvector norm too small.\n";
+                result.status = TINY_ERR_MATH_INVALID_PARAM;
+                return result;
+            }
+
+            result.eigenvalue = numerator / denominator;
+
+            // Normalize the new vector
+            float new_norm_sq = 0.0f;
+            for (int i = 0; i < n; ++i)
+            {
+                new_norm_sq += temp_vec(i, 0) * temp_vec(i, 0);
+            }
+
+            if (new_norm_sq < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                std::cerr << "[Error] Power iteration: computed vector norm too small.\n";
+                result.status = TINY_ERR_MATH_INVALID_PARAM;
+                return result;
+            }
+
+            float new_inv_norm = 1.0f / sqrtf(new_norm_sq);
+            for (int i = 0; i < n; ++i)
+            {
+                result.eigenvector(i, 0) = temp_vec(i, 0) * new_inv_norm;
+            }
+
+            // Check convergence
+            if (iter > 0)
+            {
+                float eigenvalue_change = fabsf(result.eigenvalue - prev_eigenvalue);
+                if (eigenvalue_change < tolerance * fabsf(result.eigenvalue))
+                {
+                    result.iterations = iter + 1;
+                    result.status = TINY_OK;
+                    return result;
+                }
+            }
+
+            prev_eigenvalue = result.eigenvalue;
+        }
+
+        // Max iterations reached
+        result.iterations = max_iter;
+        result.status = TINY_ERR_NOT_FINISHED;
+        std::cerr << "[Warning] Power iteration did not converge within " << max_iter << " iterations.\n";
+        return result;
+    }
+
+    /**
+     * @name Mat::eigendecompose_jacobi()
+     * @brief Compute complete eigenvalue decomposition using Jacobi method for symmetric matrices.
+     * @note Robust and accurate method ideal for structural dynamics matrices in SHM.
+     *
+     * @param tolerance Convergence tolerance (default: 1e-6)
+     * @param max_iter Maximum number of iterations (default: 100)
+     * @return EigenDecomposition containing all eigenvalues, eigenvectors, and status
+     */
+    Mat::EigenDecomposition Mat::eigendecompose_jacobi(float tolerance, int max_iter) const
+    {
+        EigenDecomposition result;
+
+        // Validation: must be square matrix
+        if (this->row != this->col)
+        {
+            std::cerr << "[Error] Eigendecomposition requires a square matrix.\n";
+            result.status = TINY_ERR_INVALID_ARG;
+            return result;
+        }
+
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] Matrix data pointer is null.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
+
+        // Check if matrix is symmetric
+        if (!this->is_symmetric(tolerance * 10.0f))
+        {
+            std::cerr << "[Warning] Matrix is not symmetric. Jacobi method may not converge correctly.\n";
+        }
+
+        int n = this->row;
+
+        // Initialize: working copy of matrix, eigenvectors as identity
+        Mat A = Mat(*this); // Working copy (will become diagonal)
+        result.eigenvectors = Mat::eye(n);
+
+        // Jacobi iteration
+        for (int iter = 0; iter < max_iter; ++iter)
+        {
+            // Find largest off-diagonal element
+            float max_off_diag = 0.0f;
+            int p = 0, q = 0;
+
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = i + 1; j < n; ++j)
+                {
+                    float abs_val = fabsf(A(i, j));
+                    if (abs_val > max_off_diag)
+                    {
+                        max_off_diag = abs_val;
+                        p = i;
+                        q = j;
+                    }
+                }
+            }
+
+            // Check convergence
+            if (max_off_diag < tolerance)
+            {
+                // Extract eigenvalues from diagonal
+                result.eigenvalues = Mat(n, 1);
+                for (int i = 0; i < n; ++i)
+                {
+                    result.eigenvalues(i, 0) = A(i, i);
+                }
+                result.iterations = iter + 1;
+                result.status = TINY_OK;
+                return result;
+            }
+
+            // Compute rotation angle
+            float app = A(p, p);
+            float aqq = A(q, q);
+            float apq = A(p, q);
+
+            float tau = (aqq - app) / (2.0f * apq);
+            float t;
+            if (tau >= 0.0f)
+            {
+                t = 1.0f / (tau + sqrtf(1.0f + tau * tau));
+            }
+            else
+            {
+                t = -1.0f / (-tau + sqrtf(1.0f + tau * tau));
+            }
+
+            float c = 1.0f / sqrtf(1.0f + t * t); // cosine
+            float s = t * c;                       // sine
+
+            // Apply Jacobi rotation to A
+            // Update rows p and q
+            for (int j = 0; j < n; ++j)
+            {
+                if (j != p && j != q)
+                {
+                    float apj = A(p, j);
+                    float aqj = A(q, j);
+                    A(p, j) = c * apj - s * aqj;
+                    A(q, j) = s * apj + c * aqj;
+                    A(j, p) = A(p, j); // Maintain symmetry
+                    A(j, q) = A(q, j);
+                }
+            }
+
+            // Update diagonal elements
+            float app_new = c * c * app - 2.0f * c * s * apq + s * s * aqq;
+            float aqq_new = s * s * app + 2.0f * c * s * apq + c * c * aqq;
+            A(p, p) = app_new;
+            A(q, q) = aqq_new;
+            A(p, q) = 0.0f;
+            A(q, p) = 0.0f;
+
+            // Update eigenvectors
+            for (int i = 0; i < n; ++i)
+            {
+                float vip = result.eigenvectors(i, p);
+                float viq = result.eigenvectors(i, q);
+                result.eigenvectors(i, p) = c * vip - s * viq;
+                result.eigenvectors(i, q) = s * vip + c * viq;
+            }
+        }
+
+        // Extract eigenvalues from diagonal
+        result.eigenvalues = Mat(n, 1);
+        for (int i = 0; i < n; ++i)
+        {
+            result.eigenvalues(i, 0) = A(i, i);
+        }
+
+        result.iterations = max_iter;
+        result.status = TINY_ERR_NOT_FINISHED;
+        std::cerr << "[Warning] Jacobi method did not converge within " << max_iter << " iterations.\n";
+        return result;
+    }
+
+    /**
+     * @name Mat::eigendecompose_qr()
+     * @brief Compute complete eigenvalue decomposition using QR algorithm for general matrices.
+     * @note Supports non-symmetric matrices, but may have complex eigenvalues (only real part returned).
+     *
+     * @param max_iter Maximum number of QR iterations (default: 100)
+     * @param tolerance Convergence tolerance (default: 1e-6)
+     * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
+     */
+    Mat::EigenDecomposition Mat::eigendecompose_qr(int max_iter, float tolerance) const
+    {
+        EigenDecomposition result;
+
+        // Validation: must be square matrix
+        if (this->row != this->col)
+        {
+            std::cerr << "[Error] Eigendecomposition requires a square matrix.\n";
+            result.status = TINY_ERR_INVALID_ARG;
+            return result;
+        }
+
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] Matrix data pointer is null.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
+
+        int n = this->row;
+
+        // Initialize: start with original matrix, eigenvectors as identity
+        Mat A = Mat(*this); // Working copy (will become upper triangular)
+        result.eigenvectors = Mat::eye(n);
+
+        // QR iteration with improved convergence checking
+        for (int iter = 0; iter < max_iter; ++iter)
+        {
+            // Check convergence: check if matrix is upper triangular
+            // Use a more lenient tolerance for sub-diagonal elements
+            bool converged = true;
+            float max_off_diag = 0.0f;
+            for (int i = 1; i < n; ++i)
+            {
+                for (int j = 0; j < i; ++j)
+                {
+                    float abs_val = fabsf(A(i, j));
+                    if (abs_val > max_off_diag)
+                        max_off_diag = abs_val;
+                    // Use relative tolerance: compare with diagonal elements
+                    float diag_scale = fmaxf(fabsf(A(i, i)), fabsf(A(j, j)));
+                    float rel_tolerance = tolerance * fmaxf(1.0f, diag_scale);
+                    if (abs_val > rel_tolerance)
+                    {
+                        converged = false;
+                    }
+                }
+            }
+
+            if (converged)
+            {
+                // Extract eigenvalues from diagonal
+                result.eigenvalues = Mat(n, 1);
+                for (int i = 0; i < n; ++i)
+                {
+                    result.eigenvalues(i, 0) = A(i, i);
+                }
+                result.iterations = iter + 1;
+                result.status = TINY_OK;
+                return result;
+            }
+            
+            // Optional: Use shift to accelerate convergence (Wilkinson shift for last 2x2 block)
+            // For simplicity, we skip shift for now but can add it later if needed
+
+            // QR decomposition using Gram-Schmidt process
+            Mat Q(n, n);
+            Mat R(n, n);
+
+            // Gram-Schmidt orthogonalization
+            for (int j = 0; j < n; ++j)
+            {
+                // Copy j-th column of A to Q
+                for (int i = 0; i < n; ++i)
+                {
+                    Q(i, j) = A(i, j);
+                }
+
+                // Orthogonalize against previous columns
+                for (int k = 0; k < j; ++k)
+                {
+                    // Compute dot product
+                    float dot = 0.0f;
+                    for (int i = 0; i < n; ++i)
+                    {
+                        dot += Q(i, k) * A(i, j);
+                    }
+                    R(k, j) = dot;
+
+                    // Subtract projection
+                    for (int i = 0; i < n; ++i)
+                    {
+                        Q(i, j) -= dot * Q(i, k);
+                    }
+                }
+
+                // Normalize
+                float norm = 0.0f;
+                for (int i = 0; i < n; ++i)
+                {
+                    norm += Q(i, j) * Q(i, j);
+                }
+                norm = sqrtf(norm);
+
+                if (norm < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                {
+                    std::cerr << "[Error] QR decomposition: column vector norm too small.\n";
+                    result.status = TINY_ERR_MATH_INVALID_PARAM;
+                    return result;
+                }
+
+                for (int i = 0; i < n; ++i)
+                {
+                    Q(i, j) /= norm;
+                }
+                R(j, j) = norm;
+            }
+
+            // Compute R = Q^T * A
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = i; j < n; ++j)
+                {
+                    R(i, j) = 0.0f;
+                    for (int k = 0; k < n; ++k)
+                    {
+                        R(i, j) += Q(k, i) * A(k, j);
+                    }
+                }
+            }
+
+            // Update A = R * Q
+            Mat A_new(n, n);
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    A_new(i, j) = 0.0f;
+                    for (int k = 0; k < n; ++k)
+                    {
+                        A_new(i, j) += R(i, k) * Q(k, j);
+                    }
+                }
+            }
+            A = A_new;
+
+            // Update eigenvectors: V = V * Q
+            Mat V_new(n, n);
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    V_new(i, j) = 0.0f;
+                    for (int k = 0; k < n; ++k)
+                    {
+                        V_new(i, j) += result.eigenvectors(i, k) * Q(k, j);
+                    }
+                }
+            }
+            result.eigenvectors = V_new;
+        }
+
+        // Extract eigenvalues from diagonal
+        result.eigenvalues = Mat(n, 1);
+        for (int i = 0; i < n; ++i)
+        {
+            result.eigenvalues(i, 0) = A(i, i);
+        }
+
+        result.iterations = max_iter;
+        result.status = TINY_ERR_NOT_FINISHED;
+        std::cerr << "[Warning] QR algorithm did not converge within " << max_iter << " iterations.\n";
+        return result;
+    }
+
+    /**
+     * @name Mat::eigendecompose()
+     * @brief Automatic eigenvalue decomposition with method selection.
+     * @note Convenient interface for edge computing: uses Jacobi for symmetric matrices, QR for general.
+     *
+     * @param tolerance Convergence tolerance (default: 1e-6)
+     * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
+     */
+    Mat::EigenDecomposition Mat::eigendecompose(float tolerance) const
+    {
+        // Check if matrix is symmetric
+        if (this->is_symmetric(tolerance * 10.0f))
+        {
+            // Use Jacobi method for symmetric matrices (more efficient and stable)
+            return this->eigendecompose_jacobi(tolerance, 100);
+        }
+        else
+        {
+            // Use QR algorithm for general matrices
+            return this->eigendecompose_qr(100, tolerance);
+        }
+    }
+
     /* === Stream Operators === */
     /**
      * @name operator<<
@@ -2239,3 +2775,4 @@ namespace tiny
         return true;
     }
 }
+

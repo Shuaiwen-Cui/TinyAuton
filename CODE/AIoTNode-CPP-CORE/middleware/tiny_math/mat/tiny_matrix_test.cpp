@@ -2057,6 +2057,669 @@ void test_memory_layout()
     copied.print_matrix(true);
 }
 
+// Group 11: Eigenvalue and Eigenvector Decomposition
+void test_eigenvalue_decomposition()
+{
+    std::cout << "\n--- Test: Eigenvalue and Eigenvector Decomposition ---\n";
+
+    // Test 1: is_symmetric() - Basic functionality
+    std::cout << "\n[Test 1] is_symmetric() - Basic Functionality\n";
+    
+    // Test 1.1: Symmetric matrix
+    {
+        std::cout << "[Test 1.1] Symmetric 3x3 Matrix\n";
+        tiny::Mat sym_mat1(3, 3);
+        sym_mat1(0, 0) = 4.0f; sym_mat1(0, 1) = 1.0f; sym_mat1(0, 2) = 2.0f;
+        sym_mat1(1, 0) = 1.0f; sym_mat1(1, 1) = 3.0f; sym_mat1(1, 2) = 0.0f;
+        sym_mat1(2, 0) = 2.0f; sym_mat1(2, 1) = 0.0f; sym_mat1(2, 2) = 5.0f;
+        bool is_sym1 = sym_mat1.is_symmetric(1e-5f);
+        std::cout << "Matrix:\n";
+        sym_mat1.print_matrix(true);
+        std::cout << "Is symmetric: " << (is_sym1 ? "True" : "False") << " (Expected: True)\n";
+    }
+
+    // Test 1.2: Non-symmetric matrix (keep for later tests)
+    tiny::Mat non_sym_mat(3, 3);
+    {
+        std::cout << "\n[Test 1.2] Non-Symmetric 3x3 Matrix\n";
+        non_sym_mat(0, 0) = 1.0f; non_sym_mat(0, 1) = 2.0f; non_sym_mat(0, 2) = 3.0f;
+        non_sym_mat(1, 0) = 4.0f; non_sym_mat(1, 1) = 5.0f; non_sym_mat(1, 2) = 6.0f;
+        non_sym_mat(2, 0) = 7.0f; non_sym_mat(2, 1) = 8.0f; non_sym_mat(2, 2) = 9.0f;
+        bool is_sym2 = non_sym_mat.is_symmetric(1e-5f);
+        std::cout << "Matrix:\n";
+        non_sym_mat.print_matrix(true);
+        std::cout << "Is symmetric: " << (is_sym2 ? "True" : "False") << " (Expected: False)\n";
+    }
+
+    // Test 1.3: Non-square matrix
+    {
+        std::cout << "\n[Test 1.3] Non-Square Matrix (2x3)\n";
+        tiny::Mat rect_mat(2, 3);
+        bool is_sym3 = rect_mat.is_symmetric(1e-5f);
+        std::cout << "Is symmetric: " << (is_sym3 ? "True" : "False") << " (Expected: False)\n";
+    }
+
+    // Test 1.4: Symmetric matrix with small numerical errors
+    {
+        std::cout << "\n[Test 1.4] Symmetric Matrix with Small Numerical Errors\n";
+        tiny::Mat sym_mat2(2, 2);
+        // Use 1e-5 error which is within float precision (float has ~7 significant digits)
+        // For 2.0, we can represent 2.00001 accurately
+        float error_value = 1e-5f;
+        sym_mat2(0, 0) = 1.0f; 
+        sym_mat2(0, 1) = 2.0f + error_value;
+        sym_mat2(1, 0) = 2.0f; 
+        sym_mat2(1, 1) = 3.0f;
+        std::cout << "Matrix with error " << error_value << ":\n";
+        sym_mat2.print_matrix(true);
+        float diff = fabsf(sym_mat2(0, 1) - sym_mat2(1, 0));
+        std::cout << "Difference: |A(0,1) - A(1,0)| = ";
+        // Use scientific notation for small values
+        if (diff < 1e-3f)
+        {
+            std::cout << std::scientific << std::setprecision(6) << diff << std::fixed;
+        }
+        else
+        {
+            std::cout << std::setprecision(6) << diff;
+        }
+        std::cout << " (Expected: " << error_value << ")\n";
+        
+        // Verify the difference is actually stored
+        float stored_value = sym_mat2(0, 1);
+        float expected_stored = 2.0f + error_value;
+        std::cout << "A(0,1) stored value: " << std::setprecision(8) << stored_value 
+                  << " (Expected: " << expected_stored << ")\n";
+        
+        bool is_sym4 = sym_mat2.is_symmetric(1e-4f); // tolerance > error, should pass
+        std::cout << "Is symmetric (tolerance=1e-4): " << (is_sym4 ? "True" : "False") 
+                  << " (Expected: True, tolerance > error) ";
+        std::cout << (is_sym4 ? "[PASS]" : "[FAIL]") << "\n";
+        
+        bool is_sym5 = sym_mat2.is_symmetric(1e-6f); // tolerance < error, should fail
+        std::cout << "Is symmetric (tolerance=1e-6): " << (is_sym5 ? "True" : "False") 
+                  << " (Expected: False, tolerance < error) ";
+        bool correct_result = !is_sym5; // Should be False (not symmetric)
+        std::cout << (correct_result ? "[PASS]" : "[FAIL]") << "\n";
+        
+        // Additional check: verify the difference is close to expected
+        float diff_error = fabsf(diff - error_value);
+        std::cout << "Difference accuracy: |actual_diff - expected_diff| = " 
+                  << std::scientific << std::setprecision(2) << diff_error << std::fixed;
+        bool diff_accurate = (diff_error < error_value * 0.1f); // Within 10% of error value
+        std::cout << " " << (diff_accurate ? "[PASS - difference stored correctly]" : "[FAIL - float precision issue]") << "\n";
+    }
+
+    // Test 2: power_iteration() - Dominant eigenvalue
+    std::cout << "\n[Test 2] power_iteration() - Dominant Eigenvalue\n";
+    
+    // Test 2.1: Simple 2x2 symmetric matrix (known eigenvalues)
+    tiny::Mat mat2x2(2, 2);
+    {
+        std::cout << "\n[Test 2.1] Simple 2x2 Matrix\n";
+        mat2x2(0, 0) = 2.0f; mat2x2(0, 1) = 1.0f;
+        mat2x2(1, 0) = 1.0f; mat2x2(1, 1) = 2.0f;
+        std::cout << "Matrix:\n";
+        mat2x2.print_matrix(true);
+        
+        // Expected values: eigenvalues are 3 and 1 (for matrix [2,1; 1,2])
+        // Characteristic equation: det([2-λ, 1; 1, 2-λ]) = (2-λ)² - 1 = λ² - 4λ + 3 = 0
+        // Solutions: λ = (4 ± √(16-12))/2 = (4 ± 2)/2 = 3 or 1
+        std::cout << "\n[Expected Results]\n";
+        std::cout << "  Expected eigenvalues: 3.0 (largest), 1.0 (smallest)\n";
+        std::cout << "  Expected dominant eigenvector (for λ=3): approximately [0.707, 0.707] or [-0.707, -0.707] (normalized)\n";
+        std::cout << "  Expected dominant eigenvector (for λ=1): approximately [0.707, -0.707] or [-0.707, 0.707] (normalized)\n";
+        
+        tiny::Mat::EigenPair result_power = mat2x2.power_iteration(1000, 1e-6f);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "  Dominant eigenvalue: " << result_power.eigenvalue 
+                  << " (Expected: 3.0, largest eigenvalue)\n";
+        std::cout << "  Iterations: " << result_power.iterations << "\n";
+        std::cout << "  Status: " << (result_power.status == TINY_OK ? "OK" : "Error") << "\n";
+        std::cout << "  Dominant eigenvector:\n";
+        result_power.eigenvector.print_matrix(true);
+        
+        // Check if result matches expected
+        float error = fabsf(result_power.eigenvalue - 3.0f);
+        std::cout << "  Error from expected (3.0): " << error << (error < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
+    }
+
+    // Test 2.2: 3x3 matrix (SHM-like stiffness matrix) - keep for later tests
+    tiny::Mat stiffness(3, 3);
+    {
+        std::cout << "\n[Test 2.2] 3x3 Stiffness Matrix (SHM Application)\n";
+        stiffness(0, 0) = 2.0f; stiffness(0, 1) = -1.0f; stiffness(0, 2) = 0.0f;
+        stiffness(1, 0) = -1.0f; stiffness(1, 1) = 2.0f; stiffness(1, 2) = -1.0f;
+        stiffness(2, 0) = 0.0f; stiffness(2, 1) = -1.0f; stiffness(2, 2) = 2.0f;
+        std::cout << "Stiffness Matrix:\n";
+        stiffness.print_matrix(true);
+        
+        // Expected values for 3x3 tridiagonal symmetric matrix [2,-1,0; -1,2,-1; 0,-1,2]
+        // This is a standard tridiagonal matrix with known eigenvalues
+        // Approximate eigenvalues: λ₁ ≈ 3.414, λ₂ ≈ 2.000, λ₃ ≈ 0.586
+        std::cout << "\n[Expected Results]\n";
+        std::cout << "  Expected eigenvalues (approximate): 3.414 (largest), 2.000, 0.586 (smallest)\n";
+        std::cout << "  Expected primary frequency: sqrt(3.414) ≈ 1.848 rad/s\n";
+        
+        tiny::Mat::EigenPair result_stiff = stiffness.power_iteration(500, 1e-6f);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "  Dominant eigenvalue (primary frequency squared): " << result_stiff.eigenvalue << "\n";
+        std::cout << "  Primary frequency: " << sqrtf(result_stiff.eigenvalue) << " rad/s (Expected: ~1.848 rad/s)\n";
+        std::cout << "  Iterations: " << result_stiff.iterations << "\n";
+        std::cout << "  Status: " << (result_stiff.status == TINY_OK ? "OK" : "Error") << "\n";
+        
+        float expected_eigen = 3.414f;
+        float error = fabsf(result_stiff.eigenvalue - expected_eigen);
+        std::cout << "  Error from expected (" << expected_eigen << "): " << error << (error < 0.1f ? " [PASS]" : " [FAIL]") << "\n";
+    }
+
+    // Test 2.3: Non-square matrix (should fail)
+    {
+        std::cout << "\n[Test 2.3] Non-Square Matrix (Expect Error)\n";
+        tiny::Mat non_square(2, 3);
+        tiny::Mat::EigenPair result_error = non_square.power_iteration(100, 1e-6f);
+        std::cout << "Status: " << (result_error.status == TINY_OK ? "OK" : "Error (Expected)") << "\n";
+    }
+
+    // Test 3: eigendecompose_jacobi() - Symmetric matrix decomposition
+    std::cout << "\n[Test 3] eigendecompose_jacobi() - Symmetric Matrix Decomposition\n";
+    
+    // Test 3.1: Simple 2x2 symmetric matrix
+    {
+        std::cout << "\n[Test 3.1] 2x2 Symmetric Matrix - Complete Decomposition\n";
+        std::cout << "[Expected Results]\n";
+        std::cout << "  Expected eigenvalues: 3.0, 1.0 (in any order)\n";
+        std::cout << "  Expected eigenvectors (for λ=3): [0.707, 0.707] or [-0.707, -0.707] (normalized)\n";
+        std::cout << "  Expected eigenvectors (for λ=1): [0.707, -0.707] or [-0.707, 0.707] (normalized)\n";
+        
+        tiny::Mat::EigenDecomposition result_jacobi1 = mat2x2.eigendecompose_jacobi(1e-6f, 100);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalues:\n";
+        result_jacobi1.eigenvalues.print_matrix(true);
+        std::cout << "Eigenvectors (each column is an eigenvector):\n";
+        result_jacobi1.eigenvectors.print_matrix(true);
+        std::cout << "Iterations: " << result_jacobi1.iterations << "\n";
+        std::cout << "Status: " << (result_jacobi1.status == TINY_OK ? "OK" : "Error") << "\n";
+        
+        // Check eigenvalues
+        float ev1 = result_jacobi1.eigenvalues(0, 0);
+        float ev2 = result_jacobi1.eigenvalues(1, 0);
+        bool ev_check = ((fabsf(ev1 - 3.0f) < 0.01f && fabsf(ev2 - 1.0f) < 0.01f) ||
+                         (fabsf(ev1 - 1.0f) < 0.01f && fabsf(ev2 - 3.0f) < 0.01f));
+        std::cout << "Eigenvalue check (should be 3.0 and 1.0): " << (ev_check ? "[PASS]" : "[FAIL]") << "\n";
+        
+        // Verify: A * v = lambda * v
+        std::cout << "\n[Verification] Check A * v = lambda * v for first eigenvector:\n";
+        tiny::Mat Av = mat2x2 * result_jacobi1.eigenvectors.block(0, 0, 2, 1);
+        tiny::Mat lambda_v = result_jacobi1.eigenvalues(0, 0) * result_jacobi1.eigenvectors.block(0, 0, 2, 1);
+        std::cout << "A * v:\n";
+        Av.print_matrix(true);
+        std::cout << "lambda * v:\n";
+        lambda_v.print_matrix(true);
+        bool verify1 = matrices_approximately_equal(Av, lambda_v, 1e-4f);
+        std::cout << "Verification (A*v = λ*v): " << (verify1 ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // Test 3.2: 3x3 symmetric matrix (SHM stiffness matrix)
+    {
+        std::cout << "\n[Test 3.2] 3x3 Stiffness Matrix (SHM Application)\n";
+        std::cout << "[Expected Results]\n";
+        std::cout << "  Expected eigenvalues (approximate): 3.414, 2.000, 0.586\n";
+        std::cout << "  Expected natural frequencies: 1.848, 1.414, 0.765 rad/s\n";
+        std::cout << "  Note: Eigenvalues may appear in any order\n";
+        
+        tiny::Mat::EigenDecomposition result_jacobi2 = stiffness.eigendecompose_jacobi(1e-5f, 100);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalues (natural frequencies squared):\n";
+        result_jacobi2.eigenvalues.print_matrix(true);
+        std::cout << "Natural frequencies (rad/s):\n";
+        float expected_freqs[3] = {1.848f, 1.414f, 0.765f};
+        for (int i = 0; i < result_jacobi2.eigenvalues.row; ++i)
+        {
+            float freq = sqrtf(result_jacobi2.eigenvalues(i, 0));
+            std::cout << "  Mode " << i << ": " << freq << " rad/s";
+            // Check if frequency matches any expected value
+            bool matched = false;
+            for (int j = 0; j < 3; ++j)
+            {
+                if (fabsf(freq - expected_freqs[j]) < 0.1f)
+                {
+                    std::cout << " (Expected: ~" << expected_freqs[j] << " rad/s) [PASS]";
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) std::cout << " [CHECK]";
+            std::cout << "\n";
+        }
+        std::cout << "Eigenvectors (mode shapes):\n";
+        result_jacobi2.eigenvectors.print_matrix(true);
+        std::cout << "Iterations: " << result_jacobi2.iterations << "\n";
+        std::cout << "Status: " << (result_jacobi2.status == TINY_OK ? "OK" : "Error") << "\n";
+    }
+
+    // Test 3.3: Diagonal matrix (trivial case)
+    {
+        std::cout << "\n[Test 3.3] Diagonal Matrix (Eigenvalues on diagonal)\n";
+        tiny::Mat diag_mat(3, 3);
+        diag_mat(0, 0) = 5.0f; diag_mat(0, 1) = 0.0f; diag_mat(0, 2) = 0.0f;
+        diag_mat(1, 0) = 0.0f; diag_mat(1, 1) = 3.0f; diag_mat(1, 2) = 0.0f;
+        diag_mat(2, 0) = 0.0f; diag_mat(2, 1) = 0.0f; diag_mat(2, 2) = 1.0f;
+        std::cout << "Matrix:\n";
+        diag_mat.print_matrix(true);
+        std::cout << "\n[Expected Results]\n";
+        std::cout << "  Expected eigenvalues: 5.0, 3.0, 1.0 (diagonal elements, may be in any order)\n";
+        std::cout << "  Expected eigenvectors: standard basis vectors [1,0,0], [0,1,0], [0,0,1] (or their negatives)\n";
+        std::cout << "  Expected iterations: 1 (diagonal matrix should converge immediately)\n";
+        
+        tiny::Mat::EigenDecomposition result_diag = diag_mat.eigendecompose_jacobi(1e-6f, 10);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalues:\n";
+        result_diag.eigenvalues.print_matrix(true);
+        std::cout << "Eigenvectors:\n";
+        result_diag.eigenvectors.print_matrix(true);
+        std::cout << "Iterations: " << result_diag.iterations << " (Expected: 1)\n";
+        
+        // Check eigenvalues
+        float ev1 = result_diag.eigenvalues(0, 0);
+        float ev2 = result_diag.eigenvalues(1, 0);
+        float ev3 = result_diag.eigenvalues(2, 0);
+        bool ev_check = ((fabsf(ev1 - 5.0f) < 0.01f || fabsf(ev1 - 3.0f) < 0.01f || fabsf(ev1 - 1.0f) < 0.01f) &&
+                         (fabsf(ev2 - 5.0f) < 0.01f || fabsf(ev2 - 3.0f) < 0.01f || fabsf(ev2 - 1.0f) < 0.01f) &&
+                         (fabsf(ev3 - 5.0f) < 0.01f || fabsf(ev3 - 3.0f) < 0.01f || fabsf(ev3 - 1.0f) < 0.01f));
+        std::cout << "Eigenvalue check (should be 5.0, 3.0, 1.0): " << (ev_check ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // Test 4: eigendecompose_qr() - General matrix decomposition
+    std::cout << "\n[Test 4] eigendecompose_qr() - General Matrix Decomposition\n";
+    
+    // Test 4.1: General 2x2 matrix
+    {
+        std::cout << "\n[Test 4.1] General 2x2 Matrix\n";
+        tiny::Mat gen_mat(2, 2);
+        gen_mat(0, 0) = 1.0f; gen_mat(0, 1) = 2.0f;
+        gen_mat(1, 0) = 3.0f; gen_mat(1, 1) = 4.0f;
+        std::cout << "Matrix:\n";
+        gen_mat.print_matrix(true);
+        
+        // Expected values for matrix [1,2; 3,4]
+        // Characteristic equation: det([1-λ, 2; 3, 4-λ]) = (1-λ)(4-λ) - 6 = λ² - 5λ - 2 = 0
+        // Solutions: λ = (5 ± √(25+8))/2 = (5 ± √33)/2 ≈ 5.372, -0.372
+        std::cout << "\n[Expected Results]\n";
+        std::cout << "  Expected eigenvalues: (5+√33)/2 ≈ 5.372, (5-√33)/2 ≈ -0.372\n";
+        std::cout << "  Note: This is a non-symmetric matrix, eigenvalues are real but may have complex eigenvectors\n";
+        
+        tiny::Mat::EigenDecomposition result_qr1 = gen_mat.eigendecompose_qr(100, 1e-5f);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalues:\n";
+        result_qr1.eigenvalues.print_matrix(true);
+        std::cout << "Eigenvectors:\n";
+        result_qr1.eigenvectors.print_matrix(true);
+        std::cout << "Iterations: " << result_qr1.iterations << "\n";
+        std::cout << "Status: " << (result_qr1.status == TINY_OK ? "OK" : "Error") << "\n";
+        
+        // Check eigenvalues with detailed error reporting
+        float ev1 = result_qr1.eigenvalues(0, 0);
+        float ev2 = result_qr1.eigenvalues(1, 0);
+        float expected_ev1 = 5.372f;
+        float expected_ev2 = -0.372f;
+        
+        // Match eigenvalues to expected values
+        float error1a = fabsf(ev1 - expected_ev1);
+        float error1b = fabsf(ev1 - expected_ev2);
+        float error2a = fabsf(ev2 - expected_ev1);
+        float error2b = fabsf(ev2 - expected_ev2);
+        
+        bool match1 = (error1a < error1b); // ev1 matches expected_ev1 better
+        float matched_ev1 = match1 ? expected_ev1 : expected_ev2;
+        float matched_ev2 = match1 ? expected_ev2 : expected_ev1;
+        float actual_error1 = match1 ? error1a : error1b;
+        float actual_error2 = match1 ? error2b : error2a;
+        float rel_error1 = actual_error1 / fabsf(matched_ev1);
+        float rel_error2 = actual_error2 / fabsf(matched_ev2);
+        
+        std::cout << "Eigenvalue 1: " << ev1 << " (Expected: " << matched_ev1 << ", Error: " << actual_error1 
+                  << ", Rel Error: " << (rel_error1 * 100.0f) << "%) ";
+        bool pass1 = (rel_error1 < 0.05f); // 5% relative error tolerance
+        std::cout << (pass1 ? "[PASS]" : "[FAIL - error too large]") << "\n";
+        
+        std::cout << "Eigenvalue 2: " << ev2 << " (Expected: " << matched_ev2 << ", Error: " << actual_error2 
+                  << ", Rel Error: " << (rel_error2 * 100.0f) << "%) ";
+        bool pass2 = (rel_error2 < 0.05f); // 5% relative error tolerance
+        std::cout << (pass2 ? "[PASS]" : "[FAIL - error too large]") << "\n";
+        
+        bool ev_check = pass1 && pass2;
+        std::cout << "Overall eigenvalue check: " << (ev_check ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // Test 4.2: Non-symmetric 3x3 matrix
+    {
+        std::cout << "\n[Test 4.2] Non-Symmetric 3x3 Matrix\n";
+        std::cout << "Matrix [1,2,3; 4,5,6; 7,8,9]:\n";
+        non_sym_mat.print_matrix(true);
+        
+        // Expected values for matrix [1,2,3; 4,5,6; 7,8,9]
+        // Characteristic equation: λ³ - 15λ² - 18λ = 0
+        // Solutions: λ(λ² - 15λ - 18) = 0
+        // λ₁ = 0, λ₂,₃ = (15 ± √(225+72))/2 = (15 ± √297)/2 ≈ 16.12, -1.12
+        // However, QR algorithm may have numerical errors, especially for non-symmetric matrices
+        std::cout << "\n[Expected Results]\n";
+        std::cout << "  Expected eigenvalues (theoretical): 16.12, -1.12, 0.00\n";
+        std::cout << "  Note: This matrix is rank-deficient (determinant = 0), so one eigenvalue is 0\n";
+        std::cout << "  Note: QR algorithm may have numerical errors, especially for non-symmetric matrices\n";
+        std::cout << "  Acceptable range: largest eigenvalue ~15-18, smallest eigenvalue near 0\n";
+        
+        tiny::Mat::EigenDecomposition result_qr2 = non_sym_mat.eigendecompose_qr(100, 1e-5f);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalues:\n";
+        result_qr2.eigenvalues.print_matrix(true);
+        std::cout << "Eigenvectors:\n";
+        result_qr2.eigenvectors.print_matrix(true);
+        std::cout << "Iterations: " << result_qr2.iterations << "\n";
+        std::cout << "Status: " << (result_qr2.status == TINY_OK ? "OK" : "Error") << "\n";
+        
+        // Check results with detailed error reporting
+        float expected_evs[3] = {16.12f, -1.12f, 0.0f};
+        bool matched[3] = {false, false, false};
+        float errors[3] = {0.0f, 0.0f, 0.0f};
+        float rel_errors[3] = {0.0f, 0.0f, 0.0f};
+        
+        // Match each computed eigenvalue to the closest expected value
+        for (int i = 0; i < result_qr2.eigenvalues.row; ++i)
+        {
+            float ev = result_qr2.eigenvalues(i, 0);
+            float min_error = 1e10f;
+            int best_match = -1;
+            
+            // Find closest expected eigenvalue
+            for (int j = 0; j < 3; ++j)
+            {
+                if (!matched[j])
+                {
+                    float error = fabsf(ev - expected_evs[j]);
+                    if (error < min_error)
+                    {
+                        min_error = error;
+                        best_match = j;
+                    }
+                }
+            }
+            
+            if (best_match >= 0)
+            {
+                matched[best_match] = true;
+                errors[best_match] = min_error;
+                float expected = expected_evs[best_match];
+                rel_errors[best_match] = (fabsf(expected) > 1e-6f) ? (min_error / fabsf(expected)) : min_error;
+                
+                std::cout << "Eigenvalue " << i << ": " << ev << " (Expected: " << expected 
+                          << ", Error: " << min_error << ", Rel Error: " << (rel_errors[best_match] * 100.0f) << "%) ";
+                
+                // For zero eigenvalue, use absolute tolerance; for others, use relative tolerance
+                bool pass = (fabsf(expected) < 0.1f) ? (min_error < 0.1f) : (rel_errors[best_match] < 0.15f); // 15% tolerance for QR
+                std::cout << (pass ? "[PASS]" : "[FAIL - error too large]") << "\n";
+            }
+        }
+        
+        // Overall check
+        bool overall_pass = true;
+        for (int i = 0; i < 3; ++i)
+        {
+            bool pass = (fabsf(expected_evs[i]) < 0.1f) ? (errors[i] < 0.1f) : (rel_errors[i] < 0.15f);
+            if (!pass) overall_pass = false;
+        }
+        std::cout << "Overall eigenvalue check: " << (overall_pass ? "[PASS]" : "[FAIL - some eigenvalues have large errors]") << "\n";
+    }
+
+    // Test 5: eigendecompose() - Automatic method selection
+    std::cout << "\n[Test 5] eigendecompose() - Automatic Method Selection\n";
+    
+    // Test 5.1: Symmetric matrix (should use Jacobi)
+    {
+        std::cout << "\n[Test 5.1] Symmetric Matrix (Auto-select: Jacobi)\n";
+        tiny::Mat sym_mat1(3, 3);
+        sym_mat1(0, 0) = 4.0f; sym_mat1(0, 1) = 1.0f; sym_mat1(0, 2) = 2.0f;
+        sym_mat1(1, 0) = 1.0f; sym_mat1(1, 1) = 3.0f; sym_mat1(1, 2) = 0.0f;
+        sym_mat1(2, 0) = 2.0f; sym_mat1(2, 1) = 0.0f; sym_mat1(2, 2) = 5.0f;
+        std::cout << "Matrix:\n";
+        sym_mat1.print_matrix(true);
+        std::cout << "\n[Expected Results]\n";
+        std::cout << "  Method: Should automatically use Jacobi (symmetric matrix detected)\n";
+        std::cout << "  Expected eigenvalues (approximate): 6.67, 3.48, 1.85\n";
+        std::cout << "  Note: Eigenvalues may appear in any order\n";
+        
+        tiny::Mat::EigenDecomposition result_auto1 = sym_mat1.eigendecompose(1e-5f);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalues:\n";
+        result_auto1.eigenvalues.print_matrix(true);
+        std::cout << "Iterations: " << result_auto1.iterations << "\n";
+        std::cout << "Status: " << (result_auto1.status == TINY_OK ? "OK" : "Error") << "\n";
+        std::cout << "Method used: Jacobi (auto-selected for symmetric matrix)\n";
+    }
+
+    // Test 5.2: Non-symmetric matrix (should use QR)
+    {
+        std::cout << "\n[Test 5.2] Non-Symmetric Matrix (Auto-select: QR)\n";
+        std::cout << "[Expected Results]\n";
+        std::cout << "  Method: Should automatically use QR (non-symmetric matrix detected)\n";
+        std::cout << "  Expected eigenvalues (theoretical): 16.12, -1.12, 0.00\n";
+        std::cout << "  Note: One eigenvalue should be near 0 (rank-deficient matrix)\n";
+        std::cout << "  Note: QR algorithm may have numerical errors for non-symmetric matrices\n";
+        std::cout << "  Acceptable: largest ~15-18, smallest near 0, one near -1 to -3\n";
+        
+        tiny::Mat::EigenDecomposition result_auto2 = non_sym_mat.eigendecompose(1e-5f);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalues:\n";
+        result_auto2.eigenvalues.print_matrix(true);
+        std::cout << "Iterations: " << result_auto2.iterations << "\n";
+        std::cout << "Status: " << (result_auto2.status == TINY_OK ? "OK" : "Error") << "\n";
+        std::cout << "Method used: QR (auto-selected for non-symmetric matrix)\n";
+        
+        // Check results with detailed error reporting (same as Test 4.2)
+        float expected_evs[3] = {16.12f, -1.12f, 0.0f};
+        bool matched[3] = {false, false, false};
+        float errors[3] = {0.0f, 0.0f, 0.0f};
+        float rel_errors[3] = {0.0f, 0.0f, 0.0f};
+        
+        for (int i = 0; i < result_auto2.eigenvalues.row; ++i)
+        {
+            float ev = result_auto2.eigenvalues(i, 0);
+            float min_error = 1e10f;
+            int best_match = -1;
+            
+            for (int j = 0; j < 3; ++j)
+            {
+                if (!matched[j])
+                {
+                    float error = fabsf(ev - expected_evs[j]);
+                    if (error < min_error)
+                    {
+                        min_error = error;
+                        best_match = j;
+                    }
+                }
+            }
+            
+            if (best_match >= 0)
+            {
+                matched[best_match] = true;
+                errors[best_match] = min_error;
+                float expected = expected_evs[best_match];
+                rel_errors[best_match] = (fabsf(expected) > 1e-6f) ? (min_error / fabsf(expected)) : min_error;
+                
+                std::cout << "Eigenvalue " << i << ": " << ev << " (Expected: " << expected 
+                          << ", Error: " << min_error << ", Rel Error: " << (rel_errors[best_match] * 100.0f) << "%) ";
+                
+                bool pass = (fabsf(expected) < 0.1f) ? (min_error < 0.1f) : (rel_errors[best_match] < 0.15f);
+                std::cout << (pass ? "[PASS]" : "[FAIL - error too large]") << "\n";
+            }
+        }
+        
+        bool overall_pass = true;
+        for (int i = 0; i < 3; ++i)
+        {
+            bool pass = (fabsf(expected_evs[i]) < 0.1f) ? (errors[i] < 0.1f) : (rel_errors[i] < 0.15f);
+            if (!pass) overall_pass = false;
+        }
+        std::cout << "Overall eigenvalue check: " << (overall_pass ? "[PASS]" : "[FAIL - some eigenvalues have large errors]") << "\n";
+    }
+
+    // Test 6: SHM Application Scenario - Structural Dynamics
+    std::cout << "\n[Test 6] SHM Application - Structural Dynamics Analysis\n";
+    
+    // Create a simple 4-DOF structural system (mass-spring system)
+    {
+        std::cout << "\n[Test 6.1] 4-DOF Mass-Spring System\n";
+        tiny::Mat K(4, 4);  // Stiffness matrix
+        K(0, 0) = 2.0f; K(0, 1) = -1.0f; K(0, 2) = 0.0f; K(0, 3) = 0.0f;
+        K(1, 0) = -1.0f; K(1, 1) = 2.0f; K(1, 2) = -1.0f; K(1, 3) = 0.0f;
+        K(2, 0) = 0.0f; K(2, 1) = -1.0f; K(2, 2) = 2.0f; K(2, 3) = -1.0f;
+        K(3, 0) = 0.0f; K(3, 1) = 0.0f; K(3, 2) = -1.0f; K(3, 3) = 1.0f;
+        
+        std::cout << "Stiffness Matrix K:\n";
+        K.print_matrix(true);
+        std::cout << "Is symmetric: " << (K.is_symmetric(1e-6f) ? "Yes" : "No") << "\n";
+        
+        // Quick frequency identification using power iteration
+        std::cout << "\n[Quick Analysis] Primary frequency using power_iteration():\n";
+        std::cout << "[Expected Results]\n";
+        std::cout << "  Expected primary eigenvalue: ~3.53 (largest eigenvalue)\n";
+        std::cout << "  Expected primary frequency: sqrt(3.53) ≈ 1.88 rad/s\n";
+        
+        tiny::Mat::EigenPair primary = K.power_iteration(500, 1e-6f);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "  Primary eigenvalue: " << primary.eigenvalue << " (Expected: ~3.53)\n";
+        std::cout << "  Primary frequency: " << sqrtf(primary.eigenvalue) << " rad/s (Expected: ~1.88 rad/s)\n";
+        std::cout << "  Iterations: " << primary.iterations << "\n";
+        float error_primary = fabsf(primary.eigenvalue - 3.53f);
+        std::cout << "  Error from expected: " << error_primary << (error_primary < 0.2f ? " [PASS]" : " [FAIL]") << "\n";
+        
+        // Complete modal analysis using Jacobi
+        std::cout << "\n[Complete Analysis] Full modal analysis using eigendecompose_jacobi():\n";
+        std::cout << "[Expected Results]\n";
+        std::cout << "  Expected eigenvalues (approximate): 3.53, 2.35, 1.00, 0.12\n";
+        std::cout << "  Expected natural frequencies: 1.88, 1.53, 1.00, 0.35 rad/s\n";
+        std::cout << "  Note: These are approximate values for the 4-DOF system\n";
+        
+        tiny::Mat::EigenDecomposition modal = K.eigendecompose_jacobi(1e-5f, 100);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "All eigenvalues (natural frequencies squared):\n";
+        modal.eigenvalues.print_matrix(true);
+        std::cout << "Natural frequencies (rad/s):\n";
+        float expected_freqs_4dof[4] = {1.88f, 1.53f, 1.00f, 0.35f};
+        for (int i = 0; i < modal.eigenvalues.row; ++i)
+        {
+            float freq = sqrtf(modal.eigenvalues(i, 0));
+            std::cout << "  Mode " << i << ": " << freq << " rad/s";
+            // Check if frequency matches any expected value
+            bool matched = false;
+            for (int j = 0; j < 4; ++j)
+            {
+                if (fabsf(freq - expected_freqs_4dof[j]) < 0.15f)
+                {
+                    std::cout << " (Expected: ~" << expected_freqs_4dof[j] << " rad/s) [PASS]";
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) std::cout << " [CHECK]";
+            std::cout << "\n";
+        }
+        std::cout << "Mode shapes (eigenvectors):\n";
+        modal.eigenvectors.print_matrix(true);
+        std::cout << "Total iterations: " << modal.iterations << "\n";
+    }
+
+    // Test 7: Edge Cases and Error Handling
+    std::cout << "\n[Test 7] Edge Cases and Error Handling\n";
+    
+    // Test 7.1: 1x1 matrix
+    {
+        std::cout << "\n[Test 7.1] 1x1 Matrix\n";
+        tiny::Mat mat1x1(1, 1);
+        mat1x1(0, 0) = 5.0f;
+        std::cout << "Matrix: [5.0]\n";
+        std::cout << "[Expected Results]\n";
+        std::cout << "  Expected eigenvalue: 5.0 (the matrix element itself)\n";
+        std::cout << "  Expected eigenvector: [1.0] (normalized)\n";
+        
+        tiny::Mat::EigenDecomposition result_1x1 = mat1x1.eigendecompose(1e-6f);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalue: " << result_1x1.eigenvalues(0, 0) << " (Expected: 5.0)\n";
+        std::cout << "Eigenvector:\n";
+        result_1x1.eigenvectors.print_matrix(true);
+        float error = fabsf(result_1x1.eigenvalues(0, 0) - 5.0f);
+        std::cout << "Error from expected: " << error << (error < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
+    }
+    
+    // Test 7.2: Zero matrix
+    {
+        std::cout << "\n[Test 7.2] Zero Matrix\n";
+        tiny::Mat zero_mat(3, 3);
+        zero_mat.clear();
+        tiny::Mat::EigenPair result_zero = zero_mat.power_iteration(100, 1e-6f);
+        std::cout << "Status: " << (result_zero.status == TINY_OK ? "OK" : "Error (Expected)") << "\n";
+    }
+    
+    // Test 7.3: Identity matrix
+    {
+        std::cout << "\n[Test 7.3] Identity Matrix\n";
+        tiny::Mat I = tiny::Mat::eye(3);
+        std::cout << "Matrix (3x3 Identity):\n";
+        I.print_matrix(true);
+        std::cout << "\n[Expected Results]\n";
+        std::cout << "  Expected eigenvalues: 1.0, 1.0, 1.0 (all eigenvalues are 1)\n";
+        std::cout << "  Expected eigenvectors: Any orthonormal basis (e.g., standard basis vectors)\n";
+        std::cout << "  Expected iterations: 1 (should converge immediately)\n";
+        
+        tiny::Mat::EigenDecomposition result_I = I.eigendecompose_jacobi(1e-6f, 10);
+        std::cout << "\n[Actual Results]\n";
+        std::cout << "Eigenvalues (should all be 1.0):\n";
+        result_I.eigenvalues.print_matrix(true);
+        std::cout << "Eigenvectors:\n";
+        result_I.eigenvectors.print_matrix(true);
+        std::cout << "Iterations: " << result_I.iterations << " (Expected: 1)\n";
+        
+        // Check all eigenvalues are 1.0
+        bool all_one = true;
+        for (int i = 0; i < result_I.eigenvalues.row; ++i)
+        {
+            if (fabsf(result_I.eigenvalues(i, 0) - 1.0f) > 0.01f)
+            {
+                all_one = false;
+                break;
+            }
+        }
+        std::cout << "All eigenvalues = 1.0: " << (all_one ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // Test 8: Performance Test for SHM Applications
+    std::cout << "\n[Test 8] Performance Test for SHM Applications\n";
+    
+    // Test 8.1: Power iteration performance (fast method)
+    std::cout << "\n[Test 8.1] Power Iteration Performance (Real-time SHM)\n";
+    TIME_OPERATION(
+        tiny::Mat::EigenPair perf_result = stiffness.power_iteration(500, 1e-6f);
+        (void)perf_result;
+    , "Power Iteration (3x3 matrix)");
+    
+    // Test 8.2: Jacobi method performance
+    std::cout << "\n[Test 8.2] Jacobi Method Performance\n";
+    TIME_OPERATION(
+        tiny::Mat::EigenDecomposition perf_jacobi = stiffness.eigendecompose_jacobi(1e-5f, 100);
+        (void)perf_jacobi;
+    , "Jacobi Decomposition (3x3 symmetric matrix)");
+    
+    // Test 8.3: QR method performance
+    std::cout << "\n[Test 8.3] QR Method Performance\n";
+    TIME_OPERATION(
+        tiny::Mat::EigenDecomposition perf_qr = non_sym_mat.eigendecompose_qr(100, 1e-5f);
+        (void)perf_qr;
+    , "QR Decomposition (3x3 general matrix)");
+
+    std::cout << "\n[Eigenvalue Decomposition Tests Complete]\n";
+}
+
 void tiny_matrix_test()
 {
     std::cout << "============ [tiny_matrix_test start] ============\n";
@@ -2109,6 +2772,9 @@ void tiny_matrix_test()
 
     // Group 10: Memory layout tests
     test_memory_layout();
+
+    // Group 11: Eigenvalue and Eigenvector Decomposition
+    test_eigenvalue_decomposition();
 
     std::cout << "============ [tiny_matrix_test end] ============\n";
     

@@ -155,10 +155,63 @@ namespace tiny
         Mat band_solve(Mat A, Mat b, int k);
         Mat roots(Mat A, Mat y);
         
+        /* === Eigenvalue & Eigenvector Decomposition === */
+        // Forward declarations (structures defined after class)
+        struct EigenPair;
+        struct EigenDecomposition;
+        
+        // Check if matrix is symmetric (within tolerance)
+        bool is_symmetric(float tolerance = 1e-6f) const;
+        
+        // Power iteration method: compute dominant eigenvalue and eigenvector
+        // Fast method suitable for real-time SHM applications
+        EigenPair power_iteration(int max_iter = 1000, float tolerance = 1e-6f) const;
+        
+        // Jacobi method: complete eigendecomposition for symmetric matrices
+        // Robust and accurate, ideal for structural dynamics matrices
+        EigenDecomposition eigendecompose_jacobi(float tolerance = 1e-6f, int max_iter = 100) const;
+        
+        // QR algorithm: complete eigendecomposition for general matrices
+        // Supports non-symmetric matrices, may have complex eigenvalues
+        EigenDecomposition eigendecompose_qr(int max_iter = 100, float tolerance = 1e-6f) const;
+        
+        // Automatic method selection: uses Jacobi for symmetric, QR for general
+        // Convenient interface for edge computing applications
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        
     protected:
 
     private:
 
+    };
+
+    /* === Eigenvalue & Eigenvector Decomposition Structures === */
+    /**
+     * @brief Structure to hold a single eigenvalue-eigenvector pair
+     * @note Used primarily for power iteration method
+     */
+    struct Mat::EigenPair
+    {
+        float eigenvalue;      ///< Eigenvalue (real part)
+        Mat eigenvector;       ///< Corresponding eigenvector (column vector)
+        int iterations;        ///< Number of iterations performed
+        tiny_error_t status;   ///< Computation status
+        
+        EigenPair();
+    };
+    
+    /**
+     * @brief Structure to hold complete eigenvalue decomposition results
+     * @note Contains all eigenvalues and eigenvectors
+     */
+    struct Mat::EigenDecomposition
+    {
+        Mat eigenvalues;       ///< Eigenvalues (diagonal matrix or vector)
+        Mat eigenvectors;      ///< Eigenvector matrix (each column is an eigenvector)
+        int iterations;        ///< Number of iterations performed
+        tiny_error_t status;   ///< Computation status
+        
+        EigenDecomposition();
     };
 
     /* === Stream Operators === */
