@@ -119,6 +119,9 @@ namespace tiny
 
         // swap rows
         void swap_rows(int row1, int row2);
+        
+        // swap columns
+        void swap_cols(int col1, int col2);
 
         // clear matrix
         void clear(void);
@@ -137,7 +140,8 @@ namespace tiny
 
         /* === Linear Algebra === */
         Mat transpose();                   // Transpose matrix
-        Mat cofactor(int row, int col);    // cofactor matrix extraction
+        Mat minor(int row, int col);       // minor matrix (submatrix after removing row and col)
+        Mat cofactor(int row, int col);    // cofactor matrix (same as minor matrix, sign applied when computing cofactor value)
         float determinant();
         Mat adjoint(); 
         void normalize();

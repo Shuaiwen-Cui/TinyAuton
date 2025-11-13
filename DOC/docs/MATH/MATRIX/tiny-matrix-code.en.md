@@ -49,6 +49,11 @@ namespace tiny
         bool sub_matrix; //< flag indicates that matrix is a subset of another matrix
 
         /* === Rectangular ROI Structure === */
+        /**
+         * @name Region of Interest (ROI) Structure
+         * @brief This is the structure for ROI
+         * 
+         */
         struct ROI
         {
             int pos_x;  ///< starting column index
@@ -155,10 +160,63 @@ namespace tiny
         Mat band_solve(Mat A, Mat b, int k);
         Mat roots(Mat A, Mat y);
         
+        /* === Eigenvalue & Eigenvector Decomposition === */
+        // Forward declarations (structures defined after class)
+        struct EigenPair;
+        struct EigenDecomposition;
+        
+        // Check if matrix is symmetric (within tolerance)
+        bool is_symmetric(float tolerance = 1e-6f) const;
+        
+        // Power iteration method: compute dominant eigenvalue and eigenvector
+        // Fast method suitable for real-time SHM applications
+        EigenPair power_iteration(int max_iter = 1000, float tolerance = 1e-6f) const;
+        
+        // Jacobi method: complete eigendecomposition for symmetric matrices
+        // Robust and accurate, ideal for structural dynamics matrices
+        EigenDecomposition eigendecompose_jacobi(float tolerance = 1e-6f, int max_iter = 100) const;
+        
+        // QR algorithm: complete eigendecomposition for general matrices
+        // Supports non-symmetric matrices, may have complex eigenvalues
+        EigenDecomposition eigendecompose_qr(int max_iter = 100, float tolerance = 1e-6f) const;
+        
+        // Automatic method selection: uses Jacobi for symmetric, QR for general
+        // Convenient interface for edge computing applications
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        
     protected:
 
     private:
 
+    };
+
+    /* === Eigenvalue & Eigenvector Decomposition Structures === */
+    /**
+     * @brief Structure to hold a single eigenvalue-eigenvector pair
+     * @note Used primarily for power iteration method
+     */
+    struct Mat::EigenPair
+    {
+        float eigenvalue;      ///< Eigenvalue (real part)
+        Mat eigenvector;       ///< Corresponding eigenvector (column vector)
+        int iterations;        ///< Number of iterations performed
+        tiny_error_t status;   ///< Computation status
+        
+        EigenPair();
+    };
+    
+    /**
+     * @brief Structure to hold complete eigenvalue decomposition results
+     * @note Contains all eigenvalues and eigenvectors
+     */
+    struct Mat::EigenDecomposition
+    {
+        Mat eigenvalues;       ///< Eigenvalues (diagonal matrix or vector)
+        Mat eigenvectors;      ///< Eigenvector matrix (each column is an eigenvector)
+        int iterations;        ///< Number of iterations performed
+        tiny_error_t status;   ///< Computation status
+        
+        EigenDecomposition();
     };
 
     /* === Stream Operators === */
@@ -202,10 +260,8 @@ namespace tiny
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <string.h>
-#include <math.h>
 #include <cmath>
-#include <inttypes.h>
+#include <cinttypes>
 #include <iomanip>
 
 /* LIBRARIE CONTENTS */
@@ -320,6 +376,12 @@ namespace tiny
      */
     void Mat::print_matrix(bool show_padding)
     {
+        if (this->data == nullptr)
+        {
+            std::cout << "[Error] Cannot print matrix: data pointer is null.\n";
+            return;
+        }
+        
         std::cout << "Matrix Elements >>>\n";
         for (int i = 0; i < this->row; ++i)
         {
@@ -391,6 +453,9 @@ namespace tiny
         if (this->data == nullptr)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
+            // Memory allocation failed, object is in invalid state (data = nullptr)
+            // Caller should check data pointer before using the matrix
+            return;
         }
         std::memset(this->data, 0, this->memory * sizeof(float));
     }
@@ -418,6 +483,9 @@ namespace tiny
         if (this->data == nullptr)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
+            // Memory allocation failed, object is in invalid state (data = nullptr)
+            // Caller should check data pointer before using the matrix
+            return;
         }
         std::memset(this->data, 0, this->memory * sizeof(float));
     }
@@ -445,6 +513,9 @@ namespace tiny
         if (this->data == nullptr)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
+            // Memory allocation failed, object is in invalid state (data = nullptr)
+            // Caller should check data pointer before using the matrix
+            return;
         }
         std::memset(this->data, 0, this->memory * sizeof(float));
     }
@@ -531,6 +602,9 @@ namespace tiny
                 if (this->data == nullptr)
                 {
                     std::cerr << "[Error] Memory allocation failed in alloc_mem()\n";
+                    // Memory allocation failed, object is in invalid state (data = nullptr)
+                    // Caller should check data pointer before using the matrix
+                    return;
                 }
                 std::memcpy(this->data, src.data, this->memory * sizeof(float));
             }
@@ -581,7 +655,7 @@ namespace tiny
         }
         for (size_t r = 0; r < src.row; r++)
         {
-            memcpy(&this->data[(r + row_pos) * this->stride + col_pos], &src.data[r * src.col], src.col * sizeof(float));
+            memcpy(&this->data[(r + row_pos) * this->stride + col_pos], &src.data[r * src.stride], src.col * sizeof(float));
         }
 
         return TINY_OK;
@@ -692,7 +766,7 @@ namespace tiny
         // deep copy the data from the source matrix
         for (size_t r = 0; r < result.row; r++)
         {
-            memcpy(&result.data[r * result.col], &this->data[(r + start_row) * this->stride + start_col], result.col * sizeof(float));
+            memcpy(&result.data[r * result.stride], &this->data[(r + start_row) * this->stride + start_col], result.col * sizeof(float));
         }
 
         // return result;
@@ -724,6 +798,18 @@ namespace tiny
      */
     Mat Mat::block(int start_row, int start_col, int block_rows, int block_cols)
     {
+        // Boundary check
+        if (start_row < 0 || start_col < 0 || block_rows <= 0 || block_cols <= 0)
+        {
+            std::cerr << "[Error] Invalid block parameters: negative start position or non-positive block size.\n";
+            return Mat();
+        }
+        if ((start_row + block_rows) > this->row || (start_col + block_cols) > this->col)
+        {
+            std::cerr << "[Error] Block exceeds matrix boundaries.\n";
+            return Mat();
+        }
+        
         Mat result(block_rows, block_cols);
         for (int i = 0; i < block_rows; ++i)
         {
@@ -744,18 +830,17 @@ namespace tiny
      */
     void Mat::swap_rows(int row1, int row2)
     {
-        if ((this->row <= row1) || (this->row <= row2))
+        if (row1 < 0 || row1 >= this->row || row2 < 0 || row2 >= this->row)
         {
             std::cerr << "Error: row index out of range" << std::endl;
+            return;
         }
-        else
-        {
-            float *temp_row = new float[this->col];
-            memcpy(temp_row, &this->data[row1 * this->stride], this->col * sizeof(float));
-            memcpy(&this->data[row1 * this->stride], &this->data[row2 * this->stride], this->col * sizeof(float));
-            memcpy(&this->data[row2 * this->stride], temp_row, this->col * sizeof(float));
-            delete[] temp_row;
-        }
+        
+        float *temp_row = new float[this->col];
+        memcpy(temp_row, &this->data[row1 * this->stride], this->col * sizeof(float));
+        memcpy(&this->data[row1 * this->stride], &this->data[row2 * this->stride], this->col * sizeof(float));
+        memcpy(&this->data[row2 * this->stride], temp_row, this->col * sizeof(float));
+        delete[] temp_row;
     }
 
     /**
@@ -1129,11 +1214,12 @@ namespace tiny
 
         // 2. Zero division check
         bool zero_found = false;
+        const float epsilon = 1e-9f;
         for (int i = 0; i < B.row; ++i)
         {
             for (int j = 0; j < B.col; ++j)
             {
-                if (B(i, j) == 0.0f)
+                if (fabs(B(i, j)) < epsilon)
                 {
                     zero_found = true;
                     break;
@@ -1339,11 +1425,12 @@ namespace tiny
 
         // Base case: 1x1 matrix
         if (n == 1)
-            return this->data[0];
+            return this->data[0 * this->stride + 0];
 
         // Base case: 2x2 matrix (optimized)
         if (n == 2)
-            return this->data[0] * this->data[3] - this->data[1] * this->data[2];
+            return this->data[0 * this->stride + 0] * this->data[1 * this->stride + 1] - 
+                   this->data[0 * this->stride + 1] * this->data[1 * this->stride + 0];
 
         float D = 0.0f;
         int sign = 1;
@@ -1902,9 +1989,9 @@ namespace tiny
                 if (A(j, i) != 0)
                 {
                     float factor = A(j, i) * a_ii;
-                    for (int k = i; k < A.col; ++k)
+                    for (int col_idx = i; col_idx < A.col; ++col_idx)
                     {
-                        A(j, k) -= A(i, k) * factor; // Eliminate the element
+                        A(j, col_idx) -= A(i, col_idx) * factor; // Eliminate the element
                     }
                     b(j, 0) -= b(i, 0) * factor; // Update the result vector
                     A(j, i) = 0;                 // Set the element to zero as it has been eliminated
@@ -1943,7 +2030,14 @@ namespace tiny
      */
     Mat Mat::roots(Mat A, Mat y)
     {
-        int n = A.col; // Number of rows and columns in A (assuming A is square)
+        // Check if A is square
+        if (A.row != A.col)
+        {
+            std::cerr << "[Error] Matrix A must be square for solving.\n";
+            return Mat();
+        }
+        
+        int n = A.row; // Number of rows and columns in A (A is square)
 
         // Create augmented matrix [A | y]
         Mat augmentedMatrix = Mat::augment(A, y);
@@ -1990,6 +2084,542 @@ namespace tiny
         return result;
     }
 
+    /* === Eigenvalue & Eigenvector Decomposition === */
+    /**
+     * @name Mat::EigenPair::EigenPair()
+     * @brief Default constructor for EigenPair structure
+     */
+    Mat::EigenPair::EigenPair() : eigenvalue(0.0f), iterations(0), status(TINY_OK)
+    {
+    }
+
+    /**
+     * @name Mat::EigenDecomposition::EigenDecomposition()
+     * @brief Default constructor for EigenDecomposition structure
+     */
+    Mat::EigenDecomposition::EigenDecomposition() : iterations(0), status(TINY_OK)
+    {
+    }
+
+    /**
+     * @name Mat::is_symmetric()
+     * @brief Check if the matrix is symmetric within a given tolerance.
+     * @note Essential for SHM applications where structural matrices are typically symmetric.
+     *
+     * @param tolerance Maximum allowed difference between A(i,j) and A(j,i)
+     * @return true if matrix is symmetric, false otherwise
+     */
+    bool Mat::is_symmetric(float tolerance) const
+    {
+        // Only square matrices can be symmetric
+        if (this->row != this->col)
+        {
+            return false;
+        }
+
+        // Check symmetry: A(i,j) should equal A(j,i) within tolerance
+        for (int i = 0; i < this->row; ++i)
+        {
+            for (int j = i + 1; j < this->col; ++j)
+            {
+                float diff = fabsf((*this)(i, j) - (*this)(j, i));
+                if (diff > tolerance)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @name Mat::power_iteration()
+     * @brief Compute the dominant (largest magnitude) eigenvalue and eigenvector using power iteration.
+     * @note Fast method suitable for real-time SHM applications to quickly identify primary frequency.
+     *
+     * @param max_iter Maximum number of iterations (default: 1000)
+     * @param tolerance Convergence tolerance (default: 1e-6)
+     * @return EigenPair containing the dominant eigenvalue, eigenvector, and status
+     */
+    Mat::EigenPair Mat::power_iteration(int max_iter, float tolerance) const
+    {
+        EigenPair result;
+
+        // Validation: must be square matrix
+        if (this->row != this->col)
+        {
+            std::cerr << "[Error] Power iteration requires a square matrix.\n";
+            result.status = TINY_ERR_INVALID_ARG;
+            return result;
+        }
+
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] Matrix data pointer is null.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
+
+        int n = this->row;
+
+        // Initialize eigenvector with better strategy to avoid convergence to smaller eigenvalues
+        // Strategy: Use sum of columns (or rows) to get a vector with components in all directions
+        result.eigenvector = Mat(n, 1);
+        float norm_sq = 0.0f;
+        
+        // Method 1: Use sum of absolute values of columns (more robust)
+        for (int i = 0; i < n; ++i)
+        {
+            float col_sum = 0.0f;
+            for (int j = 0; j < n; ++j)
+            {
+                col_sum += fabsf((*this)(j, i));
+            }
+            result.eigenvector(i, 0) = col_sum + 1.0f; // Add 1 to avoid zero
+            norm_sq += result.eigenvector(i, 0) * result.eigenvector(i, 0);
+        }
+        
+        // If all components are too similar, use a different initialization
+        if (norm_sq < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+        {
+            // Fallback: use values based on index with some variation
+            for (int i = 0; i < n; ++i)
+            {
+                result.eigenvector(i, 0) = 1.0f + 0.1f * static_cast<float>(i);
+                norm_sq += result.eigenvector(i, 0) * result.eigenvector(i, 0);
+            }
+        }
+        
+        float inv_norm = 1.0f / sqrtf(norm_sq);
+        for (int i = 0; i < n; ++i)
+        {
+            result.eigenvector(i, 0) *= inv_norm;
+        }
+
+        // Power iteration loop
+        Mat temp_vec(n, 1);
+        float prev_eigenvalue = 0.0f;
+
+        for (int iter = 0; iter < max_iter; ++iter)
+        {
+            // Compute A * v
+            for (int i = 0; i < n; ++i)
+            {
+                temp_vec(i, 0) = 0.0f;
+                for (int j = 0; j < n; ++j)
+                {
+                    temp_vec(i, 0) += (*this)(i, j) * result.eigenvector(j, 0);
+                }
+            }
+
+            // Compute Rayleigh quotient: lambda = v^T * A * v / (v^T * v)
+            float numerator = 0.0f;
+            float denominator = 0.0f;
+            for (int i = 0; i < n; ++i)
+            {
+                numerator += result.eigenvector(i, 0) * temp_vec(i, 0);
+                denominator += result.eigenvector(i, 0) * result.eigenvector(i, 0);
+            }
+
+            if (fabsf(denominator) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                std::cerr << "[Error] Power iteration: eigenvector norm too small.\n";
+                result.status = TINY_ERR_MATH_INVALID_PARAM;
+                return result;
+            }
+
+            result.eigenvalue = numerator / denominator;
+
+            // Normalize the new vector
+            float new_norm_sq = 0.0f;
+            for (int i = 0; i < n; ++i)
+            {
+                new_norm_sq += temp_vec(i, 0) * temp_vec(i, 0);
+            }
+
+            if (new_norm_sq < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                std::cerr << "[Error] Power iteration: computed vector norm too small.\n";
+                result.status = TINY_ERR_MATH_INVALID_PARAM;
+                return result;
+            }
+
+            float new_inv_norm = 1.0f / sqrtf(new_norm_sq);
+            for (int i = 0; i < n; ++i)
+            {
+                result.eigenvector(i, 0) = temp_vec(i, 0) * new_inv_norm;
+            }
+
+            // Check convergence
+            if (iter > 0)
+            {
+                float eigenvalue_change = fabsf(result.eigenvalue - prev_eigenvalue);
+                if (eigenvalue_change < tolerance * fabsf(result.eigenvalue))
+                {
+                    result.iterations = iter + 1;
+                    result.status = TINY_OK;
+                    return result;
+                }
+            }
+
+            prev_eigenvalue = result.eigenvalue;
+        }
+
+        // Max iterations reached
+        result.iterations = max_iter;
+        result.status = TINY_ERR_NOT_FINISHED;
+        std::cerr << "[Warning] Power iteration did not converge within " << max_iter << " iterations.\n";
+        return result;
+    }
+
+    /**
+     * @name Mat::eigendecompose_jacobi()
+     * @brief Compute complete eigenvalue decomposition using Jacobi method for symmetric matrices.
+     * @note Robust and accurate method ideal for structural dynamics matrices in SHM.
+     *
+     * @param tolerance Convergence tolerance (default: 1e-6)
+     * @param max_iter Maximum number of iterations (default: 100)
+     * @return EigenDecomposition containing all eigenvalues, eigenvectors, and status
+     */
+    Mat::EigenDecomposition Mat::eigendecompose_jacobi(float tolerance, int max_iter) const
+    {
+        EigenDecomposition result;
+
+        // Validation: must be square matrix
+        if (this->row != this->col)
+        {
+            std::cerr << "[Error] Eigendecomposition requires a square matrix.\n";
+            result.status = TINY_ERR_INVALID_ARG;
+            return result;
+        }
+
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] Matrix data pointer is null.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
+
+        // Check if matrix is symmetric
+        if (!this->is_symmetric(tolerance * 10.0f))
+        {
+            std::cerr << "[Warning] Matrix is not symmetric. Jacobi method may not converge correctly.\n";
+        }
+
+        int n = this->row;
+
+        // Initialize: working copy of matrix, eigenvectors as identity
+        Mat A = Mat(*this); // Working copy (will become diagonal)
+        result.eigenvectors = Mat::eye(n);
+
+        // Jacobi iteration
+        for (int iter = 0; iter < max_iter; ++iter)
+        {
+            // Find largest off-diagonal element
+            float max_off_diag = 0.0f;
+            int p = 0, q = 0;
+
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = i + 1; j < n; ++j)
+                {
+                    float abs_val = fabsf(A(i, j));
+                    if (abs_val > max_off_diag)
+                    {
+                        max_off_diag = abs_val;
+                        p = i;
+                        q = j;
+                    }
+                }
+            }
+
+            // Check convergence
+            if (max_off_diag < tolerance)
+            {
+                // Extract eigenvalues from diagonal
+                result.eigenvalues = Mat(n, 1);
+                for (int i = 0; i < n; ++i)
+                {
+                    result.eigenvalues(i, 0) = A(i, i);
+                }
+                result.iterations = iter + 1;
+                result.status = TINY_OK;
+                return result;
+            }
+
+            // Compute rotation angle
+            float app = A(p, p);
+            float aqq = A(q, q);
+            float apq = A(p, q);
+
+            float tau = (aqq - app) / (2.0f * apq);
+            float t;
+            if (tau >= 0.0f)
+            {
+                t = 1.0f / (tau + sqrtf(1.0f + tau * tau));
+            }
+            else
+            {
+                t = -1.0f / (-tau + sqrtf(1.0f + tau * tau));
+            }
+
+            float c = 1.0f / sqrtf(1.0f + t * t); // cosine
+            float s = t * c;                       // sine
+
+            // Apply Jacobi rotation to A
+            // Update rows p and q
+            for (int j = 0; j < n; ++j)
+            {
+                if (j != p && j != q)
+                {
+                    float apj = A(p, j);
+                    float aqj = A(q, j);
+                    A(p, j) = c * apj - s * aqj;
+                    A(q, j) = s * apj + c * aqj;
+                    A(j, p) = A(p, j); // Maintain symmetry
+                    A(j, q) = A(q, j);
+                }
+            }
+
+            // Update diagonal elements
+            float app_new = c * c * app - 2.0f * c * s * apq + s * s * aqq;
+            float aqq_new = s * s * app + 2.0f * c * s * apq + c * c * aqq;
+            A(p, p) = app_new;
+            A(q, q) = aqq_new;
+            A(p, q) = 0.0f;
+            A(q, p) = 0.0f;
+
+            // Update eigenvectors
+            for (int i = 0; i < n; ++i)
+            {
+                float vip = result.eigenvectors(i, p);
+                float viq = result.eigenvectors(i, q);
+                result.eigenvectors(i, p) = c * vip - s * viq;
+                result.eigenvectors(i, q) = s * vip + c * viq;
+            }
+        }
+
+        // Extract eigenvalues from diagonal
+        result.eigenvalues = Mat(n, 1);
+        for (int i = 0; i < n; ++i)
+        {
+            result.eigenvalues(i, 0) = A(i, i);
+        }
+
+        result.iterations = max_iter;
+        result.status = TINY_ERR_NOT_FINISHED;
+        std::cerr << "[Warning] Jacobi method did not converge within " << max_iter << " iterations.\n";
+        return result;
+    }
+
+    /**
+     * @name Mat::eigendecompose_qr()
+     * @brief Compute complete eigenvalue decomposition using QR algorithm for general matrices.
+     * @note Supports non-symmetric matrices, but may have complex eigenvalues (only real part returned).
+     *
+     * @param max_iter Maximum number of QR iterations (default: 100)
+     * @param tolerance Convergence tolerance (default: 1e-6)
+     * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
+     */
+    Mat::EigenDecomposition Mat::eigendecompose_qr(int max_iter, float tolerance) const
+    {
+        EigenDecomposition result;
+
+        // Validation: must be square matrix
+        if (this->row != this->col)
+        {
+            std::cerr << "[Error] Eigendecomposition requires a square matrix.\n";
+            result.status = TINY_ERR_INVALID_ARG;
+            return result;
+        }
+
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] Matrix data pointer is null.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
+
+        int n = this->row;
+
+        // Initialize: start with original matrix, eigenvectors as identity
+        Mat A = Mat(*this); // Working copy (will become upper triangular)
+        result.eigenvectors = Mat::eye(n);
+
+        // QR iteration with improved convergence checking
+        for (int iter = 0; iter < max_iter; ++iter)
+        {
+            // Check convergence: check if matrix is upper triangular
+            // Use a more lenient tolerance for sub-diagonal elements
+            bool converged = true;
+            float max_off_diag = 0.0f;
+            for (int i = 1; i < n; ++i)
+            {
+                for (int j = 0; j < i; ++j)
+                {
+                    float abs_val = fabsf(A(i, j));
+                    if (abs_val > max_off_diag)
+                        max_off_diag = abs_val;
+                    // Use relative tolerance: compare with diagonal elements
+                    float diag_scale = fmaxf(fabsf(A(i, i)), fabsf(A(j, j)));
+                    float rel_tolerance = tolerance * fmaxf(1.0f, diag_scale);
+                    if (abs_val > rel_tolerance)
+                    {
+                        converged = false;
+                    }
+                }
+            }
+
+            if (converged)
+            {
+                // Extract eigenvalues from diagonal
+                result.eigenvalues = Mat(n, 1);
+                for (int i = 0; i < n; ++i)
+                {
+                    result.eigenvalues(i, 0) = A(i, i);
+                }
+                result.iterations = iter + 1;
+                result.status = TINY_OK;
+                return result;
+            }
+            
+            // Optional: Use shift to accelerate convergence (Wilkinson shift for last 2x2 block)
+            // For simplicity, we skip shift for now but can add it later if needed
+
+            // QR decomposition using Gram-Schmidt process
+            Mat Q(n, n);
+            Mat R(n, n);
+
+            // Gram-Schmidt orthogonalization
+            for (int j = 0; j < n; ++j)
+            {
+                // Copy j-th column of A to Q
+                for (int i = 0; i < n; ++i)
+                {
+                    Q(i, j) = A(i, j);
+                }
+
+                // Orthogonalize against previous columns
+                for (int k = 0; k < j; ++k)
+                {
+                    // Compute dot product
+                    float dot = 0.0f;
+                    for (int i = 0; i < n; ++i)
+                    {
+                        dot += Q(i, k) * A(i, j);
+                    }
+                    R(k, j) = dot;
+
+                    // Subtract projection
+                    for (int i = 0; i < n; ++i)
+                    {
+                        Q(i, j) -= dot * Q(i, k);
+                    }
+                }
+
+                // Normalize
+                float norm = 0.0f;
+                for (int i = 0; i < n; ++i)
+                {
+                    norm += Q(i, j) * Q(i, j);
+                }
+                norm = sqrtf(norm);
+
+                if (norm < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                {
+                    std::cerr << "[Error] QR decomposition: column vector norm too small.\n";
+                    result.status = TINY_ERR_MATH_INVALID_PARAM;
+                    return result;
+                }
+
+                for (int i = 0; i < n; ++i)
+                {
+                    Q(i, j) /= norm;
+                }
+                R(j, j) = norm;
+            }
+
+            // Compute R = Q^T * A
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = i; j < n; ++j)
+                {
+                    R(i, j) = 0.0f;
+                    for (int k = 0; k < n; ++k)
+                    {
+                        R(i, j) += Q(k, i) * A(k, j);
+                    }
+                }
+            }
+
+            // Update A = R * Q
+            Mat A_new(n, n);
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    A_new(i, j) = 0.0f;
+                    for (int k = 0; k < n; ++k)
+                    {
+                        A_new(i, j) += R(i, k) * Q(k, j);
+                    }
+                }
+            }
+            A = A_new;
+
+            // Update eigenvectors: V = V * Q
+            Mat V_new(n, n);
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < n; ++j)
+                {
+                    V_new(i, j) = 0.0f;
+                    for (int k = 0; k < n; ++k)
+                    {
+                        V_new(i, j) += result.eigenvectors(i, k) * Q(k, j);
+                    }
+                }
+            }
+            result.eigenvectors = V_new;
+        }
+
+        // Extract eigenvalues from diagonal
+        result.eigenvalues = Mat(n, 1);
+        for (int i = 0; i < n; ++i)
+        {
+            result.eigenvalues(i, 0) = A(i, i);
+        }
+
+        result.iterations = max_iter;
+        result.status = TINY_ERR_NOT_FINISHED;
+        std::cerr << "[Warning] QR algorithm did not converge within " << max_iter << " iterations.\n";
+        return result;
+    }
+
+    /**
+     * @name Mat::eigendecompose()
+     * @brief Automatic eigenvalue decomposition with method selection.
+     * @note Convenient interface for edge computing: uses Jacobi for symmetric matrices, QR for general.
+     *
+     * @param tolerance Convergence tolerance (default: 1e-6)
+     * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
+     */
+    Mat::EigenDecomposition Mat::eigendecompose(float tolerance) const
+    {
+        // Check if matrix is symmetric
+        if (this->is_symmetric(tolerance * 10.0f))
+        {
+            // Use Jacobi method for symmetric matrices (more efficient and stable)
+            return this->eigendecompose_jacobi(tolerance, 100);
+        }
+        else
+        {
+            // Use QR algorithm for general matrices
+            return this->eigendecompose_qr(100, tolerance);
+        }
+    }
+
     /* === Stream Operators === */
     /**
      * @name operator<<
@@ -2005,6 +2635,12 @@ namespace tiny
      */
     std::ostream &operator<<(std::ostream &os, const Mat &m)
     {
+        if (m.data == nullptr)
+        {
+            os << "[Error] Cannot print matrix: data pointer is null.\n";
+            return os;
+        }
+        
         for (int i = 0; i < m.row; ++i)
         {
             os << m(i, 0);
@@ -2085,7 +2721,7 @@ namespace tiny
 
         if (m1.sub_matrix || m2.sub_matrix)
         {
-            Mat temp(m1.row, m2.col);
+            Mat temp(m1.row, m1.col);
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
             dspm_add_f32(m1.data, m2.data, temp.data, m1.row, m1.col, m1.pad, m2.pad, temp.pad, 1, 1, 1);
 #else
@@ -2292,13 +2928,22 @@ namespace tiny
      */
     Mat operator/(const Mat &m, float num)
     {
+        // Check division by zero
+        if (num == 0.0f)
+        {
+            std::cerr << "[Error] Division by zero in operator/.\n";
+            Mat err_ret;
+            return err_ret;
+        }
+        
         if (m.sub_matrix)
         {
             Mat temp(m.row, m.col);
+            float inv_num = 1.0f / num;
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-            dspm_mulc_f32(m.data, temp.data, 1 / num, m.row, m.col, m.pad, temp.pad, 1, 1);
+            dspm_mulc_f32(m.data, temp.data, inv_num, m.row, m.col, m.pad, temp.pad, 1, 1);
 #else
-            tiny_mat_multc_f32(m.data, temp.data, 1 / num, m.row, m.col, m.pad, temp.pad, 1, 1);
+            tiny_mat_multc_f32(m.data, temp.data, inv_num, m.row, m.col, m.pad, temp.pad, 1, 1);
 #endif
             return temp;
         }
@@ -2357,13 +3002,15 @@ namespace tiny
             return false;
         }
 
+        const float epsilon = 1e-5f;
         for (int row = 0; row < m1.row; row++)
         {
             for (int col = 0; col < m1.col; col++)
             {
-                if (m1(row, col) != m2(row, col))
+                float diff = fabs(m1(row, col) - m2(row, col));
+                if (diff > epsilon)
                 {
-                    std::cout << "operator == Error: " << row << " " << col << ", m1.data=" << m1(row, col) << ", m2.data=" << m2(row, col) << std::endl;
+                    std::cout << "operator == Error: " << row << " " << col << ", m1.data=" << m1(row, col) << ", m2.data=" << m2(row, col) << ", diff=" << diff << std::endl;
                     return false;
                 }
             }

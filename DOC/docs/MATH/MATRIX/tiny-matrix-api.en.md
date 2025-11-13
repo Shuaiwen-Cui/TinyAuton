@@ -18,7 +18,34 @@ TinyMath
 ```
 
 ```cpp
+/**
+ * @file tiny_matrix.hpp
+ * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
+ * @brief This file is the header file for the submodule matrix (advanced matrix operations) of the tiny_math middleware.
+ * @version 1.0
+ * @date 2025-04-17
+ * @note This file is built on top of the mat.h file from the ESP-DSP library.
+ *
+ */
 
+#pragma once
+
+/* DEPENDENCIES */
+// TinyMath
+#include "tiny_math_config.h"
+#include "tiny_vec.h"
+#include "tiny_mat.h"
+
+// Standard Libraries
+#include <iostream>
+#include <stdint.h>
+
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+// ESP32 DSP C++ Matrix library
+#include "mat.h"
+#endif
+
+/* STATEMENTS */
 namespace tiny
 {
     class Mat
@@ -148,10 +175,63 @@ namespace tiny
         Mat band_solve(Mat A, Mat b, int k);
         Mat roots(Mat A, Mat y);
         
+        /* === Eigenvalue & Eigenvector Decomposition === */
+        // Forward declarations (structures defined after class)
+        struct EigenPair;
+        struct EigenDecomposition;
+        
+        // Check if matrix is symmetric (within tolerance)
+        bool is_symmetric(float tolerance = 1e-6f) const;
+        
+        // Power iteration method: compute dominant eigenvalue and eigenvector
+        // Fast method suitable for real-time SHM applications
+        EigenPair power_iteration(int max_iter = 1000, float tolerance = 1e-6f) const;
+        
+        // Jacobi method: complete eigendecomposition for symmetric matrices
+        // Robust and accurate, ideal for structural dynamics matrices
+        EigenDecomposition eigendecompose_jacobi(float tolerance = 1e-6f, int max_iter = 100) const;
+        
+        // QR algorithm: complete eigendecomposition for general matrices
+        // Supports non-symmetric matrices, may have complex eigenvalues
+        EigenDecomposition eigendecompose_qr(int max_iter = 100, float tolerance = 1e-6f) const;
+        
+        // Automatic method selection: uses Jacobi for symmetric, QR for general
+        // Convenient interface for edge computing applications
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        
     protected:
 
     private:
 
+    };
+
+    /* === Eigenvalue & Eigenvector Decomposition Structures === */
+    /**
+     * @brief Structure to hold a single eigenvalue-eigenvector pair
+     * @note Used primarily for power iteration method
+     */
+    struct Mat::EigenPair
+    {
+        float eigenvalue;      ///< Eigenvalue (real part)
+        Mat eigenvector;       ///< Corresponding eigenvector (column vector)
+        int iterations;        ///< Number of iterations performed
+        tiny_error_t status;   ///< Computation status
+        
+        EigenPair();
+    };
+    
+    /**
+     * @brief Structure to hold complete eigenvalue decomposition results
+     * @note Contains all eigenvalues and eigenvectors
+     */
+    struct Mat::EigenDecomposition
+    {
+        Mat eigenvalues;       ///< Eigenvalues (diagonal matrix or vector)
+        Mat eigenvectors;      ///< Eigenvector matrix (each column is an eigenvector)
+        int iterations;        ///< Number of iterations performed
+        tiny_error_t status;   ///< Computation status
+        
+        EigenDecomposition();
     };
 
     /* === Stream Operators === */
@@ -172,7 +252,6 @@ namespace tiny
     bool operator==(const Mat &A, const Mat &B);
 
 }
-
 ```
 ## META DATA
 
@@ -957,6 +1036,114 @@ Mat Mat::roots(Mat A, Mat y);
 
 
 
+## LINEAR ALGEBRA - Eigenvalues & Eigenvectors
+
+### Struct: `Mat::EigenPair`
+
+```cpp
+Mat::EigenPair::EigenPair();
+// fields:
+// float eigenvalue;      // dominant (largest-magnitude) eigenvalue
+// Mat eigenvector;       // corresponding eigenvector (n x 1)
+// int iterations;        // number of iterations (for iterative methods)
+// tiny_error_t status;   // computation status (TINY_OK / error code)
+```
+
+**Description**: Container for a single eigenvalue/eigenvector result and related metadata. Typically returned by `power_iteration`.
+
+### Struct: `Mat::EigenDecomposition`
+
+```cpp
+Mat::EigenDecomposition::EigenDecomposition();
+// fields:
+// Mat eigenvalues;    // n x 1 matrix storing eigenvalues
+// Mat eigenvectors;   // n x n matrix, columns are eigenvectors
+// int iterations;     // iterations used by the algorithm
+// tiny_error_t status; // computation status
+```
+
+**Description**: Container for a full eigendecomposition result (all eigenvalues and eigenvectors).
+
+### Check Symmetry
+
+```cpp
+bool Mat::is_symmetric(float tolerance) const;
+```
+
+**Description**: Check whether a matrix is symmetric within the given `tolerance` (|A(i,j)-A(j,i)| < tolerance).
+
+**Parameters**:
+- `float tolerance` : Maximum allowed difference (e.g. 1e-6).
+
+**Returns**: `true` if approximately symmetric, otherwise `false`.
+
+### Power Iteration (dominant eigenpair)
+
+```cpp
+Mat::EigenPair Mat::power_iteration(int max_iter, float tolerance) const;
+```
+
+**Description**: Compute the dominant (largest-magnitude) eigenvalue and its eigenvector using the power iteration method.
+
+**Parameters**:
+- `int max_iter` : Maximum number of iterations (typical default: 1000).
+- `float tolerance` : Convergence tolerance (e.g. 1e-6).
+
+**Returns**: `EigenPair` containing `eigenvalue`, `eigenvector`, `iterations`, and `status`.
+
+**Notes**:
+- Requires a square matrix and non-null data pointer; returns an error status otherwise.
+- Power iteration only returns the dominant eigenpair. For full spectrum, use eigendecomposition functions below.
+
+### Jacobi Eigendecomposition (symmetric matrices)
+
+```cpp
+Mat::EigenDecomposition Mat::eigendecompose_jacobi(float tolerance, int max_iter) const;
+```
+
+**Description**: Compute full eigendecomposition using the Jacobi method. Recommended for symmetric matrices (good accuracy and stability for structural dynamics applications).
+
+**Parameters**:
+- `float tolerance` : Convergence threshold (e.g. 1e-6).
+- `int max_iter` : Maximum iterations (e.g. 100).
+
+**Returns**: `EigenDecomposition` with `eigenvalues`, `eigenvectors`, `iterations`, and `status`.
+
+**Notes**: If the matrix is not approximately symmetric the function will warn, though it may still run. For non-symmetric matrices prefer the QR method.
+
+### QR Eigendecomposition (general matrices)
+
+```cpp
+Mat::EigenDecomposition Mat::eigendecompose_qr(int max_iter, float tolerance) const;
+```
+
+**Description**: Compute eigendecomposition using the QR algorithm. Works for general (possibly non-symmetric) matrices. Complex eigenvalues may arise; current implementation returns real parts.
+
+**Parameters**:
+- `int max_iter` : Maximum number of QR iterations (default example: 100).
+- `float tolerance` : Convergence tolerance (e.g. 1e-6).
+
+**Returns**: `EigenDecomposition` containing eigenvalues, eigenvectors, iterations and status.
+
+**Notes**: QR uses Gram–Schmidt for Q/R in this implementation; it can be less stable for ill-conditioned matrices. For symmetric matrices, Jacobi is preferred.
+
+### Automatic Eigendecomposition
+
+```cpp
+Mat::EigenDecomposition Mat::eigendecompose(float tolerance) const;
+```
+
+**Description**: Convenience interface that automatically selects the algorithm: it tests symmetry with `is_symmetric(tolerance * 10.0f)`. If approximately symmetric, it uses Jacobi; otherwise it runs QR.
+
+**Parameters**:
+- `float tolerance` : Used for symmetry test and decomposition convergence (recommended 1e-6).
+
+**Returns**: `EigenDecomposition`.
+
+**Usage Tips**:
+- If the matrix is known to be symmetric (e.g. stiffness or mass matrices), call `eigendecompose_jacobi` for best stability.
+- For general matrices or unknown symmetry use `eigendecompose`.
+- Eigendecomposition is computationally expensive for large matrices on embedded platforms; consider reduced-order or iterative methods when possible.
 
 ## STREAM OPERATORS
 

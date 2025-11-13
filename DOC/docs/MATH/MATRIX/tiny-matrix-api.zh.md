@@ -18,6 +18,34 @@ TinyMath
 ```
 
 ```cpp
+/**
+ * @file tiny_matrix.hpp
+ * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
+ * @brief This file is the header file for the submodule matrix (advanced matrix operations) of the tiny_math middleware.
+ * @version 1.0
+ * @date 2025-04-17
+ * @note This file is built on top of the mat.h file from the ESP-DSP library.
+ *
+ */
+
+#pragma once
+
+/* DEPENDENCIES */
+// TinyMath
+#include "tiny_math_config.h"
+#include "tiny_vec.h"
+#include "tiny_mat.h"
+
+// Standard Libraries
+#include <iostream>
+#include <stdint.h>
+
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+// ESP32 DSP C++ Matrix library
+#include "mat.h"
+#endif
+
+/* STATEMENTS */
 namespace tiny
 {
     class Mat
@@ -147,10 +175,63 @@ namespace tiny
         Mat band_solve(Mat A, Mat b, int k);
         Mat roots(Mat A, Mat y);
         
+        /* === Eigenvalue & Eigenvector Decomposition === */
+        // Forward declarations (structures defined after class)
+        struct EigenPair;
+        struct EigenDecomposition;
+        
+        // Check if matrix is symmetric (within tolerance)
+        bool is_symmetric(float tolerance = 1e-6f) const;
+        
+        // Power iteration method: compute dominant eigenvalue and eigenvector
+        // Fast method suitable for real-time SHM applications
+        EigenPair power_iteration(int max_iter = 1000, float tolerance = 1e-6f) const;
+        
+        // Jacobi method: complete eigendecomposition for symmetric matrices
+        // Robust and accurate, ideal for structural dynamics matrices
+        EigenDecomposition eigendecompose_jacobi(float tolerance = 1e-6f, int max_iter = 100) const;
+        
+        // QR algorithm: complete eigendecomposition for general matrices
+        // Supports non-symmetric matrices, may have complex eigenvalues
+        EigenDecomposition eigendecompose_qr(int max_iter = 100, float tolerance = 1e-6f) const;
+        
+        // Automatic method selection: uses Jacobi for symmetric, QR for general
+        // Convenient interface for edge computing applications
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        
     protected:
 
     private:
 
+    };
+
+    /* === Eigenvalue & Eigenvector Decomposition Structures === */
+    /**
+     * @brief Structure to hold a single eigenvalue-eigenvector pair
+     * @note Used primarily for power iteration method
+     */
+    struct Mat::EigenPair
+    {
+        float eigenvalue;      ///< Eigenvalue (real part)
+        Mat eigenvector;       ///< Corresponding eigenvector (column vector)
+        int iterations;        ///< Number of iterations performed
+        tiny_error_t status;   ///< Computation status
+        
+        EigenPair();
+    };
+    
+    /**
+     * @brief Structure to hold complete eigenvalue decomposition results
+     * @note Contains all eigenvalues and eigenvectors
+     */
+    struct Mat::EigenDecomposition
+    {
+        Mat eigenvalues;       ///< Eigenvalues (diagonal matrix or vector)
+        Mat eigenvectors;      ///< Eigenvector matrix (each column is an eigenvector)
+        int iterations;        ///< Number of iterations performed
+        tiny_error_t status;   ///< Computation status
+        
+        EigenDecomposition();
     };
 
     /* === Stream Operators === */
@@ -961,7 +1042,116 @@ Mat::roots(Mat A, Mat y);
 
 **返回值**: 根矩阵 x
 
-## 线性代数
+## 线性代数 - 特征值与特征向量 (Eigen)
+
+### 结构体：`Mat::EigenPair`
+
+```cpp
+Mat::EigenPair::EigenPair();
+// fields:
+// float eigenvalue;      // 支配（最大模）特征值
+// Mat eigenvector;       // 对应的特征向量（n x 1）
+// int iterations;        // 迭代次数（若为迭代法返回）
+// tiny_error_t status;   // 计算状态（TINY_OK / 错误码）
+```
+
+**描述**: 用于保存单一特征值/特征向量对及其计算信息。常由 `power_iteration` 返回。
+
+### 结构体：`Mat::EigenDecomposition`
+
+```cpp
+Mat::EigenDecomposition::EigenDecomposition();
+// fields:
+// Mat eigenvalues;    // n x 1 矩阵，存放特征值
+// Mat eigenvectors;   // n x n 矩阵，通常每一列为对应的特征向量
+// int iterations;     // 迭代次数（若为迭代法返回）
+// tiny_error_t status; // 计算状态（TINY_OK / 错误码）
+```
+
+**描述**: 用于保存完整的特征值分解结果，包括全部特征值和对应的特征向量矩阵。
+
+### 判断对称性
+
+```cpp
+bool Mat::is_symmetric(float tolerance) const;
+```
+
+**描述**: 检查矩阵是否为对称矩阵（A(i,j) 与 A(j,i) 的差值小于 `tolerance`）。
+
+**参数**:
+- `float tolerance`: 允许的最大差值（例如 1e-6）。
+
+**返回值**: `true`（近似对称）或 `false`。
+
+### 幂迭代（求主特征值/向量）
+
+```cpp
+Mat::EigenPair Mat::power_iteration(int max_iter, float tolerance) const;
+```
+
+**描述**: 使用幂迭代法计算矩阵的主特征值（绝对值最大）及对应特征向量。
+
+**参数**:
+- `int max_iter`：最大迭代次数（代码注释中常用默认值 `1000`）。
+- `float tolerance`：收敛容差（例如 `1e-6`）。
+
+**返回值**: 一个 `EigenPair`，包含 `eigenvalue`、`eigenvector`、`iterations` 与 `status`。
+
+**注意**:
+- 要求矩阵为方阵且数据指针非空；若矩阵非方阵或数据为空，返回带错误状态的 `EigenPair`。
+- 单次幂迭代只给出主特征值/向量；若需全部特征值/向量请使用下面的分解函数。
+
+### Jacobi 特征分解（对称矩阵）
+
+```cpp
+Mat::EigenDecomposition Mat::eigendecompose_jacobi(float tolerance, int max_iter) const;
+```
+
+**描述**: 对称矩阵优先使用 Jacobi 方法求全部特征值与特征向量，收敛性与稳定性好，适合结构动力学场景（SHM）。
+
+**参数**:
+- `float tolerance`：收敛阈值（例如 `1e-6`）。
+- `int max_iter`：最大迭代次数（例如 `100`）。
+
+**返回值**: `EigenDecomposition`（包含 `eigenvalues` 与 `eigenvectors`；计算状态可查看 `status` 字段）。
+
+**注意**: 若矩阵不是近似对称，函数会发出警告，但仍可运行；对于非对称矩阵推荐使用 QR 方法。
+
+### QR 特征分解（一般矩阵）
+
+```cpp
+Mat::EigenDecomposition Mat::eigendecompose_qr(int max_iter, float tolerance) const;
+```
+
+**描述**: 使用 QR 算法对一般矩阵进行特征值分解（不要求对称）。对于非对称矩阵可能产生复数特征值——当前实现仅返回实部（会存在精度或收敛性限制）。
+
+**参数**:
+- `int max_iter`：最大 QR 迭代次数（默认示例值 `100`）。
+- `float tolerance`：收敛容差（例如 `1e-6`）。
+
+**返回值**: `EigenDecomposition`（`eigenvalues`、`eigenvectors`、`iterations`、`status`）。
+
+**注意**: 算法使用 Gram–Schmidt 构造 Q/R，可能在数值病态情况下不稳定；对于严格对称矩阵优先使用 Jacobi。
+
+### 自动特征分解（根据矩阵特性选择方法）
+
+```cpp
+Mat::EigenDecomposition Mat::eigendecompose(float tolerance) const;
+```
+
+**描述**: 简便接口，会先调用 `is_symmetric(tolerance * 10)` 判断矩阵是否近似对称：
+- 若为对称，使用 `eigendecompose_jacobi`；
+- 否则使用 `eigendecompose_qr`。
+
+**参数**:
+- `float tolerance`：用于对称性检测与分解收敛判断（建议 `1e-6`）。
+
+**返回值**: `EigenDecomposition`。
+
+**使用建议**:
+- 若明确知道矩阵为对称矩阵（如刚度矩阵、质量矩阵），直接使用 `eigendecompose_jacobi`；对非对称或不确定情形，可使用 `eigendecompose`。
+- 对于较大矩阵或嵌入式场景，Jacobi/QR 计算成本较高，请权衡数值稳定性与性能。
+
 
 ## 流操作符
 
