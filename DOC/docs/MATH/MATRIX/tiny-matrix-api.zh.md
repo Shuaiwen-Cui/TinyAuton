@@ -642,7 +642,7 @@ Mat block(int start_row, int start_col, int block_rows, int block_cols);
 ### 交换行
 
 ```cpp
-void swap_rows(int row1, int row2);
+void Mat::swap_rows(int row1, int row2);
 ```
 
 **描述**: 交换当前矩阵的两行。
@@ -655,14 +655,29 @@ void swap_rows(int row1, int row2);
 
 **返回值**: void
 
+### 交换列
+
+```cpp
+void Mat::swap_cols(int col1, int col2);
+```
+
+**描述**: 交换当前矩阵的两列。在需要列主元的高斯消元等算法中很有用。
+
+**参数**:
+
+- `int col1`: 第一列索引
+
+- `int col2`: 第二列索引
+
+**返回值**: void
 
 ### 清除矩阵
 
 ```cpp
-void clear(void);
+void Mat::clear(void);
 ```
 
-**描述**: 清除当前矩阵的元素。
+**描述**: 通过将所有元素设置为零来清除矩阵。
 
 **参数**: void
 
@@ -703,11 +718,13 @@ Mat &operator+=(const Mat &A);
 Mat &operator+=(float C);
 ```
 
-**描述**: 加法运算符，将常量加到当前矩阵。
+**描述**: 将常量按元素加到当前矩阵。
 
 **参数**:
 
-- `float C`: 常量
+- `float C`: 要加的常量
+
+**返回值**: Mat& - 当前矩阵的引用
 
 ### 减法运算符
 
@@ -715,11 +732,13 @@ Mat &operator+=(float C);
 Mat &operator-=(const Mat &A);
 ```
 
-**描述**: 减法运算符，将源矩阵的元素从当前矩阵中减去。
+**描述**: 从当前矩阵中按元素减去源矩阵。
 
 **参数**:
 
 - `const Mat &A`: 源矩阵对象
+
+**返回值**: Mat& - 当前矩阵的引用
 
 ### 减法运算符 - 常量
 
@@ -727,11 +746,13 @@ Mat &operator-=(const Mat &A);
 Mat &operator-=(float C);
 ```
 
-**描述**: 减法运算符，将常量从当前矩阵中减去。
+**描述**: 从当前矩阵中按元素减去常量。
 
 **参数**:
 
-- `float C`: 常量
+- `float C`: 要减的常量
+
+**返回值**: Mat& - 当前矩阵的引用
 
 ### 乘法运算符
 
@@ -739,11 +760,13 @@ Mat &operator-=(float C);
 Mat &operator*=(const Mat &A);
 ```
 
-**描述**: 乘法运算符，将源矩阵的元素乘到当前矩阵。
+**描述**: 矩阵乘法：this = this * A
 
 **参数**:
 
-- `const Mat &A`: 源矩阵对象
+- `const Mat &A`: 要乘的矩阵
+
+**返回值**: Mat& - 当前矩阵的引用
 
 ### 乘法运算符 - 常量
 
@@ -751,11 +774,13 @@ Mat &operator*=(const Mat &A);
 Mat &operator*=(float C);
 ```
 
-**描述**: 乘法运算符，将常量乘到当前矩阵。
+**描述**: 按元素乘以常量。
 
 **参数**:
 
-- `float C`: 常量
+- `float C`: 常量乘数
+
+**返回值**: Mat& - 当前矩阵的引用
 
 ### 除法运算符
 
@@ -763,11 +788,13 @@ Mat &operator*=(float C);
 Mat &operator/=(const Mat &B);
 ```
 
-**描述**: 除法运算符，将当前矩阵除以源矩阵。
+**描述**: 按元素除法：this = this / B
 
 **参数**:
 
-- `const Mat &B`: 源矩阵对象
+- `const Mat &B`: 除数矩阵
+
+**返回值**: Mat& - 当前矩阵的引用
 
 ### 除法运算符 - 常量
 
@@ -775,11 +802,13 @@ Mat &operator/=(const Mat &B);
 Mat &operator/=(float C);
 ```
 
-**描述**: 除法运算符，将当前矩阵除以常量。
+**描述**: 将当前矩阵按元素除以常量。
 
 **参数**:
 
-- `float C`: 常量
+- `float C`: 常量除数
+
+**返回值**: Mat& - 当前矩阵的引用
 
 ### 幂运算符
 
@@ -787,43 +816,59 @@ Mat &operator/=(float C);
 Mat operator^(int C);
 ```
 
-**描述**: 幂运算符，将当前矩阵的元素进行幂运算。
+**描述**: 按元素整数幂运算。返回一个新矩阵，其中每个元素都提升到给定幂次。
 
 **参数**:
 
-- `int C`: 幂指数
+- `int C`: 指数（整数）
+
+**返回值**: Mat - 幂运算后的新矩阵
 
 ## 线性代数
 
 ### 转置矩阵
 
 ```cpp
-Mat::transpose();
+Mat Mat::transpose();
 ```
 
-**描述**: 转置当前矩阵。
+**描述**: 计算矩阵的转置，返回新矩阵。
 
 **参数**: void
 
-
-**返回值**: 转置后的矩阵对象
-
+**返回值**: Mat - 转置后的矩阵对象
 
 ### 余子式矩阵
 
 ```cpp
-Mat::cofactor(int row, int col);
+Mat Mat::minor(int row, int col);
 ```
 
-**描述**: 提取当前矩阵的余子式矩阵。
+**描述**: 通过移除指定的行和列来计算余子式矩阵。余子式是移除一行一列后得到的子矩阵。
 
 **参数**:
 
-- `int row`: 行索引
+- `int row`: 要移除的行索引
 
-- `int col`: 列索引
+- `int col`: 要移除的列索引
 
-**返回值**: 余子式矩阵对象
+**返回值**: Mat - (n-1)x(n-1) 的余子式矩阵
+
+### 代数余子式矩阵
+
+```cpp
+Mat Mat::cofactor(int row, int col);
+```
+
+**描述**: 计算代数余子式矩阵（与余子式矩阵相同）。代数余子式矩阵与余子式矩阵相同。符号 (-1)^(i+j) 在计算代数余子式值时应用，而不是应用到矩阵元素本身。
+
+**参数**:
+
+- `int row`: 要移除的行索引
+
+- `int col`: 要移除的列索引
+
+**返回值**: Mat - (n-1)x(n-1) 的代数余子式矩阵（与余子式矩阵相同）
 
 
 ### 行列式
@@ -832,24 +877,24 @@ Mat::cofactor(int row, int col);
 float Mat::determinant();
 ```
 
-**描述**: 计算当前矩阵的行列式。
+**描述**: 使用拉普拉斯展开计算方阵的行列式。效率较低，仅适用于小矩阵！！！
 
 **参数**: void
 
-**返回值**: 行列式的值
+**返回值**: float - 行列式的值
 
 
 ### 伴随矩阵
 
 ```cpp
-Mat::adjoint();
+Mat Mat::adjoint();
 ```
 
-**描述**: 计算当前矩阵的伴随矩阵。
+**描述**: 计算方阵的伴随（或伴随转置）矩阵。
 
 **参数**: void
 
-**返回值**: 伴随矩阵对象
+**返回值**: Mat - 伴随矩阵对象
 
 
 ### 归一化
@@ -858,7 +903,7 @@ Mat::adjoint();
 void Mat::normalize();
 ```
 
-**描述**: 归一化当前矩阵的元素。
+**描述**: 使用L2范数（Frobenius范数）归一化矩阵。归一化后，||Matrix|| = 1。
 
 **参数**: void
 
@@ -870,58 +915,76 @@ void Mat::normalize();
 float Mat::norm() const;
 ```
 
-**描述**: 计算当前矩阵的范数。
+**描述**: 计算矩阵的Frobenius范数（L2范数）。
 
 **参数**: void
 
-**返回值**: 范数的值
+**返回值**: float - 计算得到的矩阵范数
 
 ### 矩阵求逆 -- 基于伴随矩阵
 ```cpp
-Mat::inverse_adjoint();
+Mat Mat::inverse_adjoint();
 ```
 
-**描述**: 计算当前矩阵的逆矩阵，基于伴随矩阵法。
+**描述**: 使用伴随矩阵法计算方阵的逆矩阵。如果矩阵是奇异的，返回零矩阵。
 
 **参数**: void
 
-**返回值**: 逆矩阵对象
+**返回值**: Mat - 逆矩阵对象。如果矩阵是奇异的，返回零矩阵
 
 ### 单位矩阵
 
 ```cpp
-Mat::eye(int size);
+static Mat Mat::eye(int size);
 ```
 
-**描述**: 创建一个单位矩阵。
+**描述**: 生成指定大小的单位矩阵。
 
 **参数**:
 
-- `int size`: 矩阵的大小
+- `int size`: 方阵的维度
 
-**返回值**: 单位矩阵对象
+**返回值**: Mat - 单位矩阵 (size x size)
 
-### 增广矩阵
+### 增广矩阵（水平连接）
 
 ```cpp
-Mat::augment(const Mat &A, const Mat &B);
+static Mat Mat::augment(const Mat &A, const Mat &B);
 ```
 
-**描述**: 创建一个增广矩阵，将两个矩阵连接在一起。
+**描述**: 通过水平连接两个矩阵创建增广矩阵 [A | B]。A和B的行数必须匹配。
 
 **参数**:
 
-- `const Mat &A`: 第一个矩阵对象
+- `const Mat &A`: 左侧矩阵
 
-- `const Mat &B`: 第二个矩阵对象
+- `const Mat &B`: 右侧矩阵
 
-### 单位矩阵
+**返回值**: Mat - 增广矩阵 [A B]
+
+### 垂直堆叠
 
 ```cpp
-Mat::ones(int rows, int cols);
+static Mat Mat::vstack(const Mat &A, const Mat &B);
 ```
 
-**描述**: 创建一个全为1的矩阵。
+**描述**: 垂直堆叠两个矩阵 [A; B]。A和B的列数必须匹配。
+
+**参数**:
+
+- `const Mat &A`: 顶部矩阵
+
+- `const Mat &B`: 底部矩阵
+
+**返回值**: Mat - 垂直堆叠的矩阵 [A; B]
+
+### 全1矩阵（矩形）
+
+```cpp
+static Mat Mat::ones(int rows, int cols);
+```
+
+**描述**: 创建指定大小的全1矩阵。
 
 **参数**:
 
@@ -929,51 +992,57 @@ Mat::ones(int rows, int cols);
 
 - `int cols`: 列数
 
-### 全1的矩阵
+**返回值**: Mat - 矩阵 [rows x cols]，所有元素 = 1
+
+### 全1矩阵（方阵）
 
 ```cpp
-Mat::ones(int size);
+static Mat Mat::ones(int size);
 ```
 
-**描述**: 创建一个全为1的矩阵。
+**描述**: 创建指定大小的方阵，所有元素为1。
 
 **参数**:
 
-- `int size`: 矩阵的大小
+- `int size`: 方阵的大小（行数 = 列数）
+
+**返回值**: Mat - 方阵 [size x size]，所有元素 = 1
 
 ### 高斯消元法
 
 ```cpp
-Mat::gaussian_eliminate() const;
+Mat Mat::gaussian_eliminate() const;
 ```
 
-**描述**: 使用高斯消元法对当前矩阵进行变换。
+**描述**: 执行高斯消元法，将矩阵转换为行阶梯形式（REF）。
 
 **参数**: void
 
-### 高斯消元法下行最简形式
+**返回值**: Mat - 上三角矩阵（REF形式）
+
+### 从高斯消元到行最简形式
 
 ```cpp
-Mat::row_reduce_from_gaussian();
+Mat Mat::row_reduce_from_gaussian();
 ```
 
-**描述**: 使用高斯消元法将当前矩阵转换为下行最简形式。
+**描述**: 将矩阵（假设已为行阶梯形式）转换为简化行阶梯形式（RREF）。
 
 **参数**: void
 
-**返回值**: 下行最简形式的矩阵对象
+**返回值**: Mat - RREF形式的矩阵
 
 ### 高斯-约旦消元法求逆
 
 ```cpp
-Mat::inverse_gje();
+Mat Mat::inverse_gje();
 ```
 
-**描述**: 使用高斯-约旦消元法计算当前矩阵的逆矩阵。
+**描述**: 使用高斯-约旦消元法计算方阵的逆矩阵。
 
 **参数**: void
 
-**返回值**: 逆矩阵对象
+**返回值**: Mat - 如果矩阵可逆则返回逆矩阵，否则返回空矩阵
 
 ### 点积
 
@@ -981,66 +1050,65 @@ Mat::inverse_gje();
 float Mat::dotprod(const Mat &A, const Mat &B);
 ```
 
-**描述**: 计算两个矩阵的点积。
+**描述**: 计算两个向量（Nx1）的点积。
 
 **参数**:
 
-- `const Mat &A`: 第一个矩阵对象
+- `const Mat &A`: 输入向量 A (Nx1)
 
-- `const Mat &B`: 第二个矩阵对象
+- `const Mat &B`: 输入向量 B (Nx1)
 
-**返回值**: 点积的值
+**返回值**: float - 计算得到的点积值
 
 ### 解线性方程组
 
 ```cpp
-Mat::solve(const Mat &A, const Mat &b);
+Mat Mat::solve(const Mat &A, const Mat &b);
 ```
 
-**描述**: 解线性方程组 Ax = b。
+**描述**: 使用高斯消元法求解线性方程组 Ax = b。
 
 **参数**:
 
-- `const Mat &A`: 系数矩阵
+- `const Mat &A`: 系数矩阵 (NxN)
 
-- `const Mat &b`: 常数矩阵
+- `const Mat &b`: 结果向量 (Nx1)
 
-**返回值**: 解矩阵 x
-
+**返回值**: Mat - 解向量 (Nx1)，包含方程 Ax = b 的根
 
 ### 带状矩阵求解
 
 ```cpp
-Mat::band_solve(Mat A, Mat b, int k);
+Mat Mat::band_solve(Mat A, Mat b, int k);
 ```
 
-**描述**: 解带状矩阵方程 Ax = b。
+**描述**: 使用优化的高斯消元法求解带状矩阵方程组 Ax = b。
 
 **参数**:
 
-- `Mat A`: 带状矩阵
+- `Mat A`: 系数矩阵 (NxN) - 带状矩阵
 
-- `Mat b`: 常数矩阵
+- `Mat b`: 结果向量 (Nx1)
 
-- `int k`: 带宽
+- `int k`: 矩阵的带宽（非零带的宽度）
 
-**返回值**: 解矩阵 x
+**返回值**: Mat - 解向量 (Nx1)，包含方程 Ax = b 的根
 
 ### 线性系统求根
 
 ```cpp
-Mat::roots(Mat A, Mat y);
+Mat Mat::roots(Mat A, Mat y);
 ```
 
-**描述**: 求解线性系统的根。
+**描述**: 使用不同方法求解矩阵。这是 'solve' 函数的另一种实现，原理上没有区别。此方法使用高斯消元法求解线性系统 A * x = y。
 
 **参数**:
 
-- `Mat A`: 系数矩阵
+- `Mat A`: 矩阵 [N]x[N]，包含输入系数
 
-- `Mat y`: 常数矩阵
+- `Mat y`: 向量 [N]x[1]，包含结果值
 
-**返回值**: 根矩阵 x
+**返回值**: Mat - 矩阵 [N]x[1]，包含根
 
 ## 线性代数 - 特征值与特征向量 (Eigen)
 
@@ -1208,13 +1276,15 @@ std::istream &operator>>(std::istream &is, Mat &m);
 Mat operator+(const Mat &A, const Mat &B);
 ```
 
-**描述**: 加法运算符，将两个矩阵相加。
+**描述**: 按元素将两个矩阵相加。
 
 **参数**:
 
-- `const Mat &A`: 第一个矩阵对象
+- `const Mat &A`: 第一个矩阵
 
-- `const Mat &B`: 第二个矩阵对象
+- `const Mat &B`: 第二个矩阵
+
+**返回值**: Mat - 结果矩阵 A+B
 
 ### 加法运算符 - 常量
 
@@ -1222,13 +1292,15 @@ Mat operator+(const Mat &A, const Mat &B);
 Mat operator+(const Mat &A, float C);
 ```
 
-**描述**: 加法运算符，将矩阵与常量相加。
+**描述**: 按元素将常量加到矩阵。
 
 **参数**:
 
-- `const Mat &A`: 矩阵对象
+- `const Mat &A`: 输入矩阵 A
 
-- `float C`: 常量
+- `float C`: 输入常量
+
+**返回值**: Mat - 结果矩阵 A+C
 
 ### 减法运算符
 
@@ -1236,13 +1308,15 @@ Mat operator+(const Mat &A, float C);
 Mat operator-(const Mat &A, const Mat &B);
 ```
 
-**描述**: 减法运算符，将第一个矩阵减去第二个矩阵。
+**描述**: 按元素将两个矩阵相减。
 
 **参数**:
 
-- `const Mat &A`: 第一个矩阵对象
+- `const Mat &A`: 第一个矩阵
 
-- `const Mat &B`: 第二个矩阵对象
+- `const Mat &B`: 第二个矩阵
+
+**返回值**: Mat - 结果矩阵 A-B
 
 ### 减法运算符 - 常量
 
@@ -1250,13 +1324,15 @@ Mat operator-(const Mat &A, const Mat &B);
 Mat operator-(const Mat &A, float C);
 ```
 
-**描述**: 减法运算符，将矩阵减去常量。
+**描述**: 按元素从矩阵中减去常量。
 
 **参数**:
 
-- `const Mat &A`: 矩阵对象
+- `const Mat &A`: 输入矩阵 A
 
-- `float C`: 常量   
+- `float C`: 输入常量
+
+**返回值**: Mat - 结果矩阵 A-C
 
 ### 乘法运算符
 
@@ -1264,13 +1340,15 @@ Mat operator-(const Mat &A, float C);
 Mat operator*(const Mat &A, const Mat &B);
 ```
 
-**描述**: 乘法运算符，将两个矩阵相乘。
+**描述**: 将两个矩阵相乘（矩阵乘法）。
 
 **参数**:
 
-- `const Mat &A`: 第一个矩阵对象
+- `const Mat &A`: 第一个矩阵
 
-- `const Mat &B`: 第二个矩阵对象
+- `const Mat &B`: 第二个矩阵
+
+**返回值**: Mat - 结果矩阵 A*B
 
 ### 乘法运算符 - 常量
 
@@ -1278,27 +1356,31 @@ Mat operator*(const Mat &A, const Mat &B);
 Mat operator*(const Mat &A, float C);
 ```
 
-**描述**: 乘法运算符，将矩阵与常量相乘。
+**描述**: 按元素将矩阵乘以常量。
 
 **参数**:
 
-- `const Mat &A`: 矩阵对象
+- `const Mat &A`: 输入矩阵 A
 
-- `float C`: 常量
+- `float C`: 浮点数值
 
-### 乘法运算符 - 常量 - 反向
+**返回值**: Mat - 结果矩阵 A*C
+
+### 乘法运算符 - 常量（左侧）
 
 ```cpp
 Mat operator*(float C, const Mat &A);
 ```
 
-**描述**: 乘法运算符，将常量与矩阵相乘。
+**描述**: 按元素将常量乘以矩阵。
 
 **参数**:
 
-- `float C`: 常量
+- `float C`: 浮点数值
 
-- `const Mat &A`: 矩阵对象
+- `const Mat &A`: 输入矩阵 A
+
+**返回值**: Mat - 结果矩阵 C*A
 
 ### 除法运算符
 
@@ -1306,13 +1388,15 @@ Mat operator*(float C, const Mat &A);
 Mat operator/(const Mat &A, float C);
 ```
 
-**描述**: 除法运算符，将矩阵除以常量。
+**描述**: 按元素将矩阵除以常量。
 
 **参数**:
 
-- `const Mat &A`: 矩阵对象
+- `const Mat &A`: 输入矩阵 A
 
-- `float C`: 常量
+- `float C`: 浮点数值
+
+**返回值**: Mat - 结果矩阵 A/C
 
 ### 除法运算符 - 矩阵
 
@@ -1320,13 +1404,15 @@ Mat operator/(const Mat &A, float C);
 Mat operator/(const Mat &A, const Mat &B);
 ```
 
-**描述**: 除法运算符，将第一个矩阵除以第二个矩阵。
+**描述**: 按元素将矩阵 A 除以矩阵 B。
 
 **参数**:
 
-- `const Mat &A`: 第一个矩阵对象
+- `const Mat &A`: 输入矩阵 A
 
-- `const Mat &B`: 第二个矩阵对象
+- `const Mat &B`: 输入矩阵 B
+
+**返回值**: Mat - 结果矩阵 C，其中 C[i,j] = A[i,j]/B[i,j]
 
 ### 等于运算符
 

@@ -1443,6 +1443,48 @@ namespace tiny
     }
 
     /**
+     * @name Mat::vstack(const Mat &A, const Mat &B)
+     * @brief Vertically stack two matrices [A; B].
+     *
+     * @param A Top matrix
+     * @param B Bottom matrix
+     * @return Mat Vertically stacked matrix [A; B]
+     */
+    Mat Mat::vstack(const Mat &A, const Mat &B)
+    {
+        // 1. Check if column counts match
+        if (A.col != B.col)
+        {
+            std::cerr << "[Error] Cannot vstack matrices: Column counts do not match ("
+                      << A.col << " vs " << B.col << ")\n";
+            return Mat();
+        }
+
+        // 2. Create new matrix with combined rows
+        Mat AB(A.row + B.row, A.col);
+
+        // 3. Copy data from A and B
+        // Copy A (top rows)
+        for (int i = 0; i < A.row; ++i)
+        {
+            for (int j = 0; j < A.col; ++j)
+            {
+                AB(i, j) = A(i, j);
+            }
+        }
+        // Copy B (bottom rows)
+        for (int i = 0; i < B.row; ++i)
+        {
+            for (int j = 0; j < B.col; ++j)
+            {
+                AB(A.row + i, j) = B(i, j);
+            }
+        }
+
+        return AB;
+    }
+
+    /**
      * @name Mat::ones(int size)
      * @brief Create a square matrix filled with ones.
      *

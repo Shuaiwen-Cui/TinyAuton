@@ -631,6 +631,22 @@ void Mat::swap_rows(int row1, int row2);
 
 **Returns**: void
 
+### Swap columns
+
+```cpp
+void Mat::swap_cols(int col1, int col2);
+```
+
+**Description**: Swaps the specified columns in the matrix. Useful for column pivoting in algorithms like Gaussian elimination with column pivoting.
+
+**Parameters**:
+
+- `int col1` : First column index.
+
+- `int col2` : Second column index.
+
+**Returns**: void
+
 ### Clear matrix
 
 ```cpp
@@ -675,7 +691,15 @@ Mat &operator+=(const Mat &A);
 Mat &operator+=(float C);
 ```
 
-### Sbtract matrix
+**Description**: Element-wise addition of a constant to this matrix.
+
+**Parameters**:
+
+- `float C` : The constant to add.
+
+**Returns**: Mat& - Reference to the current matrix.
+
+### Subtract matrix
 ```cpp
 Mat &operator-=(const Mat &A);
 ```
@@ -691,11 +715,13 @@ Mat &operator-=(const Mat &A);
 Mat &operator-=(float C);
 ```
 
-**Description**: Subtracts the specified constant from this matrix.
+**Description**: Element-wise subtraction of a constant from this matrix.
 
-***Parameters**:
+**Parameters**:
 
-- `float C` : Constant to be subtracted.
+- `float C` : The constant to subtract.
+
+**Returns**: Mat& - Reference to the current matrix.
 
 ### Multiply matrix
 ```cpp
@@ -713,44 +739,52 @@ Mat &operator*=(const Mat &A);
 Mat &operator*=(float C);
 ```
 
-**Description**: Multiplies this matrix by the specified constant.
+**Description**: Element-wise multiplication by a constant.
 
 **Parameters**:
 
-- `float C` : Constant to be multiplied.
+- `float C` : The constant multiplier.
+
+**Returns**: Mat& - Reference to the current matrix.
 
 ### Divide matrix (element-wise)
 ```cpp
 Mat &operator/=(const Mat &B);
 ```
 
-**Description**: Divides this matrix by the specified matrix element-wise.
+**Description**: Element-wise division: this = this / B.
 
 **Parameters**:
 
-- `const Mat &B` : Matrix to be divided by.
+- `const Mat &B` : The matrix divisor.
+
+**Returns**: Mat& - Reference to the current matrix.
 
 ### Divide constant
 ```cpp
 Mat &operator/=(float C);
 ```
 
-**Description**: Divides this matrix by the specified constant.
+**Description**: Element-wise division of this matrix by a constant.
 
 **Parameters**:
 
-- `float C` : Constant to be divided by.
+- `float C` : The constant divisor.
+
+**Returns**: Mat& - Reference to the current matrix.
 
 ### Exponentiation
 ```cpp
 Mat operator^(int C);
 ```
 
-**Description**: Raises this matrix to the specified power.
+**Description**: Element-wise integer exponentiation. Returns a new matrix where each element is raised to the given power.
 
 **Parameters**:
 
-- `int C` : Exponent.
+- `int C` : The exponent (integer).
+
+**Returns**: Mat - New matrix after exponentiation.
 
 
 ## LINEAR ALGEBRA
@@ -758,27 +792,46 @@ Mat operator^(int C);
 ### Transpose
 
 ```cpp
-Mat::transpose();
+Mat Mat::transpose();
 ```
 
 **Description**: Calculates the transpose of the matrix, returning a new matrix.
 
-
 **Parameters**: None.
 
-### cofactor 
+**Returns**: Mat - Transposed matrix.
+
+### Minor matrix
 
 ```cpp
-Mat::cofactor(int row, int col);
+Mat Mat::minor(int row, int col);
 ```
 
-**Description**: Extracts the cofactor matrix from the specified row and column.
+**Description**: Calculates the minor matrix by removing the specified row and column. The minor is the submatrix obtained by removing one row and one column.
 
 **Parameters**: 
 
-- `int row`: Number of the row to be excluded.
+- `int row`: Row index to remove.
 
-- `int col`: Number of the column to be excluded.
+- `int col`: Column index to remove.
+
+**Returns**: Mat - The (n-1)x(n-1) minor matrix.
+
+### Cofactor matrix
+
+```cpp
+Mat Mat::cofactor(int row, int col);
+```
+
+**Description**: Calculates the cofactor matrix (same as minor matrix). The cofactor matrix is the same as the minor matrix. The sign (-1)^(i+j) is applied when computing the cofactor value, not to the matrix elements themselves.
+
+**Parameters**: 
+
+- `int row`: Row index to remove.
+
+- `int col`: Column index to remove.
+
+**Returns**: Mat - The (n-1)x(n-1) cofactor matrix (same as minor matrix).
 
 ### Determinant
 
@@ -786,7 +839,7 @@ Mat::cofactor(int row, int col);
 float Mat::determinant();
 ```
 
-**Description**: Calculates the determinant of the matrix. It is based on cofactor and adjoint matrices.
+**Description**: Calculates the determinant of a square matrix using Laplace Expansion. Low efficiency, only suitable for small matrices!!!
 
 **Parameters**: None.
 
@@ -795,10 +848,10 @@ float Mat::determinant();
 ### Adjoint
 
 ```cpp
-Mat::adjoint();
+Mat Mat::adjoint();
 ```
 
-**Description**: Calculates the adjoint of the matrix.
+**Description**: Calculates the adjoint (adjugate) matrix of a square matrix.
 
 **Parameters**: None.
 
@@ -810,7 +863,7 @@ Mat::adjoint();
 void Mat::normalize();
 ```
 
-**Description**: Normalizes the matrix.
+**Description**: Normalizes the matrix using L2 norm (Frobenius norm). After normalization, ||Matrix|| = 1.
 
 **Parameters**: None.
 
@@ -822,58 +875,78 @@ void Mat::normalize();
 float Mat::norm() const;
 ```
 
-**Description**: Calculates the norm of the matrix.
+**Description**: Calculates the Frobenius norm (L2 norm) of the matrix.
 
 **Parameters**: None.
 
-**Returns**: float - Norm value.
+**Returns**: float - The computed matrix norm.
 
 ### Inverse using Adjoint
 
 ```cpp
-Mat::inverse_adjoint();
+Mat Mat::inverse_adjoint();
 ```
 
-**Description**: Calculates the inverse of the matrix using the adjoint method.
+**Description**: Computes the inverse of a square matrix using adjoint method. If the matrix is singular, returns a zero matrix.
 
 **Parameters**: None.
 
-**Returns**: Mat - Inverse matrix.
+**Returns**: Mat - The inverse matrix. If singular, returns a zero matrix.
 
-### Identity matrix
+### Identity Matrix
 
 ```cpp
-static Mat::eye(int size);
+static Mat Mat::eye(int size);
 ```
 
-**Description**: Creates an identity matrix of the specified size.
+**Description**: Generates an identity matrix of given size.
 
 **Parameters**: 
 
-- `int size` : Size of the identity matrix.
+- `int size` : Dimension of the square identity matrix.
 
-**Returns**: Mat - Identity matrix.
+**Returns**: Mat - Identity matrix (size x size).
 
 
-### Augmentation Matrix
+### Augmentation Matrix (Horizontal Concatenation)
 
 ```cpp
-static Mat::augment(const Mat &A, const Mat &B);
+static Mat Mat::augment(const Mat &A, const Mat &B);
 ```
 
-**Description**: Creates an augmented matrix by combining two matrices.
+**Description**: Creates an augmented matrix by horizontally concatenating two matrices [A | B]. The row counts of A and B must match.
 
 **Parameters**:
 
-- `const Mat &A` : First matrix.
+- `const Mat &A` : Left matrix.
 
-### identity matrix
+- `const Mat &B` : Right matrix.
+
+**Returns**: Mat - Augmented matrix [A B].
+
+### Vertical Stack
 
 ```cpp
-static Mat::ones(int rows, int cols);
+static Mat Mat::vstack(const Mat &A, const Mat &B);
 ```
 
-**Description**: Creates a matrix filled with ones of the specified size.
+**Description**: Vertically stacks two matrices [A; B]. The column counts of A and B must match.
+
+**Parameters**:
+
+- `const Mat &A` : Top matrix.
+
+- `const Mat &B` : Bottom matrix.
+
+**Returns**: Mat - Vertically stacked matrix [A; B].
+
+### All-Ones Matrix (Rectangular)
+
+```cpp
+static Mat Mat::ones(int rows, int cols);
+```
+
+**Description**: Creates a matrix of specified size filled with ones.
 
 **Parameters**:
 
@@ -881,74 +954,58 @@ static Mat::ones(int rows, int cols);
 
 - `int cols` : Number of columns.
 
-**Returns**: Mat - Matrix filled with ones.
+**Returns**: Mat - Matrix [rows x cols] with all elements = 1.
 
-### All-Ones matrix
-
-```cpp
-static Mat::ones(int rows, int cols);
-```
-
-**Description**: Creates a matrix filled with ones of the specified size.
-
-**Parameters**:
-
-- `int rows` : Number of rows.
-
-- `int cols` : Number of columns.
-
-**Returns**: Mat - Matrix filled with ones.
-
-
-### All-Ones matrix
+### All-Ones Matrix (Square)
 
 ```cpp
-static Mat::ones(int size);
+static Mat Mat::ones(int size);
 ```
 
 **Description**: Creates a square matrix filled with ones of the specified size.
 
 **Parameters**:
 
-- `int size` : Size of the square matrix.
+- `int size` : Size of the square matrix (rows = cols).
 
-**Returns**: Mat - Square matrix filled with ones.
+**Returns**: Mat - Square matrix [size x size] with all elements = 1.
 
 
 ### Gaussian Elimination
 
 ```cpp
-Mat::gaussian_eliminate() const;
+Mat Mat::gaussian_eliminate() const;
 ```
 
-**Description**: Performs Gaussian elimination on the matrix.
-
+**Description**: Performs Gaussian Elimination to convert matrix to Row Echelon Form (REF).
 
 **Parameters**: None.
 
-### row reduce from Gaussian elimination
+**Returns**: Mat - The upper triangular matrix (REF form).
+
+### Row Reduce from Gaussian
 
 ```cpp
-Mat::row_reduce_from_gaussian();
+Mat Mat::row_reduce_from_gaussian();
 ```
 
-**Description**: Performs row reduction from Gaussian elimination on the matrix.
+**Description**: Converts a matrix (assumed in row echelon form) to Reduced Row Echelon Form (RREF).
 
 **Parameters**: None.
 
-**Returns**: Mat - Row reduced matrix.
+**Returns**: Mat - The matrix in RREF form.
 
-### Inverse using Gaussian-Jordan elimination
+### Inverse using Gaussian-Jordan Elimination
 
 ```cpp
-Mat::inverse_gje();
+Mat Mat::inverse_gje();
 ```
 
-**Description**: Calculates the inverse of the matrix using Gaussian-Jordan elimination.
+**Description**: Computes the inverse of a square matrix using Gauss-Jordan elimination.
 
 **Parameters**: None.
 
-**Returns**: Mat - Inverse matrix.
+**Returns**: Mat - The inverse matrix if invertible, otherwise returns empty matrix.
 
 ### Dot Product
 
@@ -956,15 +1013,15 @@ Mat::inverse_gje();
 float Mat::dotprod(const Mat &A, const Mat &B);
 ```
 
-**Description**: Calculates the dot product of two matrices.
+**Description**: Calculates the dot product of two vectors (Nx1).
 
 **Parameters**:
 
-- `const Mat &A` : First matrix.
+- `const Mat &A` : Input vector A (Nx1).
 
-- `const Mat &B` : Second matrix.
+- `const Mat &B` : Input vector B (Nx1).
 
-**Returns**: float - Dot product value.
+**Returns**: float - The computed dot product value.
 
 ### Solve Linear System
 
@@ -972,15 +1029,15 @@ float Mat::dotprod(const Mat &A, const Mat &B);
 Mat Mat::solve(const Mat &A, const Mat &b);
 ```
 
-**Description**: Solves the linear system Ax = b.
+**Description**: Solves the linear system Ax = b using Gaussian elimination.
 
 **Parameters**:
 
-- `const Mat &A` : Coefficient matrix.
+- `const Mat &A` : Coefficient matrix (NxN).
 
-- `const Mat &b` : Right-hand side matrix.
+- `const Mat &b` : Result vector (Nx1).
 
-**Returns**: Mat - Solution matrix.
+**Returns**: Mat - Solution vector (Nx1) containing the roots of the equation Ax = b.
 
 ### Band Solve
 
@@ -988,32 +1045,17 @@ Mat Mat::solve(const Mat &A, const Mat &b);
 Mat Mat::band_solve(Mat A, Mat b, int k);
 ```
 
-**Description**: Solves a banded linear system.
+**Description**: Solves the system of equations Ax = b using optimized Gaussian elimination for banded matrices.
 
 **Parameters**:
 
-- `Mat A` : Coefficient matrix.
+- `Mat A` : Coefficient matrix (NxN) - banded matrix.
 
-- `Mat b` : Right-hand side matrix.
+- `Mat b` : Result vector (Nx1).
 
+- `int k` : Bandwidth of the matrix (the width of the non-zero bands).
 
-### Band Solve
-
-```cpp
-Mat Mat::band_solve(Mat A, Mat b, int k);
-```
-
-**Description**: Solves a banded linear system.
-
-**Parameters**:
-
-- `Mat A` : Coefficient matrix.
-
-- `Mat b` : Right-hand side matrix.
-
-- `int k` : Bandwidth.
-
-**Returns**: Mat - Solution matrix.
+**Returns**: Mat - Solution vector (Nx1) containing the roots of the equation Ax = b.
 
 
 
@@ -1023,16 +1065,15 @@ Mat Mat::band_solve(Mat A, Mat b, int k);
 Mat Mat::roots(Mat A, Mat y);
 ```
 
-**Description**: Calculates the roots of a polynomial represented by the matrix A.
+**Description**: Solves the matrix using a different method. Another implementation of the 'solve' function, no difference in principle. This method solves the linear system A * x = y using Gaussian elimination.
 
 **Parameters**:
 
-- `Mat A` : Coefficient matrix.
+- `Mat A` : Matrix [N]x[N] with input coefficients.
 
-- `Mat y` : Right-hand side matrix.
+- `Mat y` : Vector [N]x[1] with result values.
 
-
-**Returns**: Mat - Roots matrix.
+**Returns**: Mat - Matrix [N]x[1] with roots.
 
 
 
@@ -1200,59 +1241,67 @@ std::istream &operator>>(std::istream &is, Mat &m);
 Mat operator+(const Mat &A, const Mat &B);
 ```
 
-**Description**: Adds the specified matrices.
+**Description**: Adds two matrices element-wise.
 
 **Parameters**:
 
 - `const Mat &A` : First matrix.
 
 - `const Mat &B` : Second matrix.
+
+**Returns**: Mat - Result matrix A+B.
 
 ### Add constant
 ```cpp
 Mat operator+(const Mat &A, float C);
 ```
 
-**Description**: Adds the specified constant to the matrix.
+**Description**: Adds a constant to a matrix element-wise.
 
 **Parameters**:
 
-- `const Mat &A` : Matrix to be added.
+- `const Mat &A` : Input matrix A.
 
-- `float C` : Constant to be added.
+- `float C` : Input constant.
+
+**Returns**: Mat - Result matrix A+C.
 
 ### Subtract matrix
 ```cpp
 Mat operator-(const Mat &A, const Mat &B);
 ```
 
-**Description**: Subtracts the specified matrices.
+**Description**: Subtracts two matrices element-wise.
 
 **Parameters**:
 
 - `const Mat &A` : First matrix.
 
 - `const Mat &B` : Second matrix.
+
+**Returns**: Mat - Result matrix A-B.
 
 ### Subtract constant
 ```cpp
 Mat operator-(const Mat &A, float C);
 ```
 
-**Description**: Subtracts the specified constant from the matrix.
+**Description**: Subtracts a constant from a matrix element-wise.
 
 **Parameters**:
 
-- `const Mat &A` : Matrix to be subtracted.
+- `const Mat &A` : Input matrix A.
 
-- `float C` : Constant to be subtracted.
+- `float C` : Input constant.
+
+**Returns**: Mat - Result matrix A-C.
 
 ### Multiply matrix
 ```cpp
 Mat operator*(const Mat &A, const Mat &B);
 ```
 
-**Description**: Multiplies the specified matrices.
+**Description**: Multiplies two matrices (matrix multiplication).
 
 **Parameters**:
 
@@ -1260,45 +1309,37 @@ Mat operator*(const Mat &A, const Mat &B);
 
 - `const Mat &B` : Second matrix.
 
+**Returns**: Mat - Result matrix A*B.
+
 ### Multiply constant
 ```cpp
 Mat operator*(const Mat &A, float C);
 ```
 
-**Description**: Multiplies the specified matrix by the constant.
+**Description**: Multiplies a matrix by a constant element-wise.
 
 **Parameters**:
 
-- `const Mat &A` : Matrix to be multiplied.
+- `const Mat &A` : Input matrix A.
 
-- `float C` : Constant to be multiplied.
+- `float C` : Floating point value.
 
-### Multiply constant
+**Returns**: Mat - Result matrix A*C.
+
+### Multiply constant (left side)
 ```cpp
 Mat operator*(float C, const Mat &A);
 ```
 
-**Description**: Multiplies the specified matrix by the constant.
+**Description**: Multiplies a constant by a matrix element-wise.
 
 **Parameters**:
 
-- `float C` : Constant to be multiplied.
+- `float C` : Floating point value.
 
-- `const Mat &A` : Matrix to be multiplied.
+- `const Mat &A` : Input matrix A.
 
-### Multiply constant with constant on the left
-
-```cpp
-Mat operator*(float C, const Mat &A);
-```
-
-**Description**: Multiplies the specified matrix by the constant.
-
-**Parameters**:
-
-- `float C` : Constant to be multiplied.
-
-- `const Mat &A` : Matrix to be multiplied.
+**Returns**: Mat - Result matrix C*A.
 
 
 ### Divide matrix (by constant)
@@ -1306,26 +1347,30 @@ Mat operator*(float C, const Mat &A);
 Mat operator/(const Mat &A, float C);
 ```
 
-**Description**: Divides the specified matrix by the constant element-wise.
+**Description**: Divides a matrix by a constant element-wise.
 
 **Parameters**:
 
-- `const Mat &A` : Matrix to be divided.
+- `const Mat &A` : Input matrix A.
 
-- `float C` : Constant to divide by.
+- `float C` : Floating point value.
+
+**Returns**: Mat - Result matrix A/C.
 
 ### Divide matrix (element-wise)
 ```cpp
 Mat operator/(const Mat &A, const Mat &B);
 ```
 
-**Description**: Divides the specified matrices element-wise.
+**Description**: Divides matrix A by matrix B element-wise.
 
 **Parameters**:
 
-- `const Mat &A` : First matrix.
+- `const Mat &A` : Input matrix A.
 
-- `const Mat &B` : Second matrix.
+- `const Mat &B` : Input matrix B.
+
+**Returns**: Mat - Result matrix C, where C[i,j] = A[i,j]/B[i,j].
 
 ### Equality check
 ```cpp

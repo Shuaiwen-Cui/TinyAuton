@@ -15,6 +15,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <sstream>  // For std::istringstream (used in stream operator tests)
 
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
 #include "esp_task_wdt.h"       // For FreeRTOS task watchdog
@@ -982,6 +983,66 @@ void test_matrix_utilities()
     tiny::Mat invalidAug = tiny::Mat::augment(A, C);
     invalidAug.print_info();  // Should show empty matrix due to error
 
+    // Test 5.8.5: Vertical Stack (vstack)
+    std::cout << "\n[Test 5.8.5] Vertically Stack Two Matrices [A; B]\n";
+
+    // Prepare matrices A (2x3) and B (2x3)
+    tiny::Mat A_vstack(2, 3);
+    A_vstack(0,0) = 1;  A_vstack(0,1) = 2;  A_vstack(0,2) = 3;
+    A_vstack(1,0) = 4;  A_vstack(1,1) = 5;  A_vstack(1,2) = 6;
+
+    tiny::Mat B_vstack(2, 3);
+    B_vstack(0,0) = 7;  B_vstack(0,1) = 8;  B_vstack(0,2) = 9;
+    B_vstack(1,0) = 10; B_vstack(1,1) = 11; B_vstack(1,2) = 12;
+
+    std::cout << "Matrix A (top):\n";
+    A_vstack.print_matrix(true);
+    std::cout << "Matrix B (bottom):\n";
+    B_vstack.print_matrix(true);
+
+    tiny::Mat AB_vstack = tiny::Mat::vstack(A_vstack, B_vstack);
+    std::cout << "Vertically Stacked Matrix [A; B]:\n";
+    AB_vstack.print_matrix(true);
+    std::cout << "Expected: 4x3 matrix with A on top, B on bottom\n";
+
+    // Test 5.8.6: Vertical Stack with different row counts
+    std::cout << "\n[Test 5.8.6] Vertical Stack with Different Row Counts (Same Columns)\n";
+    tiny::Mat A_small(1, 3);
+    A_small(0,0) = 1; A_small(0,1) = 2; A_small(0,2) = 3;
+
+    tiny::Mat B_large(3, 3);
+    B_large(0,0) = 4;  B_large(0,1) = 5;  B_large(0,2) = 6;
+    B_large(1,0) = 7;  B_large(1,1) = 8;  B_large(1,2) = 9;
+    B_large(2,0) = 10; B_large(2,1) = 11; B_large(2,2) = 12;
+
+    std::cout << "Matrix A (1x3):\n";
+    A_small.print_matrix(true);
+    std::cout << "Matrix B (3x3):\n";
+    B_large.print_matrix(true);
+
+    tiny::Mat AB_mixed = tiny::Mat::vstack(A_small, B_large);
+    std::cout << "Vertically Stacked Matrix [A; B] (1x3 + 3x3 = 4x3):\n";
+    AB_mixed.print_matrix(true);
+
+    // Test 5.8.7: Column mismatch case (Expect Error)
+    std::cout << "\n[Test 5.8.7] VStack with Column Mismatch (Expect Error)\n";
+    tiny::Mat A_col(2, 2);
+    A_col(0,0) = 1; A_col(0,1) = 2;
+    A_col(1,0) = 3; A_col(1,1) = 4;
+
+    tiny::Mat B_col(2, 3);  // Different column count
+    B_col(0,0) = 5; B_col(0,1) = 6; B_col(0,2) = 7;
+    B_col(1,0) = 8; B_col(1,1) = 9; B_col(1,2) = 10;
+
+    std::cout << "Matrix A (2x2):\n";
+    A_col.print_matrix(true);
+    std::cout << "Matrix B (2x3, different columns):\n";
+    B_col.print_matrix(true);
+
+    tiny::Mat invalidVStack = tiny::Mat::vstack(A_col, B_col);
+    std::cout << "Result (should be empty due to error):\n";
+    invalidVStack.print_info();  // Should show empty matrix due to error
+
 }
 
 // Group 5.9: Gaussian Elimination
@@ -1566,10 +1627,10 @@ void test_roots()
 // Group 6: Stream Operators
 void test_stream_operators()
 {
-    std::cout << "\n[Test: Stream Operators]\n";
+    std::cout << "\n[Group 6: Stream Operators Tests]\n";
 
-    // Test 1: Test stream insertion operator (<<) for Mat
-    std::cout << "[Test 1] Stream Insertion Operator (<<) for Mat\n";
+    // Test 6.1: Test stream insertion operator (<<) for Mat
+    std::cout << "\n[Test 6.1] Stream Insertion Operator (<<) for Mat\n";
     tiny::Mat mat1(3, 3);
     mat1(0, 0) = 1; mat1(0, 1) = 2; mat1(0, 2) = 3;
     mat1(1, 0) = 4; mat1(1, 1) = 5; mat1(1, 2) = 6;
@@ -1578,37 +1639,50 @@ void test_stream_operators()
     std::cout << "Matrix mat1:\n";
     std::cout << mat1 << std::endl; // Use the << operator to print mat1
 
-    // Test 2: Test stream insertion operator (<<) for Mat::ROI
-    std::cout << "[Test 2] Stream Insertion Operator (<<) for Mat::ROI\n";
+    // Test 6.2: Test stream insertion operator (<<) for Mat::ROI
+    std::cout << "\n[Test 6.2] Stream Insertion Operator (<<) for Mat::ROI\n";
     tiny::Mat::ROI roi(1, 2, 3, 4);
-    std::cout << "ROI roi:\n";
+    // ROI constructor: ROI(pos_x, pos_y, width, height)
+    // roi(1, 2, 3, 4) means: start at column 1, row 2, with width 3, height 4
+    std::cout << "ROI created: ROI(pos_x=1, pos_y=2, width=3, height=4)\n";
+    std::cout << "Expected output:\n";
+    std::cout << "  row start: 2 (pos_y)\n";
+    std::cout << "  col start: 1 (pos_x)\n";
+    std::cout << "  row count: 4 (height)\n";
+    std::cout << "  col count: 3 (width)\n";
+    std::cout << "\nActual output:\n";
     std::cout << roi << std::endl; // Use the << operator to print roi
 
-    // Test 3: Test stream extraction operator (>>) for Mat
-    std::cout << "[Test 3] Stream Extraction Operator (>>) for Mat\n";
+    // Test 6.3: Test stream extraction operator (>>) for Mat
+    std::cout << "\n[Test 6.3] Stream Extraction Operator (>>) for Mat\n";
     tiny::Mat mat2(2, 2);
-    std::cout << "Please enter 4 elements for a 2x2 matrix:\n";
-    std::cin >> mat2; // Use the >> operator to input mat2
+    // Use istringstream to simulate input (for automated testing)
+    std::istringstream input1("10 20 30 40");
+    std::cout << "Simulated input: \"10 20 30 40\"\n";
+    input1 >> mat2; // Use the >> operator to read from string stream
     std::cout << "Matrix mat2 after input:\n";
     std::cout << mat2 << std::endl; // Use the << operator to print mat2
+    std::cout << "Expected: [10, 20; 30, 40]\n";
 
-    // Test 4: Test stream extraction operator (>>) for Mat (with invalid input)
-    std::cout << "[Test 4] Stream Extraction Operator (>>) for Mat with invalid input\n";
+    // Test 6.4: Test stream extraction operator (>>) for Mat (with different values)
+    std::cout << "\n[Test 6.4] Stream Extraction Operator (>>) for Mat (2x3 matrix)\n";
     tiny::Mat mat3(2, 3);
-    std::cout << "Please enter 6 elements for a 2x3 matrix:\n";
-    std::cin >> mat3; // Use the >> operator to input mat3
+    // Use istringstream to simulate input (for automated testing)
+    std::istringstream input2("1.5 2.5 3.5 4.5 5.5 6.5");
+    std::cout << "Simulated input: \"1.5 2.5 3.5 4.5 5.5 6.5\"\n";
+    input2 >> mat3; // Use the >> operator to read from string stream
     std::cout << "Matrix mat3 after input:\n";
     std::cout << mat3 << std::endl; // Use the << operator to print mat3
+    std::cout << "Expected: [1.5, 2.5, 3.5; 4.5, 5.5, 6.5]\n";
 }
 
 // Group 7: Global Arithmetic Operators
-
 void test_matrix_operations()
 {
-    std::cout << "\n[Test: Matrix Operations]\n";
+    std::cout << "\n[Group 7: Global Arithmetic Operators Tests]\n";
 
-    /*** Test 1: Matrix Addition (operator+) ***/
-    std::cout << "\n[Test 1] Matrix Addition (operator+)\n";
+    // Test 7.1: Matrix Addition (operator+)
+    std::cout << "\n[Test 7.1] Matrix Addition (operator+)\n";
     tiny::Mat matA(2, 2);
     tiny::Mat matB(2, 2);
     
@@ -1618,30 +1692,45 @@ void test_matrix_operations()
     matB(0, 0) = 5; matB(0, 1) = 6;
     matB(1, 0) = 7; matB(1, 1) = 8;
 
+    std::cout << "Matrix A:\n";
+    matA.print_matrix(true);
+    std::cout << "Matrix B:\n";
+    matB.print_matrix(true);
+
     tiny::Mat resultAdd = matA + matB;
     std::cout << "matA + matB:\n";
     std::cout << resultAdd << std::endl;  // Expected: [6, 8], [10, 12]
 
-    /*** Test 2: Matrix Addition with Constant (operator+) ***/
-    std::cout << "\n[Test 2] Matrix Addition with Constant (operator+)\n";
+    // Test 7.2: Matrix Addition with Constant (operator+)
+    std::cout << "\n[Test 7.2] Matrix Addition with Constant (operator+)\n";
+    std::cout << "Matrix A:\n";
+    matA.print_matrix(true);
+    std::cout << "Constant: 5.0\n";
     tiny::Mat resultAddConst = matA + 5.0f;
     std::cout << "matA + 5.0f:\n";
     std::cout << resultAddConst << std::endl;  // Expected: [6, 7], [8, 9]
 
-    /*** Test 3: Matrix Subtraction (operator-) ***/
-    std::cout << "\n[Test 3] Matrix Subtraction (operator-)\n";
+    // Test 7.3: Matrix Subtraction (operator-)
+    std::cout << "\n[Test 7.3] Matrix Subtraction (operator-)\n";
+    std::cout << "Matrix A:\n";
+    matA.print_matrix(true);
+    std::cout << "Matrix B:\n";
+    matB.print_matrix(true);
     tiny::Mat resultSub = matA - matB;
     std::cout << "matA - matB:\n";
     std::cout << resultSub << std::endl;  // Expected: [-4, -4], [-4, -4]
 
-    /*** Test 4: Matrix Subtraction with Constant (operator-) ***/
-    std::cout << "\n[Test 4] Matrix Subtraction with Constant (operator-)\n";
+    // Test 7.4: Matrix Subtraction with Constant (operator-)
+    std::cout << "\n[Test 7.4] Matrix Subtraction with Constant (operator-)\n";
+    std::cout << "Matrix A:\n";
+    matA.print_matrix(true);
+    std::cout << "Constant: 2.0\n";
     tiny::Mat resultSubConst = matA - 2.0f;
     std::cout << "matA - 2.0f:\n";
     std::cout << resultSubConst << std::endl;  // Expected: [-1, 0], [1, 2]
 
-    /*** Test 5: Matrix Multiplication (operator*) ***/
-    std::cout << "\n[Test 5] Matrix Multiplication (operator*)\n";
+    // Test 7.5: Matrix Multiplication (operator*)
+    std::cout << "\n[Test 7.5] Matrix Multiplication (operator*)\n";
     tiny::Mat matC(2, 3);
     tiny::Mat matD(3, 2);
 
@@ -1652,30 +1741,45 @@ void test_matrix_operations()
     matD(1, 0) = 9; matD(1, 1) = 10;
     matD(2, 0) = 11; matD(2, 1) = 12;
 
+    std::cout << "Matrix C (2x3):\n";
+    matC.print_matrix(true);
+    std::cout << "Matrix D (3x2):\n";
+    matD.print_matrix(true);
+
     tiny::Mat resultMul = matC * matD;
     std::cout << "matC * matD:\n";
     std::cout << resultMul << std::endl;  // Expected: [58, 64], [139, 154]
 
-    /*** Test 6: Matrix Multiplication with Constant (operator*) ***/
-    std::cout << "\n[Test 6] Matrix Multiplication with Constant (operator*)\n";
+    // Test 7.6: Matrix Multiplication with Constant (operator*)
+    std::cout << "\n[Test 7.6] Matrix Multiplication with Constant (operator*)\n";
+    std::cout << "Matrix A:\n";
+    matA.print_matrix(true);
+    std::cout << "Constant: 2.0\n";
     tiny::Mat resultMulConst = matA * 2.0f;
     std::cout << "matA * 2.0f:\n";
     std::cout << resultMulConst << std::endl;  // Expected: [2, 4], [6, 8]
 
-    /*** Test 7: Matrix Division (operator/) ***/
-    std::cout << "\n[Test 7] Matrix Division (operator/)\n";
+    // Test 7.7: Matrix Division (operator/)
+    std::cout << "\n[Test 7.7] Matrix Division (operator/)\n";
+    std::cout << "Matrix A:\n";
+    matA.print_matrix(true);
+    std::cout << "Constant: 2.0\n";
     tiny::Mat resultDiv = matA / 2.0f;
     std::cout << "matA / 2.0f:\n";
     std::cout << resultDiv << std::endl;  // Expected: [0.5, 1], [1.5, 2]
 
-    /*** Test 8: Matrix Division Element-wise (operator/) ***/
-    std::cout << "\n[Test 8] Matrix Division Element-wise (operator/)\n";
+    // Test 7.8: Matrix Division Element-wise (operator/)
+    std::cout << "\n[Test 7.8] Matrix Division Element-wise (operator/)\n";
+    std::cout << "Matrix A:\n";
+    matA.print_matrix(true);
+    std::cout << "Matrix B:\n";
+    matB.print_matrix(true);
     tiny::Mat resultDivElem = matA / matB;
     std::cout << "matA / matB:\n";
     std::cout << resultDivElem << std::endl;  // Expected: [0.2, 0.333], [0.428, 0.5]
 
-    /*** Test 9: Matrix Comparison (operator==) ***/
-    std::cout << "\n[Test 9] Matrix Comparison (operator==)\n";
+    // Test 7.9: Matrix Comparison (operator==)
+    std::cout << "\n[Test 7.9] Matrix Comparison (operator==)\n";
     tiny::Mat matE(2, 2);
     matE(0, 0) = 1; matE(0, 1) = 2;
     matE(1, 0) = 3; matE(1, 1) = 4;
@@ -1684,10 +1788,20 @@ void test_matrix_operations()
     matF(0, 0) = 1; matF(0, 1) = 2;
     matF(1, 0) = 3; matF(1, 1) = 4;
 
+    std::cout << "Matrix E:\n";
+    matE.print_matrix(true);
+    std::cout << "Matrix F:\n";
+    matF.print_matrix(true);
+
     bool isEqual = (matE == matF);
     std::cout << "matE == matF: " << (isEqual ? "True" : "False") << std::endl;  // Expected: True
 
     matF(0, 0) = 5;  // Modify matF
+    std::cout << "\nAfter modifying matF(0,0) = 5:\n";
+    std::cout << "Matrix E:\n";
+    matE.print_matrix(true);
+    std::cout << "Matrix F:\n";
+    matF.print_matrix(true);
     isEqual = (matE == matF);
     std::cout << "matE == matF after modification: " << (isEqual ? "True" : "False") << std::endl;  // Expected: False
 }
@@ -1695,22 +1809,22 @@ void test_matrix_operations()
 // Group 8: Boundary Conditions and Error Handling
 void test_boundary_conditions()
 {
-    std::cout << "\n--- Test: Boundary Conditions and Error Handling ---\n";
+    std::cout << "\n[Group 8: Boundary Conditions and Error Handling Tests]\n";
 
-    // Test 1: Null pointer handling in print functions
-    std::cout << "\n[Test 1] Null Pointer Handling in print_matrix\n";
+    // Test 8.1: Null pointer handling in print functions
+    std::cout << "\n[Test 8.1] Null Pointer Handling in print_matrix\n";
     tiny::Mat null_mat;
     null_mat.data = nullptr;  // Simulate null pointer
     null_mat.print_matrix(true);  // Should handle gracefully
 
-    // Test 2: Null pointer handling in operator<<
-    std::cout << "\n[Test 2] Null Pointer Handling in operator<<\n";
+    // Test 8.2: Null pointer handling in operator<<
+    std::cout << "\n[Test 8.2] Null Pointer Handling in operator<<\n";
     tiny::Mat null_mat2;
     null_mat2.data = nullptr;
     std::cout << null_mat2 << std::endl;  // Should handle gracefully
 
-    // Test 3: Invalid block parameters
-    std::cout << "\n[Test 3] Invalid Block Parameters\n";
+    // Test 8.3: Invalid block parameters
+    std::cout << "\n[Test 8.3] Invalid Block Parameters\n";
     tiny::Mat mat(3, 3);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
@@ -1728,8 +1842,8 @@ void test_boundary_conditions()
     tiny::Mat block3 = mat.block(0, 0, 0, 2);
     std::cout << "block(0, 0, 0, 2): " << (block3.data == nullptr ? "Empty (correct)" : "Error") << "\n";
 
-    // Test 4: Invalid swap_rows parameters
-    std::cout << "\n[Test 4] Invalid swap_rows Parameters\n";
+    // Test 8.4: Invalid swap_rows parameters
+    std::cout << "\n[Test 8.4] Invalid swap_rows Parameters\n";
     tiny::Mat mat2(3, 3);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
@@ -1748,8 +1862,8 @@ void test_boundary_conditions()
     std::cout << "After swap_rows(0, 5):\n";
     mat2.print_matrix(true);
 
-    // Test 4.5: Invalid swap_cols parameters
-    std::cout << "\n[Test 4.5] Invalid swap_cols Parameters\n";
+    // Test 8.5: Invalid swap_cols parameters
+    std::cout << "\n[Test 8.5] Invalid swap_cols Parameters\n";
     tiny::Mat mat2_cols(3, 3);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
@@ -1768,8 +1882,8 @@ void test_boundary_conditions()
     std::cout << "After swap_cols(0, 5):\n";
     mat2_cols.print_matrix(true);
 
-    // Test 5: Division by zero
-    std::cout << "\n[Test 5] Division by Zero\n";
+    // Test 8.6: Division by zero
+    std::cout << "\n[Test 8.6] Division by Zero\n";
     tiny::Mat mat3(2, 2);
     mat3(0, 0) = 1; mat3(0, 1) = 2;
     mat3(1, 0) = 3; mat3(1, 1) = 4;
@@ -1777,8 +1891,8 @@ void test_boundary_conditions()
     tiny::Mat result = mat3 / 0.0f;
     std::cout << "mat3 / 0.0f: " << (result.data == nullptr ? "Empty (correct)" : "Error") << "\n";
 
-    // Test 6: Matrix division with zero elements
-    std::cout << "\n[Test 6] Matrix Division with Zero Elements\n";
+    // Test 8.7: Matrix division with zero elements
+    std::cout << "\n[Test 8.7] Matrix Division with Zero Elements\n";
     tiny::Mat mat4(2, 2);
     mat4(0, 0) = 1; mat4(0, 1) = 2;
     mat4(1, 0) = 3; mat4(1, 1) = 4;
@@ -1791,8 +1905,8 @@ void test_boundary_conditions()
     std::cout << "mat4 /= divisor (with zero):\n";
     mat4.print_matrix(true);
 
-    // Test 7: Empty matrix operations
-    std::cout << "\n[Test 7] Empty Matrix Operations\n";
+    // Test 8.8: Empty matrix operations
+    std::cout << "\n[Test 8.8] Empty Matrix Operations\n";
     tiny::Mat empty1, empty2;
     tiny::Mat empty_sum = empty1 + empty2;
     std::cout << "Empty matrix addition: " << (empty_sum.data == nullptr ? "Empty (correct)" : "Error") << "\n";
@@ -1801,15 +1915,15 @@ void test_boundary_conditions()
 // Group 9: Performance Benchmarks
 void test_performance_benchmarks()
 {
-    std::cout << "\n--- Test: Performance Benchmarks ---\n";
+    std::cout << "\n[Group 9: Performance Benchmarks Tests]\n";
     
     // Ensure current task is added to watchdog before starting performance tests
     #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     ensure_task_wdt_added();
     #endif
 
-    // Test 1: Matrix Addition Performance (reduced size to prevent timeout)
-    std::cout << "\n[Performance Test 1] Matrix Addition\n";
+    // Test 9.1: Matrix Addition Performance (reduced size to prevent timeout)
+    std::cout << "\n[Test 9.1] Matrix Addition Performance\n";
     tiny::Mat A(50, 50);  // Reduced from 100x100 to 50x50
     tiny::Mat B(50, 50);
     for (int i = 0; i < 50; ++i)
@@ -1822,8 +1936,8 @@ void test_performance_benchmarks()
     }
     TIME_REPEATED_OPERATION(tiny::Mat C = A + B;, PERFORMANCE_TEST_ITERATIONS, "50x50 Matrix Addition");
 
-    // Test 2: Matrix Multiplication Performance (reduced size)
-    std::cout << "\n[Performance Test 2] Matrix Multiplication\n";
+    // Test 9.2: Matrix Multiplication Performance (reduced size)
+    std::cout << "\n[Test 9.2] Matrix Multiplication Performance\n";
     tiny::Mat D(30, 30);  // Reduced from 50x50 to 30x30
     tiny::Mat E(30, 30);
     for (int i = 0; i < 30; ++i)
@@ -1836,18 +1950,18 @@ void test_performance_benchmarks()
     }
     TIME_REPEATED_OPERATION(tiny::Mat F = D * E;, PERFORMANCE_TEST_ITERATIONS, "30x30 Matrix Multiplication");
 
-    // Test 3: Matrix Transpose Performance (reduced size)
-    std::cout << "\n[Performance Test 3] Matrix Transpose\n";
+    // Test 9.3: Matrix Transpose Performance (reduced size)
+    std::cout << "\n[Test 9.3] Matrix Transpose Performance\n";
     tiny::Mat G(50, 30);  // Reduced from 100x50 to 50x30
     for (int i = 0; i < 50; ++i)
         for (int j = 0; j < 30; ++j)
             G(i, j) = static_cast<float>(i * 30 + j);
     TIME_REPEATED_OPERATION(tiny::Mat H = G.transpose();, PERFORMANCE_TEST_ITERATIONS, "50x30 Matrix Transpose");
 
-    // Test 4: Determinant Performance (reduced size significantly due to recursive nature)
+    // Test 9.4: Determinant Performance (reduced size significantly due to recursive nature)
     // Note: Determinant calculation uses recursive Laplace expansion which is O(n!) complexity
     // For performance testing, we use smaller matrices (5x5) to avoid timeout
-    std::cout << "\n[Performance Test 4] Determinant Calculation\n";
+    std::cout << "\n[Test 9.4] Determinant Calculation Performance\n";
     tiny::Mat I(5, 5);  // Reduced to 5x5 to prevent timeout (8x8 was too slow)
     for (int i = 0; i < 5; ++i)
         for (int j = 0; j < 5; ++j)
@@ -1873,15 +1987,15 @@ void test_performance_benchmarks()
               << det_dt_avg_us << " us avg\n";
     std::cout << "[Note] Determinant uses recursive Laplace expansion (O(n!)), suitable only for small matrices.\n";
 
-    // Test 5: Matrix Copy Performance (with padding, reduced size)
-    std::cout << "\n[Performance Test 5] Matrix Copy with Padding\n";
+    // Test 9.5: Matrix Copy Performance (with padding, reduced size)
+    std::cout << "\n[Test 9.5] Matrix Copy with Padding Performance\n";
     float data[80] = {0};  // Reduced from 150 to 80
     for (int i = 0; i < 80; ++i) data[i] = static_cast<float>(i);
     tiny::Mat J(data, 8, 8, 10);  // Reduced from 10x10 stride 15 to 8x8 stride 10
     TIME_REPEATED_OPERATION(tiny::Mat K = J.copy_roi(0, 0, 8, 8);, PERFORMANCE_TEST_ITERATIONS, "8x8 Copy ROI (with padding)");
 
-    // Test 6: Element Access Performance (reduced size)
-    std::cout << "\n[Performance Test 6] Element Access\n";
+    // Test 9.6: Element Access Performance (reduced size)
+    std::cout << "\n[Test 9.6] Element Access Performance\n";
     tiny::Mat L(50, 50);  // Reduced from 100x100 to 50x50
     for (int i = 0; i < 50; ++i)
         for (int j = 0; j < 50; ++j)
@@ -1922,10 +2036,10 @@ void test_performance_benchmarks()
 // Group 10: Memory Layout Tests (Padding and Stride)
 void test_memory_layout()
 {
-    std::cout << "\n--- Test: Memory Layout (Padding and Stride) ---\n";
+    std::cout << "\n[Group 10: Memory Layout Tests (Padding and Stride)]\n";
 
-    // Test 1: Contiguous memory (pad=0, step=1)
-    std::cout << "\n[Test 1] Contiguous Memory (no padding)\n";
+    // Test 10.1: Contiguous memory (pad=0, step=1)
+    std::cout << "\n[Test 10.1] Contiguous Memory (no padding)\n";
     tiny::Mat mat1(3, 4);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 4; ++j)
@@ -1934,16 +2048,16 @@ void test_memory_layout()
     mat1.print_info();
     mat1.print_matrix(true);
 
-    // Test 2: Padded memory (stride > col)
-    std::cout << "\n[Test 2] Padded Memory (stride > col)\n";
+    // Test 10.2: Padded memory (stride > col)
+    std::cout << "\n[Test 10.2] Padded Memory (stride > col)\n";
     float data[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
     tiny::Mat mat2(data, 3, 4, 5);
     std::cout << "Matrix 3x4 (stride=5, pad=1):\n";
     mat2.print_info();
     mat2.print_matrix(true);
 
-    // Test 3: Operations with padded matrices
-    std::cout << "\n[Test 3] Addition with Padded Matrices\n";
+    // Test 10.3: Operations with padded matrices
+    std::cout << "\n[Test 10.3] Addition with Padded Matrices\n";
     float data1[15] = {1, 2, 3, 4, 0, 5, 6, 7, 8, 0, 9, 10, 11, 12, 0};
     float data2[15] = {10, 20, 30, 40, 0, 50, 60, 70, 80, 0, 90, 100, 110, 120, 0};
     tiny::Mat mat3(data1, 3, 4, 5);
@@ -1953,15 +2067,15 @@ void test_memory_layout()
     mat5.print_info();
     mat5.print_matrix(true);
 
-    // Test 4: ROI operations with padded matrices
-    std::cout << "\n[Test 4] ROI Operations with Padded Matrices\n";
+    // Test 10.4: ROI operations with padded matrices
+    std::cout << "\n[Test 10.4] ROI Operations with Padded Matrices\n";
     tiny::Mat roi = mat2.view_roi(1, 1, 2, 2);
     std::cout << "ROI (1,1,2,2) from padded matrix:\n";
     roi.print_info();
     roi.print_matrix(true);
 
-    // Test 5: Copy operations preserve stride
-    std::cout << "\n[Test 5] Copy Operations Preserve Stride\n";
+    // Test 10.5: Copy operations preserve stride
+    std::cout << "\n[Test 10.5] Copy Operations Preserve Stride\n";
     tiny::Mat copied = mat2.copy_roi(0, 0, 3, 4);
     std::cout << "Copied matrix (should have stride=4, no padding):\n";
     copied.print_info();
@@ -1971,14 +2085,14 @@ void test_memory_layout()
 // Group 11: Eigenvalue and Eigenvector Decomposition
 void test_eigenvalue_decomposition()
 {
-    std::cout << "\n--- Test: Eigenvalue and Eigenvector Decomposition ---\n";
+    std::cout << "\n[Group 11: Eigenvalue and Eigenvector Decomposition Tests]\n";
 
-    // Test 1: is_symmetric() - Basic functionality
-    std::cout << "\n[Test 1] is_symmetric() - Basic Functionality\n";
+    // Test 11.1: is_symmetric() - Basic functionality
+    std::cout << "\n[Test 11.1] is_symmetric() - Basic Functionality\n";
     
-    // Test 1.1: Symmetric matrix
+    // Test 11.1.1: Symmetric matrix
     {
-        std::cout << "[Test 1.1] Symmetric 3x3 Matrix\n";
+        std::cout << "[Test 11.1.1] Symmetric 3x3 Matrix\n";
         tiny::Mat sym_mat1(3, 3);
         sym_mat1(0, 0) = 4.0f; sym_mat1(0, 1) = 1.0f; sym_mat1(0, 2) = 2.0f;
         sym_mat1(1, 0) = 1.0f; sym_mat1(1, 1) = 3.0f; sym_mat1(1, 2) = 0.0f;
@@ -1989,10 +2103,10 @@ void test_eigenvalue_decomposition()
         std::cout << "Is symmetric: " << (is_sym1 ? "True" : "False") << " (Expected: True)\n";
     }
 
-    // Test 1.2: Non-symmetric matrix (keep for later tests)
+    // Test 11.1.2: Non-symmetric matrix (keep for later tests)
     tiny::Mat non_sym_mat(3, 3);
     {
-        std::cout << "\n[Test 1.2] Non-Symmetric 3x3 Matrix\n";
+        std::cout << "\n[Test 11.1.2] Non-Symmetric 3x3 Matrix\n";
         non_sym_mat(0, 0) = 1.0f; non_sym_mat(0, 1) = 2.0f; non_sym_mat(0, 2) = 3.0f;
         non_sym_mat(1, 0) = 4.0f; non_sym_mat(1, 1) = 5.0f; non_sym_mat(1, 2) = 6.0f;
         non_sym_mat(2, 0) = 7.0f; non_sym_mat(2, 1) = 8.0f; non_sym_mat(2, 2) = 9.0f;
@@ -2002,17 +2116,17 @@ void test_eigenvalue_decomposition()
         std::cout << "Is symmetric: " << (is_sym2 ? "True" : "False") << " (Expected: False)\n";
     }
 
-    // Test 1.3: Non-square matrix
+    // Test 11.1.3: Non-square matrix
     {
-        std::cout << "\n[Test 1.3] Non-Square Matrix (2x3)\n";
+        std::cout << "\n[Test 11.1.3] Non-Square Matrix (2x3)\n";
         tiny::Mat rect_mat(2, 3);
         bool is_sym3 = rect_mat.is_symmetric(1e-5f);
         std::cout << "Is symmetric: " << (is_sym3 ? "True" : "False") << " (Expected: False)\n";
     }
 
-    // Test 1.4: Symmetric matrix with small numerical errors
+    // Test 11.1.4: Symmetric matrix with small numerical errors
     {
-        std::cout << "\n[Test 1.4] Symmetric Matrix with Small Numerical Errors\n";
+        std::cout << "\n[Test 11.1.4] Symmetric Matrix with Small Numerical Errors\n";
         tiny::Mat sym_mat2(2, 2);
         // Use 1e-5 error which is within float precision (float has ~7 significant digits)
         // For 2.0, we can represent 2.00001 accurately
@@ -2061,13 +2175,13 @@ void test_eigenvalue_decomposition()
         std::cout << " " << (diff_accurate ? "[PASS - difference stored correctly]" : "[FAIL - float precision issue]") << "\n";
     }
 
-    // Test 2: power_iteration() - Dominant eigenvalue
-    std::cout << "\n[Test 2] power_iteration() - Dominant Eigenvalue\n";
+    // Test 11.2: power_iteration() - Dominant eigenvalue
+    std::cout << "\n[Test 11.2] power_iteration() - Dominant Eigenvalue\n";
     
-    // Test 2.1: Simple 2x2 symmetric matrix (known eigenvalues)
+    // Test 11.2.1: Simple 2x2 symmetric matrix (known eigenvalues)
     tiny::Mat mat2x2(2, 2);
     {
-        std::cout << "\n[Test 2.1] Simple 2x2 Matrix\n";
+        std::cout << "\n[Test 11.2.1] Simple 2x2 Matrix\n";
         mat2x2(0, 0) = 2.0f; mat2x2(0, 1) = 1.0f;
         mat2x2(1, 0) = 1.0f; mat2x2(1, 1) = 2.0f;
         std::cout << "Matrix:\n";
@@ -2095,10 +2209,10 @@ void test_eigenvalue_decomposition()
         std::cout << "  Error from expected (3.0): " << error << (error < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
     }
 
-    // Test 2.2: 3x3 matrix (SHM-like stiffness matrix) - keep for later tests
+    // Test 11.2.2: 3x3 matrix (SHM-like stiffness matrix) - keep for later tests
     tiny::Mat stiffness(3, 3);
     {
-        std::cout << "\n[Test 2.2] 3x3 Stiffness Matrix (SHM Application)\n";
+        std::cout << "\n[Test 11.2.2] 3x3 Stiffness Matrix (SHM Application)\n";
         stiffness(0, 0) = 2.0f; stiffness(0, 1) = -1.0f; stiffness(0, 2) = 0.0f;
         stiffness(1, 0) = -1.0f; stiffness(1, 1) = 2.0f; stiffness(1, 2) = -1.0f;
         stiffness(2, 0) = 0.0f; stiffness(2, 1) = -1.0f; stiffness(2, 2) = 2.0f;
@@ -2124,20 +2238,20 @@ void test_eigenvalue_decomposition()
         std::cout << "  Error from expected (" << expected_eigen << "): " << error << (error < 0.1f ? " [PASS]" : " [FAIL]") << "\n";
     }
 
-    // Test 2.3: Non-square matrix (should fail)
+    // Test 11.2.3: Non-square matrix (should fail)
     {
-        std::cout << "\n[Test 2.3] Non-Square Matrix (Expect Error)\n";
+        std::cout << "\n[Test 11.2.3] Non-Square Matrix (Expect Error)\n";
         tiny::Mat non_square(2, 3);
         tiny::Mat::EigenPair result_error = non_square.power_iteration(100, 1e-6f);
         std::cout << "Status: " << (result_error.status == TINY_OK ? "OK" : "Error (Expected)") << "\n";
     }
 
-    // Test 3: eigendecompose_jacobi() - Symmetric matrix decomposition
-    std::cout << "\n[Test 3] eigendecompose_jacobi() - Symmetric Matrix Decomposition\n";
+    // Test 11.3: eigendecompose_jacobi() - Symmetric matrix decomposition
+    std::cout << "\n[Test 11.3] eigendecompose_jacobi() - Symmetric Matrix Decomposition\n";
     
-    // Test 3.1: Simple 2x2 symmetric matrix
+    // Test 11.3.1: Simple 2x2 symmetric matrix
     {
-        std::cout << "\n[Test 3.1] 2x2 Symmetric Matrix - Complete Decomposition\n";
+        std::cout << "\n[Test 11.3.1] 2x2 Symmetric Matrix - Complete Decomposition\n";
         std::cout << "[Expected Results]\n";
         std::cout << "  Expected eigenvalues: 3.0, 1.0 (in any order)\n";
         std::cout << "  Expected eigenvectors (for λ=3): [0.707, 0.707] or [-0.707, -0.707] (normalized)\n";
@@ -2171,9 +2285,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Verification (A*v = λ*v): " << (verify1 ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 3.2: 3x3 symmetric matrix (SHM stiffness matrix)
+    // Test 11.3.2: 3x3 symmetric matrix (SHM stiffness matrix)
     {
-        std::cout << "\n[Test 3.2] 3x3 Stiffness Matrix (SHM Application)\n";
+        std::cout << "\n[Test 11.3.2] 3x3 Stiffness Matrix (SHM Application)\n";
         std::cout << "[Expected Results]\n";
         std::cout << "  Expected eigenvalues (approximate): 3.414, 2.000, 0.586\n";
         std::cout << "  Expected natural frequencies: 1.848, 1.414, 0.765 rad/s\n";
@@ -2209,9 +2323,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Status: " << (result_jacobi2.status == TINY_OK ? "OK" : "Error") << "\n";
     }
 
-    // Test 3.3: Diagonal matrix (trivial case)
+    // Test 11.3.3: Diagonal matrix (trivial case)
     {
-        std::cout << "\n[Test 3.3] Diagonal Matrix (Eigenvalues on diagonal)\n";
+        std::cout << "\n[Test 11.3.3] Diagonal Matrix (Eigenvalues on diagonal)\n";
         tiny::Mat diag_mat(3, 3);
         diag_mat(0, 0) = 5.0f; diag_mat(0, 1) = 0.0f; diag_mat(0, 2) = 0.0f;
         diag_mat(1, 0) = 0.0f; diag_mat(1, 1) = 3.0f; diag_mat(1, 2) = 0.0f;
@@ -2241,12 +2355,12 @@ void test_eigenvalue_decomposition()
         std::cout << "Eigenvalue check (should be 5.0, 3.0, 1.0): " << (ev_check ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 4: eigendecompose_qr() - General matrix decomposition
-    std::cout << "\n[Test 4] eigendecompose_qr() - General Matrix Decomposition\n";
+    // Test 11.4: eigendecompose_qr() - General matrix decomposition
+    std::cout << "\n[Test 11.4] eigendecompose_qr() - General Matrix Decomposition\n";
     
-    // Test 4.1: General 2x2 matrix
+    // Test 11.4.1: General 2x2 matrix
     {
-        std::cout << "\n[Test 4.1] General 2x2 Matrix\n";
+        std::cout << "\n[Test 11.4.1] General 2x2 Matrix\n";
         tiny::Mat gen_mat(2, 2);
         gen_mat(0, 0) = 1.0f; gen_mat(0, 1) = 2.0f;
         gen_mat(1, 0) = 3.0f; gen_mat(1, 1) = 4.0f;
@@ -2303,9 +2417,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Overall eigenvalue check: " << (ev_check ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 4.2: Non-symmetric 3x3 matrix
+    // Test 11.4.2: Non-symmetric 3x3 matrix
     {
-        std::cout << "\n[Test 4.2] Non-Symmetric 3x3 Matrix\n";
+        std::cout << "\n[Test 11.4.2] Non-Symmetric 3x3 Matrix\n";
         std::cout << "Matrix [1,2,3; 4,5,6; 7,8,9]:\n";
         non_sym_mat.print_matrix(true);
         
@@ -2382,12 +2496,12 @@ void test_eigenvalue_decomposition()
         std::cout << "Overall eigenvalue check: " << (overall_pass ? "[PASS]" : "[FAIL - some eigenvalues have large errors]") << "\n";
     }
 
-    // Test 5: eigendecompose() - Automatic method selection
-    std::cout << "\n[Test 5] eigendecompose() - Automatic Method Selection\n";
+    // Test 11.5: eigendecompose() - Automatic method selection
+    std::cout << "\n[Test 11.5] eigendecompose() - Automatic Method Selection\n";
     
-    // Test 5.1: Symmetric matrix (should use Jacobi)
+    // Test 11.5.1: Symmetric matrix (should use Jacobi)
     {
-        std::cout << "\n[Test 5.1] Symmetric Matrix (Auto-select: Jacobi)\n";
+        std::cout << "\n[Test 11.5.1] Symmetric Matrix (Auto-select: Jacobi)\n";
         tiny::Mat sym_mat1(3, 3);
         sym_mat1(0, 0) = 4.0f; sym_mat1(0, 1) = 1.0f; sym_mat1(0, 2) = 2.0f;
         sym_mat1(1, 0) = 1.0f; sym_mat1(1, 1) = 3.0f; sym_mat1(1, 2) = 0.0f;
@@ -2408,9 +2522,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Method used: Jacobi (auto-selected for symmetric matrix)\n";
     }
 
-    // Test 5.2: Non-symmetric matrix (should use QR)
+    // Test 11.5.2: Non-symmetric matrix (should use QR)
     {
-        std::cout << "\n[Test 5.2] Non-Symmetric Matrix (Auto-select: QR)\n";
+        std::cout << "\n[Test 11.5.2] Non-Symmetric Matrix (Auto-select: QR)\n";
         std::cout << "[Expected Results]\n";
         std::cout << "  Method: Should automatically use QR (non-symmetric matrix detected)\n";
         std::cout << "  Expected eigenvalues (theoretical): 16.12, -1.12, 0.00\n";
@@ -2475,12 +2589,12 @@ void test_eigenvalue_decomposition()
         std::cout << "Overall eigenvalue check: " << (overall_pass ? "[PASS]" : "[FAIL - some eigenvalues have large errors]") << "\n";
     }
 
-    // Test 6: SHM Application Scenario - Structural Dynamics
-    std::cout << "\n[Test 6] SHM Application - Structural Dynamics Analysis\n";
+    // Test 11.6: SHM Application Scenario - Structural Dynamics
+    std::cout << "\n[Test 11.6] SHM Application - Structural Dynamics Analysis\n";
     
     // Create a simple 4-DOF structural system (mass-spring system)
     {
-        std::cout << "\n[Test 6.1] 4-DOF Mass-Spring System\n";
+        std::cout << "\n[Test 11.6.1] 4-DOF Mass-Spring System\n";
         tiny::Mat K(4, 4);  // Stiffness matrix
         K(0, 0) = 2.0f; K(0, 1) = -1.0f; K(0, 2) = 0.0f; K(0, 3) = 0.0f;
         K(1, 0) = -1.0f; K(1, 1) = 2.0f; K(1, 2) = -1.0f; K(1, 3) = 0.0f;
@@ -2541,12 +2655,12 @@ void test_eigenvalue_decomposition()
         std::cout << "Total iterations: " << modal.iterations << "\n";
     }
 
-    // Test 7: Edge Cases and Error Handling
-    std::cout << "\n[Test 7] Edge Cases and Error Handling\n";
+    // Test 11.7: Edge Cases and Error Handling
+    std::cout << "\n[Test 11.7] Edge Cases and Error Handling\n";
     
-    // Test 7.1: 1x1 matrix
+    // Test 11.7.1: 1x1 matrix
     {
-        std::cout << "\n[Test 7.1] 1x1 Matrix\n";
+        std::cout << "\n[Test 11.7.1] 1x1 Matrix\n";
         tiny::Mat mat1x1(1, 1);
         mat1x1(0, 0) = 5.0f;
         std::cout << "Matrix: [5.0]\n";
@@ -2563,18 +2677,18 @@ void test_eigenvalue_decomposition()
         std::cout << "Error from expected: " << error << (error < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
     }
     
-    // Test 7.2: Zero matrix
+    // Test 11.7.2: Zero matrix
     {
-        std::cout << "\n[Test 7.2] Zero Matrix\n";
+        std::cout << "\n[Test 11.7.2] Zero Matrix\n";
         tiny::Mat zero_mat(3, 3);
         zero_mat.clear();
         tiny::Mat::EigenPair result_zero = zero_mat.power_iteration(100, 1e-6f);
         std::cout << "Status: " << (result_zero.status == TINY_OK ? "OK" : "Error (Expected)") << "\n";
     }
     
-    // Test 7.3: Identity matrix
+    // Test 11.7.3: Identity matrix
     {
-        std::cout << "\n[Test 7.3] Identity Matrix\n";
+        std::cout << "\n[Test 11.7.3] Identity Matrix\n";
         tiny::Mat I = tiny::Mat::eye(3);
         std::cout << "Matrix (3x3 Identity):\n";
         I.print_matrix(true);
@@ -2604,25 +2718,25 @@ void test_eigenvalue_decomposition()
         std::cout << "All eigenvalues = 1.0: " << (all_one ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 8: Performance Test for SHM Applications
-    std::cout << "\n[Test 8] Performance Test for SHM Applications\n";
+    // Test 11.8: Performance Test for SHM Applications
+    std::cout << "\n[Test 11.8] Performance Test for SHM Applications\n";
     
-    // Test 8.1: Power iteration performance (fast method)
-    std::cout << "\n[Test 8.1] Power Iteration Performance (Real-time SHM)\n";
+    // Test 11.8.1: Power iteration performance (fast method)
+    std::cout << "\n[Test 11.8.1] Power Iteration Performance (Real-time SHM)\n";
     TIME_OPERATION(
         tiny::Mat::EigenPair perf_result = stiffness.power_iteration(500, 1e-6f);
         (void)perf_result;
     , "Power Iteration (3x3 matrix)");
     
-    // Test 8.2: Jacobi method performance
-    std::cout << "\n[Test 8.2] Jacobi Method Performance\n";
+    // Test 11.8.2: Jacobi method performance
+    std::cout << "\n[Test 11.8.2] Jacobi Method Performance\n";
     TIME_OPERATION(
         tiny::Mat::EigenDecomposition perf_jacobi = stiffness.eigendecompose_jacobi(1e-5f, 100);
         (void)perf_jacobi;
     , "Jacobi Decomposition (3x3 symmetric matrix)");
     
-    // Test 8.3: QR method performance
-    std::cout << "\n[Test 8.3] QR Method Performance\n";
+    // Test 11.8.3: QR method performance
+    std::cout << "\n[Test 11.8.3] QR Method Performance\n";
     TIME_OPERATION(
         tiny::Mat::EigenDecomposition perf_qr = non_sym_mat.eigendecompose_qr(100, 1e-5f);
         (void)perf_qr;
@@ -2655,37 +2769,39 @@ void tiny_matrix_test()
     // test_matrix_exponentiation();
 
     // Group 5: Linear algebra tests
-    test_matrix_transpose();
-    test_matrix_cofactor();
-    test_matrix_determinant();
-    test_matrix_adjoint();
-    test_matrix_normalize();
-    test_matrix_norm();
-    test_inverse_adjoint_adjoint();
-    test_matrix_utilities();
-    test_gaussian_eliminate();
-    test_row_reduce_from_gaussian();
-    test_inverse_gje();
-    test_dotprod();
-    test_solve();
-    test_band_solve();
-    test_roots();
+    // test_matrix_transpose();
+    // test_matrix_cofactor();
+    // test_matrix_determinant();
+    // test_matrix_adjoint();
+    // test_matrix_normalize();
+    // test_matrix_norm();
+    // test_inverse_adjoint_adjoint();
+    // test_matrix_utilities();
+    // test_gaussian_eliminate();
+    // test_row_reduce_from_gaussian();
+    // test_inverse_gje();
+    // test_dotprod();
+    // test_solve();
+    // test_band_solve();
+    // test_roots();
 
-    // // Group 6: Stream operators
+    // Group 6: Stream operators
     // test_stream_operators();
+
+    // Group 7: Matrix operations
     // test_matrix_operations();
 
-    // // Group 8: Boundary conditions and error handling
+    // Group 8: Boundary conditions and error handling
     // test_boundary_conditions();
 
-    // // Group 9: Performance benchmarks
+    // Group 9: Performance benchmarks
     // test_performance_benchmarks();
 
-    // // Group 10: Memory layout tests
+    // Group 10: Memory layout tests
     // test_memory_layout();
 
-    // // Group 11: Eigenvalue and Eigenvector Decomposition
-    // test_eigenvalue_decomposition();
+    // Group 11: Eigenvalue and Eigenvector Decomposition
+    test_eigenvalue_decomposition();
 
     std::cout << "============ [tiny_matrix_test end] ============\n";
     

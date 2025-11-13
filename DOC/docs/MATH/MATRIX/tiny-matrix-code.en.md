@@ -1,4 +1,4 @@
-# CODE
+# CODE 
 
 ## tiny_matrix.hpp
 
@@ -124,6 +124,9 @@ namespace tiny
 
         // swap rows
         void swap_rows(int row1, int row2);
+        
+        // swap columns
+        void swap_cols(int col1, int col2);
 
         // clear matrix
         void clear(void);
@@ -142,14 +145,16 @@ namespace tiny
 
         /* === Linear Algebra === */
         Mat transpose();                   // Transpose matrix
-        Mat cofactor(int row, int col);    // cofactor matrix extraction
+        Mat minor(int row, int col);       // minor matrix (submatrix after removing row and col)
+        Mat cofactor(int row, int col);    // cofactor matrix (same as minor matrix, sign applied when computing cofactor value)
         float determinant();
         Mat adjoint(); 
         void normalize();
         float norm() const;
         Mat inverse_adjoint();
         static Mat eye(int size);
-        static Mat augment(const Mat &A, const Mat &B);
+        static Mat augment(const Mat &A, const Mat &B);  // Horizontal concatenation [A | B]
+        static Mat vstack(const Mat &A, const Mat &B);  // Vertical concatenation [A; B]
         static Mat ones(int rows, int cols);
         static Mat ones(int size);
         Mat gaussian_eliminate() const;
@@ -844,6 +849,31 @@ namespace tiny
     }
 
     /**
+     * @name Mat::swap_cols(int col1, int col2)
+     * @brief Swap two columns of the matrix.
+     * @note Useful for column pivoting in algorithms like Gaussian elimination with column pivoting.
+     *
+     * @param col1 The index of the first column to swap
+     * @param col2 The index of the second column to swap
+     */
+    void Mat::swap_cols(int col1, int col2)
+    {
+        if (col1 < 0 || col1 >= this->col || col2 < 0 || col2 >= this->col)
+        {
+            std::cerr << "Error: column index out of range" << std::endl;
+            return;
+        }
+        
+        // Swap columns element by element (considering stride)
+        for (int i = 0; i < this->row; ++i)
+        {
+            float temp = (*this)(i, col1);
+            (*this)(i, col1) = (*this)(i, col2);
+            (*this)(i, col2) = temp;
+        }
+    }
+
+    /**
      * @name Mat::clear()
      * @brief Clear the matrix by setting all elements to zero.
      */
@@ -1370,17 +1400,19 @@ namespace tiny
     }
 
     /**
-     * @brief Calculate the cofactor matrix by removing specified row and column.
+     * @name Mat::minor(int target_row, int target_col)
+     * @brief Calculate the minor matrix by removing specified row and column.
+     * @note Minor is the submatrix obtained by removing one row and one column.
      *
      * @param target_row Row index to remove
      * @param target_col Column index to remove
-     * @return Mat The (n-1)x(n-1) cofactor matrix
+     * @return Mat The (n-1)x(n-1) minor matrix
      */
-    Mat Mat::cofactor(int target_row, int target_col)
+    Mat Mat::minor(int target_row, int target_col)
     {
         if (this->row != this->col)
         {
-            std::cerr << "[Error] Cofactor requires square matrix.\n";
+            std::cerr << "[Error] Minor requires square matrix.\n";
             return Mat();
         }
 
@@ -1404,6 +1436,25 @@ namespace tiny
         }
 
         return result;
+    }
+
+    /**
+     * @name Mat::cofactor(int target_row, int target_col)
+     * @brief Calculate the cofactor matrix (same as minor matrix).
+     * @note The cofactor matrix is the same as the minor matrix.
+     *       The sign (-1)^(i+j) is applied when computing the cofactor value,
+     *       not to the matrix elements themselves.
+     *       Cofactor value C_ij = (-1)^(i+j) * det(minor_matrix)
+     *
+     * @param target_row Row index to remove
+     * @param target_col Column index to remove
+     * @return Mat The (n-1)x(n-1) cofactor matrix (same as minor matrix)
+     */
+    Mat Mat::cofactor(int target_row, int target_col)
+    {
+        // Cofactor matrix is the same as minor matrix
+        // The sign is applied when computing cofactor values, not to matrix elements
+        return this->minor(target_row, target_col);
     }
 
     /**
@@ -1433,13 +1484,17 @@ namespace tiny
                    this->data[0 * this->stride + 1] * this->data[1 * this->stride + 0];
 
         float D = 0.0f;
-        int sign = 1;
 
         for (int f = 0; f < n; ++f)
         {
-            Mat minor = this->cofactor(0, f);                // Get cofactor matrix
-            D += sign * (*this)(0, f) * minor.determinant(); // Recursive call to calculate determinant of the cofactor matrix
-            sign = -sign;                                    // Alternate sign
+            // Get the cofactor matrix (same as minor matrix)
+            Mat cof = this->cofactor(0, f);
+            
+            // Calculate the sign: (-1)^(0+f) = (-1)^f
+            int sign = (f % 2 == 0) ? 1 : -1;
+            
+            // det(A) = Σ a_ij * C_ij, where C_ij = (-1)^(i+j) * det(minor_ij)
+            D += sign * (*this)(0, f) * cof.determinant();
         }
 
         return D;
@@ -1475,10 +1530,12 @@ namespace tiny
             {
                 // Calculate cofactor matrix of element (i, j)
                 Mat cof = this->cofactor(i, j);
-
+                
+                // Calculate the sign: (-1)^(i+j)
                 int sign = ((i + j) % 2 == 0) ? 1 : -1;
-
+                
                 // Adjoint is transpose of cofactor matrix
+                // adj(j, i) = C_ij = (-1)^(i+j) * det(minor_ij)
                 adj(j, i) = sign * cof.determinant();
             }
         }
@@ -1628,6 +1685,48 @@ namespace tiny
             for (int j = 0; j < B.col; ++j)
             {
                 AB(i, A.col + j) = B(i, j);
+            }
+        }
+
+        return AB;
+    }
+
+    /**
+     * @name Mat::vstack(const Mat &A, const Mat &B)
+     * @brief Vertically stack two matrices [A; B].
+     *
+     * @param A Top matrix
+     * @param B Bottom matrix
+     * @return Mat Vertically stacked matrix [A; B]
+     */
+    Mat Mat::vstack(const Mat &A, const Mat &B)
+    {
+        // 1. Check if column counts match
+        if (A.col != B.col)
+        {
+            std::cerr << "[Error] Cannot vstack matrices: Column counts do not match ("
+                      << A.col << " vs " << B.col << ")\n";
+            return Mat();
+        }
+
+        // 2. Create new matrix with combined rows
+        Mat AB(A.row + B.row, A.col);
+
+        // 3. Copy data from A and B
+        // Copy A (top rows)
+        for (int i = 0; i < A.row; ++i)
+        {
+            for (int j = 0; j < A.col; ++j)
+            {
+                AB(i, j) = A(i, j);
+            }
+        }
+        // Copy B (bottom rows)
+        for (int i = 0; i < B.row; ++i)
+        {
+            for (int j = 0; j < B.col; ++j)
+            {
+                AB(A.row + i, j) = B(i, j);
             }
         }
 

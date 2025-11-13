@@ -148,7 +148,8 @@ namespace tiny
         float norm() const;
         Mat inverse_adjoint();
         static Mat eye(int size);
-        static Mat augment(const Mat &A, const Mat &B);
+        static Mat augment(const Mat &A, const Mat &B);  // Horizontal concatenation [A | B]
+        static Mat vstack(const Mat &A, const Mat &B);  // Vertical concatenation [A; B]
         static Mat ones(int rows, int cols);
         static Mat ones(int size);
         Mat gaussian_eliminate() const;
