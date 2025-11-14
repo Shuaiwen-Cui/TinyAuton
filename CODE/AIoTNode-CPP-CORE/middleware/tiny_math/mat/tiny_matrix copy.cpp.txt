@@ -19,14 +19,11 @@
 #include <cmath>
 #include <cinttypes>
 #include <iomanip>
-#include <vector>
 
 /* LIBRARIE CONTENTS */
 namespace tiny
 {
-    // ============================================================================
-    // Rectangular ROI Structure
-    // ============================================================================
+    /* === Rectangular ROI Structure === */
     /**
      * @brief Construct a new Mat:: R O I:: R O I object
      * 
@@ -69,9 +66,7 @@ namespace tiny
         return this->width * this->height;
     }
 
-    // ============================================================================
-    // Printing Functions
-    // ============================================================================
+    /* === Printing Functions === */
     /**
      * @name Mat::PrintHead()
      * @brief Print the header of the matrix.
@@ -181,9 +176,7 @@ namespace tiny
         std::cout << std::endl;
     }
 
-    // ============================================================================
-    // Constructors & Destructor
-    // ============================================================================
+    /* === Constructors & Destructor === */
     // memory allocation
     /**
      * @name Mat::allocate()
@@ -390,14 +383,10 @@ namespace tiny
         }
     }
 
-    // ============================================================================
-    // Element Access
-    // ============================================================================
+    /* === Element Access === */
     // Already defined by inline functions in the header file
 
-    // ============================================================================
-    // Data Manipulation
-    // ============================================================================
+    /* === Data Manipulation === */
 
     /**
      * @name Mat::copy_paste(const Mat &src, int row_pos, int col_pos)
@@ -647,9 +636,7 @@ namespace tiny
         }
     }
 
-    // ============================================================================
-    // Arithmetic Operators
-    // ============================================================================
+    /* === Arithmetic Operators === */
     /**
      * @name &Mat::operator=(const Mat &src)
      * @brief Copy assignment operator - copy the elements of the source matrix into the destination matrix. Compared to the copy constructor, this one is used for existing matrix to copy the elements. The copy constructor is used for the first time to create a new matrix and copy the elements at the same time.
@@ -1143,9 +1130,7 @@ namespace tiny
         return result;
     }
 
-    // ============================================================================
-    // Linear Algebra - Basic Operations
-    // ============================================================================
+    /* === Linear Algebra === */
     /**
      * @name Mat::transpose
      * @brief Transpose the matrix.
@@ -1166,235 +1151,109 @@ namespace tiny
     }
 
     /**
-     * @name Mat::determinant()
-     * @brief Compute the determinant of the matrix (auto-selects method based on size).
-     * @note For small matrices (n <= 4), uses Laplace expansion.
-     *       For larger matrices, uses LU decomposition (O(n³)) for better efficiency.
+     * @name Mat::minor(int target_row, int target_col)
+     * @brief Calculate the minor matrix by removing specified row and column.
+     * @note Minor is the submatrix obtained by removing one row and one column.
      *
-     * @return float The determinant value
+     * @param target_row Row index to remove
+     * @param target_col Column index to remove
+     * @return Mat The (n-1)x(n-1) minor matrix
+     */
+    Mat Mat::minor(int target_row, int target_col)
+    {
+        if (this->row != this->col)
+        {
+            std::cerr << "[Error] Minor requires square matrix.\n";
+            return Mat();
+        }
+
+        int n = this->row;
+        Mat result(n - 1, n - 1);
+
+        for (int i = 0, res_i = 0; i < n; ++i)
+        {
+            if (i == target_row)
+                continue;
+
+            for (int j = 0, res_j = 0; j < n; ++j)
+            {
+                if (j == target_col)
+                    continue;
+
+                result.data[res_i * result.stride + res_j] = this->data[i * this->stride + j];
+                res_j++;
+            }
+            res_i++;
+        }
+
+        return result;
+    }
+
+    /**
+     * @name Mat::cofactor(int target_row, int target_col)
+     * @brief Calculate the cofactor matrix (same as minor matrix).
+     * @note The cofactor matrix is the same as the minor matrix.
+     *       The sign (-1)^(i+j) is applied when computing the cofactor value,
+     *       not to the matrix elements themselves.
+     *       Cofactor value C_ij = (-1)^(i+j) * det(minor_matrix)
+     *
+     * @param target_row Row index to remove
+     * @param target_col Column index to remove
+     * @return Mat The (n-1)x(n-1) cofactor matrix (same as minor matrix)
+     */
+    Mat Mat::cofactor(int target_row, int target_col)
+    {
+        // Cofactor matrix is the same as minor matrix
+        // The sign is applied when computing cofactor values, not to matrix elements
+        return this->minor(target_row, target_col);
+    }
+
+    /**
+     * @name Mat::determinant()
+     * @brief Calculate the determinant of a square matrix using Laplace Expansion.
+     * @brief Low efficiency, only suitable for small matrices!!!
+     *
+     * @return Determinant value (float)
      */
     float Mat::determinant()
     {
         if (this->row != this->col)
         {
-            std::cerr << "[Error] Determinant requires a square matrix.\n";
+            std::cerr << "[Error] Determinant can only be calculated for square matrices.\n";
             return 0.0f;
         }
 
         int n = this->row;
-        
-        // For small matrices, use Laplace expansion (more accurate for small sizes)
-        if (n <= 4)
-        {
-            return this->determinant_laplace();
-        }
-        
-        // For larger matrices, use LU decomposition (much faster, O(n³) vs O(n!))
-        return this->determinant_lu();
-    }
 
-    /**
-     * @name Mat::determinant_laplace()
-     * @brief Compute the determinant using Laplace expansion (cofactor expansion).
-     * @note Time complexity: O(n!) - suitable only for small matrices (n <= 4).
-     *       Uses recursive method with first row expansion.
-     *
-     * @return float The determinant value
-     */
-    float Mat::determinant_laplace()
-    {
-        if (this->row != this->col)
-        {
-            std::cerr << "[Error] Determinant requires a square matrix.\n";
-            return 0.0f;
-        }
-
-        int n = this->row;
+        // Base case: 1x1 matrix
         if (n == 1)
-        {
-            return this->data[0];
-        }
+            return this->data[0 * this->stride + 0];
+
+        // Base case: 2x2 matrix (optimized)
         if (n == 2)
-        {
-            return this->data[0] * this->data[this->stride + 1] - this->data[1] * this->data[this->stride];
-        }
+            return this->data[0 * this->stride + 0] * this->data[1 * this->stride + 1] - 
+                   this->data[0 * this->stride + 1] * this->data[1 * this->stride + 0];
 
-        float det = 0.0f;
-        for (int j = 0; j < n; ++j)
-        {
-            Mat minor_mat = this->minor(0, j);
-            float cofactor_val = ((j % 2 == 0) ? 1.0f : -1.0f) * minor_mat.determinant_laplace();
-            det += this->data[j] * cofactor_val;
-        }
-        return det;
-    }
+        float D = 0.0f;
 
-    /**
-     * @name Mat::determinant_lu()
-     * @brief Compute the determinant using LU decomposition.
-     * @note Time complexity: O(n³) - efficient for large matrices.
-     *       Formula: det(A) = det(P) * det(L) * det(U) = det(P) * 1 * (product of U diagonal)
-     *       where det(P) = (-1)^(number of row swaps)
-     *
-     * @return float The determinant value
-     */
-    float Mat::determinant_lu()
-    {
-        if (this->row != this->col)
+        for (int f = 0; f < n; ++f)
         {
-            std::cerr << "[Error] Determinant requires a square matrix.\n";
-            return 0.0f;
-        }
-
-        // Perform LU decomposition
-        LUDecomposition lu = this->lu_decompose(true);  // Use pivoting for numerical stability
-        
-        if (lu.status != TINY_OK)
-        {
-            // Matrix is singular or near-singular
-            return 0.0f;
-        }
-
-        int n = this->row;
-        
-        // Compute det(P): permutation matrix determinant = (-1)^(permutation signature)
-        float det_P = 1.0f;
-        if (lu.pivoted)
-        {
-            // Compute permutation signature by finding cycles in P
-            // P is a permutation matrix, so each row/column has exactly one 1
-            // We can compute the sign by decomposing into transpositions
-            std::vector<bool> visited(n, false);
-            int cycle_count = 0;
+            // Get the cofactor matrix (same as minor matrix)
+            Mat cof = this->cofactor(0, f);
             
-            for (int i = 0; i < n; ++i)
-            {
-                if (visited[i]) continue;
-                
-                // Find the cycle starting at i
-                int current = i;
-                int cycle_length = 0;
-                while (!visited[current])
-                {
-                    visited[current] = true;
-                    cycle_length++;
-                    
-                    // Find where P maps current row
-                    for (int j = 0; j < n; ++j)
-                    {
-                        if (fabsf(lu.P(current, j) - 1.0f) < 1e-6f)
-                        {
-                            current = j;
-                            break;
-                        }
-                    }
-                }
-                
-                // A cycle of length k contributes (k-1) transpositions
-                if (cycle_length > 1)
-                {
-                    cycle_count += (cycle_length - 1);
-                }
-            }
+            // Calculate the sign: (-1)^(0+f) = (-1)^f
+            int sign = (f % 2 == 0) ? 1 : -1;
             
-            // det(P) = (-1)^(number of transpositions)
-            det_P = (cycle_count % 2 == 0) ? 1.0f : -1.0f;
+            // det(A) = Σ a_ij * C_ij, where C_ij = (-1)^(i+j) * det(minor_ij)
+            D += sign * (*this)(0, f) * cof.determinant();
         }
 
-        // Compute det(L): lower triangular with unit diagonal = 1
-        float det_L = 1.0f;  // L has unit diagonal, so det(L) = 1
-
-        // Compute det(U): product of diagonal elements
-        float det_U = 1.0f;
-        for (int i = 0; i < n; ++i)
-        {
-            det_U *= lu.U(i, i);
-        }
-
-        // det(A) = det(P) * det(L) * det(U)
-        return det_P * det_L * det_U;
-    }
-
-    /**
-     * @name Mat::determinant_gaussian()
-     * @brief Compute the determinant using Gaussian elimination.
-     * @note Time complexity: O(n³) - efficient for large matrices.
-     *       Converts matrix to upper triangular form, then multiplies diagonal elements.
-     *       Tracks row swaps to account for sign changes.
-     *
-     * @return float The determinant value
-     */
-    float Mat::determinant_gaussian()
-    {
-        if (this->row != this->col)
-        {
-            std::cerr << "[Error] Determinant requires a square matrix.\n";
-            return 0.0f;
-        }
-
-        int n = this->row;
-        Mat A = Mat(*this);  // Working copy
-        int swap_count = 0;  // Track number of row swaps
-
-        // Gaussian elimination to upper triangular form
-        for (int k = 0; k < n - 1; ++k)
-        {
-            // Partial pivoting: find row with largest element in column k
-            int max_row = k;
-            float max_val = fabsf(A(k, k));
-            for (int i = k + 1; i < n; ++i)
-            {
-                if (fabsf(A(i, k)) > max_val)
-                {
-                    max_val = fabsf(A(i, k));
-                    max_row = i;
-                }
-            }
-
-            // Swap rows if necessary
-            if (max_row != k)
-            {
-                A.swap_rows(k, max_row);
-                swap_count++;
-            }
-
-            // Check for singular matrix
-            if (fabsf(A(k, k)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                // Matrix is singular
-                return 0.0f;
-            }
-
-            // Eliminate below diagonal
-            for (int i = k + 1; i < n; ++i)
-            {
-                float factor = A(i, k) / A(k, k);
-                for (int j = k; j < n; ++j)
-                {
-                    A(i, j) -= factor * A(k, j);
-                }
-            }
-        }
-
-        // Compute determinant: product of diagonal elements
-        float det = 1.0f;
-        for (int i = 0; i < n; ++i)
-        {
-            det *= A(i, i);
-        }
-
-        // Account for row swaps: each swap multiplies determinant by -1
-        if (swap_count % 2 == 1)
-        {
-            det = -det;
-        }
-
-        return det;
+        return D;
     }
 
     /**
      * @name Mat::adjoint()
-     * @brief Compute the adjoint (adjugate) matrix.
+     * @brief Calculate the adjoint (adjugate) matrix of a square matrix.
      *
      * @return Mat The adjoint matrix
      */
@@ -1402,164 +1261,146 @@ namespace tiny
     {
         if (this->row != this->col)
         {
-            std::cerr << "[Error] Adjoint requires a square matrix.\n";
+            std::cerr << "[Error] Adjoint can only be computed for square matrices.\n";
             return Mat();
         }
 
         int n = this->row;
-        Mat result(n, n);
+        Mat adj(n, n);
+
+        // Special case for 1x1 matrix
+        if (n == 1)
+        {
+            adj(0, 0) = 1.0f;
+            return adj;
+        }
 
         for (int i = 0; i < n; ++i)
         {
             for (int j = 0; j < n; ++j)
             {
-                Mat cofactor_mat = this->cofactor(i, j);
-                result(j, i) = cofactor_mat.determinant(); // Note: transpose (j,i) not (i,j)
+                // Calculate cofactor matrix of element (i, j)
+                Mat cof = this->cofactor(i, j);
+                
+                // Calculate the sign: (-1)^(i+j)
+                int sign = ((i + j) % 2 == 0) ? 1 : -1;
+                
+                // Adjoint is transpose of cofactor matrix
+                // adj(j, i) = C_ij = (-1)^(i+j) * det(minor_ij)
+                adj(j, i) = sign * cof.determinant();
             }
         }
 
-        return result;
+        return adj;
     }
 
     /**
-     * @name Mat::normalize()
-     * @brief Normalize the matrix by dividing each element by the matrix norm.
+     * @brief Normalize the matrix using L2 norm (Frobenius norm).
+     *        After normalization, ||Matrix|| = 1
      */
     void Mat::normalize()
     {
-        float n = this->norm();
-        if (n > TINY_MATH_MIN_POSITIVE_INPUT_F32)
-        {
-            for (int i = 0; i < this->row; ++i)
-            {
-                for (int j = 0; j < this->col; ++j)
-                {
-                    (*this)(i, j) /= n;
-                }
-            }
-        }
-    }
+        float norm_sq = 0.0f;
 
-    /**
-     * @name Mat::norm()
-     * @brief Compute the Frobenius norm of the matrix.
-     *
-     * @return float The matrix norm
-     */
-    float Mat::norm() const
-    {
-        float sum_sq = 0.0f;
         for (int i = 0; i < this->row; ++i)
         {
             for (int j = 0; j < this->col; ++j)
             {
                 float val = (*this)(i, j);
+                norm_sq += val * val;
+            }
+        }
+
+        if (norm_sq == 0.0f)
+        {
+            std::cerr << "[Warning] Cannot normalize a zero matrix.\n";
+            return;
+        }
+
+        float inv_norm = 1.0f / sqrtf(norm_sq);
+        *this *= inv_norm;
+    }
+
+    /**
+     * @name Mat::norm() const
+     * @brief Calculate the Frobenius norm (L2 norm) of the matrix.
+     *
+     * @return float The computed matrix norm
+     */
+    float Mat::norm() const
+    {
+        float sum_sq = 0.0f;
+
+        for (int i = 0; i < this->row; ++i)
+        {
+            for (int j = 0; j < this->col; ++j)
+            {
+                float val = (*this)(i, j); // Access valid matrix element
                 sum_sq += val * val;
             }
         }
+
         return sqrtf(sum_sq);
     }
 
     /**
      * @name Mat::inverse_adjoint()
-     * @brief Compute the inverse matrix using the adjoint method.
+     * @brief Compute the inverse of a square matrix using adjoint method.
      *
-     * @return Mat The inverse matrix
+     * @return Mat The inverse matrix. If singular, returns a zero matrix.
      */
     Mat Mat::inverse_adjoint()
     {
-        float det = this->determinant();
-        if (fabsf(det) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+        if (this->row != this->col)
         {
-            std::cerr << "[Error] Matrix is singular, cannot compute inverse.\n";
+            std::cerr << "[Error] Inverse can only be computed for square matrices.\n";
             return Mat();
         }
 
-        Mat adj = this->adjoint();
-        return adj * (1.0f / det);
-    }
+        int n = this->row;
 
-    /**
-     * @name Mat::dotprod(const Mat &A, const Mat &B)
-     * @brief Compute the dot product of two matrices (element-wise multiplication and sum).
-     *
-     * @param A First matrix
-     * @param B Second matrix
-     * @return float Dot product value
-     */
-    float Mat::dotprod(const Mat &A, const Mat &B)
-    {
-        if (A.row != B.row || A.col != B.col)
+        float det_val = this->determinant();
+        if (det_val == 0.0f)
         {
-            std::cerr << "[Error] Dot product requires matrices of the same size.\n";
-            return 0.0f;
+            std::cerr << "[Error] Singular matrix, inverse does not exist.\n";
+            return Mat(n, n); // Return zero matrix
         }
 
-        float result = 0.0f;
-        for (int i = 0; i < A.row; ++i)
+        Mat adj = this->adjoint();
+
+        // Inverse = adjoint / determinant
+        Mat inv(n, n);
+        float inv_det = 1.0f / det_val;
+
+        for (int i = 0; i < n; ++i)
         {
-            for (int j = 0; j < A.col; ++j)
+            for (int j = 0; j < n; ++j)
             {
-                result += A(i, j) * B(i, j);
+                inv(i, j) = adj(i, j) * inv_det;
             }
         }
-        return result;
+
+        return inv;
     }
 
-    // ============================================================================
-    // Linear Algebra - Matrix Utilities
-    // ============================================================================
     /**
      * @name Mat::eye(int size)
-     * @brief Create an identity matrix of specified size.
+     * @brief Generate an identity matrix of given size.
      *
-     * @param size Size of the square identity matrix
-     * @return Mat Identity matrix
+     * @param size Dimension of the square identity matrix
+     * @return Mat Identity matrix (size x size)
      */
     Mat Mat::eye(int size)
     {
         Mat identity(size, size);
+
+        // Set diagonal elements to 1, rest are initialized as 0
         for (int i = 0; i < size; ++i)
         {
-            for (int j = 0; j < size; ++j)
-            {
-                identity(i, j) = (i == j) ? 1.0f : 0.0f;
-            }
+            identity(i, i) = 1.0f;
         }
+
         return identity;
-    }
-
-    /**
-     * @name Mat::ones(int rows, int cols)
-     * @brief Create a matrix filled with ones.
-     *
-     * @param rows Number of rows
-     * @param cols Number of columns
-     * @return Mat Matrix filled with ones
-     */
-    Mat Mat::ones(int rows, int cols)
-    {
-        Mat result(rows, cols);
-        for (int i = 0; i < rows; ++i)
-        {
-            for (int j = 0; j < cols; ++j)
-            {
-                result(i, j) = 1.0f;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @name Mat::ones(int size)
-     * @brief Create a square matrix filled with ones.
-     *
-     * @param size Size of the square matrix (rows = cols)
-     * @return Mat Square matrix [size x size] with all elements = 1
-     */
-    Mat Mat::ones(int size)
-    {
-        return Mat::ones(size, size);
     }
 
     /**
@@ -1644,235 +1485,38 @@ namespace tiny
     }
 
     /**
-     * @name Mat::gram_schmidt_orthogonalize()
-     * @brief Orthogonalize a set of vectors using the Gram-Schmidt process
-     * @note This is a general-purpose orthogonalization function that can be reused
-     *       for QR decomposition and other applications requiring orthogonal bases
-     * 
-     * @param vectors Input matrix where each column is a vector to be orthogonalized
-     * @param orthogonal_vectors Output matrix for orthogonalized vectors (each column is orthogonal)
-     * @param coefficients Output matrix for projection coefficients (upper triangular, like R in QR)
-     * @param tolerance Minimum norm threshold for linear independence check
-     * @return true if successful, false if input is invalid
+     * @name Mat::ones(int size)
+     * @brief Create a square matrix filled with ones.
+     *
+     * @param size Size of the square matrix (rows = cols)
+     * @return Mat Square matrix [size x size] with all elements = 1
      */
-    bool Mat::gram_schmidt_orthogonalize(const Mat &vectors, Mat &orthogonal_vectors, 
-                                         Mat &coefficients, float tolerance)
+    Mat Mat::ones(int size)
     {
-        // Validation
-        if (vectors.data == nullptr)
-        {
-            std::cerr << "[Error] gram_schmidt_orthogonalize: Input matrix is null.\n";
-            return false;
-        }
-
-        int m = vectors.row;  // Dimension of vectors
-        int n = vectors.col;  // Number of vectors
-
-        if (m == 0 || n == 0)
-        {
-            std::cerr << "[Error] gram_schmidt_orthogonalize: Invalid dimensions.\n";
-            return false;
-        }
-
-        // Initialize output matrices
-        orthogonal_vectors = Mat(m, n);
-        coefficients = Mat(n, n);  // Upper triangular matrix for coefficients
-        coefficients.clear();  // Initialize to zero
-
-        // Modified Gram-Schmidt process (more numerically stable than classical GS)
-        // Also includes re-orthogonalization for better numerical stability
-        for (int j = 0; j < n; ++j)
-        {
-            // Copy j-th column of input vectors to working vector
-            for (int i = 0; i < m; ++i)
-            {
-                orthogonal_vectors(i, j) = vectors(i, j);
-            }
-
-            // Modified Gram-Schmidt: orthogonalize against previous columns
-            // Use a more stable approach: subtract projection immediately
-            for (int k = 0; k < j; ++k)
-            {
-                // Compute dot product: coefficient(k,j) = Q(:,k)^T * Q(:,j)
-                float dot = 0.0f;
-                for (int i = 0; i < m; ++i)
-                {
-                    dot += orthogonal_vectors(i, k) * orthogonal_vectors(i, j);
-                }
-                coefficients(k, j) = dot;  // Store projection coefficient
-
-                // Subtract projection immediately: Q(:,j) = Q(:,j) - dot * Q(:,k)
-                for (int i = 0; i < m; ++i)
-                {
-                    orthogonal_vectors(i, j) -= dot * orthogonal_vectors(i, k);
-                }
-            }
-
-            // Re-orthogonalization: improve numerical stability by doing one more pass
-            // This helps reduce accumulated rounding errors (especially important for
-            // near-linearly-dependent vectors)
-            for (int k = 0; k < j; ++k)
-            {
-                float dot = 0.0f;
-                for (int i = 0; i < m; ++i)
-                {
-                    dot += orthogonal_vectors(i, k) * orthogonal_vectors(i, j);
-                }
-                // Update coefficient with correction (small correction for numerical stability)
-                coefficients(k, j) += dot;
-                // Subtract residual projection to improve orthogonality
-                for (int i = 0; i < m; ++i)
-                {
-                    orthogonal_vectors(i, j) -= dot * orthogonal_vectors(i, k);
-                }
-            }
-
-            // Normalize: compute norm of orthogonalized vector
-            float norm = 0.0f;
-            for (int i = 0; i < m; ++i)
-            {
-                norm += orthogonal_vectors(i, j) * orthogonal_vectors(i, j);
-            }
-            norm = sqrtf(norm);
-
-            // Use stricter tolerance for near-linear-dependent vectors
-            // If norm is very small, generate an orthogonal vector to complete the basis
-            if (norm < tolerance || norm < 1e-5f)  // Stricter check for numerical stability
-            {
-                // Vector is linearly dependent (or near-zero)
-                // Instead of setting to zero, generate an orthogonal vector to maintain Q's orthogonality
-                // Strategy: Start with a standard basis vector and orthogonalize it
-                coefficients(j, j) = 0.0f;  // Original vector has zero norm (linearly dependent)
-                
-                // Try to find an orthogonal vector by starting with standard basis vectors
-                // and orthogonalizing them against previous columns
-                bool found_orthogonal = false;
-                for (int basis_idx = 0; basis_idx < m && !found_orthogonal; ++basis_idx)
-                {
-                    // Start with standard basis vector e_basis_idx
-                    for (int i = 0; i < m; ++i)
-                    {
-                        orthogonal_vectors(i, j) = (i == basis_idx) ? 1.0f : 0.0f;
-                    }
-                    
-                    // Orthogonalize against previous columns
-                    for (int k = 0; k < j; ++k)
-                    {
-                        float dot = 0.0f;
-                        for (int i = 0; i < m; ++i)
-                        {
-                            dot += orthogonal_vectors(i, k) * orthogonal_vectors(i, j);
-                        }
-                        for (int i = 0; i < m; ++i)
-                        {
-                            orthogonal_vectors(i, j) -= dot * orthogonal_vectors(i, k);
-                        }
-                    }
-                    
-                    // Check if we got a non-zero vector
-                    float new_norm = 0.0f;
-                    for (int i = 0; i < m; ++i)
-                    {
-                        new_norm += orthogonal_vectors(i, j) * orthogonal_vectors(i, j);
-                    }
-                    new_norm = sqrtf(new_norm);
-                    
-                    if (new_norm > 1e-5f)
-                    {
-                        // Found a valid orthogonal vector, normalize it
-                        // Note: coefficients(j, j) remains 0 (original vector was linearly dependent)
-                        // but Q(:, j) is now a normalized orthogonal vector
-                        for (int i = 0; i < m; ++i)
-                        {
-                            orthogonal_vectors(i, j) /= new_norm;
-                        }
-                        found_orthogonal = true;
-                    }
-                }
-                
-                // If still no orthogonal vector found, set to zero (shouldn't happen for full-rank cases)
-                if (!found_orthogonal)
-                {
-                    coefficients(j, j) = 0.0f;
-                    for (int i = 0; i < m; ++i)
-                    {
-                        orthogonal_vectors(i, j) = 0.0f;
-                    }
-                }
-            }
-            else
-            {
-                coefficients(j, j) = norm;
-                // Normalize the orthogonalized vector
-                for (int i = 0; i < m; ++i)
-                {
-                    orthogonal_vectors(i, j) /= norm;
-                }
-            }
-        }
-
-        return true;
+        return Mat::ones(size, size);
     }
 
-    // ============================================================================
-    // Linear Algebra - Matrix Operations
-    // ============================================================================
     /**
-     * @name Mat::minor(int target_row, int target_col)
-     * @brief Calculate the minor matrix by removing specified row and column.
-     * @note Minor is the submatrix obtained by removing one row and one column.
+     * @name Mat::ones(int rows, int cols)
+     * @brief Create a matrix of specified size filled with ones.
      *
-     * @param target_row Row index to remove
-     * @param target_col Column index to remove
-     * @return Mat The (n-1)x(n-1) minor matrix
+     * @param rows Number of rows
+     * @param cols Number of columns
+     * @return Mat Matrix [rows x cols] with all elements = 1
      */
-    Mat Mat::minor(int target_row, int target_col)
+    Mat Mat::ones(int rows, int cols)
     {
-        if (this->row != this->col)
+        Mat result(rows, cols);
+
+        for (int i = 0; i < rows; ++i)
         {
-            std::cerr << "[Error] Minor requires square matrix.\n";
-            return Mat();
-        }
-
-        int n = this->row;
-        Mat result(n - 1, n - 1);
-
-        for (int i = 0, res_i = 0; i < n; ++i)
-        {
-            if (i == target_row)
-                continue;
-
-            for (int j = 0, res_j = 0; j < n; ++j)
+            for (int j = 0; j < cols; ++j)
             {
-                if (j == target_col)
-                    continue;
-
-                result.data[res_i * result.stride + res_j] = this->data[i * this->stride + j];
-                res_j++;
+                result(i, j) = 1.0f;
             }
-            res_i++;
         }
 
         return result;
-    }
-
-    /**
-     * @name Mat::cofactor(int target_row, int target_col)
-     * @brief Calculate the cofactor matrix (same as minor matrix).
-     * @note The cofactor matrix is the same as the minor matrix.
-     *       The sign (-1)^(i+j) is applied when computing the cofactor value,
-     *       not to the matrix elements themselves.
-     *       Cofactor value C_ij = (-1)^(i+j) * det(minor_matrix)
-     *
-     * @param target_row Row index to remove
-     * @param target_col Column index to remove
-     * @return Mat The (n-1)x(n-1) cofactor matrix (same as minor matrix)
-     */
-    Mat Mat::cofactor(int target_row, int target_col)
-    {
-        // Cofactor matrix is the same as minor matrix
-        // The sign is applied when computing cofactor values, not to matrix elements
-        return this->minor(target_row, target_col);
     }
 
     /**
@@ -2043,6 +1687,32 @@ namespace tiny
         }
 
         return result;
+    }
+
+    /**
+     * @name Mat::dotprod(const Mat &A, const Mat &B)
+     * @brief Calculate the dot product of two vectors (Nx1).
+     *
+     * @param[in] A Input vector A (Nx1).
+     * @param[in] B Input vector B (Nx1).
+     *
+     * @return float The computed dot product value.
+     */
+    float Mat::dotprod(const Mat &A, const Mat &B)
+    {
+        if (A.row != B.row || A.col != 1 || B.col != 1)
+        {
+            std::cerr << "[Error] Dot product can only be computed for two vectors of the same length.\n";
+            return 0.0f; // Return 0 in case of dimension mismatch
+        }
+
+        float sum = 0;
+        for (int i = 0; i < A.row; ++i)
+        {
+            sum += A(i, 0) * B(i, 0);
+        }
+
+        return sum;
     }
 
     /**
@@ -2264,9 +1934,7 @@ namespace tiny
         return result;
     }
 
-    // ============================================================================
-    // Matrix Decomposition
-    // ============================================================================
+    /* === Matrix Decomposition === */
     /**
      * @name Mat::LUDecomposition::LUDecomposition()
      * @brief Default constructor for LUDecomposition structure
@@ -2565,25 +2233,62 @@ namespace tiny
         int n = this->col;
         int min_dim = (m < n) ? m : n;
 
-        // QR decomposition using Gram-Schmidt process
-        // Use the reusable gram_schmidt_orthogonalize function
-        Mat Q_ortho, R_coeff;
-        if (!Mat::gram_schmidt_orthogonalize(*this, Q_ortho, R_coeff, TINY_MATH_MIN_POSITIVE_INPUT_F32))
-        {
-            result.status = TINY_ERR_MATH_NULL_POINTER;
-            return result;
-        }
-
-        // Extract Q and R from the orthogonalization results
-        result.Q = Q_ortho;
+        Mat A = Mat(*this);  // Working copy
+        result.Q = Mat(m, m);
         result.R = Mat(m, n);
 
-        // Copy coefficients to R (upper triangular part)
+        // QR decomposition using Gram-Schmidt process
         for (int j = 0; j < min_dim; ++j)
         {
-            for (int k = 0; k <= j; ++k)
+            // Copy j-th column of A to Q
+            for (int i = 0; i < m; ++i)
             {
-                result.R(k, j) = R_coeff(k, j);
+                result.Q(i, j) = A(i, j);
+            }
+
+            // Orthogonalize against previous columns
+            for (int k = 0; k < j; ++k)
+            {
+                // Compute dot product: R(k,j) = Q(:,k)^T * A(:,j)
+                float dot = 0.0f;
+                for (int i = 0; i < m; ++i)
+                {
+                    dot += result.Q(i, k) * A(i, j);
+                }
+                result.R(k, j) = dot;
+
+                // Subtract projection: Q(:,j) = Q(:,j) - R(k,j) * Q(:,k)
+                for (int i = 0; i < m; ++i)
+                {
+                    result.Q(i, j) -= dot * result.Q(i, k);
+                }
+            }
+
+            // Normalize: compute R(j,j) = ||Q(:,j)||
+            float norm = 0.0f;
+            for (int i = 0; i < m; ++i)
+            {
+                norm += result.Q(i, j) * result.Q(i, j);
+            }
+            norm = sqrtf(norm);
+
+            if (norm < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                // Column is linearly dependent, set to zero
+                result.R(j, j) = 0.0f;
+                for (int i = 0; i < m; ++i)
+                {
+                    result.Q(i, j) = 0.0f;
+                }
+            }
+            else
+            {
+                result.R(j, j) = norm;
+                // Normalize Q(:,j)
+                for (int i = 0; i < m; ++i)
+                {
+                    result.Q(i, j) /= norm;
+                }
             }
 
             // Compute remaining R elements: R(j,k) = Q(:,j)^T * A(:,k) for k > j
@@ -2592,7 +2297,7 @@ namespace tiny
                 float dot = 0.0f;
                 for (int i = 0; i < m; ++i)
                 {
-                    dot += result.Q(i, j) * (*this)(i, k);
+                    dot += result.Q(i, j) * A(i, k);
                 }
                 result.R(j, k) = dot;
             }
@@ -2965,9 +2670,7 @@ namespace tiny
         return A_plus;
     }
 
-    // ============================================================================
-    // Eigenvalue & Eigenvector Decomposition
-    // ============================================================================
+    /* === Eigenvalue & Eigenvector Decomposition === */
     /**
      * @name Mat::EigenPair::EigenPair()
      * @brief Default constructor for EigenPair structure
@@ -3573,34 +3276,68 @@ namespace tiny
             // For simplicity, we skip shift for now but can add it later if needed
 
             // QR decomposition using Gram-Schmidt process
-            // Use the reusable gram_schmidt_orthogonalize function
-            Mat Q_ortho, R_coeff;
-            if (!Mat::gram_schmidt_orthogonalize(A, Q_ortho, R_coeff, TINY_MATH_MIN_POSITIVE_INPUT_F32))
-            {
-                result.status = TINY_ERR_MATH_NULL_POINTER;
-                return result;
-            }
-
-            Mat Q = Q_ortho;
+            Mat Q(n, n);
             Mat R(n, n);
 
-            // Copy coefficients to R (upper triangular part)
+            // Gram-Schmidt orthogonalization
             for (int j = 0; j < n; ++j)
             {
-                for (int k = 0; k <= j; ++k)
+                // Copy j-th column of A to Q
+                for (int i = 0; i < n; ++i)
                 {
-                    R(k, j) = R_coeff(k, j);
+                    Q(i, j) = A(i, j);
                 }
 
-                // Compute remaining R elements: R(j,k) = Q(:,j)^T * A(:,k) for k > j
-                for (int k = j + 1; k < n; ++k)
+                // Orthogonalize against previous columns
+                for (int k = 0; k < j; ++k)
                 {
+                    // Compute dot product
                     float dot = 0.0f;
                     for (int i = 0; i < n; ++i)
                     {
-                        dot += Q(i, j) * A(i, k);
+                        dot += Q(i, k) * A(i, j);
                     }
-                    R(j, k) = dot;
+                    R(k, j) = dot;
+
+                    // Subtract projection
+                    for (int i = 0; i < n; ++i)
+                    {
+                        Q(i, j) -= dot * Q(i, k);
+                    }
+                }
+
+                // Normalize
+                float norm = 0.0f;
+                for (int i = 0; i < n; ++i)
+                {
+                    norm += Q(i, j) * Q(i, j);
+                }
+                norm = sqrtf(norm);
+
+                if (norm < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                {
+                    std::cerr << "[Error] QR decomposition: column vector norm too small.\n";
+                    result.status = TINY_ERR_MATH_INVALID_PARAM;
+                    return result;
+                }
+
+                for (int i = 0; i < n; ++i)
+                {
+                    Q(i, j) /= norm;
+                }
+                R(j, j) = norm;
+            }
+
+            // Compute R = Q^T * A
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = i; j < n; ++j)
+                {
+                    R(i, j) = 0.0f;
+                    for (int k = 0; k < n; ++k)
+                    {
+                        R(i, j) += Q(k, i) * A(k, j);
+                    }
                 }
             }
 
@@ -3671,9 +3408,7 @@ namespace tiny
         }
     }
 
-    // ============================================================================
-    // Stream Operators
-    // ============================================================================
+    /* === Stream Operators === */
     /**
      * @name operator<<
      * @brief Stream insertion operator for printing matrix to the output stream (e.g., std::cout).
@@ -3752,9 +3487,7 @@ namespace tiny
         return is;
     }
 
-    // ============================================================================
-    // Global Arithmetic Operators
-    // ============================================================================
+    /* === Global Arithmetic Operators === */
     /**
      * + operator, sum of two matrices
      * The operator use DSP optimized implementation of multiplication.

@@ -31,9 +31,7 @@ namespace tiny
     class Mat
     {
     public:
-        // ============================================================================
-        // Matrix Metadata
-        // ============================================================================
+        /* === Matrix Metadata === */
         int row;         //< number of rows
         int col;         //< number of columns
         int pad;         //< number of paddings between 2 rows
@@ -45,12 +43,11 @@ namespace tiny
         bool ext_buff;   //< flag indicates that matrix use external buffer
         bool sub_matrix; //< flag indicates that matrix is a subset of another matrix
 
-        // ============================================================================
-        // Rectangular ROI Structure
-        // ============================================================================
+        /* === Rectangular ROI Structure === */
         /**
          * @name Region of Interest (ROI) Structure
          * @brief This is the structure for ROI
+         * 
          */
         struct ROI
         {
@@ -59,52 +56,77 @@ namespace tiny
             int width;  ///< width of ROI (columns)
             int height; ///< height of ROI (rows)
 
+            // ROI constructor
             ROI(int pos_x = 0, int pos_y = 0, int width = 0, int height = 0);
+
+            // resize ROI
             void resize_roi(int pos_x, int pos_y, int width, int height);
+
+            // calculate area of ROI
             int area_roi(void) const;
         };
         
-        // ============================================================================
-        // Printing Functions
-        // ============================================================================
+        /* === Printing Functions === */
+        // print matrix info
         void print_info() const;
+
+        // print matrix elements, paddings optional
         void print_matrix(bool show_padding);
 
-        // ============================================================================
-        // Constructors & Destructor
-        // ============================================================================
+        /* === Constructors & Destructor === */
+        // memory allocation
         void alloc_mem(); // Allocate internal memory
+
+        // constructor
         Mat();
         Mat(int rows, int cols);
         Mat(int rows, int cols, int stride);
         Mat(float *data, int rows, int cols);
         Mat(float *data, int rows, int cols, int stride);
         Mat(const Mat &src);
+
+        // destructor
         ~Mat();
 
-        // ============================================================================
-        // Element Access
-        // ============================================================================
+        /* === Element Access === */
+        // access matrix elements - non const
         inline float &operator()(int row, int col) { return data[row * stride + col]; }
+
+        // access matrix elements - const             
         inline const float &operator()(int row, int col) const { return data[row * stride + col]; }
 
-        // ============================================================================
-        // Data Manipulation
-        // ============================================================================
+        /* === Data Manipulation === */
+        // copy other matrix into this matrix as a sub-matrix
         tiny_error_t copy_paste(const Mat &src, int row_pos, int col_pos);
+
+        // copy header of other matrix to this matrix
         tiny_error_t copy_head(const Mat &src);
+
+        // get a view (shallow copy) of sub-matrix (ROI) from this matrix
         Mat view_roi(int start_row, int start_col, int roi_rows, int roi_cols) const;
+
+        // get a view (shallow copy) of sub-matrix (ROI) from this matrix using ROI structure
         Mat view_roi(const Mat::ROI &roi) const;
+
+        // get a replica (deep copy) of sub-matrix (ROI) 
         Mat copy_roi(int start_row, int start_col, int roi_rows, int roi_cols);
+
+        // get a replica (deep copy) of sub-matrix (ROI) using ROI structure
         Mat copy_roi(const Mat::ROI &roi);
+
+        // get a block of matrix
         Mat block(int start_row, int start_col, int block_rows, int block_cols);
+
+        // swap rows
         void swap_rows(int row1, int row2);
+        
+        // swap columns
         void swap_cols(int col1, int col2);
+
+        // clear matrix
         void clear(void);
 
-        // ============================================================================
-        // Arithmetic Operators
-        // ============================================================================
+        /* === Arithmetic Operators === */
         Mat &operator=(const Mat &src);    // Copy assignment
         Mat &operator+=(const Mat &A);     // Add matrix
         Mat &operator+=(float C);          // Add constant
@@ -116,74 +138,52 @@ namespace tiny
         Mat &operator/=(float C);          // Divide constant
         Mat operator^(int C);              // Exponentiation
 
-        // ============================================================================
-        // Linear Algebra - Basic Operations
-        // ============================================================================
+        /* === Linear Algebra === */
         Mat transpose();                   // Transpose matrix
-        float determinant();               // Compute determinant (auto-selects method based on size)
-        float determinant_laplace();        // Compute determinant using Laplace expansion (O(n!), for small matrices)
-        float determinant_lu();            // Compute determinant using LU decomposition (O(n³), efficient for large matrices)
-        float determinant_gaussian();      // Compute determinant using Gaussian elimination (O(n³), efficient for large matrices)
-        Mat adjoint();                     // Compute adjoint matrix
-        Mat inverse_adjoint();            // Compute inverse using adjoint method
-        void normalize();                  // Normalize matrix
-        float norm() const;                // Compute matrix norm
-        float dotprod(const Mat &A, const Mat &B);  // Dot product
-
-        // ============================================================================
-        // Linear Algebra - Matrix Utilities
-        // ============================================================================
-        static Mat eye(int size);          // Create identity matrix
-        static Mat ones(int rows, int cols);  // Create matrix filled with ones
-        static Mat ones(int size);         // Create square matrix filled with ones
+        Mat minor(int row, int col);       // minor matrix (submatrix after removing row and col)
+        Mat cofactor(int row, int col);    // cofactor matrix (same as minor matrix, sign applied when computing cofactor value)
+        float determinant();
+        Mat adjoint(); 
+        void normalize();
+        float norm() const;
+        Mat inverse_adjoint();
+        static Mat eye(int size);
         static Mat augment(const Mat &A, const Mat &B);  // Horizontal concatenation [A | B]
-        static Mat vstack(const Mat &A, const Mat &B);   // Vertical concatenation [A; B]
+        static Mat vstack(const Mat &A, const Mat &B);  // Vertical concatenation [A; B]
+        static Mat ones(int rows, int cols);
+        static Mat ones(int size);
+        Mat gaussian_eliminate() const;
+        Mat row_reduce_from_gaussian();
+        Mat inverse_gje(); // Inverse using Gaussian-Jordan elimination
+        float dotprod(const Mat &A, const Mat &B);
+        Mat solve(const Mat &A, const Mat &b) const;
+        Mat band_solve(Mat A, Mat b, int k);
+        Mat roots(Mat A, Mat y);
         
-        /**
-         * @brief Gram-Schmidt orthogonalization process
-         * @note Orthogonalizes a set of vectors using the Gram-Schmidt process
-         * @param vectors Input matrix where each column is a vector to be orthogonalized
-         * @param orthogonal_vectors Output matrix for orthogonalized vectors (each column is orthogonal)
-         * @param coefficients Output matrix for projection coefficients (R matrix in QR decomposition)
-         * @param tolerance Minimum norm threshold for linear independence check
-         * @return true if successful, false if input is invalid
-         */
-        static bool gram_schmidt_orthogonalize(const Mat &vectors, Mat &orthogonal_vectors, 
-                                               Mat &coefficients, float tolerance = 1e-6f);
-
-        // ============================================================================
-        // Linear Algebra - Matrix Operations
-        // ============================================================================
-        Mat minor(int row, int col);       // Minor matrix (submatrix after removing row and col)
-        Mat cofactor(int row, int col);    // Cofactor matrix
-        Mat gaussian_eliminate() const;    // Gaussian elimination
-        Mat row_reduce_from_gaussian();   // Row reduction from Gaussian form
-        Mat inverse_gje();                 // Inverse using Gaussian-Jordan elimination
-
-        // ============================================================================
-        // Linear Algebra - Linear System Solving
-        // ============================================================================
-        Mat solve(const Mat &A, const Mat &b) const;  // Solve Ax = b using Gaussian elimination
-        Mat band_solve(Mat A, Mat b, int k);          // Solve banded system
-        Mat roots(Mat A, Mat y);                      // Alternative solve method
-
-        // ============================================================================
-        // Matrix Decomposition
-        // ============================================================================
+        /* === Matrix Decomposition === */
         // Forward declarations (structures defined after class)
         struct LUDecomposition;
         struct CholeskyDecomposition;
         struct QRDecomposition;
         struct SVDDecomposition;
         
-        // Matrix property checks
-        bool is_symmetric(float tolerance = 1e-6f) const;
+        // Check if matrix is positive definite (for Cholesky)
         bool is_positive_definite(float tolerance = 1e-6f) const;
         
-        // Decomposition methods
+        // LU Decomposition: A = L * U (with optional pivoting)
+        // Efficient for solving multiple systems with same coefficient matrix
         LUDecomposition lu_decompose(bool use_pivoting = true) const;
+        
+        // Cholesky Decomposition: A = L * L^T (for symmetric positive definite matrices)
+        // Faster than LU for SPD matrices, used in structural dynamics
         CholeskyDecomposition cholesky_decompose() const;
+        
+        // QR Decomposition: A = Q * R (Q orthogonal, R upper triangular)
+        // Numerically stable, used for least squares and orthogonalization
         QRDecomposition qr_decompose() const;
+        
+        // Singular Value Decomposition: A = U * S * V^T
+        // Most general decomposition, used for rank estimation, pseudo-inverse, dimension reduction
         SVDDecomposition svd_decompose(int max_iter = 100, float tolerance = 1e-6f) const;
         
         // Solve using decomposition (more efficient for multiple RHS)
@@ -193,32 +193,42 @@ namespace tiny
         
         // Pseudo-inverse using SVD (for rank-deficient or non-square matrices)
         static Mat pseudo_inverse(const SVDDecomposition &svd, float tolerance = 1e-6f);
-
-        // ============================================================================
-        // Eigenvalue & Eigenvector Decomposition
-        // ============================================================================
+        
+        /* === Eigenvalue & Eigenvector Decomposition === */
         // Forward declarations (structures defined after class)
         struct EigenPair;
         struct EigenDecomposition;
         
-        // Single eigenvalue methods (fast, for real-time applications)
+        // Check if matrix is symmetric (within tolerance)
+        bool is_symmetric(float tolerance = 1e-6f) const;
+        
+        // Power iteration method: compute dominant eigenvalue and eigenvector
+        // Fast method suitable for real-time SHM applications
         EigenPair power_iteration(int max_iter = 1000, float tolerance = 1e-6f) const;
+        
+        // Inverse power iteration method: compute smallest eigenvalue and eigenvector
+        // Critical for system identification - finds fundamental frequency/lowest mode
         EigenPair inverse_power_iteration(int max_iter = 1000, float tolerance = 1e-6f) const;
         
-        // Complete eigendecomposition methods
+        // Jacobi method: complete eigendecomposition for symmetric matrices
+        // Robust and accurate, ideal for structural dynamics matrices
         EigenDecomposition eigendecompose_jacobi(float tolerance = 1e-6f, int max_iter = 100) const;
+        
+        // QR algorithm: complete eigendecomposition for general matrices
+        // Supports non-symmetric matrices, may have complex eigenvalues
         EigenDecomposition eigendecompose_qr(int max_iter = 100, float tolerance = 1e-6f) const;
-        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;  // Auto-select method
-
+        
+        // Automatic method selection: uses Jacobi for symmetric, QR for general
+        // Convenient interface for edge computing applications
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        
     protected:
 
     private:
 
     };
 
-    // ============================================================================
-    // Matrix Decomposition Structures
-    // ============================================================================
+    /* === Matrix Decomposition Structures === */
     /**
      * @brief Structure to hold LU decomposition results
      * @note A = L * U, where L is lower triangular and U is upper triangular
@@ -275,9 +285,7 @@ namespace tiny
         SVDDecomposition();
     };
     
-    // ============================================================================
-    // Eigenvalue & Eigenvector Decomposition Structures
-    // ============================================================================
+    /* === Eigenvalue & Eigenvector Decomposition Structures === */
     /**
      * @brief Structure to hold a single eigenvalue-eigenvector pair
      * @note Used primarily for power iteration method
@@ -306,16 +314,12 @@ namespace tiny
         EigenDecomposition();
     };
 
-    // ============================================================================
-    // Stream Operators
-    // ============================================================================
+    /* === Stream Operators === */
     std::ostream &operator<<(std::ostream &os, const Mat &m);
     std::ostream &operator<<(std::ostream &os, const Mat::ROI &roi);
     std::istream &operator>>(std::istream &is, Mat &m);
 
-    // ============================================================================
-    // Global Arithmetic Operators
-    // ============================================================================
+    /* === Global Arithmetic Operators === */
     Mat operator+(const Mat &A, const Mat &B);
     Mat operator+(const Mat &A, float C);
     Mat operator-(const Mat &A, const Mat &B);
