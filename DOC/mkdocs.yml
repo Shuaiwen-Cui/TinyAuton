@@ -138,7 +138,13 @@ plugins:
             TINY_MATRIX-TEST: TINY_MATRIX-测试
             USAGE: 使用方法
             EXAMPLES: 示例
-            DSP: 信号处理
+            DSP: 数字信号处理
+            SIGNAL: 信号
+            CONVOLUTION: 卷积
+            CORRELATION: 互相关
+            RESAMPLING: 重采样
+            TRANSFORM: 变换
+            DWT: 离散小波变换
             AI: 人工智能
             NOTES: 说明
             CODE: 代码
@@ -304,6 +310,28 @@ nav:
           - TINY_MATRIX-TEST: "MATH/MATRIX/tiny-matrix-test.md"
   - DSP:
       - "DSP/dsp.md"
+      - USAGE: "DSP/USAGE/usage.md"
+      - HEADER-FILE:
+          - CONFIGURATION: "DSP/HEADER-FILE/tiny_dsp_config.md"
+          - TINYDSP: "DSP/HEADER-FILE/tiny_dsp.md"
+      - SIGNAL:
+          - CONVOLUTION: 
+             - NOTES: "DSP/SIGNAL/CONVOLUTION/notes.md"
+             - CODE: "DSP/SIGNAL/CONVOLUTION/code.md"
+             - TEST: "DSP/SIGNAL/CONVOLUTION/test.md"
+          - CORRELATION: 
+             - NOTES: "DSP/SIGNAL/CORRELATION/notes.md"
+             - CODE: "DSP/SIGNAL/CORRELATION/code.md"
+             - TEST: "DSP/SIGNAL/CORRELATION/test.md"
+          - RESAMPLING:
+             - NOTES: "DSP/SIGNAL/RESAMPLE/notes.md"
+             - CODE: "DSP/SIGNAL/RESAMPLE/code.md"
+             - TEST: "DSP/SIGNAL/RESAMPLE/test.md"
+      - TRANSFORM:
+          - DWT:
+              - NOTES: "DSP/TRANSFORM/DWT/notes.md"
+              - CODE: "DSP/TRANSFORM/DWT/code.md"
+              - TEST: "DSP/TRANSFORM/DWT/test.md"
   - AI:
       - "AI/ai.md"
 
