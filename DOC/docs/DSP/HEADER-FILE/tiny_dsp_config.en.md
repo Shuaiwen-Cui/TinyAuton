@@ -20,14 +20,13 @@
 
 #pragma once
 
+/* DEPENDENCIES */
+#include "tiny_math.h"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-/* DEPENDENCIES */
-#include "tiny_math.h"
-
 
 #ifdef __cplusplus
 }

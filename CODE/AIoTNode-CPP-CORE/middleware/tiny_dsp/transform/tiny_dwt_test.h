@@ -18,13 +18,29 @@ extern "C"
 {
 #endif
 
+/**
+ * @name tiny_dwt_test
+ * @brief Unit test for single-level DWT and inverse DWT
+ */
 void tiny_dwt_test(void);
 
 /**
- * @name tiny_dwt_multilevel_test
+ * @name tiny_dwt_test_multilevel
  * @brief Unit test for multi-level DWT and inverse DWT
  */
 void tiny_dwt_test_multilevel(void);
+
+/**
+ * @name tiny_dwt_test_wavelets
+ * @brief Test different wavelet types (DB1-DB10)
+ */
+void tiny_dwt_test_wavelets(void);
+
+/**
+ * @name tiny_dwt_test_all
+ * @brief Run all DWT tests
+ */
+void tiny_dwt_test_all(void);
 
 #ifdef __cplusplus
 }

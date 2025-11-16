@@ -2290,7 +2290,6 @@ namespace tiny
         int cols = R.col;
 
         int pivot_row = rows - 1;
-        int pivot_col = cols - 2;
 
         while (pivot_row >= 0)
         {

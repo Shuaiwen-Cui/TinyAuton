@@ -114,6 +114,7 @@ tiny_error_t tiny_conv_f32(const float *Signal, const int siglen, const float *K
 ```
 
 **Description**:  
+
 This function performs the convolution operation between the input signal and the kernel. It first checks whether the input parameters are `NULL`, and then selects either the ESP32 DSP library or a standard C implementation for the convolution calculation based on the platform. The function returns the convolution result.
 
 **Features**:

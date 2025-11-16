@@ -251,39 +251,71 @@ tiny_error_t tiny_dwt_decompose_f32(const float *input, int input_len,
     const float *lo_d = TINY_WAVELET_GET_LO_D(wavelet);
     const float *hi_d = TINY_WAVELET_GET_HI_D(wavelet);
 
-    int conv_len = input_len + filter_len - 1;
-    float *temp_conv = (float *)calloc(conv_len, sizeof(float));
-    if (!temp_conv)
+    // TINY_CONV_CENTER mode internally performs FULL convolution first
+    // Need buffer size: input_len + filter_len - 1 for FULL convolution
+    int conv_full_len = input_len + filter_len - 1;
+    float *temp_conv_full = (float *)calloc(conv_full_len, sizeof(float));
+    if (!temp_conv_full)
         return TINY_ERR_DSP_MEMORY_ALLOC;
 
-    tiny_error_t err = tiny_conv_ex_f32(input, input_len, lo_d, filter_len, temp_conv,
-                                        TINY_PADDING_SYMMETRIC, TINY_CONV_CENTER);
+    // Temporary buffer for CENTER mode output (input_len samples)
+    float *temp_conv = (float *)calloc(input_len, sizeof(float));
+    if (!temp_conv)
+    {
+        free(temp_conv_full);
+        return TINY_ERR_DSP_MEMORY_ALLOC;
+    }
+
+    // Low-pass filter convolution
+    tiny_error_t err = tiny_conv_ex_f32(input, input_len, lo_d, filter_len, temp_conv_full,
+                                        TINY_PADDING_SYMMETRIC, TINY_CONV_FULL);
     if (err != TINY_OK)
     {
+        free(temp_conv_full);
         free(temp_conv);
         return err;
     }
+    
+    // Extract center portion (equivalent to TINY_CONV_CENTER mode)
+    int center_start = (filter_len - 1) / 2;
+    for (int i = 0; i < input_len; i++)
+    {
+        temp_conv[i] = temp_conv_full[center_start + i];
+    }
+    
     err = tiny_downsample_skip_f32(temp_conv, input_len, cA, cA_len, 1, 2);
     if (err != TINY_OK)
     {
+        free(temp_conv_full);
         free(temp_conv);
         return err;
     }
 
-    err = tiny_conv_ex_f32(input, input_len, hi_d, filter_len, temp_conv,
-                           TINY_PADDING_SYMMETRIC, TINY_CONV_CENTER);
+    // High-pass filter convolution
+    err = tiny_conv_ex_f32(input, input_len, hi_d, filter_len, temp_conv_full,
+                           TINY_PADDING_SYMMETRIC, TINY_CONV_FULL);
     if (err != TINY_OK)
     {
+        free(temp_conv_full);
         free(temp_conv);
         return err;
     }
+    
+    // Extract center portion
+    for (int i = 0; i < input_len; i++)
+    {
+        temp_conv[i] = temp_conv_full[center_start + i];
+    }
+    
     err = tiny_downsample_skip_f32(temp_conv, input_len, cD, cD_len, 1, 2);
     if (err != TINY_OK)
     {
+        free(temp_conv_full);
         free(temp_conv);
         return err;
     }
 
+    free(temp_conv_full);
     free(temp_conv);
     return TINY_OK;
 }
@@ -305,10 +337,13 @@ tiny_error_t tiny_dwt_reconstruct_f32(const float *cA, const float *cD, int coef
 
     int up_len = coeff_len * 2;
     int conv_len = up_len + filter_len - 1;
-    int offset = filter_len / 2;
+    // Correct offset: for FULL convolution, center extraction starts at (filter_len - 1) / 2
+    // This aligns with TINY_CONV_CENTER mode logic
+    int offset = (filter_len - 1) / 2;
 
-    float *upA = (float *)calloc(conv_len, sizeof(float));
-    float *upD = (float *)calloc(conv_len, sizeof(float));
+    // Allocate memory for upsampled signals (only need up_len, not conv_len)
+    float *upA = (float *)calloc(up_len, sizeof(float));
+    float *upD = (float *)calloc(up_len, sizeof(float));
     if (!upA || !upD)
     {
         free(upA);
@@ -331,6 +366,7 @@ tiny_error_t tiny_dwt_reconstruct_f32(const float *cA, const float *cD, int coef
         return err;
     }
 
+    // Allocate memory for convolution results (FULL mode output length)
     float *recA = (float *)calloc(conv_len, sizeof(float));
     float *recD = (float *)calloc(conv_len, sizeof(float));
     if (!recA || !recD)
@@ -352,16 +388,28 @@ tiny_error_t tiny_dwt_reconstruct_f32(const float *cA, const float *cD, int coef
     if (err != TINY_OK)
         goto cleanup;
 
-    int actual_len = up_len; // target output length
-    for (int i = 0; i < actual_len; i++)
+    // Extract center portion from FULL convolution result
+    // With offset = (filter_len - 1) / 2, we can safely extract up_len samples
+    // because: offset + up_len - 1 = (filter_len - 1) / 2 + up_len - 1
+    //         = (filter_len - 1) / 2 + up_len - 1
+    //         < (filter_len - 1) + up_len - 1
+    //         = filter_len + up_len - 2
+    //         < up_len + filter_len - 1 = conv_len
+    for (int i = 0; i < up_len; i++)
     {
-        if ((i + offset) < conv_len)
-            output[i] = recA[i + offset] + recD[i + offset];
+        int idx = i + offset;
+        if (idx < conv_len)
+        {
+            output[i] = recA[idx] + recD[idx];
+        }
         else
+        {
+            // This shouldn't happen with correct offset, but handle gracefully
             output[i] = 0.0f;
+        }
     }
 
-    *output_len = actual_len;
+    *output_len = up_len;
 
 cleanup:
     free(upA);
@@ -392,7 +440,6 @@ tiny_error_t tiny_dwt_multilevel_decompose_f32(const float *input, int input_len
     int cD_pos = 0;
 
     int current_len = input_len;
-    float *cA = NULL;
     for (int l = 0; l < levels; l++)
     {
         int cA_len = 0, cD_len = 0;

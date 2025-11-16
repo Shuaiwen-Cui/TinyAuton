@@ -1,8 +1,10 @@
-#include "tiny_dsp.h"
-#include "tiny_conv.h"
-#include "tiny_conv_test.h"
+#include "tiny_ica_test.h"
 
 extern "C" void app_main(void)
 {
-    tiny_matrix_test();
+    // Run ICA tests
+    tiny_ica_test();
+    
+    printf("\n\n");
+    
 }

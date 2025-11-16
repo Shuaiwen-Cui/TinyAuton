@@ -72,6 +72,9 @@ tiny_error_t tiny_ccorr_f32(const float *Signal, const int siglen, const float *
         return TINY_ERR_DSP_NULL_POINTER;
     }
 
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+    dsps_ccorr_f32(Signal, siglen, Kernel, kernlen, corrvout);
+#else
     float *sig = (float *)Signal;
     float *kern = (float *)Kernel;
     int lsig = siglen;
@@ -85,10 +88,6 @@ tiny_error_t tiny_ccorr_f32(const float *Signal, const int siglen, const float *
         lsig = kernlen;
         lkern = siglen;
     }
-
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    dsps_ccorr_f32(Signal, siglen, Kernel, kernlen, corrvout);
-#else
     // stage I
     for (int n = 0; n < lkern; n++)
     {

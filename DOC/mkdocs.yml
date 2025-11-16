@@ -139,12 +139,18 @@ plugins:
             USAGE: 使用方法
             EXAMPLES: 示例
             DSP: 数字信号处理
+            SUPPORT: 支持功能
             SIGNAL: 信号
             CONVOLUTION: 卷积
             CORRELATION: 互相关
             RESAMPLING: 重采样
             TRANSFORM: 变换
+            FFT: 快速傅里叶变换
             DWT: 离散小波变换
+            ICA: 独立成分分析
+            FILTER: 滤波器
+            FIR: 有限脉冲响应
+            IIR: 无限脉冲响应
             AI: 人工智能
             NOTES: 说明
             CODE: 代码
@@ -314,6 +320,10 @@ nav:
       - HEADER-FILE:
           - CONFIGURATION: "DSP/HEADER-FILE/tiny_dsp_config.md"
           - TINYDSP: "DSP/HEADER-FILE/tiny_dsp.md"
+      - SUPPORT:
+          - NOTES: "DSP/SUPPORT/notes.md"
+          - CODE: "DSP/SUPPORT/code.md"
+          - TEST: "DSP/SUPPORT/test.md"
       - SIGNAL:
           - CONVOLUTION: 
              - NOTES: "DSP/SIGNAL/CONVOLUTION/notes.md"
@@ -327,11 +337,28 @@ nav:
              - NOTES: "DSP/SIGNAL/RESAMPLE/notes.md"
              - CODE: "DSP/SIGNAL/RESAMPLE/code.md"
              - TEST: "DSP/SIGNAL/RESAMPLE/test.md"
+      - FILTER:
+          - FIR:
+              - NOTES: "DSP/FILTER/FIR/notes.md"
+              - CODE: "DSP/FILTER/FIR/code.md"
+              - TEST: "DSP/FILTER/FIR/test.md"
+          - IIR:
+              - NOTES: "DSP/FILTER/IIR/notes.md"
+              - CODE: "DSP/FILTER/IIR/code.md"
+              - TEST: "DSP/FILTER/IIR/test.md"
       - TRANSFORM:
+          - FFT:
+              - NOTES: "DSP/TRANSFORM/FFT/notes.md"
+              - CODE: "DSP/TRANSFORM/FFT/code.md"
+              - TEST: "DSP/TRANSFORM/FFT/test.md"
           - DWT:
               - NOTES: "DSP/TRANSFORM/DWT/notes.md"
               - CODE: "DSP/TRANSFORM/DWT/code.md"
               - TEST: "DSP/TRANSFORM/DWT/test.md"
+          - ICA:
+              - NOTES: "DSP/TRANSFORM/ICA/notes.md"
+              - CODE: "DSP/TRANSFORM/ICA/code.md"
+              - TEST: "DSP/TRANSFORM/ICA/test.md"
   - AI:
       - "AI/ai.md"
 

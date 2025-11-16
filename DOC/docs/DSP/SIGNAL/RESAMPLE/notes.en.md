@@ -42,7 +42,7 @@ tiny_error_t tiny_downsample_skip_f32(const float *input, int input_len, float *
 
 ```
 
-***Description**:
+**Description**:
 
 Signal downsampling function that uses two integer parameters `keep` and `skip` to control the downsampling process. `keep` indicates the number of samples to keep, while `skip` indicates the number of samples to skip.
 
@@ -102,7 +102,7 @@ tiny_error_t tiny_upsample_zero_f32(const float *input, int input_len, float *ou
 }
 ```
 
-***Description**:
+**Description**:
 
 Signal upsampling is the process of increasing the sampling rate of a signal by inserting zeros between the original samples. It is typically used to increase the sampling rate of a signal. Note that this is different from interpolation, which involves filling in gaps between samples.
 
