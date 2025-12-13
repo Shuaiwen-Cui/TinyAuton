@@ -1,0 +1,2 @@
+source /home/cshwstem/CSW/TinyAuton/CODE/AIoTNode-C-CORE-CHN-AI-PROTO/build/bootloader/gdbinit/symbols
+source /home/cshwstem/CSW/TinyAuton/CODE/AIoTNode-C-CORE-CHN-AI-PROTO/build/bootloader/gdbinit/connect
