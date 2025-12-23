@@ -30,9 +30,14 @@ extern "C"
 #endif
 
 /* Macros */
+/* WPA2-Enterprise (campus/enterprise) */
 #define ENTERPRISE_WIFI_SSID "NTUSECURE"                    // SSID of WiFi
 #define ENTERPRISE_WIFI_USERNAME "SHUAIWEN001@e.ntu.edu.sg" // Username
 #define ENTERPRISE_WIFI_PASSWORD "Csw19950918%"             // Password
+
+/* Personal WiFi (WPA2-PSK / open) */
+#define PERSONAL_WIFI_SSID "TP-LINK_354D"    // Personal WiFi SSID
+#define PERSONAL_WIFI_PASSWORD "19960423"     // Leave empty string for open networks
 
     /* Variables */
     extern const char *TAG_WIFI; // tag for logging
@@ -47,6 +52,14 @@ extern "C"
      * @return esp_err_t
      */
     esp_err_t wifi_sta_wpa2_init(void);
+
+    /**
+     * @name wifi_sta_personal_init
+     * @brief Initialize the WIFI station for personal WiFi (WPA2-PSK or open)
+     * @param void
+     * @return esp_err_t
+     */
+    esp_err_t wifi_sta_personal_init(void);
 
 #ifdef __cplusplus
 }

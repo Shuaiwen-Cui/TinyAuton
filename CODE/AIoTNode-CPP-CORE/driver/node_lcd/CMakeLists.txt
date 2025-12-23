@@ -7,6 +7,8 @@ set(include_dirs
 )
 
 set(requires
+    esp_driver_gpio
+    esp_driver_spi
     node_spi
 )
 

@@ -8,6 +8,7 @@ set(include_dirs
 
 set(requires
     driver
+    esp_driver_i2c
     log
 )
 

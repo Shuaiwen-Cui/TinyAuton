@@ -22,7 +22,7 @@ extern "C"
 #include "mqtt_client.h"
 
 /* Macros */
-#define MQTT_ADDRESS "mqtt://8.222.194.160" // MQTT Broker URL
+#define MQTT_ADDRESS "mqtt://8.141.92.6" // MQTT Broker URL 8.222.194.160
 #define MQTT_PORT 1883                      // MQTT Broker Port
 #define MQTT_CLIENT "ESP32-S3-Node-001"     // Client ID (Unique for devices)
 #define MQTT_USERNAME "cshwstem"            // MQTT Username

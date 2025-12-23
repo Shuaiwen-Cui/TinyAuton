@@ -80,7 +80,7 @@ extern "C"
         };
         ESP_LOGI(TAG_WIFI, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));                   // set the mode to station mode
-        ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config)); // set the configuration with the configured struct
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config)); // set the configuration with the configured struct
         // ESP_ERROR_CHECK( esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)EXAMPLE_EAP_ID, strlen(EXAMPLE_EAP_ID)) ); // set the identity (not necessary for WAP2-ENTERPRISE)
 
         ESP_ERROR_CHECK(esp_eap_client_set_username((uint8_t *)ENTERPRISE_WIFI_USERNAME, strlen(ENTERPRISE_WIFI_USERNAME))); // ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_username((uint8_t *)ENTERPRISE_WIFI_USERNAME, strlen(ENTERPRISE_WIFI_USERNAME)));
@@ -89,6 +89,52 @@ extern "C"
         ESP_ERROR_CHECK(esp_wifi_sta_enterprise_enable()); // ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_enable());
 
         /* WiFi Start */
+        ret = esp_wifi_start();
+        if (ret != ESP_OK)
+        {
+            ESP_LOGE(TAG_WIFI, "esp_wifi_start failed: %s", esp_err_to_name(ret));
+            return ret;
+        }
+        return ESP_OK;
+    }
+
+    /**
+     * @name wifi_sta_personal_init
+     * @brief Initialize the WIFI station for personal WiFi (WPA2-PSK or open)
+     * @param void
+     * @return esp_err_t
+     */
+    esp_err_t wifi_sta_personal_init(void)
+    {
+        esp_err_t ret;
+
+        /* Preparation */
+        ESP_ERROR_CHECK(esp_netif_init());
+        wifi_event_group = xEventGroupCreate();
+        ESP_ERROR_CHECK(esp_event_loop_create_default());
+        sta_netif = esp_netif_create_default_wifi_sta();
+        assert(sta_netif);
+
+        /* WiFi Configuration */
+        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+        ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+        ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+        ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
+        ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+
+        wifi_config_t wifi_config = {0};
+        strlcpy((char *)wifi_config.sta.ssid, PERSONAL_WIFI_SSID, sizeof(wifi_config.sta.ssid));
+        strlcpy((char *)wifi_config.sta.password, PERSONAL_WIFI_PASSWORD, sizeof(wifi_config.sta.password));
+
+        size_t password_len = strlen(PERSONAL_WIFI_PASSWORD);
+        wifi_config.sta.threshold.authmode = (password_len == 0) ? WIFI_AUTH_OPEN : WIFI_AUTH_WPA2_PSK;
+        wifi_config.sta.pmf_cfg.capable = true;
+        wifi_config.sta.pmf_cfg.required = false;
+
+        ESP_LOGI(TAG_WIFI, "Setting personal WiFi SSID %s...", wifi_config.sta.ssid);
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+
         ret = esp_wifi_start();
         if (ret != ESP_OK)
         {
