@@ -287,151 +287,167 @@ void test_tiny_mat_add_f32_contiguous(void)
  * Test Parameters:
  * ================================================================================
  *   rows = 2, cols = 3
- *   padd1 = 2, padd2 = 1, padd_out = 2 (with padding)
+ *   padd1 = 4, padd2 = 4, padd_out = 4 (larger padding)
  *   step1 = 2, step2 = 3, step_out = 2 (non-contiguous access)
  */
 void test_tiny_mat_add_f32_padded_strided(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 2: tiny_mat_add_f32 - Non-Contiguous Memory Layout (pad!=0, step>1)\n\r");
+    printf("Test Case 2: tiny_mat_add_f32 - Non-contiguous memory (pad!=0, step>1)\n\r");
     printf("================================================================================\n\r");
-    
+
     const int rows = 2;
     const int cols = 3;
-    const int padd1 = 2;
-    const int padd2 = 1;
-    const int padd_out = 2;
-    const int step1 = 2;
-    const int step2 = 3;
-    const int step_out = 2;
-    
-    printf("Parameters: rows=%d, cols=%d, pad1=%d, pad2=%d, pad_out=%d, step1=%d, step2=%d, step_out=%d\n\r",
+    // Use larger padding so that stride comfortably covers sparse steps.
+    // This avoids any ambiguity about padding location and keeps indices in-bounds.
+    const int padd1 = 4;     // stride1 = 3 + 4 = 7
+    const int padd2 = 4;     // stride2 = 3 + 4 = 7
+    const int padd_out = 4;  // stride_out = 3 + 4 = 7
+    const int step1 = 2;     // indices for cols: 0,2,4 (all < stride1=7)
+    const int step2 = 3;     // indices for cols: 0,3,6 (all < stride2=7)
+    const int step_out = 2;  // indices for cols: 0,2,4 (all < stride_out=7)
+
+    printf("Params: rows=%d, cols=%d, pad1=%d, pad2=%d, pad_out=%d, step1=%d, step2=%d, step_out=%d\n\r",
            rows, cols, padd1, padd2, padd_out, step1, step2, step_out);
-    printf("Index formula: index = row * (cols + padding) + col * step\n\r");
-    printf("\n\r");
-    
-    // Input1: 2 rows, 3 cols, padding=2, step=2
-    // Row stride = cols + padd1 = 3 + 2 = 5
-    // Memory index calculation: base = row * (cols + padd1), offset = col * step1
-    float input1[20] = {0}; // Allocate enough space, initialize to zero
-    // Row 0: elements at indices 0, 2, 4
-    input1[0 * 5 + 0 * 2] = 1.0f; // row 0, col 0: index = 0*5 + 0*2 = 0
-    input1[0 * 5 + 1 * 2] = 2.0f; // row 0, col 1: index = 0*5 + 1*2 = 2
-    input1[0 * 5 + 2 * 2] = 3.0f; // row 0, col 2: index = 0*5 + 2*2 = 4
-    // Row 1: elements at indices 5, 7, 9
-    input1[1 * 5 + 0 * 2] = 4.0f; // row 1, col 0: index = 1*5 + 0*2 = 5
-    input1[1 * 5 + 1 * 2] = 5.0f; // row 1, col 1: index = 1*5 + 1*2 = 7
-    input1[1 * 5 + 2 * 2] = 6.0f; // row 1, col 2: index = 1*5 + 2*2 = 9
-    
-    // Input2: 2 rows, 3 cols, padding=1, step=3
-    // Row stride = cols + padd2 = 3 + 1 = 4
-    // Memory index calculation: base = row * (cols + padd2), offset = col * step2
-    float input2[16] = {0}; // Allocate enough space, initialize to zero
-    // Row 0: elements at indices 0, 3, 6
-    input2[0 * 4 + 0 * 3] = 0.5f; // row 0, col 0: index = 0*4 + 0*3 = 0
-    input2[0 * 4 + 1 * 3] = 1.5f; // row 0, col 1: index = 0*4 + 1*3 = 3
-    input2[0 * 4 + 2 * 3] = 2.5f; // row 0, col 2: index = 0*4 + 2*3 = 6
-    // Row 1: elements at indices 4, 7, 10
-    input2[1 * 4 + 0 * 3] = 3.5f; // row 1, col 0: index = 1*4 + 0*3 = 4
-    input2[1 * 4 + 1 * 3] = 4.5f; // row 1, col 1: index = 1*4 + 1*3 = 7
-    input2[1 * 4 + 2 * 3] = 5.5f; // row 1, col 2: index = 1*4 + 2*3 = 10
-    
-    // Output: 2 rows, 3 cols, padding=2, step=2
-    // Row stride = cols + padd_out = 3 + 2 = 5
-    float output[20] = {0}; // Allocate enough space, initialize to zero
-    
-    printf("Input1 Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd1, step1);
-    printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
-    printf("  Value:  ");
-    for (int i = 0; i < 15; i++) {
-        printf("%4.1f ", input1[i]);
-    }
-    printf("...\n\r");
-    printf("  Matrix: [1.0  X  2.0  X  3.0]  <- Row 0 (indices: 0, 2, 4)\n\r");
-    printf("          [4.0  X  5.0  X  6.0]  <- Row 1 (indices: 5, 7, 9)\n\r");
-    printf("          (X = padding/unused)\n\r");
-    printf("\n\r");
-    
-    printf("Input2 Memory Layout (16 elements, pad=%d, step=%d):\n\r", padd2, step2);
-    printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] ...\n\r");
-    printf("  Value:  ");
-    for (int i = 0; i < 12; i++) {
-        printf("%4.1f ", input2[i]);
-    }
-    printf("...\n\r");
-    printf("  Matrix: [0.5  X  X  1.5  X  X  2.5]  <- Row 0 (indices: 0, 3, 6)\n\r");
-    printf("          [3.5  X  X  4.5  X  X  5.5]  <- Row 1 (indices: 4, 7, 10)\n\r");
-    printf("          (X = padding/unused)\n\r");
-    printf("\n\r");
-    
-    // Calculate expected output
-    float expected_output[20] = {0};
-    for (int row = 0; row < rows; row++) {
-        for (int col = 0; col < cols; col++) {
-            int idx1 = row * (cols + padd1) + col * step1;
-            int idx2 = row * (cols + padd2) + col * step2;
-            int idx_out = row * (cols + padd_out) + col * step_out;
-            expected_output[idx_out] = input1[idx1] + input2[idx2];
+    printf("Index formula: idx = row * (cols + padding) + col * step\n\r\n\r");
+
+    // Prepare inputs
+    float input1[32] = {0};
+    float input2[32] = {0};
+    float output[32] = {0};
+    const int stride1 = cols + padd1; // 7
+    const int stride2 = cols + padd2; // 7
+    const int stride_out = cols + padd_out; // 7
+
+    // input1: pad=4, step=2
+    input1[0 * stride1 + 0 * step1] = 1.0f;
+    input1[0 * stride1 + 1 * step1] = 2.0f;
+    input1[0 * stride1 + 2 * step1] = 3.0f;
+    input1[1 * stride1 + 0 * step1] = 4.0f;
+    input1[1 * stride1 + 1 * step1] = 5.0f;
+    input1[1 * stride1 + 2 * step1] = 6.0f;
+
+    // input2: pad=4, step=3
+    input2[0 * stride2 + 0 * step2] = 0.5f;
+    input2[0 * stride2 + 1 * step2] = 1.5f;
+    input2[0 * stride2 + 2 * step2] = 2.5f;
+    input2[1 * stride2 + 0 * step2] = 3.5f;
+    input2[1 * stride2 + 1 * step2] = 4.5f;
+    input2[1 * stride2 + 2 * step2] = 5.5f;
+
+    // expected output
+    float expected_output[32] = {0};
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            int idx1 = r * stride1 + c * step1;
+            int idx2 = r * stride2 + c * step2;
+            int idxo = r * stride_out + c * step_out;
+            expected_output[idxo] = input1[idx1] + input2[idx2];
         }
     }
-    
-    printf("Expected Output Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_out, step_out);
-    printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
-    printf("  Value:  ");
-    for (int i = 0; i < 15; i++) {
-        printf("%4.1f ", expected_output[i]);
+
+    // Print raw buffers and per-row memory distribution (C = column, P = padding)
+    printf("[input1 raw len=%d] ", stride1 * rows);
+    for (int i = 0; i < stride1 * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", input1[i]); }
+    printf(" (pad=%d, step=%d)\n\r", padd1, step1);
+    for (int r = 0; r < rows; r++) {
+        printf("  input1 row%d (stride=%d):", r, stride1);
+        for (int j = 0; j < stride1; j++) {
+            int col = (j % step1 == 0) ? j / step1 : -1;
+            int is_col = (col >= 0 && col < cols);
+            printf(" [%d:%4.1f %s]", j, input1[r * stride1 + j], is_col ? "C" : "P");
+        }
+        printf("\n\r");
     }
-    printf("...\n\r");
-    printf("  Matrix: [1.5  X  3.5  X  5.5]  <- Row 0 (indices: 0, 2, 4)\n\r");
-    printf("          [7.5  X  9.5  X 11.5]  <- Row 1 (indices: 5, 7, 9)\n\r");
-    printf("          (X = padding/unused)\n\r");
     printf("\n\r");
-    
+
+    printf("[input2 raw len=%d] ", stride2 * rows);
+    for (int i = 0; i < stride2 * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", input2[i]); }
+    printf(" (pad=%d, step=%d)\n\r", padd2, step2);
+    for (int r = 0; r < rows; r++) {
+        printf("  input2 row%d (stride=%d):", r, stride2);
+        for (int j = 0; j < stride2; j++) {
+            int col = (j % step2 == 0) ? j / step2 : -1;
+            int is_col = (col >= 0 && col < cols);
+            printf(" [%d:%4.1f %s]", j, input2[r * stride2 + j], is_col ? "C" : "P");
+        }
+        printf("\n\r");
+    }
+    printf("\n\r");
+
+    // Logical view (without padding)
+    printf("Logical matrices (no padding):\n\r");
+    for (int r = 0; r < rows; r++) {
+        printf("  input1 row%d:", r);
+        for (int c = 0; c < cols; c++) {
+            int idx = r * stride1 + c * step1;
+            printf(" %4.1f", input1[idx]);
+        }
+        printf("\n\r");
+    }
+    for (int r = 0; r < rows; r++) {
+        printf("  input2 row%d:", r);
+        for (int c = 0; c < cols; c++) {
+            int idx = r * stride2 + c * step2;
+            printf(" %4.1f", input2[idx]);
+        }
+        printf("\n\r");
+    }
+    printf("\n\r");
+
     tiny_error_t err = tiny_mat_add_f32(input1, input2, output, rows, cols,
                                         padd1, padd2, padd_out,
                                         step1, step2, step_out);
-    
-    if (err == TINY_OK) {
-        printf("Output Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_out, step_out);
-        printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
-        printf("  Value:  ");
-        for (int i = 0; i < 15; i++) {
-            printf("%4.1f ", output[i]);
-        }
-        printf("...\n\r");
-        printf("  Matrix: [1.5  X  3.5  X  5.5]  <- Row 0 (indices: 0, 2, 4)\n\r");
-        printf("          [7.5  X  9.5  X 11.5]  <- Row 1 (indices: 5, 7, 9)\n\r");
-        printf("          (X = padding/unused)\n\r");
-        printf("\n\r");
-        
-        // Verify results
-        int all_correct = 1;
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                int idx_out = row * (cols + padd_out) + col * step_out;
-                int idx1 = row * (cols + padd1) + col * step1;
-                int idx2 = row * (cols + padd2) + col * step2;
-                float expected = input1[idx1] + input2[idx2];
-                float tolerance = 1e-6f;
-                float diff = (output[idx_out] > expected) ? (output[idx_out] - expected) : (expected - output[idx_out]);
-                if (diff > tolerance) {
-                    all_correct = 0;
-                    break;
-                }
-            }
-            if (!all_correct) break;
-        }
-        
-        if (all_correct) {
-            printf("✓ Test PASSED\n\r");
-        } else {
-            printf("✗ Test FAILED\n\r");
-        }
-    } else {
-        printf("✗ Test FAILED: Error code = %d\n\r", err);
+
+    if (err != TINY_OK) {
+        printf("✗ Call failed, err=%d\n\r", err);
+        printf("================================================================================\n\r\n\r");
+        return;
     }
-    
+
+    // Print output raw and per-row memory distribution
+    printf("[output raw len=%d] ", stride_out * rows);
+    for (int i = 0; i < stride_out * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", output[i]); }
+    printf(" (pad_out=%d, step_out=%d)\n\r\n\r", padd_out, step_out);
+    for (int r = 0; r < rows; r++) {
+        printf("  output row%d (stride=%d):", r, stride_out);
+        for (int j = 0; j < stride_out; j++) {
+            int col = (j % step_out == 0) ? j / step_out : -1;
+            int is_col = (col >= 0 && col < cols);
+            printf(" [%d:%4.1f %s]", j, output[r * stride_out + j], is_col ? "C" : "P");
+        }
+        printf("\n\r");
+    }
+    printf("\n\r");
+
+    // Expected vs actual (logical)
+    printf("[expected raw len=%d] ", stride_out * rows);
+    for (int i = 0; i < stride_out * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", expected_output[i]); }
+    printf(" (pad_out=%d, step_out=%d)\n\r\n\r", padd_out, step_out);
+
+    int mismatches = 0;
+    printf("Logical matrix comparison (expected | actual | diff):\n\r");
+    for (int r = 0; r < rows; r++) {
+        printf("  row%d:", r);
+        for (int c = 0; c < cols; c++) {
+            int idxo = r * stride_out + c * step_out;
+            float expv = expected_output[idxo];
+            float actv = output[idxo];
+            float diff = actv - expv;
+            if (diff < 0) diff = -diff;
+            if (diff > 1e-6f) mismatches++;
+            printf(" [%4.1f | %4.1f | %4.1e]", expv, actv, diff);
+        }
+        printf("\n\r");
+    }
+
+    if (mismatches == 0) {
+        printf("✓ Test PASSED (all elements match)\n\r");
+    } else {
+        printf("✗ Test FAILED (mismatched elements=%d)\n\r", mismatches);
+    }
+
     printf("================================================================================\n\r\n\r");
 }
 
@@ -1983,6 +1999,7 @@ void tiny_mat_test(void)
     printf("============ [test complete] ============\n\r");
 }
 
+
 ```
 
 ### main.cpp
@@ -1996,6 +2013,7 @@ extern "C" void app_main(void)
     tiny_mat_test();
 }
 
+```
 
 ## TEST RESULTS
 
@@ -2040,40 +2058,36 @@ Output Memory Layout (12 elements, contiguous):
 
 
 ================================================================================
-Test Case 2: tiny_mat_add_f32 - Non-Contiguous Memory Layout (pad!=0, step>1)
+Test Case 2: tiny_mat_add_f32 - Non-contiguous memory (pad!=0, step>1)
 ================================================================================
-Parameters: rows=2, cols=3, pad1=2, pad2=1, pad_out=2, step1=2, step2=3, step_out=2
-Index formula: index = row * (cols + padding) + col * step
+Params: rows=2, cols=3, pad1=4, pad2=4, pad_out=4, step1=2, step2=3, step_out=2
+Index formula: idx = row * (cols + padding) + col * step
 
-Input1 Memory Layout (20 elements, pad=2, step=2):
-  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
-  Value:   1.0  0.0  2.0  0.0  3.0  4.0  0.0  5.0  0.0  6.0  0.0  0.0  0.0  0.0  0.0 ...
-  Matrix: [1.0  X  2.0  X  3.0]  <- Row 0 (indices: 0, 2, 4)
-          [4.0  X  5.0  X  6.0]  <- Row 1 (indices: 5, 7, 9)
-          (X = padding/unused)
+[input1 raw len=14]  1.0  0.0  2.0  0.0  3.0  0.0  0.0  4.0  0.0  5.0  0.0  6.0  0.0  0.0 (pad=4, step=2)
+  input1 row0 (stride=7): [0: 1.0 C] [1: 0.0 P] [2: 2.0 C] [3: 0.0 P] [4: 3.0 C] [5: 0.0 P] [6: 0.0 P]
+  input1 row1 (stride=7): [0: 4.0 C] [1: 0.0 P] [2: 5.0 C] [3: 0.0 P] [4: 6.0 C] [5: 0.0 P] [6: 0.0 P]
 
-Input2 Memory Layout (16 elements, pad=1, step=3):
-  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] ...
-  Value:   0.5  0.0  0.0  1.5  3.5  0.0  2.5  4.5  0.0  0.0  5.5  0.0 ...
-  Matrix: [0.5  X  X  1.5  X  X  2.5]  <- Row 0 (indices: 0, 3, 6)
-          [3.5  X  X  4.5  X  X  5.5]  <- Row 1 (indices: 4, 7, 10)
-          (X = padding/unused)
+[input2 raw len=14]  0.5  0.0  0.0  1.5  0.0  0.0  2.5  3.5  0.0  0.0  4.5  0.0  0.0  5.5 (pad=4, step=3)
+  input2 row0 (stride=7): [0: 0.5 C] [1: 0.0 P] [2: 0.0 P] [3: 1.5 C] [4: 0.0 P] [5: 0.0 P] [6: 2.5 C]
+  input2 row1 (stride=7): [0: 3.5 C] [1: 0.0 P] [2: 0.0 P] [3: 4.5 C] [4: 0.0 P] [5: 0.0 P] [6: 5.5 C]
 
-Expected Output Memory Layout (20 elements, pad=2, step=2):
-  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
-  Value:   1.5  0.0  3.5  0.0  5.5  7.5  0.0  9.5  0.0 11.5  0.0  0.0  0.0  0.0  0.0 ...
-  Matrix: [1.5  X  3.5  X  5.5]  <- Row 0 (indices: 0, 2, 4)
-          [7.5  X  9.5  X 11.5]  <- Row 1 (indices: 5, 7, 9)
-          (X = padding/unused)
+Logical matrices (no padding):
+  input1 row0:  1.0  2.0  3.0
+  input1 row1:  4.0  5.0  6.0
+  input2 row0:  0.5  1.5  2.5
+  input2 row1:  3.5  4.5  5.5
 
-Output Memory Layout (20 elements, pad=2, step=2):
-  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
-  Value:   1.5  0.0  3.5  0.0  5.5  7.5  0.0  9.5  0.0 11.5  0.0  0.0  0.0  0.0  0.0 ...
-  Matrix: [1.5  X  3.5  X  5.5]  <- Row 0 (indices: 0, 2, 4)
-          [7.5  X  9.5  X 11.5]  <- Row 1 (indices: 5, 7, 9)
-          (X = padding/unused)
+[output raw len=14]  1.5  0.0  3.5  0.0  5.5  0.0  0.0  7.5  0.0  9.5  0.0 11.5  0.0  0.0 (pad_out=4, step_out=2)
 
-✓ Test PASSED
+  output row0 (stride=7): [0: 1.5 C] [1: 0.0 P] [2: 3.5 C] [3: 0.0 P] [4: 5.5 C] [5: 0.0 P] [6: 0.0 P]
+  output row1 (stride=7): [0: 7.5 C] [1: 0.0 P] [2: 9.5 C] [3: 0.0 P] [4:11.5 C] [5: 0.0 P] [6: 0.0 P]
+
+[expected raw len=14]  1.5  0.0  3.5  0.0  5.5  0.0  0.0  7.5  0.0  9.5  0.0 11.5  0.0  0.0 (pad_out=4, step_out=2)
+
+Logical matrix comparison (expected | actual | diff):
+  row0: [ 1.5 |  1.5 | 0.0e+00] [ 3.5 |  3.5 | 0.0e+00] [ 5.5 |  5.5 | 0.0e+00]
+  row1: [ 7.5 |  7.5 | 0.0e+00] [ 9.5 |  9.5 | 0.0e+00] [11.5 | 11.5 | 0.0e+00]
+✓ Test PASSED (all elements match)
 ================================================================================
 
 
@@ -2548,5 +2562,4 @@ Output Matrix Memory Layout (2x3, pad=1, step=1, 8 elements):
 ================================================================================
 
 ============ [test complete] ============
-
 ```
