@@ -324,10 +324,11 @@ namespace tiny
         /**
          * @brief Automatic eigenvalue decomposition with method selection.
          * @param tolerance Convergence tolerance (must be >= 0)
+         * @param max_iter Maximum number of iterations (must be > 0, default = 100)
          * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
          * @note Automatically selects Jacobi method for symmetric matrices, QR algorithm for general matrices.
          */
-        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
 
     protected:
 
@@ -449,6 +450,8 @@ namespace tiny
 }
 
 ```
+
+
 ## MATRIX METADATA
 
 !!! INFO "Matrix Structure"
@@ -618,7 +621,7 @@ void
 ### Print Matrix Elements
 
 ```cpp
-void Mat::print_matrix(bool show_padding);
+   void Mat::print_matrix(bool show_padding) const;
 ```
 
 **Description**: 
@@ -2827,7 +2830,7 @@ QR uses Gram–Schmidt for Q/R in this implementation; it can be less stable for
 ### Automatic Eigendecomposition
 
 ```cpp
-Mat::EigenDecomposition Mat::eigendecompose(float tolerance) const;
+Mat::EigenDecomposition Mat::eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
 ```
 
 **Description**:
@@ -2837,12 +2840,13 @@ Convenience interface that automatically selects the optimal algorithm based on 
 **Algorithm Selection**:
 
 1. Test if matrix is symmetric: `is_symmetric(tolerance * 10.0f)`
-2. If symmetric → use `eigendecompose_jacobi(tolerance, 100)` (more stable and accurate)
-3. If not symmetric → use `eigendecompose_qr(100, tolerance)` (handles general matrices)
+2. If symmetric → use `eigendecompose_jacobi(tolerance, max_iter)` (more stable and accurate)
+3. If not symmetric → use `eigendecompose_qr(max_iter, tolerance)` (handles general matrices)
 
 **Parameters**:
 
-- `float tolerance` : Used for symmetry test and decomposition convergence (recommended 1e-6).
+- `float tolerance` : Used for symmetry test and decomposition convergence (default 1e-6f).
+- `int max_iter` : Maximum number of iterations (must be > 0, default = 100).
 
 **Returns**:
 

@@ -18,6 +18,7 @@ TinyMath
 ```
 
 ```cpp
+
 /**
  * @file tiny_matrix.hpp
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
@@ -324,10 +325,11 @@ namespace tiny
         /**
          * @brief Automatic eigenvalue decomposition with method selection.
          * @param tolerance Convergence tolerance (must be >= 0)
+         * @param max_iter Maximum number of iterations (must be > 0, default = 100)
          * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
          * @note Automatically selects Jacobi method for symmetric matrices, QR algorithm for general matrices.
          */
-        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
 
     protected:
 
@@ -619,7 +621,7 @@ void
 ### 打印矩阵元素
 
 ```cpp
-void Mat::print_matrix(bool show_padding);
+   void Mat::print_matrix(bool show_padding) const;
 ```
 
 **描述**: 
@@ -1121,9 +1123,9 @@ Mat block(int start_row, int start_col, int block_rows, int block_cols);
 
     - `view_roi` : 从该矩阵浅拷贝子矩阵 (ROI)。
 
-    - `copy_roi` : 从该矩阵深拷贝子矩阵 (ROI)。刚性拷贝，速度更快。
+    - `copy_roi` : 从该矩阵深拷贝子矩阵 (ROI)。复制内存拷贝，速度更快。
 
-    - `block` : 从该矩阵深拷贝块。柔性拷贝，速度更慢。
+    - `block` : 从该矩阵深拷贝块。逐个元素拷贝，速度更慢。
 ### 交换行
 
 ```cpp
@@ -2842,30 +2844,51 @@ QR在此实现中使用Gram–Schmidt构造Q/R；对于病态矩阵可能不太�
 ### 自动特征分解（根据矩阵特性选择方法）
 
 ```cpp
-Mat::EigenDecomposition Mat::eigendecompose(float tolerance) const;
+Mat::EigenDecomposition Mat::eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
 ```
 
 **描述**:
 
-简便接口，会先调用 `is_symmetric(tolerance * 10)` 判断矩阵是否近似对称：
+简便接口，会自动根据矩阵特性选择最优算法。先调用 `is_symmetric(tolerance * 10.0f)` 判断矩阵是否近似对称：
 
-- 若为对称，使用 `eigendecompose_jacobi`；
+- 若为对称，使用 `eigendecompose_jacobi(tolerance, max_iter)`（更稳定和精确）；
+- 否则使用 `eigendecompose_qr(max_iter, tolerance)`（处理一般矩阵）。
 
-- 否则使用 `eigendecompose_qr`。
+**算法选择流程**:
+
+1. 测试矩阵是否对称：`is_symmetric(tolerance * 10.0f)`
+2. 若对称 → 使用 `eigendecompose_jacobi(tolerance, max_iter)`
+3. 若非对称 → 使用 `eigendecompose_qr(max_iter, tolerance)`
 
 **参数**:
 
-- `float tolerance`：用于对称性检测与分解收敛判断（建议 `1e-6`）。
+- `float tolerance`：用于对称性检测与分解收敛判断（默认 `1e-6f`）。
+- `int max_iter`：最大迭代次数（必须 > 0，默认值 = 100）。
 
 **返回值**:
 
-`EigenDecomposition`。
+`EigenDecomposition` 结构，包含所有特征值和特征向量。
 
 **使用建议**:
 
-- 若明确知道矩阵为对称矩阵（如刚度矩阵、质量矩阵），直接使用 `eigendecompose_jacobi`；对非对称或不确定情形，可使用 `eigendecompose`。
+- **自动优化**：无需手动选择算法，同时仍能获得最佳性能。
 
-- 对于较大矩阵或嵌入式场景，Jacobi/QR 计算成本较高，请权衡数值稳定性与性能。
+- **边缘计算**：非常适合嵌入式系统，无需手动调优即可获得良好性能。
+
+- **鲁棒性**：对称性测试使用放宽的容差（10×），以处理数值误差，确保正确识别对称矩阵。
+
+**实用技巧**:
+
+- **已知对称性**：若明确知道矩阵为对称矩阵（如刚度矩阵、质量矩阵），直接使用 `eigendecompose_jacobi` 可获得最佳稳定性和略好的性能。
+
+- **未知特性**：对于一般矩阵或对称性未知的情况，使用 `eigendecompose` 进行自动选择。
+
+- **性能考虑**：
+  - 在嵌入式平台上，对大型矩阵进行特征分解的计算成本很高
+  - 对于 n > 20，当只需要少数特征值时，考虑使用降阶方法或迭代方法（幂迭代）
+  - 对于实时应用，使用 `power_iteration()` 或 `inverse_power_iteration()` 计算单个特征值
+
+- **内存使用**：完全特征分解需要存储所有特征向量（n×n 矩阵），对于大型矩阵可能占用大量内存。
 
 
 ## 流操作符

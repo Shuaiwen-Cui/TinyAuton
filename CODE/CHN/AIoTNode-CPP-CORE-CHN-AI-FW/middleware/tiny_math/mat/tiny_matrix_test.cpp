@@ -251,6 +251,9 @@ void test_roi_operations()
     std::cout << "[A3.4] Copy Head - Memory Sharing Check\n"; // matB and matC share the same data pointer
     matB(0, 0) = 99.99f;
     std::cout << "matB(0, 0) = 99.99f\n";
+    std::cout << "matC:\n";
+    matC.print_info();
+    matC.print_matrix(true);
 
     // A3.5: copy_paste() - Error handling - negative position
     std::cout << "\n[A3.5] copy_paste() - Error Handling - Negative Position\n";
@@ -289,21 +292,37 @@ void test_roi_operations()
               << " (Expected: TINY_ERR_INVALID_ARG) " 
               << (err1 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
 
-    // A3.8: copy_head() - Error handling - source owns its memory
-    std::cout << "\n[A3.8] copy_head() - Error Handling - Source Owns Its Memory\n";
+    // A3.8: copy_head() - Share data from owned-memory source
+    std::cout << "\n[A3.8] copy_head() - Share Data from Owned-Memory Source (Double-Free Prevention)\n";
     tiny::Mat dest4;
     tiny::Mat owned_src(2, 2);  // Creates matrix with its own memory (ext_buff=false)
     owned_src(0, 0) = 1.0f; owned_src(0, 1) = 2.0f;
     owned_src(1, 0) = 3.0f; owned_src(1, 1) = 4.0f;
-    // Note: copy_head should only work with external buffers or submatrix views
-    // If source owns its memory, copy_head should return error to prevent double-free
+    std::cout << "Before copy_head:\n";
+    std::cout << "  owned_src: ext_buff=" << owned_src.ext_buff << "\n";
+    std::cout << "  dest4: ext_buff=" << dest4.ext_buff << "\n";
+    
+    // Note: copy_head now works with ANY source, even if it owns its memory
+    // The key safety feature: destination is marked as ext_buff=true (view, not owner)
+    // This prevents double-free: only original owner (ext_buff=false) deletes memory
     tiny_error_t err2 = dest4.copy_head(owned_src);
     std::cout << "copy_head from matrix with owned memory: error = " << err2 
-              << " (Expected: TINY_ERR_INVALID_ARG) " 
-              << (err2 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
-    std::cout << "matC (should be unchanged):\n";
-    matC.print_info();
-    matC.print_matrix(true);
+              << " (Expected: TINY_OK) " 
+              << (err2 == TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    
+    std::cout << "After copy_head:\n";
+    std::cout << "  owned_src: ext_buff=" << owned_src.ext_buff << " (still owns memory)\n";
+    std::cout << "  dest4: ext_buff=" << dest4.ext_buff << " (view, does not own)\n";
+    
+    // Verify data is shared
+    std::cout << "Verify data sharing:\n";
+    std::cout << "  dest4(0,0)=" << dest4(0, 0) << " (should be 1.0)\n";
+    std::cout << "  dest4(1,1)=" << dest4(1, 1) << " (should be 4.0)\n";
+    
+    // Modify original, verify view reflects change
+    owned_src(0, 0) = 99.0f;
+    std::cout << "After modifying owned_src(0,0) to 99.0:\n";
+    std::cout << "  dest4(0,0)=" << dest4(0, 0) << " (should be 99.0, confirming shared data)\n";
 
     // A3.9: Get a View of ROI - low level function
     std::cout << "[A3.9] Get a View of ROI - Low Level Function\n";
@@ -629,17 +648,23 @@ void test_matrix_exponentiation()
     tiny::Mat result3 = mat3 ^ 1;
     result3.print_matrix(true);  // Expect same as original
 
-    std::cout << "\n[B8.4] Raise Each Element to Power of -1 (Expect Error or Warning)\n";
+    std::cout << "\n[B8.4] Raise Each Element to Power of -1 (Element-wise Reciprocal)\n";
     tiny::Mat mat4(2, 2);
     mat4(0,0)=1; mat4(0,1)=2; mat4(1,0)=4; mat4(1,1)=5;
     tiny::Mat result4 = mat4 ^ -1;
-    result4.print_matrix(true);
+    result4.print_matrix(true);  // Expect: [1.0, 0.5; 0.25, 0.2]
 
     std::cout << "\n[B8.5] Raise Matrix Containing Zero to Power of 3\n";
     tiny::Mat mat5(2, 2);
     mat5(0,0)=0; mat5(0,1)=2; mat5(1,0)=-1; mat5(1,1)=3;
     tiny::Mat result5 = mat5 ^ 3;
     result5.print_matrix(true);
+
+    std::cout << "\n[B8.6] Raise Matrix Containing Zero to Power of -1 (Expect Warning)\n";
+    tiny::Mat mat6(2, 2);
+    mat6(0,0)=0; mat6(0,1)=2; mat6(1,0)=-1; mat6(1,1)=3;
+    tiny::Mat result6 = mat6 ^ -1;
+    result6.print_matrix(true);  // Expect warning for zero element, Inf or NaN for (0,0)
 }
 
 // ============================================================================
@@ -3997,8 +4022,12 @@ void test_eigenvalue_decomposition()
         // For now, accept either Error status or valid result (some algorithms can handle singular matrices)
         bool singular_correct = (result_sing.status != TINY_OK) || 
                                (result_sing.status == TINY_OK && (result_sing.eigenvalue == 0.0f || fabsf(result_sing.eigenvalue) < 1e-5f));
-        std::cout << "Singular matrix: Status = " << (result_sing.status == TINY_OK ? "OK" : "Error") 
-                  << " (Expected: Error or OK with eigenvalue ≈ 0) " << (singular_correct ? "[PASS]" : "[FAIL]") << "\n";
+        std::cout << "Singular matrix: Status = " << (result_sing.status == TINY_OK ? "OK" : "Error");
+        if (result_sing.status == TINY_OK)
+        {
+            std::cout << ", eigenvalue = " << result_sing.eigenvalue;
+        }
+        std::cout << " (Expected: Error or OK with eigenvalue ≈ 0) " << (singular_correct ? "[PASS]" : "[FAIL]") << "\n";
     }
 
     // E3.3: eigendecompose_jacobi() - Symmetric matrix decomposition
@@ -4444,6 +4473,46 @@ void test_eigenvalue_decomposition()
                   << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
     }
 
+    // E3.531: Parameter validation - max_iter <= 0
+    {
+        std::cout << "\n[E3.531] Parameter Validation - max_iter <= 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenDecomposition result_zero_iter = test_mat.eigendecompose(1e-6f, 0);
+        std::cout << "max_iter = 0: Status = " << (result_zero_iter.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_zero_iter.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::EigenDecomposition result_neg_iter = test_mat.eigendecompose(1e-6f, -10);
+        std::cout << "max_iter = -10: Status = " << (result_neg_iter.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg_iter.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.532: Custom max_iter parameter test
+    {
+        std::cout << "\n[E3.532] Custom max_iter Parameter Test\n";
+        tiny::Mat test_mat(3, 3);
+        test_mat(0, 0) = 4.0f; test_mat(0, 1) = 1.0f; test_mat(0, 2) = 2.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 3.0f; test_mat(1, 2) = 0.0f;
+        test_mat(2, 0) = 2.0f; test_mat(2, 1) = 0.0f; test_mat(2, 2) = 5.0f;
+        
+        std::cout << "[Test 1] max_iter = 10 (may not converge)\n";
+        tiny::Mat::EigenDecomposition result_10 = test_mat.eigendecompose(1e-6f, 10);
+        std::cout << "  Status: " << (result_10.status == TINY_OK ? "OK (Converged)" : "Not Finished (Expected)") << "\n";
+        std::cout << "  Iterations: " << result_10.iterations << "\n";
+        
+        std::cout << "[Test 2] max_iter = 200 (should converge)\n";
+        tiny::Mat::EigenDecomposition result_200 = test_mat.eigendecompose(1e-6f, 200);
+        std::cout << "  Status: " << (result_200.status == TINY_OK ? "OK (Converged)" : "Not Finished") << "\n";
+        std::cout << "  Iterations: " << result_200.iterations << "\n";
+        std::cout << "  Eigenvalues:\n";
+        result_200.eigenvalues.print_matrix(true);
+        
+        bool test_pass = (result_10.iterations <= 10) && (result_200.status == TINY_OK);
+        std::cout << "Custom max_iter test: " << (test_pass ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
     // E3.54: eigendecompose() - Boundary case - empty matrix
     {
         std::cout << "\n[E3.54] eigendecompose() - Boundary Case - Empty Matrix (0x0)\n";
@@ -4643,13 +4712,13 @@ void tiny_matrix_test()
     // ========================================================================
     // Purpose: Learn to create and manipulate matrix objects
     // A1: Constructor & Destructor
-    // test_constructor_destructor();
+    test_constructor_destructor();
 
     // A2: Element Access
-    // test_element_access();
+    test_element_access();
 
     // A3: ROI Operations
-    // test_roi_operations();
+    test_roi_operations();
 
     // ========================================================================
     // Phase 2: Basic Operations (B)
@@ -4724,13 +4793,13 @@ void tiny_matrix_test()
     // ========================================================================
     // Purpose: Ensure robustness, performance, and correctness
     // G1: Boundary Conditions and Error Handling
-    test_boundary_conditions();
+    // test_boundary_conditions();
 
     // G2: Performance Benchmarks
-    test_performance_benchmarks();
+    // test_performance_benchmarks();
 
     // G3: Memory Layout
-    test_memory_layout();
+    // test_memory_layout();
 
     std::cout << "============ [tiny_matrix_test end] ============\n";
     

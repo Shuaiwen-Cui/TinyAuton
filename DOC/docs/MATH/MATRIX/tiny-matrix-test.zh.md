@@ -282,6 +282,9 @@ void test_roi_operations()
     std::cout << "[A3.4] Copy Head - Memory Sharing Check\n"; // matB and matC share the same data pointer
     matB(0, 0) = 99.99f;
     std::cout << "matB(0, 0) = 99.99f\n";
+    std::cout << "matC:\n";
+    matC.print_info();
+    matC.print_matrix(true);
 
     // A3.5: copy_paste() - Error handling - negative position
     std::cout << "\n[A3.5] copy_paste() - Error Handling - Negative Position\n";
@@ -320,21 +323,37 @@ void test_roi_operations()
               << " (Expected: TINY_ERR_INVALID_ARG) " 
               << (err1 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
 
-    // A3.8: copy_head() - Error handling - source owns its memory
-    std::cout << "\n[A3.8] copy_head() - Error Handling - Source Owns Its Memory\n";
+    // A3.8: copy_head() - Share data from owned-memory source
+    std::cout << "\n[A3.8] copy_head() - Share Data from Owned-Memory Source (Double-Free Prevention)\n";
     tiny::Mat dest4;
     tiny::Mat owned_src(2, 2);  // Creates matrix with its own memory (ext_buff=false)
     owned_src(0, 0) = 1.0f; owned_src(0, 1) = 2.0f;
     owned_src(1, 0) = 3.0f; owned_src(1, 1) = 4.0f;
-    // Note: copy_head should only work with external buffers or submatrix views
-    // If source owns its memory, copy_head should return error to prevent double-free
+    std::cout << "Before copy_head:\n";
+    std::cout << "  owned_src: ext_buff=" << owned_src.ext_buff << "\n";
+    std::cout << "  dest4: ext_buff=" << dest4.ext_buff << "\n";
+    
+    // Note: copy_head now works with ANY source, even if it owns its memory
+    // The key safety feature: destination is marked as ext_buff=true (view, not owner)
+    // This prevents double-free: only original owner (ext_buff=false) deletes memory
     tiny_error_t err2 = dest4.copy_head(owned_src);
     std::cout << "copy_head from matrix with owned memory: error = " << err2 
-              << " (Expected: TINY_ERR_INVALID_ARG) " 
-              << (err2 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
-    std::cout << "matC (should be unchanged):\n";
-    matC.print_info();
-    matC.print_matrix(true);
+              << " (Expected: TINY_OK) " 
+              << (err2 == TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    
+    std::cout << "After copy_head:\n";
+    std::cout << "  owned_src: ext_buff=" << owned_src.ext_buff << " (still owns memory)\n";
+    std::cout << "  dest4: ext_buff=" << dest4.ext_buff << " (view, does not own)\n";
+    
+    // Verify data is shared
+    std::cout << "Verify data sharing:\n";
+    std::cout << "  dest4(0,0)=" << dest4(0, 0) << " (should be 1.0)\n";
+    std::cout << "  dest4(1,1)=" << dest4(1, 1) << " (should be 4.0)\n";
+    
+    // Modify original, verify view reflects change
+    owned_src(0, 0) = 99.0f;
+    std::cout << "After modifying owned_src(0,0) to 99.0:\n";
+    std::cout << "  dest4(0,0)=" << dest4(0, 0) << " (should be 99.0, confirming shared data)\n";
 
     // A3.9: Get a View of ROI - low level function
     std::cout << "[A3.9] Get a View of ROI - Low Level Function\n";
@@ -660,17 +679,23 @@ void test_matrix_exponentiation()
     tiny::Mat result3 = mat3 ^ 1;
     result3.print_matrix(true);  // Expect same as original
 
-    std::cout << "\n[B8.4] Raise Each Element to Power of -1 (Expect Error or Warning)\n";
+    std::cout << "\n[B8.4] Raise Each Element to Power of -1 (Element-wise Reciprocal)\n";
     tiny::Mat mat4(2, 2);
     mat4(0,0)=1; mat4(0,1)=2; mat4(1,0)=4; mat4(1,1)=5;
     tiny::Mat result4 = mat4 ^ -1;
-    result4.print_matrix(true);
+    result4.print_matrix(true);  // Expect: [1.0, 0.5; 0.25, 0.2]
 
     std::cout << "\n[B8.5] Raise Matrix Containing Zero to Power of 3\n";
     tiny::Mat mat5(2, 2);
     mat5(0,0)=0; mat5(0,1)=2; mat5(1,0)=-1; mat5(1,1)=3;
     tiny::Mat result5 = mat5 ^ 3;
     result5.print_matrix(true);
+
+    std::cout << "\n[B8.6] Raise Matrix Containing Zero to Power of -1 (Expect Warning)\n";
+    tiny::Mat mat6(2, 2);
+    mat6(0,0)=0; mat6(0,1)=2; mat6(1,0)=-1; mat6(1,1)=3;
+    tiny::Mat result6 = mat6 ^ -1;
+    result6.print_matrix(true);  // Expect warning for zero element, Inf or NaN for (0,0)
 }
 
 // ============================================================================
@@ -4028,8 +4053,12 @@ void test_eigenvalue_decomposition()
         // For now, accept either Error status or valid result (some algorithms can handle singular matrices)
         bool singular_correct = (result_sing.status != TINY_OK) || 
                                (result_sing.status == TINY_OK && (result_sing.eigenvalue == 0.0f || fabsf(result_sing.eigenvalue) < 1e-5f));
-        std::cout << "Singular matrix: Status = " << (result_sing.status == TINY_OK ? "OK" : "Error") 
-                  << " (Expected: Error or OK with eigenvalue ≈ 0) " << (singular_correct ? "[PASS]" : "[FAIL]") << "\n";
+        std::cout << "Singular matrix: Status = " << (result_sing.status == TINY_OK ? "OK" : "Error");
+        if (result_sing.status == TINY_OK)
+        {
+            std::cout << ", eigenvalue = " << result_sing.eigenvalue;
+        }
+        std::cout << " (Expected: Error or OK with eigenvalue ≈ 0) " << (singular_correct ? "[PASS]" : "[FAIL]") << "\n";
     }
 
     // E3.3: eigendecompose_jacobi() - Symmetric matrix decomposition
@@ -4475,6 +4504,46 @@ void test_eigenvalue_decomposition()
                   << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
     }
 
+    // E3.531: Parameter validation - max_iter <= 0
+    {
+        std::cout << "\n[E3.531] Parameter Validation - max_iter <= 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenDecomposition result_zero_iter = test_mat.eigendecompose(1e-6f, 0);
+        std::cout << "max_iter = 0: Status = " << (result_zero_iter.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_zero_iter.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::EigenDecomposition result_neg_iter = test_mat.eigendecompose(1e-6f, -10);
+        std::cout << "max_iter = -10: Status = " << (result_neg_iter.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg_iter.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.532: Custom max_iter parameter test
+    {
+        std::cout << "\n[E3.532] Custom max_iter Parameter Test\n";
+        tiny::Mat test_mat(3, 3);
+        test_mat(0, 0) = 4.0f; test_mat(0, 1) = 1.0f; test_mat(0, 2) = 2.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 3.0f; test_mat(1, 2) = 0.0f;
+        test_mat(2, 0) = 2.0f; test_mat(2, 1) = 0.0f; test_mat(2, 2) = 5.0f;
+        
+        std::cout << "[Test 1] max_iter = 10 (may not converge)\n";
+        tiny::Mat::EigenDecomposition result_10 = test_mat.eigendecompose(1e-6f, 10);
+        std::cout << "  Status: " << (result_10.status == TINY_OK ? "OK (Converged)" : "Not Finished (Expected)") << "\n";
+        std::cout << "  Iterations: " << result_10.iterations << "\n";
+        
+        std::cout << "[Test 2] max_iter = 200 (should converge)\n";
+        tiny::Mat::EigenDecomposition result_200 = test_mat.eigendecompose(1e-6f, 200);
+        std::cout << "  Status: " << (result_200.status == TINY_OK ? "OK (Converged)" : "Not Finished") << "\n";
+        std::cout << "  Iterations: " << result_200.iterations << "\n";
+        std::cout << "  Eigenvalues:\n";
+        result_200.eigenvalues.print_matrix(true);
+        
+        bool test_pass = (result_10.iterations <= 10) && (result_200.status == TINY_OK);
+        std::cout << "Custom max_iter test: " << (test_pass ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
     // E3.54: eigendecompose() - Boundary case - empty matrix
     {
         std::cout << "\n[E3.54] eigendecompose() - Boundary Case - Empty Matrix (0x0)\n";
@@ -4674,13 +4743,13 @@ void tiny_matrix_test()
     // ========================================================================
     // Purpose: Learn to create and manipulate matrix objects
     // A1: Constructor & Destructor
-    // test_constructor_destructor();
+    test_constructor_destructor();
 
     // A2: Element Access
-    // test_element_access();
+    test_element_access();
 
     // A3: ROI Operations
-    // test_roi_operations();
+    test_roi_operations();
 
     // ========================================================================
     // Phase 2: Basic Operations (B)
@@ -4755,13 +4824,13 @@ void tiny_matrix_test()
     // ========================================================================
     // Purpose: Ensure robustness, performance, and correctness
     // G1: Boundary Conditions and Error Handling
-    test_boundary_conditions();
+    // test_boundary_conditions();
 
     // G2: Performance Benchmarks
-    test_performance_benchmarks();
+    // test_performance_benchmarks();
 
     // G3: Memory Layout
-    test_memory_layout();
+    // test_memory_layout();
 
     std::cout << "============ [tiny_matrix_test end] ============\n";
     
@@ -4777,11 +4846,14 @@ void tiny_matrix_test()
 }
 ```
 
-## TEST OUTPUTS
 
-### Phase 1: Object Foundation (A)
+## 测试输出
+
+### 第一阶段： 对象基础 （A）
 
 ```c
+============ [tiny_matrix_test start] ============
+
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
@@ -4894,8 +4966,8 @@ ext_buff        0
 sub_matrix      0
 <<< Matrix Info
 Matrix Elements >>>
-           0            1            2            3       |2.10195e-44 
-           4            5            6            7       |1.61399 
+           0            1            2            3       |1.89175e-43 
+           4            5            6            7       |1.61149e-43 
            8            9           10           11       |1.61413 
 <<< Matrix Elements
 
@@ -5031,28 +5103,7 @@ Matrix Elements >>>
 
 [A3.4] Copy Head - Memory Sharing Check
 matB(0, 0) = 99.99f
-
-[A3.5] copy_paste() - Error Handling - Negative Position
-[Error] copy_paste: invalid position: row_pos=-1, col_pos=0 (must be non-negative)
-copy_paste with row_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
-[Error] copy_paste: invalid position: row_pos=0, col_pos=-1 (must be non-negative)
-copy_paste with col_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
-
-[A3.6] copy_paste() - Error Handling - Out of Bounds
-[Error] copy_paste: source matrix exceeds destination row boundary: row_pos=0, src.rows=3, dest.rows=2
-copy_paste 3x3 into 2x2 at (0,0): error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
-[Error] copy_paste: source matrix exceeds destination row boundary: row_pos=1, src.rows=2, dest.rows=2
-copy_paste 2x2 into 2x2 at (1,1): error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
-
-[A3.7] copy_paste() - Boundary Case - Empty Source Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] copy_paste: source matrix data pointer is null
-copy_paste empty matrix: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
-
-[A3.8] copy_head() - Error Handling - Source Owns Its Memory
-[Error] copy_head: source matrix owns its memory (ext_buff=false). Cannot share pointer - would cause double-free. Use copy assignment or copy constructor instead.
-copy_head from matrix with owned memory: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
-matC (should be unchanged):
+matC:
 Matrix Info >>>
 rows            3
 cols            4
@@ -5071,6 +5122,37 @@ Matrix Elements >>>
            8          0.4          0.5          0.6       |      0 
 <<< Matrix Elements
 
+
+[A3.5] copy_paste() - Error Handling - Negative Position
+[Error] copy_paste: invalid position: row_pos=-1, col_pos=0 (must be non-negative)
+copy_paste with row_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+[Error] copy_paste: invalid position: row_pos=0, col_pos=-1 (must be non-negative)
+copy_paste with col_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+
+[A3.6] copy_paste() - Error Handling - Out of Bounds
+[Error] copy_paste: source matrix exceeds destination row boundary: row_pos=0, src.rows=3, dest.rows=2
+copy_paste 3x3 into 2x2 at (0,0): error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+[Error] copy_paste: source matrix exceeds destination row boundary: row_pos=1, src.rows=2, dest.rows=2
+copy_paste 2x2 into 2x2 at (1,1): error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+
+[A3.7] copy_paste() - Boundary Case - Empty Source Matrix
+[>>> Error ! <<<] Memory allocation failed in alloc_mem()
+[Error] copy_paste: source matrix data pointer is null
+copy_paste empty matrix: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+
+[A3.8] copy_head() - Share Data from Owned-Memory Source (Double-Free Prevention)
+Before copy_head:
+  owned_src: ext_buff=0
+  dest4: ext_buff=0
+copy_head from matrix with owned memory: error = 0 (Expected: TINY_OK) [PASS]
+After copy_head:
+  owned_src: ext_buff=0 (still owns memory)
+  dest4: ext_buff=1 (view, does not own)
+Verify data sharing:
+  dest4(0,0)=1 (should be 1.0)
+  dest4(1,1)=4 (should be 4.0)
+After modifying owned_src(0,0) to 99.0:
+  dest4(0,0)=99 (should be 99.0, confirming shared data)
 [A3.9] Get a View of ROI - Low Level Function
 get a view of ROI with overrange dimensions - rows:
 [Error] view_roi: ROI exceeds row boundary: start_row=1, roi_rows=3, source.rows=3
@@ -5132,7 +5214,7 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 [A3.12] Copy ROI - Using ROI Structure
-time for copy_roi using ROI structure: 46 ms
+time for copy_roi using ROI structure: 43 ms
 Matrix Info >>>
 rows            2
 cols            2
@@ -5160,7 +5242,7 @@ ROI resize test: [PASS]
 ROI(0, 0, 3, 4) area: 12 (Expected: 12) [PASS]
 ROI(1, 2, 5, 6) area: 30 (Expected: 30) [PASS]
 [A3.15] Block
-time for block: 50 ms
+time for block: 53 ms
 Matrix Info >>>
 rows            2
 cols            2
@@ -5294,10 +5376,14 @@ Matrix Elements >>>
            0            0            0            0       |      0 
            0            0            0            0       |      0 
 <<< Matrix Elements
+
+============ [tiny_matrix_test end] ============
 ```
-### Phase 2: Basic Operations (B)
+### 第二阶段： 基础操作 （B）
 
 ```c
+============ [tiny_matrix_test start] ============
+
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
@@ -5484,11 +5570,10 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 
-[B8.4] Raise Each Element to Power of -1 (Expect Error or Warning)
-[Error] Negative exponent not supported in operator^ (exponent=-1)
+[B8.4] Raise Each Element to Power of -1 (Element-wise Reciprocal)
 Matrix Elements >>>
-           1            2       |
-           4            5       |
+           1          0.5       |
+        0.25          0.2       |
 <<< Matrix Elements
 
 
@@ -5497,11 +5582,23 @@ Matrix Elements >>>
            0            8       |
           -1           27       |
 <<< Matrix Elements
+
+
+[B8.6] Raise Matrix Containing Zero to Power of -1 (Expect Warning)
+[Warning] operator^: element at (0, 0) is zero or too small (0), cannot compute negative power. Result will be Inf or NaN.
+Matrix Elements >>>
+         inf          0.5       |
+          -1     0.333333       |
+<<< Matrix Elements
+
+============ [tiny_matrix_test end] ============
 ```
 
-### PPhase 3: Matrix Properties (C)
+### 第三阶段：矩阵特性（C）
 
 ```c
+============ [tiny_matrix_test start] ============
+
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
@@ -5662,18 +5759,23 @@ Matrix Elements >>>
 [C2.10] Non-square Matrix (Expect Error)
 Testing minor():
 [Error] Minor requires square matrix (got 3x4)
-minor() result: Non-empty (Error) [FAIL]
+[>>> Error ! <<<] Memory allocation failed in alloc_mem()
+minor() result: Empty matrix (Expected) [PASS]
 Testing cofactor():
 [Error] Minor requires square matrix (got 3x4)
-cofactor() result: Non-empty (Error) [FAIL]
+[>>> Error ! <<<] Memory allocation failed in alloc_mem()
+cofactor() result: Empty matrix (Expected) [PASS]
 
 [C2.11] minor() - Boundary Case - Out of Bounds Indices
 [Error] minor: target_row=-1 is out of range [0, 2]
-minor(-1, 0): Non-empty (Error) [FAIL]
+[>>> Error ! <<<] Memory allocation failed in alloc_mem()
+minor(-1, 0): Empty matrix (Expected) [PASS]
 [Error] minor: target_col=-1 is out of range [0, 2]
-minor(0, -1): Non-empty (Error) [FAIL]
+[>>> Error ! <<<] Memory allocation failed in alloc_mem()
+minor(0, -1): Empty matrix (Expected) [PASS]
 [Error] minor: target_row=3 is out of range [0, 2]
-minor(3, 0) (out of bounds): Non-empty (Error) [FAIL]
+[>>> Error ! <<<] Memory allocation failed in alloc_mem()
+minor(3, 0) (out of bounds): Empty matrix (Expected) [PASS]
 
 [C2.12] minor() - Boundary Case - 1x1 Matrix
 [>>> Error ! <<<] Memory allocation failed in alloc_mem()
@@ -5789,16 +5891,13 @@ Note: Both methods are O(n³) and should be much faster than Laplace expansion.
 
 [C3.10] determinant_laplace() - Boundary Case - Empty Matrix
 [>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] determinant_laplace: matrix data pointer is null
-Empty matrix determinant (Laplace): 0 (Expected: 1.0) [FAIL]
+Empty matrix determinant (Laplace): 1 (Expected: 1.0) [PASS]
 
 [C3.11] determinant_lu() - Boundary Case - Empty Matrix
-[Error] determinant_lu: matrix data pointer is null
-Empty matrix determinant (LU): 0 (Expected: 1.0) [FAIL]
+Empty matrix determinant (LU): 1 (Expected: 1.0) [PASS]
 
 [C3.12] determinant_gaussian() - Boundary Case - Empty Matrix
-[Error] determinant_gaussian: matrix data pointer is null
-Empty matrix determinant (Gaussian): 0 (Expected: 1.0) [FAIL]
+Empty matrix determinant (Gaussian): 1 (Expected: 1.0) [PASS]
 
 [C3.13] Determinant Methods - Non-Square Matrix
 [Error] Determinant requires a square matrix (got 2x3)
@@ -5817,10 +5916,9 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 [>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] adjoint: failed to create cofactor matrix at (0, 0)
 Adjoint Matrix:
 Matrix Elements >>>
-           0       |
+           1       |
 <<< Matrix Elements
 
 
@@ -6153,11 +6251,16 @@ temp pointer    0
 ext_buff        0
 sub_matrix      0
 <<< Matrix Info
+============ [tiny_matrix_test end] ============
+
 ```
 
-### Phase 4: Linear System Solving (D)
+
+### 第四阶段：线性系统求解（D）
 
 ```c
+============ [tiny_matrix_test start] ============
+
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
@@ -6757,11 +6860,14 @@ Dimension mismatch roots: Empty matrix or error state (Expected) [PASS]
 [>>> Error ! <<<] Memory allocation failed in alloc_mem()
 [Error] roots: matrix A data pointer is null
 Empty system roots: Empty matrix or error state (Expected) [PASS]
+============ [tiny_matrix_test end] ============
 ```
 
-### Phase 5: Advanced Linear Algebra (E1+2)
+### 第五阶段： 高级线性代数（E1+2）
 
 ```c
+============ [tiny_matrix_test start] ============
+
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
@@ -7116,16 +7222,16 @@ Invalid SVD decomposition: A_plus rows = 1 (Expected: 0 or error state) [PASS]
 [E1.6] Matrix Decomposition Performance Tests
 
 [E1.61] LU Decomposition Performance
-[Performance] LU Decomposition (4x4 matrix): 142.00 us
+[Performance] LU Decomposition (4x4 matrix): 148.00 us
 
 [E1.62] Cholesky Decomposition Performance
-[Performance] Cholesky Decomposition (4x4 SPD matrix): 90.00 us
+[Performance] Cholesky Decomposition (4x4 SPD matrix): 95.00 us
 
 [E1.63] QR Decomposition Performance
-[Performance] QR Decomposition (4x4 matrix): 188.00 us
+[Performance] QR Decomposition (4x4 matrix): 194.00 us
 
 [E1.64] SVD Decomposition Performance
-[Performance] SVD Decomposition (4x4 matrix): 373.00 us
+[Performance] SVD Decomposition (4x4 matrix): 367.00 us
 
 [Matrix Decomposition Tests Complete]
 
@@ -7239,11 +7345,14 @@ Zero rows (0x2): PASS (correctly rejected)
 [>>> Error ! <<<] Memory allocation failed in alloc_mem()
 [Error] gram_schmidt_orthogonalize: Input matrix is null.
 Zero columns (2x0): PASS (correctly rejected)
+============ [tiny_matrix_test end] ============
 ```
 
-### Phase 6: System Identification Applications (E3)
+### 第六阶段：系统识别应用（E3）
 
 ```c
+============ [tiny_matrix_test start] ============
+
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
@@ -7466,9 +7575,8 @@ Empty matrix: Status = Error, eigenvalue = 0.00 (Expected: Error status) [PASS]
 
 [E3.215] Singular Matrix (Should Fail)
 [Error] solve: pivot at (1, 1) is zero or too small (0), matrix is singular or near-singular
-[Error] solve: pivot at (1, 1) is zero or too small (0), matrix is singular or near-singular
-[Error] solve: pivot at (1, 1) is zero or too small (0), matrix is singular or near-singular
-Singular matrix: Status = OK (Expected: Error or OK with eigenvalue ≈ 0) [FAIL]
+[Error] Inverse power iteration: Matrix is singular or near-singular. Cannot solve linear system A * y = v.
+Singular matrix: Status = Error (Expected: Error or OK with eigenvalue ≈ 0) [PASS]
 
 [E3.3] eigendecompose_jacobi() - Symmetric Matrix Decomposition
 
@@ -7726,6 +7834,28 @@ Overall eigenvalue check: [PASS]
 [Error] eigendecompose: tolerance must be >= 0 (got -1e-06)
 tolerance = -1e-6: Status = Error (Expected) [PASS]
 
+[E3.531] Parameter Validation - max_iter <= 0
+[Error] eigendecompose: max_iter must be > 0 (got 0)
+max_iter = 0: Status = Error (Expected) [PASS]
+[Error] eigendecompose: max_iter must be > 0 (got -10)
+max_iter = -10: Status = Error (Expected) [PASS]
+
+[E3.532] Custom max_iter Parameter Test
+[Test 1] max_iter = 10 (may not converge)
+  Status: OK (Converged)
+  Iterations: 8
+[Test 2] max_iter = 200 (should converge)
+  Status: OK (Converged)
+  Iterations: 8
+  Eigenvalues:
+Matrix Elements >>>
+        1.85       |
+        3.48       |
+        6.67       |
+<<< Matrix Elements
+
+Custom max_iter test: [PASS]
+
 [E3.54] eigendecompose() - Boundary Case - Empty Matrix (0x0)
 [>>> Error ! <<<] Memory allocation failed in alloc_mem()
 [Error] eigendecompose: matrix data pointer is null
@@ -7845,23 +7975,27 @@ All eigenvalues = 1.0: [PASS]
 [E3.8] Performance Test for SHM Applications
 
 [E3.81] Power Iteration Performance (Real-time SHM - Dominant Eigenvalue)
-[Performance] Power Iteration (3x3 matrix): 112.00 us
+[Performance] Power Iteration (3x3 matrix): 123.00 us
 
 [E3.82] Inverse Power Iteration Performance (System Identification - Smallest Eigenvalue)
-[Performance] Inverse Power Iteration (3x3 matrix): 543.00 us
+[Performance] Inverse Power Iteration (3x3 matrix): 554.00 us
 
 [E3.83] Jacobi Method Performance (Complete Eigendecomposition - Symmetric Matrices)
-[Performance] Jacobi Decomposition (3x3 symmetric matrix): 166.00 us
+[Performance] Jacobi Decomposition (3x3 symmetric matrix): 187.00 us
 
 [E3.84] QR Method Performance (Complete Eigendecomposition - General Matrices)
-[Performance] QR Decomposition (3x3 general matrix): 818.00 us
+[Performance] QR Decomposition (3x3 general matrix): 806.00 us
 
 [Eigenvalue Decomposition Tests Complete]
+============ [tiny_matrix_test end] ============
 ```
 
-### Phase 7: Auxiliary Functions (F)
+
+### 第七阶段：辅助函数（F）
 
 ```c
+============ [tiny_matrix_test start] ============
+
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
@@ -8063,11 +8197,15 @@ Matrix Elements >>>
 
 operator == Error: 0 0, m1.data=1, m2.data=5, diff=4
 matE == matF after modification: False
+============ [tiny_matrix_test end] ============
 ```
 
-### Phase 8: Quality Assurance (G)
+
+### 第八阶段：质量保证（G）
 
 ```c
+============ [tiny_matrix_test start] ============
+
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
@@ -8164,21 +8302,21 @@ Empty matrix addition: Empty matrix or error state (Expected) [PASS]
 [Performance] 50x50 Matrix Addition (100 iterations): 18155.00 us total, 181.55 us avg
 
 [G2.2] Matrix Multiplication Performance
-[Performance] 30x30 Matrix Multiplication (100 iterations): 66752.00 us total, 667.52 us avg
+[Performance] 30x30 Matrix Multiplication (100 iterations): 66761.00 us total, 667.61 us avg
 
 [G2.3] Matrix Transpose Performance
-[Performance] 50x30 Matrix Transpose (100 iterations): 22005.00 us total, 220.05 us avg
+[Performance] 50x30 Matrix Transpose (100 iterations): 22002.00 us total, 220.02 us avg
 
 [G2.4] Determinant Calculation Performance Comparison
 
 [G2.4.1] Small Matrix (4x4) - Laplace Expansion
-[Performance] 4x4 Determinant (Laplace, 10 iterations): 3121.00 us total, 312.10 us avg
+[Performance] 4x4 Determinant (Laplace, 10 iterations): 3124.00 us total, 312.40 us avg
 
 [G2.4.2] Large Matrix (8x8) - LU Decomposition
-[Performance] 8x8 Determinant (LU, 10 iterations): 2027.00 us total, 202.70 us avg
+[Performance] 8x8 Determinant (LU, 10 iterations): 2028.00 us total, 202.80 us avg
 
 [G2.4.3] Large Matrix (8x8) - Gaussian Elimination
-[Performance] 8x8 Determinant (Gaussian, 10 iterations): 461.00 us total, 46.10 us avg
+[Performance] 8x8 Determinant (Gaussian, 10 iterations): 459.00 us total, 45.90 us avg
 
 [G2.4.4] Large Matrix (8x8) - Auto-select Method
 [Performance] 8x8 Determinant (auto-select, 10 iterations): 2013.00 us total, 201.30 us avg
@@ -8300,4 +8438,6 @@ Matrix Elements >>>
         4.00         5.00         6.00         7.00       |
         8.00         9.00        10.00        11.00       |
 <<< Matrix Elements
+
+============ [tiny_matrix_test end] ============
 ```

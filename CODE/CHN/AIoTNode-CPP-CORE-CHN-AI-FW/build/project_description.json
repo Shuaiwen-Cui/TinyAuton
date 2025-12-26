@@ -1,7 +1,7 @@
 {
     "version":            "1.2",
     "project_name":       "AIoTNode",
-    "project_version":    "433bfe1-dirty",
+    "project_version":    "387d8fe-dirty",
     "project_path":       "/home/cshwstem/CSW/TinyAuton/CODE/CHN/AIoTNode-CPP-CORE-CHN-AI-FW",
     "idf_path":           "/home/cshwstem/esp/esp-idf6/esp-idf",
     "build_dir":          "/home/cshwstem/CSW/TinyAuton/CODE/CHN/AIoTNode-CPP-CORE-CHN-AI-FW/build",

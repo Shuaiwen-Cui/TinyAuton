@@ -304,10 +304,11 @@ namespace tiny
         /**
          * @brief Automatic eigenvalue decomposition with method selection.
          * @param tolerance Convergence tolerance (must be >= 0)
+         * @param max_iter Maximum number of iterations (must be > 0, default = 100)
          * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
          * @note Automatically selects Jacobi method for symmetric matrices, QR algorithm for general matrices.
          */
-        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
 
     protected:
 

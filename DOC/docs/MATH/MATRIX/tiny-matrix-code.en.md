@@ -309,10 +309,11 @@ namespace tiny
         /**
          * @brief Automatic eigenvalue decomposition with method selection.
          * @param tolerance Convergence tolerance (must be >= 0)
+         * @param max_iter Maximum number of iterations (must be > 0, default = 100)
          * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
          * @note Automatically selects Jacobi method for symmetric matrices, QR algorithm for general matrices.
          */
-        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
 
     protected:
 
@@ -460,6 +461,7 @@ namespace tiny
 #include <cinttypes>
 #include <iomanip>
 #include <vector>
+#include <limits>
 
 /* LIBRARIE CONTENTS */
 namespace tiny
@@ -1101,11 +1103,21 @@ namespace tiny
      * @warning This function performs a SHALLOW COPY. The destination matrix shares the 
      *          data pointer with the source matrix. If the source matrix is destroyed, 
      *          the destination matrix's data pointer will become invalid.
+     * @note The destination matrix marks ext_buff=true to indicate it does NOT own the data
+     *       buffer, preventing double-free issues. Only the original owner (ext_buff=false)
+     *       is responsible for memory deallocation.
      * @note The temp pointer is NOT shared (set to nullptr) to prevent double-free issues.
      *       Each object manages its own temp buffer independently.
      */
     tiny_error_t Mat::copy_head(const Mat &src)
     {
+        // Check for null pointer
+        if (src.data == nullptr)
+        {
+            std::cerr << "[Error] copy_head: source matrix data pointer is null\n";
+            return TINY_ERR_INVALID_ARG;
+        }
+        
         // Delete current data if it was allocated by this object
         if (!this->ext_buff && this->data != nullptr)
         {
@@ -1128,29 +1140,18 @@ namespace tiny
         this->stride = src.stride;
         this->memory = src.memory;
         
-        // Shallow copy: share data pointer ONLY if source uses external buffer or is a submatrix view
-        // If source owns its memory (ext_buff=false), we must NOT share the pointer to avoid double-free
-        // In that case, copy_head should not be used - use copy assignment or copy constructor instead
-        if (src.ext_buff || src.sub_matrix)
-        {
-            // Source uses external buffer or is a view - safe to share pointer
-            // WARNING: If source is destroyed, this pointer becomes invalid
-            this->data = src.data;
-            this->ext_buff = src.ext_buff;
-            this->sub_matrix = src.sub_matrix;
-        }
-        else
-        {
-            // Source owns its memory - cannot share pointer (would cause double-free)
-            // This is an error condition - copy_head should only be used for external buffers or views
-            std::cerr << "[Error] copy_head: source matrix owns its memory (ext_buff=false). "
-                      << "Cannot share pointer - would cause double-free. "
-                      << "Use copy assignment or copy constructor instead.\n";
-            this->data = nullptr;
-            this->ext_buff = false;
-            this->sub_matrix = false;
-            return TINY_ERR_INVALID_ARG;
-        }
+        // Share data pointer regardless of source ownership
+        // This allows multiple matrices to reference the same data buffer
+        this->data = src.data;
+        this->sub_matrix = src.sub_matrix;
+        
+        // Key difference: ALWAYS set ext_buff=true for destination
+        // This ensures only the original owner (src.ext_buff=false) will deallocate memory
+        // The destination matrix becomes a view that does NOT own the data
+        // This design eliminates double-free issues:
+        // - Original owner: ext_buff=false, deletes memory on destruction
+        // - All views: ext_buff=true, does NOT delete memory on destruction
+        this->ext_buff = true;
         
         // Do NOT share temp pointer - temp is a temporary buffer that should not be shared
         // Setting temp to nullptr prevents double-free issues when either object is destroyed
@@ -2251,11 +2252,14 @@ namespace tiny
     /**
      * @name Mat::operator^(int num)
      * @brief Element-wise integer exponentiation. Returns a new matrix where each element is raised to the given power.
-     * @param num The exponent (integer, must be non-negative)
+     * @param num The exponent (integer, can be positive, negative, or zero)
      * @return Mat New matrix after exponentiation
      * @note This function performs element-wise exponentiation: result[i,j] = this[i,j]^num
      * @note For num=0, all elements become 1.0. For num=1, returns a copy of the matrix.
-     * @warning Negative exponents are not supported.
+     * @note For num=-1, returns element-wise reciprocal: result[i,j] = 1.0 / this[i,j]
+     * @note For num < 0, performs: result[i,j] = 1.0 / (this[i,j]^(-num))
+     * @warning For negative exponents, elements that are zero or too close to zero will result in
+     *          infinity or NaN. The function will print warnings for such cases.
      */
     Mat Mat::operator^(int num)
     {
@@ -2300,10 +2304,63 @@ namespace tiny
             return Mat(*this);
         }
 
+        // Handle negative exponents
         if (num < 0)
         {
-            std::cerr << "[Error] Negative exponent not supported in operator^ (exponent=" << num << ")\n";
-            return Mat(*this); // Return a copy without modification
+            // For negative exponent: A^(-n) = 1 / A^n (element-wise)
+            // Compute positive power first, then take reciprocal
+            int abs_num = -num;  // Positive exponent value
+            
+            Mat result(this->row, this->col, this->stride);
+            if (result.data == nullptr)
+            {
+                std::cerr << "[Error] operator^: failed to allocate memory for result matrix\n";
+                return Mat();
+            }
+            
+            // Element-wise exponentiation with negative exponent
+            // result[i,j] = 1.0 / (this[i,j]^abs_num)
+            for (int i = 0; i < this->row; ++i)
+            {
+                for (int j = 0; j < this->col; ++j)
+                {
+                    float base = (*this)(i, j);
+                    
+                    // Check for zero or near-zero base (for negative exponents)
+                    if (fabsf(base) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                    {
+                        std::cerr << "[Warning] operator^: element at (" << i << ", " << j 
+                                  << ") is zero or too small (" << base 
+                                  << "), cannot compute negative power. Result will be Inf or NaN.\n";
+                        result(i, j) = (base == 0.0f) ? 
+                                      (std::numeric_limits<float>::infinity()) : 
+                                      (std::numeric_limits<float>::quiet_NaN());
+                        continue;
+                    }
+                    
+                    // Compute base^abs_num (positive power)
+                    float value = 1.0f;
+                    for (int k = 0; k < abs_num; ++k)
+                    {
+                        value *= base;
+                    }
+                    
+                    // Take reciprocal: 1 / value
+                    if (fabsf(value) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                    {
+                        std::cerr << "[Warning] operator^: computed power value at (" << i << ", " << j 
+                                  << ") is too small (" << value 
+                                  << "), reciprocal may be invalid.\n";
+                        result(i, j) = std::numeric_limits<float>::infinity();
+                    }
+                    else
+                    {
+                        result(i, j) = 1.0f / value;
+                    }
+                }
+            }
+            
+            return result;
         }
 
         // General case: positive exponent > 1
@@ -2394,6 +2451,13 @@ namespace tiny
      */
     float Mat::determinant()
     {
+        // Special case: 0×0 matrix (empty matrix)
+        // By mathematical convention, det(empty matrix) = 1 (similar to empty product)
+        if (this->row == 0 && this->col == 0)
+        {
+            return 1.0f;
+        }
+        
         // Check for null pointer
         if (this->data == nullptr)
         {
@@ -2440,6 +2504,13 @@ namespace tiny
      */
     float Mat::determinant_laplace()
     {
+        // Special case: 0×0 matrix (empty matrix)
+        // By mathematical convention, det(empty matrix) = 1 (similar to empty product)
+        if (this->row == 0 && this->col == 0)
+        {
+            return 1.0f;
+        }
+        
         // Check for null pointer
         if (this->data == nullptr)
         {
@@ -2511,6 +2582,13 @@ namespace tiny
      */
     float Mat::determinant_lu()
     {
+        // Special case: 0×0 matrix (empty matrix)
+        // By mathematical convention, det(empty matrix) = 1 (similar to empty product)
+        if (this->row == 0 && this->col == 0)
+        {
+            return 1.0f;
+        }
+        
         // Check for null pointer
         if (this->data == nullptr)
         {
@@ -2636,6 +2714,13 @@ namespace tiny
      */
     float Mat::determinant_gaussian()
     {
+        // Special case: 0×0 matrix (empty matrix)
+        // By mathematical convention, det(empty matrix) = 1 (similar to empty product)
+        if (this->row == 0 && this->col == 0)
+        {
+            return 1.0f;
+        }
+        
         // Check for null pointer
         if (this->data == nullptr)
         {
@@ -2778,13 +2863,9 @@ namespace tiny
             {
                 Mat cofactor_mat = this->cofactor(i, j);
                 
-                // Check if cofactor matrix was created successfully
-                if (cofactor_mat.data == nullptr)
-                {
-                    std::cerr << "[Error] adjoint: failed to create cofactor matrix at (" 
-                              << i << ", " << j << ")\n";
-                    return Mat();
-                }
+                // For 1×1 matrix, cofactor is a 0×0 empty matrix (valid result)
+                // The determinant of a 0×0 matrix is 1.0 by mathematical convention
+                // So cofactor_mat.data == nullptr is acceptable for this case
                 
                 // Compute cofactor value: (-1)^(i+j) * det(minor)
                 float sign = ((i + j) % 2 == 0) ? 1.0f : -1.0f;
@@ -3631,7 +3712,7 @@ namespace tiny
         if (this->data == nullptr)
         {
             std::cerr << "[Error] minor: matrix data pointer is null\n";
-            return Mat();
+            return Mat(0, 0);
         }
         
         // Validate matrix dimensions
@@ -3639,7 +3720,7 @@ namespace tiny
         {
             std::cerr << "[Error] minor: invalid matrix dimensions: rows=" 
                       << this->row << ", cols=" << this->col << "\n";
-            return Mat();
+            return Mat(0, 0);
         }
         
         // Check if matrix is square
@@ -3647,7 +3728,7 @@ namespace tiny
         {
             std::cerr << "[Error] Minor requires square matrix (got " 
                       << this->row << "x" << this->col << ")\n";
-            return Mat();
+            return Mat(0, 0);
         }
 
         int n = this->row;
@@ -3657,14 +3738,14 @@ namespace tiny
         {
             std::cerr << "[Error] minor: target_row=" << target_row 
                       << " is out of range [0, " << (n-1) << "]\n";
-            return Mat();
+            return Mat(0, 0);
         }
         
         if (target_col < 0 || target_col >= n)
         {
             std::cerr << "[Error] minor: target_col=" << target_col 
                       << " is out of range [0, " << (n-1) << "]\n";
-            return Mat();
+            return Mat(0, 0);
         }
         
         // For 1×1 matrix, removing one row and one column results in 0×0 matrix
@@ -3680,7 +3761,7 @@ namespace tiny
         if (result.data == nullptr)
         {
             std::cerr << "[Error] minor: failed to create result matrix\n";
-            return Mat();
+            return Mat(0, 0);
         }
 
         // Copy elements, skipping the specified row and column
@@ -6126,6 +6207,15 @@ namespace tiny
             return Mat();
         }
         
+        // Additional validation: ensure rank doesn't exceed available columns
+        if (rank > svd.U.col || rank > svd.S.row)
+        {
+            std::cerr << "[Error] pseudo_inverse: rank " << rank 
+                      << " exceeds available columns (U.col=" << svd.U.col 
+                      << ", S.row=" << svd.S.row << ")\n";
+            return Mat();
+        }
+        
         // Handle empty matrix
         if (m == 0 || n == 0)
         {
@@ -6201,7 +6291,9 @@ namespace tiny
                         
                         // A^+[i][j] += V[i][k] * (1/σ_k) * U[j][k]
                         // Note: U^T[k][j] = U[j][k]
-                        if (k < svd.V.col && k < svd.U.col)
+                        // k is guaranteed to be < rank <= min_dim <= svd.U.col and k < n = svd.V.col
+                        // But we add bounds check for safety
+                        if (k < svd.V.col && k < svd.U.col && i < svd.V.row && j < svd.U.row)
                         {
                             float term = svd.V(i, k) * inv_sigma * svd.U(j, k);
                             
@@ -6214,6 +6306,13 @@ namespace tiny
                             }
                             
                             sum += term;
+                        }
+                        else
+                        {
+                            std::cerr << "[Warning] pseudo_inverse: index out of bounds at [" 
+                                      << i << "][" << j << "], k=" << k 
+                                      << " (V: " << svd.V.row << "x" << svd.V.col 
+                                      << ", U: " << svd.U.row << "x" << svd.U.col << "), skipping\n";
                         }
                     }
                 }
@@ -6736,7 +6835,9 @@ namespace tiny
             temp_vec = solve(*this, result.eigenvector);
 
             // Check if solve failed (matrix is singular or near-singular)
-            if (temp_vec.row == 0 || temp_vec.data == nullptr)
+            // solve() returns Mat() (default 1x1 matrix with data=nullptr) or Mat(0,0) on error
+            // Check for: null data pointer, wrong dimensions, or empty matrix
+            if (temp_vec.data == nullptr || temp_vec.row != n || temp_vec.col != 1)
             {
                 std::cerr << "[Error] Inverse power iteration: Matrix is singular or near-singular. "
                           << "Cannot solve linear system A * y = v.\n";
@@ -7290,9 +7391,10 @@ namespace tiny
      *       - QR: O(n³ * iterations) for general matrices
      * 
      * @param tolerance Convergence tolerance (must be >= 0)
+     * @param max_iter Maximum number of iterations (must be > 0, default = 100)
      * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
      */
-    Mat::EigenDecomposition Mat::eigendecompose(float tolerance) const
+    Mat::EigenDecomposition Mat::eigendecompose(float tolerance, int max_iter) const
     {
         // Check for null pointer
         if (this->data == nullptr)
@@ -7312,16 +7414,25 @@ namespace tiny
             return result;
         }
         
+        // Validate max_iter
+        if (max_iter <= 0)
+        {
+            EigenDecomposition result;
+            std::cerr << "[Error] eigendecompose: max_iter must be > 0 (got " << max_iter << ")\n";
+            result.status = TINY_ERR_INVALID_ARG;
+            return result;
+        }
+        
         // Check if matrix is symmetric
         if (this->is_symmetric(tolerance * 10.0f))
         {
             // Use Jacobi method for symmetric matrices (more efficient and stable)
-            return this->eigendecompose_jacobi(tolerance, 100);
+            return this->eigendecompose_jacobi(tolerance, max_iter);
         }
         else
         {
             // Use QR algorithm for general matrices
-            return this->eigendecompose_qr(100, tolerance);
+            return this->eigendecompose_qr(max_iter, tolerance);
         }
     }
 

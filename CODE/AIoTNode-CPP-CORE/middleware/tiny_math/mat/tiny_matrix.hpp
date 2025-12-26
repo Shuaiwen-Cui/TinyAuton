@@ -68,18 +68,67 @@ namespace tiny
         // Printing Functions
         // ============================================================================
         void print_info() const;
-        void print_matrix(bool show_padding);
+        void print_matrix(bool show_padding) const;
 
         // ============================================================================
         // Constructors & Destructor
         // ============================================================================
-        void alloc_mem(); // Allocate internal memory
+        /**
+         * @brief Allocate memory for the matrix according to the memory required.
+         * @note For ESP32, it will automatically determine if using RAM or PSRAM based on the size of the matrix.
+         * @note This function sets ext_buff to false and allocates memory based on row * stride.
+         *       If allocation fails or parameters are invalid, data will be set to nullptr.
+         */
+        void alloc_mem();
+        
+        /**
+         * @brief Default constructor: create a 1x1 matrix with only a zero element.
+         * @note If memory allocation fails, the object will be in an invalid state (data = nullptr).
+         *       Caller should check the data pointer before using the matrix.
+         */
         Mat();
+        
+        /**
+         * @brief Constructor - create a matrix with the specified number of rows and columns.
+         * @param rows Number of rows
+         * @param cols Number of columns
+         */
         Mat(int rows, int cols);
+        
+        /**
+         * @brief Constructor - create a matrix with the specified number of rows, columns and stride.
+         * @param rows Number of rows
+         * @param cols Number of columns
+         * @param stride Stride (number of elements in a row)
+         */
         Mat(int rows, int cols, int stride);
+        
+        /**
+         * @brief Constructor - create a matrix with the specified number of rows, columns and external data.
+         * @param data Pointer to external data buffer
+         * @param rows Number of rows
+         * @param cols Number of columns
+         */
         Mat(float *data, int rows, int cols);
+        
+        /**
+         * @brief Constructor - create a matrix with the specified number of rows, columns and external data.
+         * @param data Pointer to external data buffer
+         * @param rows Number of rows
+         * @param cols Number of columns
+         * @param stride Stride (number of elements in a row)
+         */
         Mat(float *data, int rows, int cols, int stride);
+        
+        /**
+         * @brief Copy constructor - create a matrix with the same properties as the source matrix.
+         * @param src Source matrix
+         */
         Mat(const Mat &src);
+        
+        /**
+         * @brief Destructor - free the memory allocated for the matrix.
+         */
         ~Mat();
 
         // ============================================================================
@@ -95,7 +144,7 @@ namespace tiny
         tiny_error_t copy_head(const Mat &src);
         Mat view_roi(int start_row, int start_col, int roi_rows, int roi_cols) const;
         Mat view_roi(const Mat::ROI &roi) const;
-        Mat copy_roi(int start_row, int start_col, int roi_rows, int roi_cols);
+        Mat copy_roi(int start_row, int start_col, int height, int width);
         Mat copy_roi(const Mat::ROI &roi);
         Mat block(int start_row, int start_col, int block_rows, int block_cols);
         void swap_rows(int row1, int row2);
@@ -154,8 +203,8 @@ namespace tiny
         // ============================================================================
         // Linear Algebra - Matrix Operations
         // ============================================================================
-        Mat minor(int row, int col);       // Minor matrix (submatrix after removing row and col)
-        Mat cofactor(int row, int col);    // Cofactor matrix
+        Mat minor(int target_row, int target_col);       // Minor matrix (submatrix after removing row and col)
+        Mat cofactor(int target_row, int target_col);    // Cofactor matrix
         Mat gaussian_eliminate() const;    // Gaussian elimination
         Mat row_reduce_from_gaussian();   // Row reduction from Gaussian form
         Mat inverse_gje();                 // Inverse using Gaussian-Jordan elimination
@@ -177,8 +226,22 @@ namespace tiny
         struct SVDDecomposition;
         
         // Matrix property checks
+        /**
+         * @brief Check if the matrix is symmetric within a given tolerance.
+         * @param tolerance Maximum allowed difference between A(i,j) and A(j,i) (must be >= 0)
+         * @return true if matrix is symmetric, false otherwise
+         */
         bool is_symmetric(float tolerance = 1e-6f) const;
-        bool is_positive_definite(float tolerance = 1e-6f) const;
+        
+        /**
+         * @brief Check if matrix is positive definite using Sylvester's criterion.
+         * @param tolerance Tolerance for numerical checks (must be >= 0)
+         * @param max_minors_to_check Maximum number of leading principal minors to check.
+         *                            - If -1: check all minors (complete Sylvester's criterion)
+         *                            - If > 0: check first max_minors_to_check minors
+         * @return true if matrix is positive definite, false otherwise
+         */
+        bool is_positive_definite(float tolerance = 1e-6f, int max_minors_to_check = -1) const;
         
         // Decomposition methods
         LUDecomposition lu_decompose(bool use_pivoting = true) const;
@@ -202,13 +265,50 @@ namespace tiny
         struct EigenDecomposition;
         
         // Single eigenvalue methods (fast, for real-time applications)
+        /**
+         * @brief Compute the dominant (largest magnitude) eigenvalue and eigenvector using power iteration.
+         * @param max_iter Maximum number of iterations (must be > 0)
+         * @param tolerance Convergence tolerance (must be >= 0). Convergence when |λ_k - λ_{k-1}| < tolerance * |λ_k|
+         * @return EigenPair containing the dominant eigenvalue, eigenvector, and status
+         */
         EigenPair power_iteration(int max_iter = 1000, float tolerance = 1e-6f) const;
+        
+        /**
+         * @brief Compute the smallest (minimum magnitude) eigenvalue and eigenvector using inverse power iteration.
+         * @param max_iter Maximum number of iterations (must be > 0)
+         * @param tolerance Convergence tolerance (must be >= 0). Convergence when |λ_k - λ_{k-1}| < tolerance * max(|λ_k|, 1)
+         * @return EigenPair containing the smallest eigenvalue, eigenvector, and status
+         * @note The matrix must be invertible (non-singular) for this method to work.
+         */
         EigenPair inverse_power_iteration(int max_iter = 1000, float tolerance = 1e-6f) const;
         
         // Complete eigendecomposition methods
+        /**
+         * @brief Compute complete eigenvalue decomposition using Jacobi method for symmetric matrices.
+         * @param tolerance Convergence tolerance (must be >= 0). Convergence when max off-diagonal < tolerance
+         * @param max_iter Maximum number of iterations (must be > 0)
+         * @return EigenDecomposition containing all eigenvalues, eigenvectors, and status
+         * @note Best for symmetric matrices. Matrix should be symmetric for best results.
+         */
         EigenDecomposition eigendecompose_jacobi(float tolerance = 1e-6f, int max_iter = 100) const;
+        
+        /**
+         * @brief Compute complete eigenvalue decomposition using QR algorithm for general matrices.
+         * @param max_iter Maximum number of QR iterations (must be > 0)
+         * @param tolerance Convergence tolerance (must be >= 0). Convergence when subdiagonal < tolerance
+         * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
+         * @note Supports non-symmetric matrices, but may have complex eigenvalues (only real part returned).
+         */
         EigenDecomposition eigendecompose_qr(int max_iter = 100, float tolerance = 1e-6f) const;
-        EigenDecomposition eigendecompose(float tolerance = 1e-6f) const;  // Auto-select method
+        
+        /**
+         * @brief Automatic eigenvalue decomposition with method selection.
+         * @param tolerance Convergence tolerance (must be >= 0)
+         * @param max_iter Maximum number of iterations (must be > 0, default = 100)
+         * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
+         * @note Automatically selects Jacobi method for symmetric matrices, QR algorithm for general matrices.
+         */
+        EigenDecomposition eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
 
     protected:
 

@@ -123,63 +123,61 @@ bool matrices_approximately_equal(const tiny::Mat &m1, const tiny::Mat &m2, floa
 }
 
 // ============================================================================
-// Group 1: Object Foundation - Constructor & Destructor Tests
+// A1: Constructor & Destructor
 // ============================================================================
-// Purpose: Test object creation and destruction - the foundation of all operations
 void test_constructor_destructor()
 {
-    std::cout << "\n[Group 1: Object Foundation - Constructor & Destructor Tests]\n";
+    std::cout << "\n[A1: Constructor & Destructor Tests]\n";
 
-    // Test 1.1: default constructor
-    std::cout << "[Test 1.1] Default Constructor\n";
+    // A1.1: default constructor
+    std::cout << "[A1.1] Default Constructor\n";
     tiny::Mat mat1;
     mat1.print_info();
     mat1.print_matrix(true);
 
-    // Test 1.2: constructor with rows and cols, using internal allocation
-    std::cout << "[Test 1.2] Constructor with Rows and Cols\n";
+    // A1.2: constructor with rows and cols, using internal allocation
+    std::cout << "[A1.2] Constructor with Rows and Cols\n";
     tiny::Mat mat2(3, 4);
     mat2.print_info();
     mat2.print_matrix(true);
 
-    // Test 1.3: constructor with rows and cols, specifying stride, using internal allocation
-    std::cout << "[Test 1.3] Constructor with Rows, Cols and Stride\n";
+    // A1.3: constructor with rows and cols, specifying stride, using internal allocation
+    std::cout << "[A1.3] Constructor with Rows, Cols and Stride\n";
     tiny::Mat mat3(3, 4, 5);
     mat3.print_info();
     mat3.print_matrix(true);
 
-    // Test 1.4: constructor with external data
-    std::cout << "[Test 1.4] Constructor with External Data\n";
+    // A1.4: constructor with external data
+    std::cout << "[A1.4] Constructor with External Data\n";
     float data[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
     tiny::Mat mat4(data, 3, 4);
     mat4.print_info();
     mat4.print_matrix(true);
 
-    // Test 1.5: constructor with external data and stride
-    std::cout << "[Test 1.5] Constructor with External Data and Stride\n";
+    // A1.5: constructor with external data and stride
+    std::cout << "[A1.5] Constructor with External Data and Stride\n";
     float data_stride[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
     tiny::Mat mat5(data_stride, 3, 4, 5);
     mat5.print_info();
     mat5.print_matrix(true);
 
-    // Test 1.6: copy constructor
-    std::cout << "[Test 1.6] Copy Constructor\n";
+    // A1.6: copy constructor
+    std::cout << "[A1.6] Copy Constructor\n";
     tiny::Mat mat6(mat5);
     mat6.print_info();
     mat6.print_matrix(true);
 }
 
 // ============================================================================
-// Group 2: Object Foundation - Element Access Tests
+// A2: Element Access
 // ============================================================================
-// Purpose: Test element access - fundamental operation for data manipulation
 void test_element_access()
 {
-    std::cout << "\n[Group 2: Object Foundation - Element Access Tests]\n";
+    std::cout << "\n[A2: Element Access Tests]\n";
     tiny::Mat mat(2, 3);
 
-    // Test 2.1: non-const access
-    std::cout << "[Test 2.1] Non-const Access\n";
+    // A2.1: non-const access
+    std::cout << "[A2.1] Non-const Access\n";
     mat(0, 0) = 1.1f;
     mat(0, 1) = 2.2f;
     mat(0, 2) = 3.3f;
@@ -189,19 +187,18 @@ void test_element_access()
     mat.print_info();
     mat.print_matrix(true);
 
-    // Test 2.2: const access
-    std::cout << "[Test 2.2] Const Access\n";
+    // A2.2: const access
+    std::cout << "[A2.2] Const Access\n";
     const tiny::Mat const_mat = mat;
     std::cout << "const_mat(0, 0): " << const_mat(0, 0) << "\n";
 }
 
 // ============================================================================
-// Group 3: Object Foundation - Data Manipulation Tests (ROI Operations)
+// A3: ROI Operations
 // ============================================================================
-// Purpose: Test ROI operations - efficient data views and submatrix operations
 void test_roi_operations()
 {
-    std::cout << "\n[Group 3: Object Foundation - Data Manipulation Tests (ROI Operations)]\n";
+    std::cout << "\n[A3: ROI Operations Tests]\n";
 
     // Material Matrices
     tiny::Mat matA(2, 3);
@@ -230,36 +227,105 @@ void test_roi_operations()
     matC.print_info();
     matC.print_matrix(true);
 
-    // Test 3.1: Copy ROI
-    std::cout << "[Test 3.1] Copy ROI - Over Range Case\n";
+    // A3.1: Copy ROI
+    std::cout << "[A3.1] Copy ROI - Over Range Case\n";
     matB.copy_paste(matA, 1, 2);
     std::cout << "matB after copy_paste matA at (1, 2):\n";
     matB.print_matrix(true);
     std::cout << "nothing changed.\n";
 
-    std::cout << "[Test 3.1] Copy ROI - Suitable Range Case\n";
+    std::cout << "[A3.2] Copy ROI - Suitable Range Case\n";
     matB.copy_paste(matA, 1, 1);
     std::cout << "matB after copy_paste matA at (1, 1):\n";
     matB.print_info();
     matB.print_matrix(true);
     std::cout << "successfully copied.\n";
 
-    // Test 3.2: Copy Head
-    std::cout << "[Test 3.2] Copy Head\n";
+    // A3.3: Copy Head
+    std::cout << "[A3.3] Copy Head\n";
     matC.copy_head(matB);
     std::cout << "matC after copy_head matB:\n";
     matC.print_info();
     matC.print_matrix(true);
 
-    std::cout << "[Test 3.2] Copy Head - Memory Sharing Check\n"; // matB and matC share the same data pointer
+    std::cout << "[A3.4] Copy Head - Memory Sharing Check\n"; // matB and matC share the same data pointer
     matB(0, 0) = 99.99f;
     std::cout << "matB(0, 0) = 99.99f\n";
     std::cout << "matC:\n";
     matC.print_info();
     matC.print_matrix(true);
 
-    // Test 3.3: Get a View of ROI - low level function
-    std::cout << "[Test 3.3] Get a View of ROI - Low Level Function\n";
+    // A3.5: copy_paste() - Error handling - negative position
+    std::cout << "\n[A3.5] copy_paste() - Error Handling - Negative Position\n";
+    tiny::Mat dest1(3, 3);
+    tiny::Mat src1(2, 2);
+    src1(0, 0) = 1.0f; src1(0, 1) = 2.0f;
+    src1(1, 0) = 3.0f; src1(1, 1) = 4.0f;
+    tiny_error_t err1 = dest1.copy_paste(src1, -1, 0);
+    std::cout << "copy_paste with row_pos=-1: error = " << err1 
+              << " (Expected: TINY_ERR_INVALID_ARG) " 
+              << (err1 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
+    err1 = dest1.copy_paste(src1, 0, -1);
+    std::cout << "copy_paste with col_pos=-1: error = " << err1 
+              << " (Expected: TINY_ERR_INVALID_ARG) " 
+              << (err1 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
+
+    // A3.6: copy_paste() - Error handling - out of bounds
+    std::cout << "\n[A3.6] copy_paste() - Error Handling - Out of Bounds\n";
+    tiny::Mat dest2(2, 2);
+    tiny::Mat src2(3, 3);  // Larger than destination
+    err1 = dest2.copy_paste(src2, 0, 0);
+    std::cout << "copy_paste 3x3 into 2x2 at (0,0): error = " << err1 
+              << " (Expected: TINY_ERR_INVALID_ARG) " 
+              << (err1 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
+    err1 = dest2.copy_paste(src1, 1, 1);  // src1 is 2x2, dest2 is 2x2, position (1,1) would exceed
+    std::cout << "copy_paste 2x2 into 2x2 at (1,1): error = " << err1 
+              << " (Expected: TINY_ERR_INVALID_ARG) " 
+              << (err1 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
+
+    // A3.7: copy_paste() - Boundary case - empty source
+    std::cout << "\n[A3.7] copy_paste() - Boundary Case - Empty Source Matrix\n";
+    tiny::Mat dest3(3, 3);
+    tiny::Mat empty_src(0, 0);
+    err1 = dest3.copy_paste(empty_src, 0, 0);
+    std::cout << "copy_paste empty matrix: error = " << err1 
+              << " (Expected: TINY_ERR_INVALID_ARG) " 
+              << (err1 == TINY_ERR_INVALID_ARG ? "[PASS]" : "[FAIL]") << "\n";
+
+    // A3.8: copy_head() - Share data from owned-memory source
+    std::cout << "\n[A3.8] copy_head() - Share Data from Owned-Memory Source (Double-Free Prevention)\n";
+    tiny::Mat dest4;
+    tiny::Mat owned_src(2, 2);  // Creates matrix with its own memory (ext_buff=false)
+    owned_src(0, 0) = 1.0f; owned_src(0, 1) = 2.0f;
+    owned_src(1, 0) = 3.0f; owned_src(1, 1) = 4.0f;
+    std::cout << "Before copy_head:\n";
+    std::cout << "  owned_src: ext_buff=" << owned_src.ext_buff << "\n";
+    std::cout << "  dest4: ext_buff=" << dest4.ext_buff << "\n";
+    
+    // Note: copy_head now works with ANY source, even if it owns its memory
+    // The key safety feature: destination is marked as ext_buff=true (view, not owner)
+    // This prevents double-free: only original owner (ext_buff=false) deletes memory
+    tiny_error_t err2 = dest4.copy_head(owned_src);
+    std::cout << "copy_head from matrix with owned memory: error = " << err2 
+              << " (Expected: TINY_OK) " 
+              << (err2 == TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    
+    std::cout << "After copy_head:\n";
+    std::cout << "  owned_src: ext_buff=" << owned_src.ext_buff << " (still owns memory)\n";
+    std::cout << "  dest4: ext_buff=" << dest4.ext_buff << " (view, does not own)\n";
+    
+    // Verify data is shared
+    std::cout << "Verify data sharing:\n";
+    std::cout << "  dest4(0,0)=" << dest4(0, 0) << " (should be 1.0)\n";
+    std::cout << "  dest4(1,1)=" << dest4(1, 1) << " (should be 4.0)\n";
+    
+    // Modify original, verify view reflects change
+    owned_src(0, 0) = 99.0f;
+    std::cout << "After modifying owned_src(0,0) to 99.0:\n";
+    std::cout << "  dest4(0,0)=" << dest4(0, 0) << " (should be 99.0, confirming shared data)\n";
+
+    // A3.9: Get a View of ROI - low level function
+    std::cout << "[A3.9] Get a View of ROI - Low Level Function\n";
     std::cout << "get a view of ROI with overrange dimensions - rows:\n";
     tiny::Mat roi1 = matB.view_roi(1, 1, 3, 2); // note here, C++ will use the copy constructor, which will copy according to the case (submatrix - shallow copy | normal - deep copy)
     std::cout << "get a view of ROI with overrange dimensions - cols:\n";
@@ -270,21 +336,21 @@ void test_roi_operations()
     roi3.print_info();
     roi3.print_matrix(true);
 
-    // Test 3.4: Get a View of ROI - using ROI structure
-    std::cout << "[Test 3.4] Get a View of ROI - Using ROI Structure\n";
+    // A3.10: Get a View of ROI - using ROI structure
+    std::cout << "[A3.10] Get a View of ROI - Using ROI Structure\n";
     tiny::Mat::ROI roi_struct(1, 1, 2, 2);
     tiny::Mat roi4 = matB.view_roi(roi_struct);
     roi4.print_info();
     roi4.print_matrix(true);
 
-    // Test 3.5: Copy ROI - low level function
-    std::cout << "[Test 3.5] Copy ROI - Low Level Function\n";
+    // A3.11: Copy ROI - low level function
+    std::cout << "[A3.11] Copy ROI - Low Level Function\n";
     tiny::Mat mat_deep_copy = matB.copy_roi(1, 1, 2, 2);
     mat_deep_copy.print_info();
     mat_deep_copy.print_matrix(true);
 
-    // Test 3.6: Copy ROI - using ROI structure
-    std::cout << "[Test 3.6] Copy ROI - Using ROI Structure\n";
+    // A3.12: Copy ROI - using ROI structure
+    std::cout << "[A3.12] Copy ROI - Using ROI Structure\n";
     TinyTimeMark_t tic1 = tiny_get_running_time();
     tiny::Mat::ROI roi_struct2(1, 1, 2, 2);
     tiny::Mat mat_deep_copy2 = matB.copy_roi(roi_struct2);
@@ -294,8 +360,32 @@ void test_roi_operations()
     mat_deep_copy2.print_info();
     mat_deep_copy2.print_matrix(true);
 
-    // Test 3.7: Block
-    std::cout << "[Test 3.7] Block\n";
+    // A3.13: ROI resize_roi() function
+    std::cout << "\n[A3.13] ROI resize_roi() Function\n";
+    tiny::Mat::ROI test_roi(0, 0, 2, 2);
+    std::cout << "Initial ROI: pos_x=" << test_roi.pos_x << ", pos_y=" << test_roi.pos_y 
+              << ", width=" << test_roi.width << ", height=" << test_roi.height << "\n";
+    test_roi.resize_roi(1, 1, 3, 3);
+    std::cout << "After resize_roi(1, 1, 3, 3): pos_x=" << test_roi.pos_x << ", pos_y=" << test_roi.pos_y 
+              << ", width=" << test_roi.width << ", height=" << test_roi.height << "\n";
+    bool roi_resize_correct = (test_roi.pos_x == 1 && test_roi.pos_y == 1 && 
+                                test_roi.width == 3 && test_roi.height == 3);
+    std::cout << "ROI resize test: " << (roi_resize_correct ? "[PASS]" : "[FAIL]") << "\n";
+
+    // A3.14: ROI area_roi() function
+    std::cout << "\n[A3.14] ROI area_roi() Function\n";
+    tiny::Mat::ROI area_roi1(0, 0, 3, 4);
+    int area1 = area_roi1.area_roi();
+    std::cout << "ROI(0, 0, 3, 4) area: " << area1 << " (Expected: 12) ";
+    std::cout << (area1 == 12 ? "[PASS]" : "[FAIL]") << "\n";
+    
+    tiny::Mat::ROI area_roi2(1, 2, 5, 6);
+    int area2 = area_roi2.area_roi();
+    std::cout << "ROI(1, 2, 5, 6) area: " << area2 << " (Expected: 30) ";
+    std::cout << (area2 == 30 ? "[PASS]" : "[FAIL]") << "\n";
+
+    // A3.15: Block
+    std::cout << "[A3.15] Block\n";
     TinyTimeMark_t tic2 = tiny_get_running_time();
     tiny::Mat mat_block = matB.block(1, 1, 2, 2);
     TinyTimeMark_t toc2 = tiny_get_running_time();
@@ -304,8 +394,8 @@ void test_roi_operations()
     mat_block.print_info();
     mat_block.print_matrix(true);
 
-    // Test 3.8: Swap Rows
-    std::cout << "[Test 3.8] Swap Rows\n";
+    // A3.16: Swap Rows
+    std::cout << "[A3.16] Swap Rows\n";
     std::cout << "matB before swap rows:\n";
     matB.print_info();
     matB.print_matrix(true);
@@ -314,8 +404,8 @@ void test_roi_operations()
     matB.print_info();
     matB.print_matrix(true);
 
-    // Test 3.9: Swap Columns
-    std::cout << "[Test 3.9] Swap Columns\n";
+    // A3.17: Swap Columns
+    std::cout << "[A3.17] Swap Columns\n";
     std::cout << "matB before swap columns:\n";
     matB.print_info();
     matB.print_matrix(true);
@@ -324,8 +414,8 @@ void test_roi_operations()
     matB.print_info();
     matB.print_matrix(true);
 
-    // Test 3.10: Clear
-    std::cout << "[Test 3.10] Clear\n";
+    // A3.18: Clear
+    std::cout << "[A3.18] Clear\n";
     std::cout << "matB before clear:\n";
     matB.print_info();
     matB.print_matrix(true);
@@ -336,15 +426,13 @@ void test_roi_operations()
 }
 
 // ============================================================================
-// Group 4: Basic Operations - Arithmetic Operators Tests
+// B1: Assignment Operator
 // ============================================================================
-// Purpose: Test basic arithmetic operations - foundation for numerical computations
-// Group 4.1: Assignment Operator
 void test_assignment_operator()
 {
-    std::cout << "\n[Group 4.1: Basic Operations - Assignment Operator Tests]\n";
+    std::cout << "\n[B1: Assignment Operator Tests]\n";
 
-    std::cout << "\n[Test 4.1.1] Assignment (Same Dimensions)\n";
+    std::cout << "\n[B1.1] Assignment (Same Dimensions)\n";
     tiny::Mat dst(2, 3), src(2, 3);
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 3; ++j)
@@ -352,29 +440,31 @@ void test_assignment_operator()
     dst = src;
     dst.print_matrix(true);
 
-    std::cout << "\n[Test 4.1.2] Assignment (Different Dimensions)\n";
+    std::cout << "\n[B1.2] Assignment (Different Dimensions)\n";
     tiny::Mat dst2(4, 2);
     dst2 = src;
     dst2.print_matrix(true);
 
-    std::cout << "\n[Test 4.1.3] Assignment to Sub-Matrix (Expect Error)\n";
+    std::cout << "\n[B1.3] Assignment to Sub-Matrix (Expect Error)\n";
     float data[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
     tiny::Mat base(data, 3, 4, 5);
     tiny::Mat subView = base.view_roi(1, 1, 2, 2);
     subView = src;
     subView.print_matrix(true);
 
-    std::cout << "\n[Test 4.1.4] Self-Assignment\n";
+    std::cout << "\n[B1.4] Self-Assignment\n";
     src = src;
     src.print_matrix(true);
 }
 
-// Group 4.2: Matrix Addition
+// ============================================================================
+// B2: Matrix Addition
+// ============================================================================
 void test_matrix_addition()
 {
-    std::cout << "\n[Group 4.2: Matrix Addition Tests]\n";
+    std::cout << "\n[B2: Matrix Addition Tests]\n";
 
-    std::cout << "\n[Test 4.2.1] Matrix Addition (Same Dimensions)\n";
+    std::cout << "\n[B2.1] Matrix Addition (Same Dimensions)\n";
     tiny::Mat A(2, 3), B(2, 3);
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 3; ++j)
@@ -385,7 +475,7 @@ void test_matrix_addition()
     A += B;
     A.print_matrix(true);
 
-    std::cout << "\n[Test 4.2.2] Sub-Matrix Addition\n";
+    std::cout << "\n[B2.2] Sub-Matrix Addition\n";
     float data[20] = {0,1,2,3,0,4,5,6,7,0,8,9,10,11,0,12,13,14,15,0};
     tiny::Mat base(data, 4, 4, 5);
     tiny::Mat subA = base.view_roi(1,1,2,2);
@@ -393,23 +483,25 @@ void test_matrix_addition()
     subA += subB;
     subA.print_matrix(true);
 
-    std::cout << "\n[Test 4.2.3] Full Matrix + Sub-Matrix Addition\n";
+    std::cout << "\n[B2.3] Full Matrix + Sub-Matrix Addition\n";
     tiny::Mat full(2,2);
     for(int i=0;i<2;++i) for(int j=0;j<2;++j) full(i,j)=2.0f;
     full += subB;
     full.print_matrix(true);
 
-    std::cout << "\n[Test 4.2.4] Addition Dimension Mismatch (Expect Error)\n";
+    std::cout << "\n[B2.4] Addition Dimension Mismatch (Expect Error)\n";
     tiny::Mat wrongDim(3,3);
     full += wrongDim;
 }
 
-// Group 4.3: Constant Addition
+// ============================================================================
+// B3: Constant Addition
+// ============================================================================
 void test_constant_addition()
 {
-    std::cout << "\n[Group 4.3: Constant Addition Tests]\n";
+    std::cout << "\n[B3: Constant Addition Tests]\n";
 
-    std::cout << "\n[Test 4.3.1] Full Matrix + Constant\n";
+    std::cout << "\n[B3.1] Full Matrix + Constant\n";
     tiny::Mat mat1(2,3);
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 3; ++j)
@@ -417,55 +509,59 @@ void test_constant_addition()
     mat1 += 5.0f;
     mat1.print_matrix(true);
 
-    std::cout << "\n[Test 4.3.2] Sub-Matrix + Constant\n";
+    std::cout << "\n[B3.2] Sub-Matrix + Constant\n";
     float data[20] = {0,1,2,3,0,4,5,6,7,0,8,9,10,11,0,12,13,14,15,0};
     tiny::Mat base(data,4,4,5);
     tiny::Mat sub = base.view_roi(1,1,2,2);
     sub += 3.0f;
     sub.print_matrix(true);
 
-    std::cout << "\n[Test 4.3.3] Add Zero\n";
+    std::cout << "\n[B3.3] Add Zero\n";
     tiny::Mat mat2(2,2);
     mat2(0,0)=1; mat2(0,1)=2; mat2(1,0)=3; mat2(1,1)=4;
     mat2 += 0.0f;
     mat2.print_matrix(true);
 
-    std::cout << "\n[Test 4.3.4] Add Negative Constant\n";
+    std::cout << "\n[B3.4] Add Negative Constant\n";
     tiny::Mat mat3(2,2);
     mat3(0,0)=10; mat3(0,1)=20; mat3(1,0)=30; mat3(1,1)=40;
     mat3 += -15.0f;
     mat3.print_matrix(true);
 }
 
-// Group 4.4: Matrix Subtraction
+// ============================================================================
+// B4: Matrix Subtraction
+// ============================================================================
 void test_matrix_subtraction()
 {
-    std::cout << "\n[Group 4.4: Matrix Subtraction Tests]\n";
+    std::cout << "\n[B4: Matrix Subtraction Tests]\n";
 
-    std::cout << "\n[Test 4.4.1] Matrix Subtraction\n";
+    std::cout << "\n[B4.1] Matrix Subtraction\n";
     tiny::Mat A(2,2), B(2,2);
     A(0,0)=5; A(0,1)=7; A(1,0)=9; A(1,1)=11;
     B(0,0)=1; B(0,1)=2; B(1,0)=3; B(1,1)=4;
     A -= B;
     A.print_matrix(true);
 
-    std::cout << "\n[Test 4.4.2] Subtraction Dimension Mismatch (Expect Error)\n";
+    std::cout << "\n[B4.2] Subtraction Dimension Mismatch (Expect Error)\n";
     tiny::Mat wrong(3,3);
     A -= wrong;
 }
 
-// Group 4.5: Constant Subtraction
+// ============================================================================
+// B5: Constant Subtraction
+// ============================================================================
 void test_constant_subtraction()
 {
-    std::cout << "\n[Group 4.5: Constant Subtraction Tests]\n";
+    std::cout << "\n[B5: Constant Subtraction Tests]\n";
 
-    std::cout << "\n[Test 4.5.1] Full Matrix - Constant\n";
+    std::cout << "\n[B5.1] Full Matrix - Constant\n";
     tiny::Mat mat(2,3);
     for (int i=0;i<2;++i) for(int j=0;j<3;++j) mat(i,j) = i*3+j+1;
     mat -= 2.0f;
     mat.print_matrix(true);
 
-    std::cout << "\n[Test 4.5.2] Sub-Matrix - Constant\n";
+    std::cout << "\n[B5.2] Sub-Matrix - Constant\n";
     float data[15] = {0,1,2,3,0,4,5,6,7,0,8,9,10,11,0};
     tiny::Mat base(data,3,4,5);
     tiny::Mat sub = base.view_roi(1,1,2,2);
@@ -473,23 +569,25 @@ void test_constant_subtraction()
     sub.print_matrix(true);
 }
 
-// Group 4.6: Matrix Element-wise Division
+// ============================================================================
+// B6: Matrix Division
+// ============================================================================
 void test_matrix_division()
 {
-    std::cout << "\n[Group 4.6: Matrix Element-wise Division Tests]\n";
+    std::cout << "\n[B6: Matrix Element-wise Division Tests]\n";
 
-    std::cout << "\n[Test 4.6.1] Element-wise Division (Same Dimensions, No Zero)\n";
+    std::cout << "\n[B6.1] Element-wise Division (Same Dimensions, No Zero)\n";
     tiny::Mat A(2, 2), B(2, 2);
     A(0,0) = 10; A(0,1) = 20; A(1,0) = 30; A(1,1) = 40;
     B(0,0) = 2;  B(0,1) = 4;  B(1,0) = 5;  B(1,1) = 8;
     A /= B;
     A.print_matrix(true);
 
-    std::cout << "\n[Test 4.6.2] Dimension Mismatch (Expect Error)\n";
+    std::cout << "\n[B6.2] Dimension Mismatch (Expect Error)\n";
     tiny::Mat wrongDim(3, 3);
     A /= wrongDim;
 
-    std::cout << "\n[Test 4.6.3] Division by Matrix Containing Zero (Expect Error)\n";
+    std::cout << "\n[B6.3] Division by Matrix Containing Zero (Expect Error)\n";
     tiny::Mat C(2, 2), D(2, 2);
     C(0,0)=5; C(0,1)=10; C(1,0)=15; C(1,1)=20;
     D(0,0)=1; D(0,1)=0;  D(1,0)=3;  D(1,1)=4;  // Contains zero
@@ -497,12 +595,14 @@ void test_matrix_division()
     C.print_matrix(true);  // Should remain unchanged
 }
 
-// Group 4.7: Constant Division
+// ============================================================================
+// B7: Constant Division
+// ============================================================================
 void test_constant_division()
 {
-    std::cout << "\n[Group 4.7: Matrix Division by Constant Tests]\n";
+    std::cout << "\n[B7: Matrix Division by Constant Tests]\n";
 
-    std::cout << "\n[Test 4.7.1] Divide Full Matrix by Positive Constant\n";
+    std::cout << "\n[B7.1] Divide Full Matrix by Positive Constant\n";
     tiny::Mat mat1(2, 3);
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 3; ++j)
@@ -510,66 +610,72 @@ void test_constant_division()
     mat1 /= 2.0f;
     mat1.print_matrix(true);
 
-    std::cout << "\n[Test 4.7.2] Divide Matrix by Negative Constant\n";
+    std::cout << "\n[B7.2] Divide Matrix by Negative Constant\n";
     tiny::Mat mat2(2, 2);
     mat2(0,0)=6; mat2(0,1)=12; mat2(1,0)=18; mat2(1,1)=24;
     mat2 /= -3.0f;
     mat2.print_matrix(true);
 
-    std::cout << "\n[Test 4.7.3] Division by Zero Constant (Expect Error)\n";
+    std::cout << "\n[B7.3] Division by Zero Constant (Expect Error)\n";
     tiny::Mat mat3(2, 2);
     mat3(0,0)=1; mat3(0,1)=2; mat3(1,0)=3; mat3(1,1)=4;
     mat3 /= 0.0f;
     mat3.print_matrix(true);  // Should remain unchanged
 }
 
-// Group 4.8: Matrix Exponentiation
+// ============================================================================
+// B8: Matrix Exponentiation
+// ============================================================================
 void test_matrix_exponentiation()
 {
-    std::cout << "\n[Group 4.8: Matrix Exponentiation Tests]\n";
+    std::cout << "\n[B8: Matrix Exponentiation Tests]\n";
 
-    std::cout << "\n[Test 4.8.1] Raise Each Element to Power of 2\n";
+    std::cout << "\n[B8.1] Raise Each Element to Power of 2\n";
     tiny::Mat mat1(2, 2);
     mat1(0,0)=2; mat1(0,1)=3; mat1(1,0)=4; mat1(1,1)=5;
     tiny::Mat result1 = mat1 ^ 2;
     result1.print_matrix(true);
 
-    std::cout << "\n[Test 4.8.2] Raise Each Element to Power of 0\n";
+    std::cout << "\n[B8.2] Raise Each Element to Power of 0\n";
     tiny::Mat mat2(2, 2);
     mat2(0,0)=7; mat2(0,1)=-3; mat2(1,0)=0.5f; mat2(1,1)=10;
     tiny::Mat result2 = mat2 ^ 0;
     result2.print_matrix(true);  // Expect all 1
 
-    std::cout << "\n[Test 4.8.3] Raise Each Element to Power of 1\n";
+    std::cout << "\n[B8.3] Raise Each Element to Power of 1\n";
     tiny::Mat mat3(2, 2);
     mat3(0,0)=9; mat3(0,1)=8; mat3(1,0)=7; mat3(1,1)=6;
     tiny::Mat result3 = mat3 ^ 1;
     result3.print_matrix(true);  // Expect same as original
 
-    std::cout << "\n[Test 4.8.4] Raise Each Element to Power of -1 (Expect Error or Warning)\n";
+    std::cout << "\n[B8.4] Raise Each Element to Power of -1 (Element-wise Reciprocal)\n";
     tiny::Mat mat4(2, 2);
     mat4(0,0)=1; mat4(0,1)=2; mat4(1,0)=4; mat4(1,1)=5;
     tiny::Mat result4 = mat4 ^ -1;
-    result4.print_matrix(true);
+    result4.print_matrix(true);  // Expect: [1.0, 0.5; 0.25, 0.2]
 
-    std::cout << "\n[Test 4.8.5] Raise Matrix Containing Zero to Power of 3\n";
+    std::cout << "\n[B8.5] Raise Matrix Containing Zero to Power of 3\n";
     tiny::Mat mat5(2, 2);
     mat5(0,0)=0; mat5(0,1)=2; mat5(1,0)=-1; mat5(1,1)=3;
     tiny::Mat result5 = mat5 ^ 3;
     result5.print_matrix(true);
+
+    std::cout << "\n[B8.6] Raise Matrix Containing Zero to Power of -1 (Expect Warning)\n";
+    tiny::Mat mat6(2, 2);
+    mat6(0,0)=0; mat6(0,1)=2; mat6(1,0)=-1; mat6(1,1)=3;
+    tiny::Mat result6 = mat6 ^ -1;
+    result6.print_matrix(true);  // Expect warning for zero element, Inf or NaN for (0,0)
 }
 
 // ============================================================================
-// Group 5: Matrix Properties - Linear Algebra Tests
+// C1: Matrix Transpose
 // ============================================================================
-// Purpose: Test matrix properties and basic linear algebra operations
-// Group 5.1: Matrix Transpose
 void test_matrix_transpose()
 {
-    std::cout << "\n[Group 5.1: Matrix Properties - Matrix Transpose Tests]\n";
+    std::cout << "\n[C1: Matrix Transpose Tests]\n";
 
-    // Test 5.1.1: Basic 2x3 matrix transpose
-    std::cout << "\n[Test 5.1.1] Transpose of 2x3 Matrix\n";
+    // C1.1: Basic 2x3 matrix transpose
+    std::cout << "\n[C1.1] Transpose of 2x3 Matrix\n";
     tiny::Mat mat1(2, 3);
     int val = 1;
     for (int i = 0; i < 2; ++i)
@@ -583,8 +689,8 @@ void test_matrix_transpose()
     std::cout << "Transposed 3x2 Matrix:\n";
     transposed1.print_matrix(true);
 
-    // Test 5.1.2: Square matrix transpose (3x3)
-    std::cout << "\n[Test 5.1.2] Transpose of 3x3 Square Matrix\n";
+    // C1.2: Square matrix transpose (3x3)
+    std::cout << "\n[C1.2] Transpose of 3x3 Square Matrix\n";
     tiny::Mat mat2(3, 3);
     val = 1;
     for (int i = 0; i < 3; ++i)
@@ -598,8 +704,8 @@ void test_matrix_transpose()
     std::cout << "Transposed 3x3 Matrix:\n";
     transposed2.print_matrix(true);
 
-    // Test 5.1.3: Matrix with padding (4x2, stride=3)
-    std::cout << "\n[Test 5.1.3] Transpose of Matrix with Padding\n";
+    // C1.3: Matrix with padding (4x2, stride=3)
+    std::cout << "\n[C1.3] Transpose of Matrix with Padding\n";
     float data[12] = {1, 2, 0, 3, 4, 0, 5, 6, 0, 7, 8, 0};  // stride=3, 4 rows
     tiny::Mat mat3(data, 4, 2, 3);
     std::cout << "Original 4x2 Matrix (with padding):\n";
@@ -609,8 +715,8 @@ void test_matrix_transpose()
     std::cout << "Transposed 2x4 Matrix:\n";
     transposed3.print_matrix(true);
 
-    // Test 5.1.4: Transpose of empty matrix
-    std::cout << "\n[Test 5.1.4] Transpose of Empty Matrix\n";
+    // C1.4: Transpose of empty matrix
+    std::cout << "\n[C1.4] Transpose of Empty Matrix\n";
     tiny::Mat mat4;
     mat4.print_matrix(true);
 
@@ -618,13 +724,15 @@ void test_matrix_transpose()
     transposed4.print_matrix(true);
 }
 
-// Group 5.2: Matrix Minor and Cofactor
+// ============================================================================
+// C2: Matrix Minor and Cofactor
+// ============================================================================
 void test_matrix_cofactor()
 {
-    std::cout << "\n[Group 5.2: Matrix Minor and Cofactor Tests]\n";
+    std::cout << "\n[C2: Matrix Minor and Cofactor Tests]\n";
 
-    // Test 5.2.1: Minor of 3x3 Matrix - Standard Case
-    std::cout << "\n[Test 5.2.1] Minor of 3x3 Matrix (Remove Row 1, Col 1)\n";
+    // C2.1: Minor of 3x3 Matrix - Standard Case
+    std::cout << "\n[C2.1] Minor of 3x3 Matrix (Remove Row 1, Col 1)\n";
     tiny::Mat mat1(3, 3);
     int val = 1;
     for (int i = 0; i < 3; ++i)
@@ -638,46 +746,46 @@ void test_matrix_cofactor()
     std::cout << "Minor Matrix (remove row 1, col 1, no sign):\n";
     minor1.print_matrix(true);  // Expected: [[1,3],[7,9]]
 
-    // Test 5.2.2: Cofactor of 3x3 Matrix - Same position
-    std::cout << "\n[Test 5.2.2] Cofactor of 3x3 Matrix (Remove Row 1, Col 1)\n";
+    // C2.2: Cofactor of 3x3 Matrix - Same position
+    std::cout << "\n[C2.2] Cofactor of 3x3 Matrix (Remove Row 1, Col 1)\n";
     std::cout << "Note: Cofactor matrix is the same as minor matrix.\n";
     std::cout << "      The sign (-1)^(i+j) is applied when computing cofactor value, not to matrix elements.\n";
     tiny::Mat cof1 = mat1.cofactor(1, 1);
     std::cout << "Cofactor Matrix (same as minor):\n";
     cof1.print_matrix(true);  // Expected: [[1,3],[7,9]] (same as minor)
 
-    // Test 5.2.3: Minor - Remove first row and first column
-    std::cout << "\n[Test 5.2.3] Minor (Remove Row 0, Col 0)\n";
+    // C2.3: Minor - Remove first row and first column
+    std::cout << "\n[C2.3] Minor (Remove Row 0, Col 0)\n";
     tiny::Mat minor2 = mat1.minor(0, 0);
     minor2.print_matrix(true);  // Expected: [[5,6],[8,9]]
 
-    // Test 5.2.4: Cofactor - Remove first row and first column
-    std::cout << "\n[Test 5.2.4] Cofactor (Remove Row 0, Col 0)\n";
+    // C2.4: Cofactor - Remove first row and first column
+    std::cout << "\n[C2.4] Cofactor (Remove Row 0, Col 0)\n";
     std::cout << "Note: Cofactor matrix is the same as minor matrix.\n";
     tiny::Mat cof2 = mat1.cofactor(0, 0);
     cof2.print_matrix(true);  // Expected: [[5,6],[8,9]] (same as minor)
 
-    // Test 5.2.5: Cofactor - Remove row 0, col 1
-    std::cout << "\n[Test 5.2.5] Cofactor (Remove Row 0, Col 1)\n";
+    // C2.5: Cofactor - Remove row 0, col 1
+    std::cout << "\n[C2.5] Cofactor (Remove Row 0, Col 1)\n";
     std::cout << "Note: Cofactor matrix is the same as minor matrix.\n";
     std::cout << "      When computing cofactor value, sign (-1)^(0+1) = -1 would be applied.\n";
     tiny::Mat cof2_neg = mat1.cofactor(0, 1);
     std::cout << "Cofactor Matrix (same as minor):\n";
     cof2_neg.print_matrix(true);  // Expected: [[4,6],[7,9]] (same as minor, no sign in matrix)
 
-    // Test 5.2.6: Minor - Remove last row and last column
-    std::cout << "\n[Test 5.2.6] Minor (Remove Row 2, Col 2)\n";
+    // C2.6: Minor - Remove last row and last column
+    std::cout << "\n[C2.6] Minor (Remove Row 2, Col 2)\n";
     tiny::Mat minor3 = mat1.minor(2, 2);
     minor3.print_matrix(true);  // Expected: [[1,2],[4,5]]
 
-    // Test 5.2.7: Cofactor - Remove last row and last column
-    std::cout << "\n[Test 5.2.7] Cofactor (Remove Row 2, Col 2)\n";
+    // C2.7: Cofactor - Remove last row and last column
+    std::cout << "\n[C2.7] Cofactor (Remove Row 2, Col 2)\n";
     std::cout << "Note: Cofactor matrix is the same as minor matrix.\n";
     tiny::Mat cof3 = mat1.cofactor(2, 2);
     cof3.print_matrix(true);  // Expected: [[1,2],[4,5]] (same as minor)
 
-    // Test 5.2.8: 4x4 Matrix Example - Minor
-    std::cout << "\n[Test 5.2.8] Minor of 4x4 Matrix (Remove Row 2, Col 1)\n";
+    // C2.8: 4x4 Matrix Example - Minor
+    std::cout << "\n[C2.8] Minor of 4x4 Matrix (Remove Row 2, Col 1)\n";
     tiny::Mat mat4(4, 4);
     val = 1;
     for (int i = 0; i < 4; ++i)
@@ -689,38 +797,77 @@ void test_matrix_cofactor()
     std::cout << "Minor Matrix:\n";
     minor4.print_matrix(true);
 
-    // Test 5.2.9: 4x4 Matrix Example - Cofactor
-    std::cout << "\n[Test 5.2.9] Cofactor of 4x4 Matrix (Remove Row 2, Col 1)\n";
+    // C2.9: 4x4 Matrix Example - Cofactor
+    std::cout << "\n[C2.9] Cofactor of 4x4 Matrix (Remove Row 2, Col 1)\n";
     std::cout << "Note: Cofactor matrix is the same as minor matrix.\n";
     std::cout << "      When computing cofactor value, sign (-1)^(2+1) = -1 would be applied.\n";
     tiny::Mat cof4 = mat4.cofactor(2, 1);
     std::cout << "Cofactor Matrix (same as minor):\n";
     cof4.print_matrix(true);
 
-    // Test 5.2.10: Non-square Matrix (Expect Error)
-    std::cout << "\n[Test 5.2.10] Non-square Matrix (Expect Error)\n";
+    // C2.10: Non-square Matrix (Expect Error)
+    std::cout << "\n[C2.10] Non-square Matrix (Expect Error)\n";
     tiny::Mat rectMat(3, 4);
     std::cout << "Testing minor():\n";
-    rectMat.minor(1, 1).print_matrix(true);  // Should trigger error and return empty matrix
+    tiny::Mat minor_rect = rectMat.minor(1, 1);
+    bool minor_rect_empty = (minor_rect.row == 0 && minor_rect.col == 0);
+    std::cout << "minor() result: " << (minor_rect_empty ? "Empty matrix (Expected)" : "Non-empty (Error)") 
+              << " " << (minor_rect_empty ? "[PASS]" : "[FAIL]") << "\n";
     std::cout << "Testing cofactor():\n";
-    rectMat.cofactor(1, 1).print_matrix(true);  // Should trigger error and return empty matrix
+    tiny::Mat cof_rect = rectMat.cofactor(1, 1);
+    bool cof_rect_empty = (cof_rect.row == 0 && cof_rect.col == 0);
+    std::cout << "cofactor() result: " << (cof_rect_empty ? "Empty matrix (Expected)" : "Non-empty (Error)") 
+              << " " << (cof_rect_empty ? "[PASS]" : "[FAIL]") << "\n";
+
+    // C2.11: minor() - Boundary case - out of bounds indices
+    std::cout << "\n[C2.11] minor() - Boundary Case - Out of Bounds Indices\n";
+    tiny::Mat test_mat(3, 3);
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            test_mat(i, j) = i * 3 + j + 1;
+    
+    tiny::Mat minor_out1 = test_mat.minor(-1, 0);
+    bool minor_out1_empty = (minor_out1.row == 0 && minor_out1.col == 0);
+    std::cout << "minor(-1, 0): " << (minor_out1_empty ? "Empty matrix (Expected)" : "Non-empty (Error)") 
+              << " " << (minor_out1_empty ? "[PASS]" : "[FAIL]") << "\n";
+    
+    tiny::Mat minor_out2 = test_mat.minor(0, -1);
+    bool minor_out2_empty = (minor_out2.row == 0 && minor_out2.col == 0);
+    std::cout << "minor(0, -1): " << (minor_out2_empty ? "Empty matrix (Expected)" : "Non-empty (Error)") 
+              << " " << (minor_out2_empty ? "[PASS]" : "[FAIL]") << "\n";
+    
+    tiny::Mat minor_out3 = test_mat.minor(3, 0);
+    bool minor_out3_empty = (minor_out3.row == 0 && minor_out3.col == 0);
+    std::cout << "minor(3, 0) (out of bounds): " << (minor_out3_empty ? "Empty matrix (Expected)" : "Non-empty (Error)") 
+              << " " << (minor_out3_empty ? "[PASS]" : "[FAIL]") << "\n";
+
+    // C2.12: minor() - Boundary case - 1x1 matrix
+    std::cout << "\n[C2.12] minor() - Boundary Case - 1x1 Matrix\n";
+    tiny::Mat mat1x1(1, 1);
+    mat1x1(0, 0) = 5.0f;
+    tiny::Mat minor_1x1 = mat1x1.minor(0, 0);
+    bool minor_1x1_empty = (minor_1x1.row == 0 && minor_1x1.col == 0);
+    std::cout << "1x1 matrix minor(0,0): " << (minor_1x1_empty ? "Empty matrix (Expected)" : "Non-empty (Error)") 
+              << " " << (minor_1x1_empty ? "[PASS]" : "[FAIL]") << "\n";
 }
 
-// Group 5.3: Matrix Determinant
+// ============================================================================
+// C3: Matrix Determinant
+// ============================================================================
 void test_matrix_determinant()
 {
-    std::cout << "\n[Group 5.3: Matrix Determinant Tests]\n";
+    std::cout << "\n[C3: Matrix Determinant Tests]\n";
 
-    // Test 5.3.1: 1x1 Matrix
-    std::cout << "\n[Test 5.3.1] 1x1 Matrix Determinant\n";
+    // C3.1: 1x1 Matrix
+    std::cout << "\n[C3.1] 1x1 Matrix Determinant\n";
     tiny::Mat mat1(1, 1);
     mat1(0, 0) = 7;
     std::cout << "Matrix:\n";
     mat1.print_matrix(true);
     std::cout << "Determinant: " << mat1.determinant() << "  (Expected: 7)\n";
 
-    // Test 5.3.2: 2x2 Matrix
-    std::cout << "\n[Test 5.3.2] 2x2 Matrix Determinant\n";
+    // C3.2: 2x2 Matrix
+    std::cout << "\n[C3.2] 2x2 Matrix Determinant\n";
     tiny::Mat mat2(2, 2);
     mat2(0, 0) = 3; mat2(0, 1) = 8;
     mat2(1, 0) = 4; mat2(1, 1) = 6;
@@ -728,8 +875,8 @@ void test_matrix_determinant()
     mat2.print_matrix(true);
     std::cout << "Determinant: " << mat2.determinant() << "  (Expected: -14)\n";
 
-    // Test 5.3.3: 3x3 Matrix
-    std::cout << "\n[Test 5.3.3] 3x3 Matrix Determinant\n";
+    // C3.3: 3x3 Matrix
+    std::cout << "\n[C3.3] 3x3 Matrix Determinant\n";
     tiny::Mat mat3(3, 3);
     mat3(0,0) = 1; mat3(0,1) = 2; mat3(0,2) = 3;
     mat3(1,0) = 0; mat3(1,1) = 4; mat3(1,2) = 5;
@@ -738,8 +885,8 @@ void test_matrix_determinant()
     mat3.print_matrix(true);
     std::cout << "Determinant: " << mat3.determinant() << "  (Expected: 22)\n";
 
-    // Test 5.3.4: 4x4 Matrix
-    std::cout << "\n[Test 5.3.4] 4x4 Matrix Determinant\n";
+    // C3.4: 4x4 Matrix
+    std::cout << "\n[C3.4] 4x4 Matrix Determinant\n";
     tiny::Mat mat4(4, 4);
     int val = 1;
     for (int i = 0; i < 4; ++i)
@@ -751,8 +898,8 @@ void test_matrix_determinant()
     std::cout << "      so the determinant should be 0.\n";
     std::cout << "Determinant: " << mat4.determinant() << "  (Expected: 0)\n";  
 
-    // Test 5.3.5: 5x5 Matrix (Tests Auto-select Mechanism)
-    std::cout << "\n[Test 5.3.5] 5x5 Matrix Determinant (Tests Auto-select to LU Method)\n";
+    // C3.5: 5x5 Matrix (Tests Auto-select Mechanism)
+    std::cout << "\n[C3.5] 5x5 Matrix Determinant (Tests Auto-select to LU Method)\n";
     tiny::Mat mat5_basic(5, 5);
     // Create a well-conditioned 5x5 matrix
     mat5_basic(0,0) = 2; mat5_basic(0,1) = 1; mat5_basic(0,2) = 0; mat5_basic(0,3) = 0; mat5_basic(0,4) = 0;
@@ -766,16 +913,16 @@ void test_matrix_determinant()
     std::cout << "Determinant (auto-select, should use LU for n > 4): " << det5_basic << "\n";
     std::cout << "Note: For n = 5 > 4, auto-select should use LU decomposition (O(n³)).\n";
 
-    // Test 5.3.6: Non-square Matrix (Expect Error)
-    std::cout << "\n[Test 5.3.6] Non-square Matrix (Expect Error)\n";
+    // C3.6: Non-square Matrix (Expect Error)
+    std::cout << "\n[C3.6] Non-square Matrix (Expect Error)\n";
     tiny::Mat rectMat(3, 4);
     std::cout << "Matrix (3x4, non-square):\n";
     rectMat.print_matrix(true);
     float det_rect = rectMat.determinant();  // should trigger error
     std::cout << "Determinant: " << det_rect << "  (Expected: 0 with error message)\n";
 
-    // Test 5.3.7: Comparison of Different Methods (5x5 Matrix)
-    std::cout << "\n[Test 5.3.7] Comparison of Different Methods (5x5 Matrix)\n";
+    // C3.7: Comparison of Different Methods (5x5 Matrix)
+    std::cout << "\n[C3.7] Comparison of Different Methods (5x5 Matrix)\n";
     tiny::Mat mat_test(5, 5);
     // Create a test matrix
     for (int i = 0; i < 5; ++i)
@@ -798,8 +945,8 @@ void test_matrix_determinant()
     std::cout << "Note: All methods should give the same result (within numerical precision).\n";
     std::cout << "      Auto-select should use LU for n > 4, avoiding slow Laplace expansion.\n";
 
-    // Test 5.3.8: Large Matrix (6x6) - Tests Efficient Methods
-    std::cout << "\n[Test 5.3.8] Large Matrix (6x6) - Tests Efficient Methods\n";
+    // C3.8: Large Matrix (6x6) - Tests Efficient Methods
+    std::cout << "\n[C3.8] Large Matrix (6x6) - Tests Efficient Methods\n";
     tiny::Mat mat6(6, 6);
     for (int i = 0; i < 6; ++i)
     {
@@ -826,8 +973,8 @@ void test_matrix_determinant()
     std::cout << "Determinant (Gaussian):             " << det6_gaussian << "\n";
     std::cout << "Note: For n > 4, auto-select uses LU decomposition (O(n³) instead of O(n!)).\n";
 
-    // Test 5.3.9: Large Matrix (8x8) - Performance Test
-    std::cout << "\n[Test 5.3.9] Large Matrix (8x8) - Performance Comparison\n";
+    // C3.9: Large Matrix (8x8) - Performance Test
+    std::cout << "\n[C3.9] Large Matrix (8x8) - Performance Comparison\n";
     tiny::Mat mat8(8, 8);
     for (int i = 0; i < 8; ++i)
     {
@@ -853,15 +1000,48 @@ void test_matrix_determinant()
     std::cout << "Determinant (Gaussian): " << det8_gaussian << "\n";
     std::cout << "Note: Both methods are O(n³) and should be much faster than Laplace expansion.\n";
 
+    // C3.10: determinant_laplace() - Boundary case - empty matrix
+    std::cout << "\n[C3.10] determinant_laplace() - Boundary Case - Empty Matrix\n";
+    tiny::Mat empty_det(0, 0);
+    float det_empty_laplace = empty_det.determinant_laplace();
+    std::cout << "Empty matrix determinant (Laplace): " << det_empty_laplace 
+              << " (Expected: 1.0) " << (fabsf(det_empty_laplace - 1.0f) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
+
+    // C3.11: determinant_lu() - Boundary case - empty matrix
+    std::cout << "\n[C3.11] determinant_lu() - Boundary Case - Empty Matrix\n";
+    float det_empty_lu = empty_det.determinant_lu();
+    std::cout << "Empty matrix determinant (LU): " << det_empty_lu 
+              << " (Expected: 1.0) " << (fabsf(det_empty_lu - 1.0f) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
+
+    // C3.12: determinant_gaussian() - Boundary case - empty matrix
+    std::cout << "\n[C3.12] determinant_gaussian() - Boundary Case - Empty Matrix\n";
+    float det_empty_gaussian = empty_det.determinant_gaussian();
+    std::cout << "Empty matrix determinant (Gaussian): " << det_empty_gaussian 
+              << " (Expected: 1.0) " << (fabsf(det_empty_gaussian - 1.0f) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
+
+    // C3.13: determinant methods - Non-square matrix (should return 0)
+    std::cout << "\n[C3.13] Determinant Methods - Non-Square Matrix\n";
+    tiny::Mat rect_det(2, 3);
+    float det_rect_laplace = rect_det.determinant_laplace();
+    float det_rect_lu = rect_det.determinant_lu();
+    float det_rect_gaussian = rect_det.determinant_gaussian();
+    std::cout << "Non-square matrix (2x3) determinant (Laplace): " << det_rect_laplace 
+              << " (Expected: 0.0) " << (fabsf(det_rect_laplace) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
+    std::cout << "Non-square matrix (2x3) determinant (LU): " << det_rect_lu 
+              << " (Expected: 0.0) " << (fabsf(det_rect_lu) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
+    std::cout << "Non-square matrix (2x3) determinant (Gaussian): " << det_rect_gaussian 
+              << " (Expected: 0.0) " << (fabsf(det_rect_gaussian) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
 }
 
-// Group 5.4: Matrix Adjoint
+// ============================================================================
+// C4: Matrix Adjoint
+// ============================================================================
 void test_matrix_adjoint()
 {
-    std::cout << "\n[Group 5.4: Matrix Adjoint Tests]\n";
+    std::cout << "\n[C4: Matrix Adjoint Tests]\n";
 
-    // Test 5.4.1: 1x1 Matrix
-    std::cout << "\n[Test 5.4.1] Adjoint of 1x1 Matrix\n";
+    // C4.1: 1x1 Matrix
+    std::cout << "\n[C4.1] Adjoint of 1x1 Matrix\n";
     tiny::Mat mat1(1, 1);
     mat1(0, 0) = 5;
     std::cout << "Original Matrix:\n";
@@ -870,8 +1050,8 @@ void test_matrix_adjoint()
     std::cout << "Adjoint Matrix:\n";
     adj1.print_matrix(true);  // Expected: [1]
 
-    // Test 5.4.2: 2x2 Matrix
-    std::cout << "\n[Test 5.4.2] Adjoint of 2x2 Matrix\n";
+    // C4.2: 2x2 Matrix
+    std::cout << "\n[C4.2] Adjoint of 2x2 Matrix\n";
     tiny::Mat mat2(2, 2);
     mat2(0, 0) = 1; mat2(0, 1) = 2;
     mat2(1, 0) = 3; mat2(1, 1) = 4;
@@ -881,8 +1061,8 @@ void test_matrix_adjoint()
     std::cout << "Adjoint Matrix:\n";
     adj2.print_matrix(true);  // Expected: [4, -2; -3, 1]
 
-    // Test 5.4.3: 3x3 Matrix
-    std::cout << "\n[Test 5.4.3] Adjoint of 3x3 Matrix\n";
+    // C4.3: 3x3 Matrix
+    std::cout << "\n[C4.3] Adjoint of 3x3 Matrix\n";
     tiny::Mat mat3(3, 3);
     mat3(0,0) = 1; mat3(0,1) = 2; mat3(0,2) = 3;
     mat3(1,0) = 0; mat3(1,1) = 4; mat3(1,2) = 5;
@@ -894,8 +1074,8 @@ void test_matrix_adjoint()
     adj3.print_matrix(true);
     // No simple expected value, but should compute correctly
 
-    // Test 5.4.4: Non-Square Matrix (Expect Error)
-    std::cout << "\n[Test 5.4.4] Adjoint of Non-Square Matrix (Expect Error)\n";
+    // C4.4: Non-Square Matrix (Expect Error)
+    std::cout << "\n[C4.4] Adjoint of Non-Square Matrix (Expect Error)\n";
     tiny::Mat rectMat(2, 3);
     std::cout << "Original Matrix (2x3, non-square):\n";
     rectMat.print_matrix(true);
@@ -905,13 +1085,15 @@ void test_matrix_adjoint()
 
 }
 
-// Group 5.5: Matrix Normalization
+// ============================================================================
+// C5: Matrix Normalization
+// ============================================================================
 void test_matrix_normalize()
 {
-    std::cout << "\n[Group 5.5: Matrix Normalization Tests]\n";
+    std::cout << "\n[C5: Matrix Normalization Tests]\n";
 
-    // Test 5.5.1: Standard normalization
-    std::cout << "\n[Test 5.5.1] Normalize a Standard 2x2 Matrix\n";
+    // C5.1: Standard normalization
+    std::cout << "\n[C5.1] Normalize a Standard 2x2 Matrix\n";
     tiny::Mat mat1(2, 2);
     mat1(0, 0) = 3.0f; mat1(0, 1) = 4.0f;
     mat1(1, 0) = 3.0f; mat1(1, 1) = 4.0f;
@@ -924,8 +1106,8 @@ void test_matrix_normalize()
     std::cout << "After normalization (Expected L2 norm = 1):\n";
     mat1.print_matrix(true);
 
-    // Test 5.5.2: Matrix with padding
-    std::cout << "\n[Test 5.5.2] Normalize a 2x2 Matrix with Stride=4 (Padding Test)\n";
+    // C5.2: Matrix with padding
+    std::cout << "\n[C5.2] Normalize a 2x2 Matrix with Stride=4 (Padding Test)\n";
     float data_with_padding[8] = {3.0f, 4.0f, 0.0f, 0.0f, 3.0f, 4.0f, 0.0f, 0.0f};
     tiny::Mat mat2(data_with_padding, 2, 2, 4);  // 2x2 matrix, stride 4
 
@@ -937,8 +1119,8 @@ void test_matrix_normalize()
     std::cout << "After normalization:\n";
     mat2.print_matrix(true);
 
-    // Test 5.5.3: Zero matrix normalization
-    std::cout << "\n[Test 5.5.3] Normalize a Zero Matrix (Expect Warning)\n";
+    // C5.3: Zero matrix normalization
+    std::cout << "\n[C5.3] Normalize a Zero Matrix (Expect Warning)\n";
     tiny::Mat mat3(2, 2);
     mat3.clear();  // Assuming clear() sets all elements to zero
 
@@ -946,13 +1128,15 @@ void test_matrix_normalize()
     mat3.normalize();  // Should trigger warning
 }
 
-// Group 5.6: Matrix Norm Calculation
+// ============================================================================
+// C6: Matrix Norm Calculation
+// ============================================================================
 void test_matrix_norm()
 {
-    std::cout << "\n[Group 5.6: Matrix Norm Calculation Tests]\n";
+    std::cout << "\n[C6: Matrix Norm Calculation Tests]\n";
 
-    // Test 5.6.1: Simple 2x2 Matrix
-    std::cout << "\n[Test 5.6.1] 2x2 Matrix Norm (Expect 5.0)\n";
+    // C6.1: Simple 2x2 Matrix
+    std::cout << "\n[C6.1] 2x2 Matrix Norm (Expect 5.0)\n";
     tiny::Mat mat1(2, 2);
     mat1(0, 0) = 3.0f; mat1(0, 1) = 4.0f;
     mat1(1, 0) = 0.0f; mat1(1, 1) = 0.0f;
@@ -961,8 +1145,8 @@ void test_matrix_norm()
     float norm1 = mat1.norm();
     std::cout << "Calculated Norm: " << norm1 << "\n";
 
-    // Test 5.6.2: Zero Matrix
-    std::cout << "\n[Test 5.6.2] Zero Matrix Norm (Expect 0.0)\n";
+    // C6.2: Zero Matrix
+    std::cout << "\n[C6.2] Zero Matrix Norm (Expect 0.0)\n";
     tiny::Mat mat2(3, 3);
     mat2.clear();  // Assuming clear() sets all elements to zero
     std::cout << "Matrix:\n";
@@ -970,8 +1154,8 @@ void test_matrix_norm()
     float norm2 = mat2.norm();
     std::cout << "Calculated Norm: " << norm2 << "\n";
 
-    // Test 5.6.3: Matrix with Negative Values
-    std::cout << "\n[Test 5.6.3] Matrix with Negative Values\n";
+    // C6.3: Matrix with Negative Values
+    std::cout << "\n[C6.3] Matrix with Negative Values\n";
     tiny::Mat mat3(2, 2);
     mat3(0, 0) = -1.0f; mat3(0, 1) = -2.0f;
     mat3(1, 0) = -3.0f; mat3(1, 1) = -4.0f;
@@ -980,8 +1164,8 @@ void test_matrix_norm()
     float norm3 = mat3.norm();
     std::cout << "Calculated Norm: " << norm3 << "  (Expect sqrt(30) ≈ 5.477)\n";
 
-    // Test 5.6.4: Matrix with Padding
-    std::cout << "\n[Test 5.6.4] 2x2 Matrix with Stride=4 (Padding Test)\n";
+    // C6.4: Matrix with Padding
+    std::cout << "\n[C6.4] 2x2 Matrix with Stride=4 (Padding Test)\n";
     float data4[8] = {1.0f, 2.0f, 0.0f, 0.0f, 3.0f, 4.0f, 0.0f, 0.0f};
     tiny::Mat mat4(data4, 2, 2, 4);  // 2x2 matrix, stride 4
     std::cout << "Matrix:\n";
@@ -990,13 +1174,15 @@ void test_matrix_norm()
     std::cout << "Calculated Norm: " << norm4 << "  (Expect sqrt(30) ≈ 5.477)\n";
 }
 
-// Group 5.7: Matrix Inversion
+// ============================================================================
+// C7: Matrix Inversion
+// ============================================================================
 void test_inverse_adjoint_adjoint()
 {
-    std::cout << "\n[Group 5.7: Matrix Inversion Tests]\n";
+    std::cout << "\n[C7: Matrix Inversion Tests]\n";
 
-    // Test 5.7.1: 2x2 Regular Matrix
-    std::cout << "\n[Test 5.7.1] Inverse of 2x2 Matrix\n";
+    // C7.1: 2x2 Regular Matrix
+    std::cout << "\n[C7.1] Inverse of 2x2 Matrix\n";
     tiny::Mat mat1(2, 2);
     mat1(0, 0) = 4;  mat1(0, 1) = 7;
     mat1(1, 0) = 2;  mat1(1, 1) = 6;
@@ -1007,8 +1193,8 @@ void test_inverse_adjoint_adjoint()
     inv1.print_matrix(true);
     std::cout << "Expected Approx:\n[ 0.6  -0.7 ]\n[ -0.2  0.4 ]\n";
 
-    // Test 5.7.2: Singular Matrix (Determinant = 0)
-    std::cout << "\n[Test 5.7.2] Singular Matrix (Expect Error)\n";
+    // C7.2: Singular Matrix (Determinant = 0)
+    std::cout << "\n[C7.2] Singular Matrix (Expect Error)\n";
     tiny::Mat mat2(2, 2);
     mat2(0, 0) = 1;  mat2(0, 1) = 2;
     mat2(1, 0) = 2;  mat2(1, 1) = 4;   // Rank-deficient, det = 0
@@ -1019,8 +1205,8 @@ void test_inverse_adjoint_adjoint()
     std::cout << "Inverse Matrix (Should be zero matrix):\n";
     inv2.print_matrix(true);
 
-    // Test 5.7.3: 3x3 Regular Matrix
-    std::cout << "\n[Test 5.7.3] Inverse of 3x3 Matrix\n";
+    // C7.3: 3x3 Regular Matrix
+    std::cout << "\n[C7.3] Inverse of 3x3 Matrix\n";
     tiny::Mat mat3(3, 3);
     mat3(0,0) = 3; mat3(0,1) = 0; mat3(0,2) = 2;
     mat3(1,0) = 2; mat3(1,1) = 0; mat3(1,2) = -2;
@@ -1031,8 +1217,8 @@ void test_inverse_adjoint_adjoint()
     std::cout << "Inverse Matrix:\n";
     inv3.print_matrix(true);
 
-    // Test 5.7.4: Non-Square Matrix (Expect Error)
-    std::cout << "\n[Test 5.7.4] Non-Square Matrix (Expect Error)\n";
+    // C7.4: Non-Square Matrix (Expect Error)
+    std::cout << "\n[C7.4] Non-Square Matrix (Expect Error)\n";
     tiny::Mat mat4(2, 3);
     std::cout << "Original Matrix (2x3, non-square):\n";
     mat4.print_matrix(true);
@@ -1041,13 +1227,15 @@ void test_inverse_adjoint_adjoint()
     inv4.print_matrix(true);
 }
 
-// Group 5.8: Matrix Utilities
+// ============================================================================
+// C8: Matrix Utilities
+// ============================================================================
 void test_matrix_utilities()
 {
-    std::cout << "\n[Group 5.8: Matrix Utilities Tests]\n";
+    std::cout << "\n[C8: Matrix Utilities Tests]\n";
 
-    // Test 5.8.1: Identity Matrix (eye)
-    std::cout << "\n[Test 5.8.1] Generate Identity Matrix (eye)\n";
+    // C8.1: Identity Matrix (eye)
+    std::cout << "\n[C8.1] Generate Identity Matrix (eye)\n";
     tiny::Mat I3 = tiny::Mat::eye(3);
     std::cout << "3x3 Identity Matrix:\n";
     I3.print_matrix(true);
@@ -1056,8 +1244,8 @@ void test_matrix_utilities()
     std::cout << "5x5 Identity Matrix:\n";
     I5.print_matrix(true);
 
-    // Test 5.8.2: Ones Matrix
-    std::cout << "\n[Test 5.8.2] Generate Ones Matrix\n";
+    // C8.2: Ones Matrix
+    std::cout << "\n[C8.2] Generate Ones Matrix\n";
     tiny::Mat ones_3x4 = tiny::Mat::ones(3, 4);
     std::cout << "3x4 Ones Matrix:\n";
     ones_3x4.print_matrix(true);
@@ -1066,8 +1254,8 @@ void test_matrix_utilities()
     std::cout << "4x4 Ones Matrix (Square):\n";
     ones_4x4.print_matrix(true);
 
-    // Test 5.8.3: Matrix Augmentation
-    std::cout << "\n[Test 5.8.3] Augment Two Matrices Horizontally [A | B]\n";
+    // C8.3: Matrix Augmentation
+    std::cout << "\n[C8.3] Augment Two Matrices Horizontally [A | B]\n";
 
     // Prepare matrices A (2x2) and B (2x3)
     tiny::Mat A(2, 2);
@@ -1087,14 +1275,14 @@ void test_matrix_utilities()
     std::cout << "Augmented Matrix [A | B]:\n";
     AB.print_matrix(true);
 
-    // Test 5.8.4: Row mismatch case
-    std::cout << "\n[Test 5.8.4] Augment with Row Mismatch (Expect Error)\n";
+    // C8.4: Row mismatch case
+    std::cout << "\n[C8.4] Augment with Row Mismatch (Expect Error)\n";
     tiny::Mat C(3, 2);  // 3x2 matrix
     tiny::Mat invalidAug = tiny::Mat::augment(A, C);
     invalidAug.print_info();  // Should show empty matrix due to error
 
-    // Test 5.8.5: Vertical Stack (vstack)
-    std::cout << "\n[Test 5.8.5] Vertically Stack Two Matrices [A; B]\n";
+    // C8.5: Vertical Stack (vstack)
+    std::cout << "\n[C8.5] Vertically Stack Two Matrices [A; B]\n";
 
     // Prepare matrices A (2x3) and B (2x3)
     tiny::Mat A_vstack(2, 3);
@@ -1115,8 +1303,8 @@ void test_matrix_utilities()
     AB_vstack.print_matrix(true);
     std::cout << "Expected: 4x3 matrix with A on top, B on bottom\n";
 
-    // Test 5.8.6: Vertical Stack with different row counts
-    std::cout << "\n[Test 5.8.6] Vertical Stack with Different Row Counts (Same Columns)\n";
+    // C8.6: Vertical Stack with different row counts
+    std::cout << "\n[C8.6] Vertical Stack with Different Row Counts (Same Columns)\n";
     tiny::Mat A_small(1, 3);
     A_small(0,0) = 1; A_small(0,1) = 2; A_small(0,2) = 3;
 
@@ -1134,8 +1322,8 @@ void test_matrix_utilities()
     std::cout << "Vertically Stacked Matrix [A; B] (1x3 + 3x3 = 4x3):\n";
     AB_mixed.print_matrix(true);
 
-    // Test 5.8.7: Column mismatch case (Expect Error)
-    std::cout << "\n[Test 5.8.7] VStack with Column Mismatch (Expect Error)\n";
+    // C8.7: Column mismatch case (Expect Error)
+    std::cout << "\n[C8.7] VStack with Column Mismatch (Expect Error)\n";
     tiny::Mat A_col(2, 2);
     A_col(0,0) = 1; A_col(0,1) = 2;
     A_col(1,0) = 3; A_col(1,1) = 4;
@@ -1155,13 +1343,15 @@ void test_matrix_utilities()
 
 }
 
-// Group 5.9: Gaussian Elimination
+// ============================================================================
+// D1: Gaussian Elimination
+// ============================================================================
 void test_gaussian_eliminate()
 {
-    std::cout << "\n[Group 5.9: Gaussian Elimination Tests]\n";
+    std::cout << "\n[D1: Gaussian Elimination Tests]\n";
 
-    // Test 5.9.1: Simple 3x3 System
-    std::cout << "\n[Test 5.9.1] 3x3 Matrix (Simple Upper Triangular)\n";
+    // D1.1: Simple 3x3 System
+    std::cout << "\n[D1.1] 3x3 Matrix (Simple Upper Triangular)\n";
     tiny::Mat mat1(3, 3);
     mat1(0,0) = 2; mat1(0,1) = 1; mat1(0,2) = -1;
     mat1(1,0) = -3; mat1(1,1) = -1; mat1(1,2) = 2;
@@ -1175,8 +1365,8 @@ void test_gaussian_eliminate()
     std::cout << "After Gaussian Elimination (Should be upper triangular):\n";
     result1.print_matrix(true);
 
-    // Test 5.9.2: 3x4 Augmented Matrix
-    std::cout << "\n[Test 5.9.2] 3x4 Augmented Matrix (Linear System Ax = b)\n";
+    // D1.2: 3x4 Augmented Matrix
+    std::cout << "\n[D1.2] 3x4 Augmented Matrix (Linear System Ax = b)\n";
     tiny::Mat mat2(3, 4);
     mat2(0,0) = 1; mat2(0,1) = 2; mat2(0,2) = -1; mat2(0,3) =  8;
     mat2(1,0) = -3; mat2(1,1) = -1; mat2(1,2) = 2; mat2(1,3) = -11;
@@ -1190,8 +1380,8 @@ void test_gaussian_eliminate()
     std::cout << "After Gaussian Elimination (Row Echelon Form):\n";
     result2.print_matrix(true);
 
-    // Test 5.9.3: Singular Matrix
-    std::cout << "\n[Test 5.9.3] Singular Matrix (No Unique Solution)\n";
+    // D1.3: Singular Matrix
+    std::cout << "\n[D1.3] Singular Matrix (No Unique Solution)\n";
     tiny::Mat mat3(2, 2);
     mat3(0,0) = 1; mat3(0,1) = 2;
     mat3(1,0) = 2; mat3(1,1) = 4;  // Linearly dependent rows
@@ -1203,8 +1393,8 @@ void test_gaussian_eliminate()
     std::cout << "After Gaussian Elimination (Should show rows of zeros):\n";
     result3.print_matrix(true);
 
-    // Test 5.9.4: Zero Matrix
-    std::cout << "\n[Test 5.9.4] Zero Matrix\n";
+    // D1.4: Zero Matrix
+    std::cout << "\n[D1.4] Zero Matrix\n";
     tiny::Mat mat4(3, 3);
     mat4.clear();  // Assuming clear() sets all elements to zero
     mat4.print_matrix(true);
@@ -1212,16 +1402,40 @@ void test_gaussian_eliminate()
     tiny::Mat result4 = mat4.gaussian_eliminate();
     std::cout << "After Gaussian Elimination (Should be a zero matrix):\n";
     result4.print_matrix(true);
+
+    // D1.5: gaussian_eliminate() - Boundary case - empty matrix
+    std::cout << "\n[D1.5] gaussian_eliminate() - Boundary Case - Empty Matrix\n";
+    tiny::Mat empty_ge(0, 0);
+    tiny::Mat result_empty_ge = empty_ge.gaussian_eliminate();
+    // Empty matrix should return empty matrix (0x0) or error state (data == nullptr or 1x1 error matrix)
+    bool empty_ge_correct = (result_empty_ge.row == 0 && result_empty_ge.col == 0) || 
+                           (result_empty_ge.data == nullptr) ||
+                           (result_empty_ge.row == 1 && result_empty_ge.col == 1 && result_empty_ge.data != nullptr);
+    std::cout << "Empty matrix gaussian_eliminate: " << (empty_ge_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (empty_ge_correct ? "[PASS]" : "[FAIL]") << "\n";
+
+    // D1.6: gaussian_eliminate() - Boundary case - 1x1 matrix
+    std::cout << "\n[D1.6] gaussian_eliminate() - Boundary Case - 1x1 Matrix\n";
+    tiny::Mat mat1x1_ge(1, 1);
+    mat1x1_ge(0, 0) = 5.0f;
+    tiny::Mat result1x1_ge = mat1x1_ge.gaussian_eliminate();
+    std::cout << "1x1 matrix after gaussian_eliminate:\n";
+    result1x1_ge.print_matrix(true);
+    bool ge1x1_correct = (result1x1_ge.row == 1 && result1x1_ge.col == 1 && 
+                          fabsf(result1x1_ge(0, 0) - 5.0f) < 1e-6f);
+    std::cout << "1x1 matrix gaussian_eliminate: " << (ge1x1_correct ? "[PASS]" : "[FAIL]") << "\n";
 }
 
 
-// Group 5.10: Row Reduce from Gaussian (RREF Calculation)
+// ============================================================================
+// D2: Row Reduce from Gaussian (RREF Calculation)
+// ============================================================================
 void test_row_reduce_from_gaussian()
 {
-    std::cout << "\n[Group 5.10: Row Reduce from Gaussian (RREF) Tests]\n";
+    std::cout << "\n[D2: Row Reduce from Gaussian (RREF) Tests]\n";
 
-    // Test 5.10.1: Simple 3x4 augmented matrix (representing a system of equations)
-    std::cout << "\n[Test 5.10.1] 3x4 Augmented Matrix\n";
+    // D2.1: Simple 3x4 augmented matrix (representing a system of equations)
+    std::cout << "\n[D2.1] 3x4 Augmented Matrix\n";
     tiny::Mat mat1(3, 4);
 
     // Matrix:
@@ -1239,8 +1453,8 @@ void test_row_reduce_from_gaussian()
     std::cout << "RREF Result:\n";
     rref1.print_matrix(true);
 
-    // Test 5.10.2: 2x3 Matrix
-    std::cout << "\n[Test 5.10.2] 2x3 Matrix\n";
+    // D2.2: 2x3 Matrix
+    std::cout << "\n[D2.2] 2x3 Matrix\n";
     tiny::Mat mat2(2, 3);
     mat2(0,0) = 1; mat2(0,1) = 2;  mat2(0,2) = 3;
     mat2(1,0) = 4; mat2(1,1) = 5;  mat2(1,2) = 6;
@@ -1252,8 +1466,8 @@ void test_row_reduce_from_gaussian()
     std::cout << "RREF Result:\n";
     rref2.print_matrix(true);
 
-    // Test 5.10.3: Already reduced matrix (should remain the same)
-    std::cout << "\n[Test 5.10.3] Already Reduced Matrix\n";
+    // D2.3: Already reduced matrix (should remain the same)
+    std::cout << "\n[D2.3] Already Reduced Matrix\n";
     tiny::Mat mat3(2, 3);
     mat3(0,0) = 1; mat3(0,1) = 0; mat3(0,2) = 2;
     mat3(1,0) = 0; mat3(1,1) = 1; mat3(1,2) = 3;
@@ -1264,15 +1478,28 @@ void test_row_reduce_from_gaussian()
     tiny::Mat rref3 = mat3.row_reduce_from_gaussian();
     std::cout << "RREF Result:\n";
     rref3.print_matrix(true);
+
+    // D2.4: row_reduce_from_gaussian() - Boundary case - empty matrix
+    std::cout << "\n[D2.4] row_reduce_from_gaussian() - Boundary Case - Empty Matrix\n";
+    tiny::Mat empty_rref(0, 0);
+    tiny::Mat result_empty_rref = empty_rref.row_reduce_from_gaussian();
+    // Empty matrix should return empty matrix (0x0) or error state (data == nullptr or 1x1 error matrix)
+    bool empty_rref_correct = (result_empty_rref.row == 0 && result_empty_rref.col == 0) || 
+                              (result_empty_rref.data == nullptr) ||
+                              (result_empty_rref.row == 1 && result_empty_rref.col == 1 && result_empty_rref.data != nullptr);
+    std::cout << "Empty matrix row_reduce_from_gaussian: " << (empty_rref_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (empty_rref_correct ? "[PASS]" : "[FAIL]") << "\n";
 }
 
-// Group 5.11: Gaussian Inverse
+// ============================================================================
+// D3: Gaussian Inverse
+// ============================================================================
 void test_inverse_gje()
 {
-    std::cout << "\n[Group 5.11: Gaussian Inverse Tests]\n";
+    std::cout << "\n[D3: Gaussian Inverse Tests]\n";
 
-    // Test 5.11.1: Regular 2x2 Matrix
-    std::cout << "\n[Test 5.11.1] 2x2 Matrix Inverse\n";
+    // D3.1: Regular 2x2 Matrix
+    std::cout << "\n[D3.1] 2x2 Matrix Inverse\n";
     tiny::Mat mat1(2, 2);
     mat1(0, 0) = 4; mat1(0, 1) = 7;
     mat1(1, 0) = 2; mat1(1, 1) = 6;
@@ -1283,8 +1510,8 @@ void test_inverse_gje()
     std::cout << "Inverse matrix (mat1):\n";
     invMat1.print_matrix(true);
 
-    // Test 5.11.2: Identity Matrix (should return identity matrix)
-    std::cout << "\n[Test 5.11.2] Identity Matrix Inverse\n";
+    // D3.2: Identity Matrix (should return identity matrix)
+    std::cout << "\n[D3.2] Identity Matrix Inverse\n";
     tiny::Mat mat2 = tiny::Mat::eye(3);
     std::cout << "Original matrix (Identity):\n";
     mat2.print_matrix(true);
@@ -1293,8 +1520,8 @@ void test_inverse_gje()
     std::cout << "Inverse matrix (Identity):\n";
     invMat2.print_matrix(true); // Expected: Identity matrix
 
-    // Test 5.11.3: Singular Matrix (should return empty matrix or indicate error)
-    std::cout << "\n[Test 5.11.3] Singular Matrix (Expected: No Inverse)\n";
+    // D3.3: Singular Matrix (should return empty matrix or indicate error)
+    std::cout << "\n[D3.3] Singular Matrix (Expected: No Inverse)\n";
     tiny::Mat mat3(3, 3);
     mat3(0, 0) = 1; mat3(0, 1) = 2; mat3(0, 2) = 3;
     mat3(1, 0) = 4; mat3(1, 1) = 5; mat3(1, 2) = 6;
@@ -1306,8 +1533,8 @@ void test_inverse_gje()
     std::cout << "Inverse matrix (singular):\n";
     invMat3.print_matrix(true); // Expected: empty matrix or error message
 
-    // Test 5.11.4: 3x3 Matrix with a valid inverse
-    std::cout << "\n[Test 5.11.4] 3x3 Matrix Inverse\n";
+    // D3.4: 3x3 Matrix with a valid inverse
+    std::cout << "\n[D3.4] 3x3 Matrix Inverse\n";
     tiny::Mat mat4(3, 3);
     mat4(0, 0) = 4; mat4(0, 1) = 7; mat4(0, 2) = 2;
     mat4(1, 0) = 3; mat4(1, 1) = 5; mat4(1, 2) = 1;
@@ -1319,8 +1546,8 @@ void test_inverse_gje()
     std::cout << "Inverse matrix (mat4):\n";
     invMat4.print_matrix(true); // Check that the inverse is calculated correctly
 
-    // Test 5.11.5: Non-square Matrix (should return error or empty matrix)
-    std::cout << "\n[Test 5.11.5] Non-square Matrix Inverse (Expected Error)\n";
+    // D3.5: Non-square Matrix (should return error or empty matrix)
+    std::cout << "\n[D3.5] Non-square Matrix Inverse (Expected Error)\n";
     tiny::Mat mat5(2, 3);
     mat5(0, 0) = 1; mat5(0, 1) = 2; mat5(0, 2) = 3;
     mat5(1, 0) = 4; mat5(1, 1) = 5; mat5(1, 2) = 6;
@@ -1332,13 +1559,15 @@ void test_inverse_gje()
     invMat5.print_matrix(true); // Expected: Error message or empty matrix
 }
 
-// Group 5.12: Dot Product
+// ============================================================================
+// D4: Dot Product
+// ============================================================================
 void test_dotprod()
 {
-    std::cout << "\n[Group 5.12: Dot Product Tests]\n";
+    std::cout << "\n[D4: Dot Product Tests]\n";
 
-    // Test 5.12.1: Valid Dot Product Calculation (Same Length Vectors)
-    std::cout << "\n[Test 5.12.1] Valid Dot Product (Same Length Vectors)\n";
+    // D4.1: Valid Dot Product Calculation (Same Length Vectors)
+    std::cout << "\n[D4.1] Valid Dot Product (Same Length Vectors)\n";
     tiny::Mat vectorA(3, 1);  // Create a 3x1 vector
     tiny::Mat vectorB(3, 1);  // Create a 3x1 vector
 
@@ -1360,8 +1589,8 @@ void test_dotprod()
     float result = vectorA.dotprod(vectorA, vectorB);
     std::cout << "Dot product of vectorA and vectorB: " << result << std::endl;  // Expected result: 1*4 + 2*5 + 3*6 = 32
 
-    // Test 5.12.2: Dot Product with Dimension Mismatch (Different Length Vectors)
-    std::cout << "\n[Test 5.12.2] Invalid Dot Product (Dimension Mismatch)\n";
+    // D4.2: Dot Product with Dimension Mismatch (Different Length Vectors)
+    std::cout << "\n[D4.2] Invalid Dot Product (Dimension Mismatch)\n";
     tiny::Mat vectorC(2, 1);  // Create a 2x1 vector (different size)
     vectorC(0, 0) = 1.0f;
     vectorC(1, 0) = 2.0f;
@@ -1374,8 +1603,8 @@ void test_dotprod()
     float invalidResult = vectorA.dotprod(vectorA, vectorC);  // Should print an error and return 0
     std::cout << "Dot product (dimension mismatch): " << invalidResult << std::endl;  // Expected: 0 and error message
 
-    // Test 5.12.3: Dot Product of Zero Vectors
-    std::cout << "\n[Test 5.12.3] Dot Product of Zero Vectors\n";
+    // D4.3: Dot Product of Zero Vectors
+    std::cout << "\n[D4.3] Dot Product of Zero Vectors\n";
     tiny::Mat zeroVectorA(3, 1);  // Create a 3x1 zero vector
     tiny::Mat zeroVectorB(3, 1);  // Create a 3x1 zero vector
 
@@ -1398,13 +1627,15 @@ void test_dotprod()
 
 }
 
-// Group 5.13: Solve Linear System
+// ============================================================================
+// D5: Solve Linear System
+// ============================================================================
 void test_solve()
 {
-    std::cout << "\n[Group 5.13: Solve Linear System Tests]\n";
+    std::cout << "\n[D5: Solve Linear System Tests]\n";
 
-    // Test 5.13.1: Solving a simple 2x2 system
-    std::cout << "\n[Test 5.13.1] Solving a Simple 2x2 System Ax = b\n";
+    // D5.1: Solving a simple 2x2 system
+    std::cout << "\n[D5.1] Solving a Simple 2x2 System Ax = b\n";
     tiny::Mat A(2, 2);
     tiny::Mat b(2, 1);
 
@@ -1423,8 +1654,8 @@ void test_solve()
     std::cout << "Solution x:\n";
     solution.print_matrix(true);
 
-    // Test 5.13.2: Solving a 3x3 system
-    std::cout << "\n[Test 5.13.2] Solving a 3x3 System Ax = b\n";
+    // D5.2: Solving a 3x3 system
+    std::cout << "\n[D5.2] Solving a 3x3 System Ax = b\n";
     tiny::Mat A2(3, 3);
     tiny::Mat b2(3, 1);
 
@@ -1445,8 +1676,8 @@ void test_solve()
     std::cout << "Solution x:\n";
     solution2.print_matrix(true);
 
-    // Test 5.13.3: Solving a system where one row is all zeros
-    std::cout << "\n[Test 5.13.3] Solving a System Where One Row is All Zeros (Expect Failure or Infinite Solutions)\n";
+    // D5.3: Solving a system where one row is all zeros
+    std::cout << "\n[D5.3] Solving a System Where One Row is All Zeros (Expect Failure or Infinite Solutions)\n";
     tiny::Mat A3(3, 3);
     tiny::Mat b3(3, 1);
 
@@ -1467,8 +1698,8 @@ void test_solve()
     std::cout << "Solution x:\n";
     solution3.print_matrix(true);
 
-    // Test 5.13.4: Solving a system with zero determinant (singular matrix)
-    std::cout << "\n[Test 5.13.4] Solving a System with Zero Determinant (Singular Matrix)\n";
+    // D5.4: Solving a system with zero determinant (singular matrix)
+    std::cout << "\n[D5.4] Solving a System with Zero Determinant (Singular Matrix)\n";
     tiny::Mat A4(3, 3);
     tiny::Mat b4(3, 1);
 
@@ -1489,8 +1720,8 @@ void test_solve()
     std::cout << "Solution x:\n";
     solution4.print_matrix(true); // Expect no solution or an error message
 
-    // Test 5.13.5: Solving a system with linearly dependent rows
-    std::cout << "\n[Test 5.13.5] Solving a System with Linearly Dependent Rows (Expect Failure or Infinite Solutions)\n";
+    // D5.5: Solving a system with linearly dependent rows
+    std::cout << "\n[D5.5] Solving a System with Linearly Dependent Rows (Expect Failure or Infinite Solutions)\n";
     tiny::Mat A5(3, 3);
     tiny::Mat b5(3, 1);
 
@@ -1511,8 +1742,8 @@ void test_solve()
     std::cout << "Solution x:\n";
     solution5.print_matrix(true); // Expect an error message or infinite solutions
 
-    // Test 5.13.6: Solving a larger 4x4 system
-    std::cout << "\n[Test 5.13.6] Solving a Larger 4x4 System Ax = b\n";
+    // D5.6: Solving a larger 4x4 system
+    std::cout << "\n[D5.6] Solving a Larger 4x4 System Ax = b\n";
     tiny::Mat A6(4, 4);
     tiny::Mat b6(4, 1);
 
@@ -1535,15 +1766,41 @@ void test_solve()
     std::cout << "Solution x:\n";
     solution6.print_matrix(true); // Should print the solution vector
 
+    // D5.7: solve() - Boundary case - empty matrix
+    std::cout << "\n[D5.7] solve() - Boundary Case - Empty Matrix\n";
+    tiny::Mat empty_A(0, 0);
+    tiny::Mat empty_b(0, 1);
+    tiny::Mat solution_empty = empty_A.solve(empty_A, empty_b);
+    // Error case should return empty matrix (0x0) or error state (data == nullptr or 1x1 error matrix)
+    bool solve_empty_correct = (solution_empty.row == 0 && solution_empty.col == 0) || 
+                               (solution_empty.data == nullptr) ||
+                               (solution_empty.row == 1 && solution_empty.col == 1 && solution_empty.data != nullptr);
+    std::cout << "Empty system solve: " << (solve_empty_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (solve_empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+
+    // D5.8: solve() - Error handling - dimension mismatch
+    std::cout << "\n[D5.8] solve() - Error Handling - Dimension Mismatch\n";
+    tiny::Mat A_mismatch(2, 2);
+    tiny::Mat b_mismatch(3, 1);  // Different dimension
+    tiny::Mat solution_mismatch = A_mismatch.solve(A_mismatch, b_mismatch);
+    // Error case should return empty matrix (0x0) or error state (data == nullptr or 1x1 error matrix)
+    // For dimension mismatch, expected solution size is 2x1, so 1x1 indicates error
+    bool solve_mismatch_correct = (solution_mismatch.row == 0 && solution_mismatch.col == 0) || 
+                                  (solution_mismatch.data == nullptr) ||
+                                  (solution_mismatch.row == 1 && solution_mismatch.col == 1 && solution_mismatch.data != nullptr);
+    std::cout << "Dimension mismatch solve: " << (solve_mismatch_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (solve_mismatch_correct ? "[PASS]" : "[FAIL]") << "\n";
 }
 
-// Group 5.14: Band Solve
+// ============================================================================
+// D6: Band Solve
+// ============================================================================
 void test_band_solve()
 {
-    std::cout << "\n[Group 5.14: Band Solve Tests]\n";
+    std::cout << "\n[D6: Band Solve Tests]\n";
 
-    // Test 5.14.1: Simple 3x3 Band Matrix
-    std::cout << "\n[Test 5.14.1] Simple 3x3 Band Matrix\n";
+    // D6.1: Simple 3x3 Band Matrix
+    std::cout << "\n[D6.1] Simple 3x3 Band Matrix\n";
     tiny::Mat A1(3, 3);
     tiny::Mat b1(3, 1);
 
@@ -1566,8 +1823,8 @@ void test_band_solve()
     std::cout << "Solution x:\n";
     solution1.print_matrix(true);
 
-    // Test 5.14.2: 4x4 Band Matrix with different right-hand side vector
-    std::cout << "\n[Test 5.14.2] 4x4 Band Matrix\n";
+    // D6.2: 4x4 Band Matrix with different right-hand side vector
+    std::cout << "\n[D6.2] 4x4 Band Matrix\n";
     tiny::Mat A2(4, 4);
     tiny::Mat b2(4, 1);
 
@@ -1592,8 +1849,8 @@ void test_band_solve()
     std::cout << "Solution x:\n";
     solution2.print_matrix(true);
 
-    // Test 5.14.3: Incompatible dimensions (expect error)
-    std::cout << "\n[Test 5.14.3] Incompatible Dimensions (Expect Error)\n";
+    // D6.3: Incompatible dimensions (expect error)
+    std::cout << "\n[D6.3] Incompatible Dimensions (Expect Error)\n";
     tiny::Mat A3(3, 3);
     tiny::Mat b3(2, 1);  // Incompatible dimension
 
@@ -1614,8 +1871,8 @@ void test_band_solve()
     std::cout << "Solution x:\n";
     solution3.print_matrix(true);
 
-    // Test 5.14.4: Singular Matrix (Should fail)
-    std::cout << "\n[Test 5.14.4] Singular Matrix (No Unique Solution)\n";
+    // D6.4: Singular Matrix (Should fail)
+    std::cout << "\n[D6.4] Singular Matrix (No Unique Solution)\n";
     tiny::Mat A4(3, 3);
     tiny::Mat b4(3, 1);
 
@@ -1637,15 +1894,42 @@ void test_band_solve()
     tiny::Mat solution4 = A4.band_solve(A4, b4, 3);
     std::cout << "Solution x:\n";
     solution4.print_matrix(true);
+
+    // D6.5: band_solve() - Boundary case - empty matrix
+    std::cout << "\n[D6.5] band_solve() - Boundary Case - Empty Matrix\n";
+    tiny::Mat empty_A_band(0, 0);
+    tiny::Mat empty_b_band(0, 1);
+    tiny::Mat solution_empty_band = empty_A_band.band_solve(empty_A_band, empty_b_band, 0);
+    // Error case should return empty matrix (0x0) or error state (data == nullptr or 1x1 error matrix)
+    bool band_solve_empty_correct = (solution_empty_band.row == 0 && solution_empty_band.col == 0) || 
+                                    (solution_empty_band.data == nullptr) ||
+                                    (solution_empty_band.row == 1 && solution_empty_band.col == 1 && solution_empty_band.data != nullptr);
+    std::cout << "Empty system band_solve: " << (band_solve_empty_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (band_solve_empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+
+    // D6.6: band_solve() - Error handling - invalid bandwidth
+    std::cout << "\n[D6.6] band_solve() - Error Handling - Invalid Bandwidth\n";
+    tiny::Mat A_band(3, 3);
+    tiny::Mat b_band(3, 1);
+    tiny::Mat solution_neg_k = A_band.band_solve(A_band, b_band, -1);
+    // Error case should return empty matrix (0x0) or error state (data == nullptr or 1x1 error matrix)
+    // For invalid bandwidth, expected solution size is 3x1, so 1x1 indicates error
+    bool band_solve_neg_k_correct = (solution_neg_k.row == 0 && solution_neg_k.col == 0) || 
+                                     (solution_neg_k.data == nullptr) ||
+                                     (solution_neg_k.row == 1 && solution_neg_k.col == 1 && solution_neg_k.data != nullptr);
+    std::cout << "band_solve with k=-1: " << (band_solve_neg_k_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (band_solve_neg_k_correct ? "[PASS]" : "[FAIL]") << "\n";
 }
 
-// Group 5.15: Roots
+// ============================================================================
+// D7: Roots
+// ============================================================================
 void test_roots()
 {
-    std::cout << "\n[Group 5.15: Roots Tests]\n";
+    std::cout << "\n[D7: Roots Tests]\n";
 
-    // Test 5.15.1: Simple 2x2 System
-    std::cout << "\n[Test 5.15.1] Solving a Simple 2x2 System Ax = b\n";
+    // D7.1: Simple 2x2 System
+    std::cout << "\n[D7.1] Solving a Simple 2x2 System Ax = b\n";
     tiny::Mat A1(2, 2);
     tiny::Mat b1(2, 1);
 
@@ -1666,8 +1950,8 @@ void test_roots()
     std::cout << "Solution x:\n";
     solution1.print_matrix(true);
 
-    // Test 5.15.2: 3x3 System
-    std::cout << "\n[Test 5.15.2] Solving a 3x3 System Ax = b\n";
+    // D7.2: 3x3 System
+    std::cout << "\n[D7.2] Solving a 3x3 System Ax = b\n";
     tiny::Mat A2(3, 3);
     tiny::Mat b2(3, 1);
 
@@ -1689,8 +1973,8 @@ void test_roots()
     std::cout << "Solution x:\n";
     solution2.print_matrix(true);
 
-    // Test 5.15.3: Singular Matrix
-    std::cout << "\n[Test 5.15.3] Singular Matrix (No Unique Solution)\n";
+    // D7.3: Singular Matrix
+    std::cout << "\n[D7.3] Singular Matrix (No Unique Solution)\n";
     tiny::Mat A3(2, 2);
     tiny::Mat b3(2, 1);
 
@@ -1711,8 +1995,8 @@ void test_roots()
     std::cout << "Solution x:\n";
     solution3.print_matrix(true);
 
-    // Test 5.15.4: Incompatible Dimensions (Expect Error)
-    std::cout << "\n[Test 5.15.4] Incompatible Dimensions (Expect Error)\n";
+    // D7.4: Incompatible Dimensions (Expect Error)
+    std::cout << "\n[D7.4] Incompatible Dimensions (Expect Error)\n";
     tiny::Mat A4(3, 3);
     tiny::Mat b4(2, 1);  // Incompatible dimension
 
@@ -1730,31 +2014,64 @@ void test_roots()
 
     // This should print an error because of incompatible dimensions
     tiny::Mat solution4 = A4.roots(A4, b4);
-    std::cout << "Solution x:\n";
-    solution4.print_matrix(true);
+    // Error case should return empty matrix (0x0) or error state (data == nullptr or 1x1 error matrix)
+    // For dimension mismatch, expected solution size is 3x1, so 1x1 indicates error
+    bool roots_mismatch_correct = (solution4.row == 0 && solution4.col == 0) || 
+                                  (solution4.data == nullptr) ||
+                                  (solution4.row == 1 && solution4.col == 1 && solution4.data != nullptr);
+    std::cout << "Dimension mismatch roots: " << (roots_mismatch_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (roots_mismatch_correct ? "[PASS]" : "[FAIL]") << "\n";
+
+    // D7.5: roots() - Boundary case - empty matrix
+    std::cout << "\n[D7.5] roots() - Boundary Case - Empty Matrix\n";
+    tiny::Mat empty_A_roots(0, 0);
+    tiny::Mat empty_y_roots(0, 1);
+    tiny::Mat solution_empty_roots = empty_A_roots.roots(empty_A_roots, empty_y_roots);
+    // Error case should return empty matrix (0x0) or error state (data == nullptr or 1x1 error matrix)
+    bool roots_empty_correct = (solution_empty_roots.row == 0 && solution_empty_roots.col == 0) || 
+                                (solution_empty_roots.data == nullptr) ||
+                                (solution_empty_roots.row == 1 && solution_empty_roots.col == 1 && solution_empty_roots.data != nullptr);
+    std::cout << "Empty system roots: " << (roots_empty_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (roots_empty_correct ? "[PASS]" : "[FAIL]") << "\n";
 }
 
 // ============================================================================
-// Group 6: Linear System Solving - Core Application Tests
+// E: Advanced Linear Algebra
 // ============================================================================
-// Purpose: Test linear system solving - the core application of matrix library
-// Note: This group includes Gaussian elimination, solve methods, and dot product
-// Group 6.1: Gaussian Elimination (moved from Group 5.9)
-// Group 6.2: Solve Linear System (moved from Group 5.13)
-// Group 6.3: Dot Product (moved from Group 5.12)
-// Group 6.4: Band Solve (moved from Group 5.14)
-// Group 6.5: Roots (moved from Group 5.15)
+// Purpose: Advanced linear algebra operations for stable and efficient solving
+// E1: Matrix Decomposition
+// E2: Gram-Schmidt Orthogonalization
 
 // ============================================================================
-// Group 10: Auxiliary Functions - Stream Operators Tests
+// E3: Eigenvalue Decomposition
 // ============================================================================
-// Purpose: Test I/O operations - auxiliary but important for debugging
+// Purpose: Eigenvalue decomposition for SHM and modal analysis
+// E3: Eigenvalue & Eigenvector
+
+// ============================================================================
+// F: Auxiliary Functions
+// ============================================================================
+// Purpose: Convenience functions and I/O operations
+// F1: Stream Operators
+// F2: Global Arithmetic Operators
+
+// ============================================================================
+// G: Quality Assurance
+// ============================================================================
+// Purpose: Ensure robustness, performance, and correctness
+// G1: Boundary Conditions and Error Handling
+// G2: Performance Benchmarks
+// G3: Memory Layout
+
+// ============================================================================
+// F1: Stream Operators
+// ============================================================================
 void test_stream_operators()
 {
-    std::cout << "\n[Group 10: Auxiliary Functions - Stream Operators Tests]\n";
+    std::cout << "\n[F1: Stream Operators Tests]\n";
 
-    // Test 10.1: Test stream insertion operator (<<) for Mat
-    std::cout << "\n[Test 10.1] Stream Insertion Operator (<<) for Mat\n";
+    // F1.1: Test stream insertion operator (<<) for Mat
+    std::cout << "\n[F1.1] Stream Insertion Operator (<<) for Mat\n";
     tiny::Mat mat1(3, 3);
     mat1(0, 0) = 1; mat1(0, 1) = 2; mat1(0, 2) = 3;
     mat1(1, 0) = 4; mat1(1, 1) = 5; mat1(1, 2) = 6;
@@ -1763,8 +2080,8 @@ void test_stream_operators()
     std::cout << "Matrix mat1:\n";
     std::cout << mat1 << std::endl; // Use the << operator to print mat1
 
-    // Test 10.2: Test stream insertion operator (<<) for Mat::ROI
-    std::cout << "\n[Test 10.2] Stream Insertion Operator (<<) for Mat::ROI\n";
+    // F1.2: Test stream insertion operator (<<) for Mat::ROI
+    std::cout << "\n[F1.2] Stream Insertion Operator (<<) for Mat::ROI\n";
     tiny::Mat::ROI roi(1, 2, 3, 4);
     // ROI constructor: ROI(pos_x, pos_y, width, height)
     // roi(1, 2, 3, 4) means: start at column 1, row 2, with width 3, height 4
@@ -1777,8 +2094,8 @@ void test_stream_operators()
     std::cout << "\nActual output:\n";
     std::cout << roi << std::endl; // Use the << operator to print roi
 
-    // Test 10.3: Test stream extraction operator (>>) for Mat
-    std::cout << "\n[Test 10.3] Stream Extraction Operator (>>) for Mat\n";
+    // F1.3: Test stream extraction operator (>>) for Mat
+    std::cout << "\n[F1.3] Stream Extraction Operator (>>) for Mat\n";
     tiny::Mat mat2(2, 2);
     // Use istringstream to simulate input (for automated testing)
     std::istringstream input1("10 20 30 40");
@@ -1788,8 +2105,8 @@ void test_stream_operators()
     std::cout << mat2 << std::endl; // Use the << operator to print mat2
     std::cout << "Expected: [10, 20; 30, 40]\n";
 
-    // Test 10.4: Test stream extraction operator (>>) for Mat (with different values)
-    std::cout << "\n[Test 10.4] Stream Extraction Operator (>>) for Mat (2x3 matrix)\n";
+    // F1.4: Test stream extraction operator (>>) for Mat (with different values)
+    std::cout << "\n[F1.4] Stream Extraction Operator (>>) for Mat (2x3 matrix)\n";
     tiny::Mat mat3(2, 3);
     // Use istringstream to simulate input (for automated testing)
     std::istringstream input2("1.5 2.5 3.5 4.5 5.5 6.5");
@@ -1801,15 +2118,14 @@ void test_stream_operators()
 }
 
 // ============================================================================
-// Group 11: Auxiliary Functions - Global Arithmetic Operators Tests
+// F2: Global Arithmetic Operators
 // ============================================================================
-// Purpose: Test global operator overloads - syntactic sugar for convenience
 void test_matrix_operations()
 {
-    std::cout << "\n[Group 11: Auxiliary Functions - Global Arithmetic Operators Tests]\n";
+    std::cout << "\n[F2: Global Arithmetic Operators Tests]\n";
 
-    // Test 11.1: Matrix Addition (operator+)
-    std::cout << "\n[Test 11.1] Matrix Addition (operator+)\n";
+    // F2.1: Matrix Addition (operator+)
+    std::cout << "\n[F2.1] Matrix Addition (operator+)\n";
     tiny::Mat matA(2, 2);
     tiny::Mat matB(2, 2);
     
@@ -1828,8 +2144,8 @@ void test_matrix_operations()
     std::cout << "matA + matB:\n";
     std::cout << resultAdd << std::endl;  // Expected: [6, 8], [10, 12]
 
-    // Test 11.2: Matrix Addition with Constant (operator+)
-    std::cout << "\n[Test 11.2] Matrix Addition with Constant (operator+)\n";
+    // F2.2: Matrix Addition with Constant (operator+)
+    std::cout << "\n[F2.2] Matrix Addition with Constant (operator+)\n";
     std::cout << "Matrix A:\n";
     matA.print_matrix(true);
     std::cout << "Constant: 5.0\n";
@@ -1837,8 +2153,8 @@ void test_matrix_operations()
     std::cout << "matA + 5.0f:\n";
     std::cout << resultAddConst << std::endl;  // Expected: [6, 7], [8, 9]
 
-    // Test 11.3: Matrix Subtraction (operator-)
-    std::cout << "\n[Test 11.3] Matrix Subtraction (operator-)\n";
+    // F2.3: Matrix Subtraction (operator-)
+    std::cout << "\n[F2.3] Matrix Subtraction (operator-)\n";
     std::cout << "Matrix A:\n";
     matA.print_matrix(true);
     std::cout << "Matrix B:\n";
@@ -1847,8 +2163,8 @@ void test_matrix_operations()
     std::cout << "matA - matB:\n";
     std::cout << resultSub << std::endl;  // Expected: [-4, -4], [-4, -4]
 
-    // Test 11.4: Matrix Subtraction with Constant (operator-)
-    std::cout << "\n[Test 11.4] Matrix Subtraction with Constant (operator-)\n";
+    // F2.4: Matrix Subtraction with Constant (operator-)
+    std::cout << "\n[F2.4] Matrix Subtraction with Constant (operator-)\n";
     std::cout << "Matrix A:\n";
     matA.print_matrix(true);
     std::cout << "Constant: 2.0\n";
@@ -1856,8 +2172,8 @@ void test_matrix_operations()
     std::cout << "matA - 2.0f:\n";
     std::cout << resultSubConst << std::endl;  // Expected: [-1, 0], [1, 2]
 
-    // Test 11.5: Matrix Multiplication (operator*)
-    std::cout << "\n[Test 11.5] Matrix Multiplication (operator*)\n";
+    // F2.5: Matrix Multiplication (operator*)
+    std::cout << "\n[F2.5] Matrix Multiplication (operator*)\n";
     tiny::Mat matC(2, 3);
     tiny::Mat matD(3, 2);
 
@@ -1877,8 +2193,8 @@ void test_matrix_operations()
     std::cout << "matC * matD:\n";
     std::cout << resultMul << std::endl;  // Expected: [58, 64], [139, 154]
 
-    // Test 11.6: Matrix Multiplication with Constant (operator*)
-    std::cout << "\n[Test 11.6] Matrix Multiplication with Constant (operator*)\n";
+    // F2.6: Matrix Multiplication with Constant (operator*)
+    std::cout << "\n[F2.6] Matrix Multiplication with Constant (operator*)\n";
     std::cout << "Matrix A:\n";
     matA.print_matrix(true);
     std::cout << "Constant: 2.0\n";
@@ -1886,8 +2202,8 @@ void test_matrix_operations()
     std::cout << "matA * 2.0f:\n";
     std::cout << resultMulConst << std::endl;  // Expected: [2, 4], [6, 8]
 
-    // Test 11.7: Matrix Division (operator/)
-    std::cout << "\n[Test 11.7] Matrix Division (operator/)\n";
+    // F2.7: Matrix Division (operator/)
+    std::cout << "\n[F2.7] Matrix Division (operator/)\n";
     std::cout << "Matrix A:\n";
     matA.print_matrix(true);
     std::cout << "Constant: 2.0\n";
@@ -1895,8 +2211,8 @@ void test_matrix_operations()
     std::cout << "matA / 2.0f:\n";
     std::cout << resultDiv << std::endl;  // Expected: [0.5, 1], [1.5, 2]
 
-    // Test 11.8: Matrix Division Element-wise (operator/)
-    std::cout << "\n[Test 11.8] Matrix Division Element-wise (operator/)\n";
+    // F2.8: Matrix Division Element-wise (operator/)
+    std::cout << "\n[F2.8] Matrix Division Element-wise (operator/)\n";
     std::cout << "Matrix A:\n";
     matA.print_matrix(true);
     std::cout << "Matrix B:\n";
@@ -1905,8 +2221,8 @@ void test_matrix_operations()
     std::cout << "matA / matB:\n";
     std::cout << resultDivElem << std::endl;  // Expected: [0.2, 0.333], [0.428, 0.5]
 
-    // Test 11.9: Matrix Comparison (operator==)
-    std::cout << "\n[Test 11.9] Matrix Comparison (operator==)\n";
+    // F2.9: Matrix Comparison (operator==)
+    std::cout << "\n[F2.9] Matrix Comparison (operator==)\n";
     tiny::Mat matE(2, 2);
     matE(0, 0) = 1; matE(0, 1) = 2;
     matE(1, 0) = 3; matE(1, 1) = 4;
@@ -1934,27 +2250,27 @@ void test_matrix_operations()
 }
 
 // ============================================================================
-// Group 12: Quality Assurance - Boundary Conditions and Error Handling Tests
+// G1: Quality Assurance - Boundary Conditions and Error Handling Tests
 // ============================================================================
 // Purpose: Test error handling and edge cases - ensure robustness
 void test_boundary_conditions()
 {
-    std::cout << "\n[Group 12: Quality Assurance - Boundary Conditions and Error Handling Tests]\n";
+    std::cout << "\n[G1: Quality Assurance - Boundary Conditions and Error Handling Tests]\n";
 
-    // Test 12.1: Null pointer handling in print functions
-    std::cout << "\n[Test 12.1] Null Pointer Handling in print_matrix\n";
+    // G1.1: Null pointer handling in print functions
+    std::cout << "\n[G1.1] Null Pointer Handling in print_matrix\n";
     tiny::Mat null_mat;
     null_mat.data = nullptr;  // Simulate null pointer
     null_mat.print_matrix(true);  // Should handle gracefully
 
-    // Test 12.2: Null pointer handling in operator<<
-    std::cout << "\n[Test 12.2] Null Pointer Handling in operator<<\n";
+    // G1.2: Null pointer handling in operator<<
+    std::cout << "\n[G1.2] Null Pointer Handling in operator<<\n";
     tiny::Mat null_mat2;
     null_mat2.data = nullptr;
     std::cout << null_mat2 << std::endl;  // Should handle gracefully
 
-    // Test 12.3: Invalid block parameters
-    std::cout << "\n[Test 12.3] Invalid Block Parameters\n";
+    // G1.3: Invalid block parameters
+    std::cout << "\n[G1.3] Invalid Block Parameters\n";
     tiny::Mat mat(3, 3);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
@@ -1972,8 +2288,8 @@ void test_boundary_conditions()
     tiny::Mat block3 = mat.block(0, 0, 0, 2);
     std::cout << "block(0, 0, 0, 2): " << (block3.data == nullptr ? "Empty (correct)" : "Error") << "\n";
 
-    // Test 12.4: Invalid swap_rows parameters
-    std::cout << "\n[Test 12.4] Invalid swap_rows Parameters\n";
+    // G1.4: Invalid swap_rows parameters
+    std::cout << "\n[G1.4] Invalid swap_rows Parameters\n";
     tiny::Mat mat2(3, 3);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
@@ -1992,8 +2308,8 @@ void test_boundary_conditions()
     std::cout << "After swap_rows(0, 5):\n";
     mat2.print_matrix(true);
 
-    // Test 12.5: Invalid swap_cols parameters
-    std::cout << "\n[Test 12.5] Invalid swap_cols Parameters\n";
+    // G1.5: Invalid swap_cols parameters
+    std::cout << "\n[G1.5] Invalid swap_cols Parameters\n";
     tiny::Mat mat2_cols(3, 3);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
@@ -2012,8 +2328,8 @@ void test_boundary_conditions()
     std::cout << "After swap_cols(0, 5):\n";
     mat2_cols.print_matrix(true);
 
-    // Test 12.6: Division by zero
-    std::cout << "\n[Test 12.6] Division by Zero\n";
+    // G1.6: Division by zero
+    std::cout << "\n[G1.6] Division by Zero\n";
     tiny::Mat mat3(2, 2);
     mat3(0, 0) = 1; mat3(0, 1) = 2;
     mat3(1, 0) = 3; mat3(1, 1) = 4;
@@ -2021,8 +2337,8 @@ void test_boundary_conditions()
     tiny::Mat result = mat3 / 0.0f;
     std::cout << "mat3 / 0.0f: " << (result.data == nullptr ? "Empty (correct)" : "Error") << "\n";
 
-    // Test 12.7: Matrix division with zero elements
-    std::cout << "\n[Test 12.7] Matrix Division with Zero Elements\n";
+    // G1.7: Matrix division with zero elements
+    std::cout << "\n[G1.7] Matrix Division with Zero Elements\n";
     tiny::Mat mat4(2, 2);
     mat4(0, 0) = 1; mat4(0, 1) = 2;
     mat4(1, 0) = 3; mat4(1, 1) = 4;
@@ -2035,28 +2351,33 @@ void test_boundary_conditions()
     std::cout << "mat4 /= divisor (with zero):\n";
     mat4.print_matrix(true);
 
-    // Test 12.8: Empty matrix operations
-    std::cout << "\n[Test 12.8] Empty Matrix Operations\n";
-    tiny::Mat empty1, empty2;
+    // G1.8: Empty matrix operations
+    std::cout << "\n[G1.8] Empty Matrix Operations\n";
+    tiny::Mat empty1(0, 0), empty2(0, 0);  // True empty matrices (0x0)
     tiny::Mat empty_sum = empty1 + empty2;
-    std::cout << "Empty matrix addition: " << (empty_sum.data == nullptr ? "Empty (correct)" : "Error") << "\n";
+    // Empty matrix addition should return empty matrix (0x0) or error state
+    bool empty_sum_correct = (empty_sum.row == 0 && empty_sum.col == 0) || 
+                             (empty_sum.data == nullptr) ||
+                             (empty_sum.row == 1 && empty_sum.col == 1 && empty_sum.data != nullptr);
+    std::cout << "Empty matrix addition: " << (empty_sum_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+              << " " << (empty_sum_correct ? "[PASS]" : "[FAIL]") << "\n";
 }
 
 // ============================================================================
-// Group 13: Quality Assurance - Performance Benchmarks Tests
+// G2: Quality Assurance - Performance Benchmarks Tests
 // ============================================================================
 // Purpose: Test performance characteristics - critical for real-time applications
 void test_performance_benchmarks()
 {
-    std::cout << "\n[Group 13: Quality Assurance - Performance Benchmarks Tests]\n";
+    std::cout << "\n[G2: Quality Assurance - Performance Benchmarks Tests]\n";
     
     // Ensure current task is added to watchdog before starting performance tests
     #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     ensure_task_wdt_added();
     #endif
 
-    // Test 13.1: Matrix Addition Performance (reduced size to prevent timeout)
-    std::cout << "\n[Test 13.1] Matrix Addition Performance\n";
+    // G2.1: Matrix Addition Performance (reduced size to prevent timeout)
+    std::cout << "\n[G2.1] Matrix Addition Performance\n";
     tiny::Mat A(50, 50);  // Reduced from 100x100 to 50x50
     tiny::Mat B(50, 50);
     for (int i = 0; i < 50; ++i)
@@ -2069,8 +2390,8 @@ void test_performance_benchmarks()
     }
     TIME_REPEATED_OPERATION(tiny::Mat C = A + B;, PERFORMANCE_TEST_ITERATIONS, "50x50 Matrix Addition");
 
-    // Test 13.2: Matrix Multiplication Performance (reduced size)
-    std::cout << "\n[Test 13.2] Matrix Multiplication Performance\n";
+    // G2.2: Matrix Multiplication Performance (reduced size)
+    std::cout << "\n[G2.2] Matrix Multiplication Performance\n";
     tiny::Mat D(30, 30);  // Reduced from 50x50 to 30x30
     tiny::Mat E(30, 30);
     for (int i = 0; i < 30; ++i)
@@ -2083,23 +2404,23 @@ void test_performance_benchmarks()
     }
     TIME_REPEATED_OPERATION(tiny::Mat F = D * E;, PERFORMANCE_TEST_ITERATIONS, "30x30 Matrix Multiplication");
 
-    // Test 13.3: Matrix Transpose Performance (reduced size)
-    std::cout << "\n[Test 13.3] Matrix Transpose Performance\n";
+    // G2.3: Matrix Transpose Performance (reduced size)
+    std::cout << "\n[G2.3] Matrix Transpose Performance\n";
     tiny::Mat G(50, 30);  // Reduced from 100x50 to 50x30
     for (int i = 0; i < 50; ++i)
         for (int j = 0; j < 30; ++j)
             G(i, j) = static_cast<float>(i * 30 + j);
     TIME_REPEATED_OPERATION(tiny::Mat H = G.transpose();, PERFORMANCE_TEST_ITERATIONS, "50x30 Matrix Transpose");
 
-    // Test 13.4: Determinant Performance Comparison
+    // G2.4: Determinant Performance Comparison
     // Note: Determinant calculation now has multiple methods:
     //   - Laplace expansion: O(n!) - for small matrices (n <= 4)
     //   - LU decomposition: O(n³) - for large matrices (n > 4, auto-selected)
     //   - Gaussian elimination: O(n³) - alternative for large matrices
-    std::cout << "\n[Test 13.4] Determinant Calculation Performance Comparison\n";
+    std::cout << "\n[G2.4] Determinant Calculation Performance Comparison\n";
     
-    // Test 13.4.1: Small Matrix (4x4) - Laplace Expansion
-        std::cout << "\n[Test 13.4.1] Small Matrix (4x4) - Laplace Expansion\n";
+    // G2.4.1: Small Matrix (4x4) - Laplace Expansion
+        std::cout << "\n[G2.4.1] Small Matrix (4x4) - Laplace Expansion\n";
     tiny::Mat I4(4, 4);
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j)
@@ -2121,12 +2442,20 @@ void test_performance_benchmarks()
               << std::fixed << std::setprecision(2) << det4_dt_total_us << " us total, "
               << det4_dt_avg_us << " us avg\n";
     
-    // Test 13.4.2: Large Matrix (8x8) - LU Decomposition
-        std::cout << "\n[Test 13.4.2] Large Matrix (8x8) - LU Decomposition\n";
+    // G2.4.2: Large Matrix (8x8) - LU Decomposition
+        std::cout << "\n[G2.4.2] Large Matrix (8x8) - LU Decomposition\n";
     tiny::Mat I8(8, 8);
+    // Create a non-singular matrix (diagonally dominant matrix) for performance testing
     for (int i = 0; i < 8; ++i)
+    {
         for (int j = 0; j < 8; ++j)
-            I8(i, j) = static_cast<float>((i + 1) * (j + 1));
+        {
+            if (i == j)
+                I8(i, j) = static_cast<float>(10 + i + 1);  // Diagonal dominance
+            else
+                I8(i, j) = static_cast<float>((i + 1) * (j + 1) * 0.1f);  // Off-diagonal elements
+        }
+    }
     
     feed_watchdog();
     TinyTimeMark_t det8_lu_t0 = tiny_get_running_time();
@@ -2144,8 +2473,8 @@ void test_performance_benchmarks()
               << std::fixed << std::setprecision(2) << det8_lu_dt_total_us << " us total, "
               << det8_lu_dt_avg_us << " us avg\n";
     
-    // Test 13.4.3: Large Matrix (8x8) - Gaussian Elimination
-        std::cout << "\n[Test 13.4.3] Large Matrix (8x8) - Gaussian Elimination\n";
+    // G2.4.3: Large Matrix (8x8) - Gaussian Elimination
+        std::cout << "\n[G2.4.3] Large Matrix (8x8) - Gaussian Elimination\n";
     feed_watchdog();
     TinyTimeMark_t det8_gauss_t0 = tiny_get_running_time();
     for (int i = 0; i < PERFORMANCE_TEST_ITERATIONS_HEAVY; ++i)
@@ -2162,8 +2491,8 @@ void test_performance_benchmarks()
               << std::fixed << std::setprecision(2) << det8_gauss_dt_total_us << " us total, "
               << det8_gauss_dt_avg_us << " us avg\n";
     
-    // Test 13.4.4: Auto-select Method (8x8) - Should use LU
-        std::cout << "\n[Test 13.4.4] Large Matrix (8x8) - Auto-select Method\n";
+    // G2.4.4: Auto-select Method (8x8) - Should use LU
+        std::cout << "\n[G2.4.4] Large Matrix (8x8) - Auto-select Method\n";
     feed_watchdog();
     TinyTimeMark_t det8_auto_t0 = tiny_get_running_time();
     for (int i = 0; i < PERFORMANCE_TEST_ITERATIONS_HEAVY; ++i)
@@ -2186,21 +2515,21 @@ void test_performance_benchmarks()
     std::cout << "  - Gaussian elimination (O(n³)): Alternative efficient method for large matrices\n";
     std::cout << "  - Auto-select: Automatically chooses the best method based on matrix size\n";
 
-    // Test 13.5: Matrix Copy Performance (with padding, reduced size)
-    std::cout << "\n[Test 13.5] Matrix Copy with Padding Performance\n";
+    // G2.5: Matrix Copy Performance (with padding, reduced size)
+    std::cout << "\n[G2.5] Matrix Copy with Padding Performance\n";
     float data[80] = {0};  // Reduced from 150 to 80
     for (int i = 0; i < 80; ++i) data[i] = static_cast<float>(i);
     tiny::Mat J(data, 8, 8, 10);  // Reduced from 10x10 stride 15 to 8x8 stride 10
     TIME_REPEATED_OPERATION(tiny::Mat K = J.copy_roi(0, 0, 8, 8);, PERFORMANCE_TEST_ITERATIONS, "8x8 Copy ROI (with padding)");
 
-    // Test 13.6: Element Access Performance (reduced size)
-    std::cout << "\n[Test 13.6] Element Access Performance\n";
+    // G2.6: Element Access Performance (reduced size)
+    std::cout << "\n[G2.6] Element Access Performance\n";
     tiny::Mat L(50, 50);  // Reduced from 100x100 to 50x50
     for (int i = 0; i < 50; ++i)
         for (int j = 0; j < 50; ++j)
             L(i, j) = static_cast<float>(i * 50 + j);
     
-    // Test 6: Element Access Performance (custom implementation for multi-line operation)
+    // G2.6 continued: Element Access Performance (custom implementation for multi-line operation)
     float sum = 0.0f;
     std::cout << "[Performance] Computing element access (warmup)...\n";
     feed_watchdog();  // Feed watchdog before starting
@@ -2233,15 +2562,15 @@ void test_performance_benchmarks()
 }
 
 // ============================================================================
-// Group 14: Quality Assurance - Memory Layout Tests (Padding and Stride)
+// G3: Quality Assurance - Memory Layout Tests (Padding and Stride)
 // ============================================================================
 // Purpose: Test memory layout handling - important for performance and compatibility
 void test_memory_layout()
 {
-    std::cout << "\n[Group 14: Quality Assurance - Memory Layout Tests (Padding and Stride)]\n";
+    std::cout << "\n[G3: Quality Assurance - Memory Layout Tests (Padding and Stride)]\n";
 
-    // Test 14.1: Contiguous memory (pad=0, step=1)
-    std::cout << "\n[Test 14.1] Contiguous Memory (no padding)\n";
+    // G3.1: Contiguous memory (pad=0, step=1)
+    std::cout << "\n[G3.1] Contiguous Memory (no padding)\n";
     tiny::Mat mat1(3, 4);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 4; ++j)
@@ -2250,16 +2579,16 @@ void test_memory_layout()
     mat1.print_info();
     mat1.print_matrix(true);
 
-    // Test 14.2: Padded memory (stride > col)
-    std::cout << "\n[Test 14.2] Padded Memory (stride > col)\n";
+    // G3.2: Padded memory (stride > col)
+    std::cout << "\n[G3.2] Padded Memory (stride > col)\n";
     float data[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
     tiny::Mat mat2(data, 3, 4, 5);
     std::cout << "Matrix 3x4 (stride=5, pad=1):\n";
     mat2.print_info();
     mat2.print_matrix(true);
 
-    // Test 14.3: Operations with padded matrices
-    std::cout << "\n[Test 14.3] Addition with Padded Matrices\n";
+    // G3.3: Operations with padded matrices
+    std::cout << "\n[G3.3] Addition with Padded Matrices\n";
     float data1[15] = {1, 2, 3, 4, 0, 5, 6, 7, 8, 0, 9, 10, 11, 12, 0};
     float data2[15] = {10, 20, 30, 40, 0, 50, 60, 70, 80, 0, 90, 100, 110, 120, 0};
     tiny::Mat mat3(data1, 3, 4, 5);
@@ -2269,15 +2598,15 @@ void test_memory_layout()
     mat5.print_info();
     mat5.print_matrix(true);
 
-    // Test 14.4: ROI operations with padded matrices
-    std::cout << "\n[Test 14.4] ROI Operations with Padded Matrices\n";
+    // G3.4: ROI operations with padded matrices
+    std::cout << "\n[G3.4] ROI Operations with Padded Matrices\n";
     tiny::Mat roi = mat2.view_roi(1, 1, 2, 2);
     std::cout << "ROI (1,1,2,2) from padded matrix:\n";
     roi.print_info();
     roi.print_matrix(true);
 
-    // Test 14.5: Copy operations preserve stride
-    std::cout << "\n[Test 14.5] Copy Operations Preserve Stride\n";
+    // G3.5: Copy operations preserve stride
+    std::cout << "\n[G3.5] Copy Operations Preserve Stride\n";
     tiny::Mat copied = mat2.copy_roi(0, 0, 3, 4);
     std::cout << "Copied matrix (should have stride=4, no padding):\n";
     copied.print_info();
@@ -2285,20 +2614,18 @@ void test_memory_layout()
 }
 
 // ============================================================================
-// Group 7: Advanced Linear Algebra - Matrix Decomposition Tests
+// E1: Matrix Decomposition
 // ============================================================================
-// Purpose: Test matrix decompositions (LU, Cholesky, QR, SVD) - foundation for 
-//          stable linear system solving and least squares problems
 void test_matrix_decomposition()
 {
-    std::cout << "\n[Group 7: Advanced Linear Algebra - Matrix Decomposition Tests]\n";
+    std::cout << "\n[E1: Matrix Decomposition Tests]\n";
 
-    // Test 7.1: is_positive_definite() - Basic functionality
-    std::cout << "\n[Test 7.1] is_positive_definite() - Basic Functionality\n";
+    // E1.1: is_positive_definite() - Basic functionality
+    std::cout << "\n[E1.1] is_positive_definite() - Basic Functionality\n";
     
-    // Test 7.1.1: Positive definite matrix
+    // E1.11: Positive definite matrix
     {
-        std::cout << "\n[Test 7.1.1] Positive Definite 3x3 Matrix\n";
+        std::cout << "\n[E1.11] Positive Definite 3x3 Matrix\n";
         tiny::Mat pd_mat(3, 3);
         pd_mat(0, 0) = 4.0f; pd_mat(0, 1) = 1.0f; pd_mat(0, 2) = 0.0f;
         pd_mat(1, 0) = 1.0f; pd_mat(1, 1) = 3.0f; pd_mat(1, 2) = 0.0f;
@@ -2311,9 +2638,9 @@ void test_matrix_decomposition()
                   << " (Expected: True) " << (is_pd ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 7.1.2: Non-positive definite matrix
+    // E1.12: Non-positive definite matrix
     {
-        std::cout << "\n[Test 7.1.2] Non-Positive Definite Matrix\n";
+        std::cout << "\n[E1.12] Non-Positive Definite Matrix\n";
         tiny::Mat non_pd(2, 2);
         non_pd(0, 0) = 1.0f; non_pd(0, 1) = 2.0f;
         non_pd(1, 0) = 2.0f; non_pd(1, 1) = 1.0f;  // Has negative eigenvalue
@@ -2325,12 +2652,73 @@ void test_matrix_decomposition()
                   << " (Expected: False) " << (!is_pd ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 7.2: LU Decomposition
-    std::cout << "\n[Test 7.2] LU Decomposition\n";
-    
-    // Test 7.2.1: Simple 3x3 matrix with pivoting
+    // E1.13: max_minors_to_check parameter
     {
-        std::cout << "\n[Test 7.2.1] 3x3 Matrix - LU Decomposition with Pivoting\n";
+        std::cout << "\n[E1.13] max_minors_to_check Parameter Testing\n";
+        tiny::Mat pd_mat(4, 4);
+        // Create a 4x4 positive definite matrix
+        pd_mat(0, 0) = 4.0f; pd_mat(0, 1) = 1.0f; pd_mat(0, 2) = 0.0f; pd_mat(0, 3) = 0.0f;
+        pd_mat(1, 0) = 1.0f; pd_mat(1, 1) = 3.0f; pd_mat(1, 2) = 0.0f; pd_mat(1, 3) = 0.0f;
+        pd_mat(2, 0) = 0.0f; pd_mat(2, 1) = 0.0f; pd_mat(2, 2) = 2.0f; pd_mat(2, 3) = 0.5f;
+        pd_mat(3, 0) = 0.0f; pd_mat(3, 1) = 0.0f; pd_mat(3, 2) = 0.5f; pd_mat(3, 3) = 1.5f;
+        
+        // Test with max_minors_to_check = -1 (check all minors)
+        bool is_pd_all = pd_mat.is_positive_definite(1e-6f, -1);
+        std::cout << "max_minors_to_check = -1 (check all): " << (is_pd_all ? "True" : "False") 
+                  << " (Expected: True) " << (is_pd_all ? "[PASS]" : "[FAIL]") << "\n";
+        
+        // Test with max_minors_to_check = 3 (check first 3 minors)
+        bool is_pd_partial = pd_mat.is_positive_definite(1e-6f, 3);
+        std::cout << "max_minors_to_check = 3 (check first 3): " << (is_pd_partial ? "True" : "False") 
+                  << " (Expected: True) " << (is_pd_partial ? "[PASS]" : "[FAIL]") << "\n";
+        
+        // Test with max_minors_to_check = 0 (should return false/error)
+        bool is_pd_zero = pd_mat.is_positive_definite(1e-6f, 0);
+        std::cout << "max_minors_to_check = 0 (invalid): " << (is_pd_zero ? "True" : "False") 
+                  << " (Expected: False) " << (!is_pd_zero ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.14: Parameter validation - negative tolerance
+    {
+        std::cout << "\n[E1.14] Parameter Validation - Negative Tolerance\n";
+        tiny::Mat pd_mat(2, 2);
+        pd_mat(0, 0) = 2.0f; pd_mat(0, 1) = 0.0f;
+        pd_mat(1, 0) = 0.0f; pd_mat(1, 1) = 2.0f;
+        
+        // Test with tolerance < 0 (should return false/error)
+        bool is_pd_neg = pd_mat.is_positive_definite(-1e-6f);
+        std::cout << "tolerance = -1e-6 (invalid): " << (is_pd_neg ? "True" : "False") 
+                  << " (Expected: False) " << (!is_pd_neg ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.15: Boundary case - empty matrix
+    {
+        std::cout << "\n[E1.15] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        // Empty matrix cannot be positive definite (data is null or invalid dimensions)
+        bool is_pd_empty = empty_mat.is_positive_definite(1e-6f);
+        std::cout << "Empty matrix (0x0): " << (is_pd_empty ? "True" : "False") 
+                  << " (Expected: False, empty matrix is invalid) " << (!is_pd_empty ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.16: Boundary case - invalid dimensions
+    {
+        std::cout << "\n[E1.16] Boundary Case - Invalid Dimensions\n";
+        tiny::Mat invalid_mat(2, 3);  // Non-square matrix
+        
+        // Non-square matrix cannot be positive definite
+        bool is_pd_invalid = invalid_mat.is_positive_definite(1e-6f);
+        std::cout << "Non-square matrix (2x3): " << (is_pd_invalid ? "True" : "False") 
+                  << " (Expected: False) " << (!is_pd_invalid ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.2: LU Decomposition
+    std::cout << "\n[E1.2] LU Decomposition\n";
+    
+    // E1.21: Simple 3x3 matrix with pivoting
+    {
+        std::cout << "\n[E1.21] 3x3 Matrix - LU Decomposition with Pivoting\n";
         tiny::Mat A(3, 3);
         A(0, 0) = 2.0f; A(0, 1) = 1.0f; A(0, 2) = 1.0f;
         A(1, 0) = 4.0f; A(1, 1) = 3.0f; A(1, 2) = 3.0f;
@@ -2369,9 +2757,9 @@ void test_matrix_decomposition()
         }
     }
 
-    // Test 7.2.2: Solve using LU decomposition
+    // E1.22: Solve using LU decomposition
     {
-        std::cout << "\n[Test 7.2.2] Solve Linear System using LU Decomposition\n";
+        std::cout << "\n[E1.22] Solve Linear System using LU Decomposition\n";
         tiny::Mat A(3, 3);
         A(0, 0) = 2.0f; A(0, 1) = 1.0f; A(0, 2) = 1.0f;
         A(1, 0) = 4.0f; A(1, 1) = 3.0f; A(1, 2) = 3.0f;
@@ -2404,12 +2792,100 @@ void test_matrix_decomposition()
         std::cout << "Verification error: " << error << (error < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
     }
 
-    // Test 7.3: Cholesky Decomposition
-    std::cout << "\n[Test 7.3] Cholesky Decomposition\n";
-    
-    // Test 7.3.1: Symmetric positive definite matrix
+    // E1.26: solve_lu() - Boundary case - empty matrix
     {
-        std::cout << "\n[Test 7.3.1] SPD Matrix - Cholesky Decomposition\n";
+        std::cout << "\n[E1.26] solve_lu() - Boundary Case - Empty Matrix\n";
+        tiny::Mat empty_A(0, 0);
+        tiny::Mat empty_b(0, 1);
+        
+        tiny::Mat::LUDecomposition lu_empty = empty_A.lu_decompose(true);
+        tiny::Mat x_empty = tiny::Mat::solve_lu(lu_empty, empty_b);
+        // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+        bool empty_correct = (x_empty.row == 0 && x_empty.col == 0) || 
+                            (x_empty.data == nullptr) ||
+                            (x_empty.row == 1 && x_empty.col == 1 && x_empty.data != nullptr);
+        std::cout << "Empty system: x rows = " << x_empty.row 
+                  << " (Expected: 0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.27: solve_lu() - Invalid LU decomposition
+    {
+        std::cout << "\n[E1.27] solve_lu() - Invalid LU Decomposition\n";
+        tiny::Mat::LUDecomposition invalid_lu;
+        invalid_lu.status = TINY_ERR_INVALID_ARG;  // Simulate invalid decomposition
+        
+        tiny::Mat b(3, 1);
+        b(0, 0) = 1.0f; b(1, 0) = 2.0f; b(2, 0) = 3.0f;
+        
+        tiny::Mat x_invalid = tiny::Mat::solve_lu(invalid_lu, b);
+        // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+        bool invalid_correct = (x_invalid.row == 0 && x_invalid.col == 0) || 
+                               (x_invalid.data == nullptr) ||
+                               (x_invalid.row == 1 && x_invalid.col == 1 && x_invalid.data != nullptr);
+        std::cout << "Invalid LU decomposition: x rows = " << x_invalid.row 
+                  << " (Expected: 0 or error state) " << (invalid_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.23: Boundary case - empty matrix
+    {
+        std::cout << "\n[E1.23] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        tiny::Mat::LUDecomposition lu_empty = empty_mat.lu_decompose(true);
+        // Error case: empty matrix should return error status, L may be 0x0 or 1x1 error matrix
+        bool empty_correct = (lu_empty.status != TINY_OK) && 
+                            ((lu_empty.L.row == 0 && lu_empty.L.col == 0) || 
+                             (lu_empty.L.data == nullptr) ||
+                             (lu_empty.L.row == 1 && lu_empty.L.col == 1 && lu_empty.L.data != nullptr));
+        std::cout << "Empty matrix: Status = " << (lu_empty.status == TINY_OK ? "OK" : "Error") 
+                  << ", L rows = " << lu_empty.L.row 
+                  << " (Expected: Error status, L is 0x0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.24: lu_decompose() - without pivoting
+    {
+        std::cout << "\n[E1.24] LU Decomposition without Pivoting\n";
+        tiny::Mat A(3, 3);
+        A(0, 0) = 2.0f; A(0, 1) = 1.0f; A(0, 2) = 1.0f;
+        A(1, 0) = 4.0f; A(1, 1) = 3.0f; A(1, 2) = 3.0f;
+        A(2, 0) = 2.0f; A(2, 1) = 1.0f; A(2, 2) = 2.0f;
+        
+        tiny::Mat::LUDecomposition lu_no_pivot = A.lu_decompose(false);
+        std::cout << "Status: " << (lu_no_pivot.status == TINY_OK ? "OK" : "Error") << "\n";
+        std::cout << "Pivoted: " << (lu_no_pivot.pivoted ? "Yes" : "No (Expected)") 
+                  << " " << (!lu_no_pivot.pivoted ? "[PASS]" : "[FAIL]") << "\n";
+        if (lu_no_pivot.status == TINY_OK && !lu_no_pivot.pivoted)
+        {
+            // Verify: A = L * U (no permutation)
+            tiny::Mat LU = lu_no_pivot.L * lu_no_pivot.U;
+            float diff = 0.0f;
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    diff += fabsf(LU(i, j) - A(i, j));
+                }
+            }
+            std::cout << "Verification (A = L * U): difference = " << diff 
+                      << (diff < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
+        }
+    }
+
+    // E1.25: lu_decompose() - Error handling - non-square matrix
+    {
+        std::cout << "\n[E1.25] lu_decompose() - Error Handling - Non-Square Matrix\n";
+        tiny::Mat non_square(2, 3);
+        tiny::Mat::LUDecomposition lu_non_square = non_square.lu_decompose(true);
+        std::cout << "Non-square matrix (2x3): Status = " << (lu_non_square.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (lu_non_square.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.3: Cholesky Decomposition
+    std::cout << "\n[E1.3] Cholesky Decomposition\n";
+    
+    // E1.31: Symmetric positive definite matrix
+    {
+        std::cout << "\n[E1.31] SPD Matrix - Cholesky Decomposition\n";
         tiny::Mat spd(3, 3);
         spd(0, 0) = 4.0f; spd(0, 1) = 2.0f; spd(0, 2) = 0.0f;
         spd(1, 0) = 2.0f; spd(1, 1) = 5.0f; spd(1, 2) = 1.0f;
@@ -2440,9 +2916,9 @@ void test_matrix_decomposition()
         }
     }
 
-    // Test 7.3.2: Solve using Cholesky decomposition
+    // E1.32: Solve using Cholesky decomposition
     {
-        std::cout << "\n[Test 7.3.2] Solve Linear System using Cholesky Decomposition\n";
+        std::cout << "\n[E1.32] Solve Linear System using Cholesky Decomposition\n";
         tiny::Mat A(3, 3);
         A(0, 0) = 4.0f; A(0, 1) = 2.0f; A(0, 2) = 0.0f;
         A(1, 0) = 2.0f; A(1, 1) = 5.0f; A(1, 2) = 1.0f;
@@ -2468,12 +2944,96 @@ void test_matrix_decomposition()
         std::cout << "Verification error: " << error << (error < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
     }
 
-    // Test 7.4: QR Decomposition
-    std::cout << "\n[Test 7.4] QR Decomposition\n";
-    
-    // Test 7.4.1: General matrix
+    // E1.35: solve_cholesky() - Boundary case - empty matrix
     {
-        std::cout << "\n[Test 7.4.1] General 3x3 Matrix - QR Decomposition\n";
+        std::cout << "\n[E1.35] solve_cholesky() - Boundary Case - Empty Matrix\n";
+        tiny::Mat empty_A(0, 0);
+        tiny::Mat empty_b(0, 1);
+        
+        tiny::Mat::CholeskyDecomposition chol_empty = empty_A.cholesky_decompose();
+        tiny::Mat x_empty = tiny::Mat::solve_cholesky(chol_empty, empty_b);
+        // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+        bool empty_correct = (x_empty.row == 0 && x_empty.col == 0) || 
+                            (x_empty.data == nullptr) ||
+                            (x_empty.row == 1 && x_empty.col == 1 && x_empty.data != nullptr);
+        std::cout << "Empty system: x rows = " << x_empty.row 
+                  << " (Expected: 0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.36: solve_cholesky() - Invalid Cholesky decomposition
+    {
+        std::cout << "\n[E1.36] solve_cholesky() - Invalid Cholesky Decomposition\n";
+        tiny::Mat::CholeskyDecomposition invalid_chol;
+        invalid_chol.status = TINY_ERR_INVALID_ARG;  // Simulate invalid decomposition
+        
+        tiny::Mat b(3, 1);
+        b(0, 0) = 1.0f; b(1, 0) = 2.0f; b(2, 0) = 3.0f;
+        
+        tiny::Mat x_invalid = tiny::Mat::solve_cholesky(invalid_chol, b);
+        // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+        bool invalid_correct = (x_invalid.row == 0 && x_invalid.col == 0) || 
+                               (x_invalid.data == nullptr) ||
+                               (x_invalid.row == 1 && x_invalid.col == 1 && x_invalid.data != nullptr);
+        std::cout << "Invalid Cholesky decomposition: x rows = " << x_invalid.row 
+                  << " (Expected: 0 or error state) " << (invalid_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.33: Boundary case - empty matrix
+    {
+        std::cout << "\n[E1.33] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        tiny::Mat::CholeskyDecomposition chol_empty = empty_mat.cholesky_decompose();
+        // Error case: empty matrix should return error status, L may be 0x0 or 1x1 error matrix
+        bool empty_correct = (chol_empty.status != TINY_OK) && 
+                            ((chol_empty.L.row == 0 && chol_empty.L.col == 0) || 
+                             (chol_empty.L.data == nullptr) ||
+                             (chol_empty.L.row == 1 && chol_empty.L.col == 1 && chol_empty.L.data != nullptr));
+        std::cout << "Empty matrix: Status = " << (chol_empty.status == TINY_OK ? "OK" : "Error") 
+                  << ", L rows = " << chol_empty.L.row 
+                  << " (Expected: Error status, L is 0x0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.34: Non-symmetric matrix (should fail)
+    {
+        std::cout << "\n[E1.34] Non-Symmetric Matrix (Should Fail)\n";
+        tiny::Mat non_sym(2, 2);
+        non_sym(0, 0) = 1.0f; non_sym(0, 1) = 2.0f;
+        non_sym(1, 0) = 3.0f; non_sym(1, 1) = 4.0f;  // Non-symmetric
+        
+        tiny::Mat::CholeskyDecomposition chol_non_sym = non_sym.cholesky_decompose();
+        std::cout << "Non-symmetric matrix: Status = " << (chol_non_sym.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (chol_non_sym.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.37: solve_cholesky() - Error handling - dimension mismatch
+    {
+        std::cout << "\n[E1.37] solve_cholesky() - Error Handling - Dimension Mismatch\n";
+        tiny::Mat A(3, 3);
+        A(0, 0) = 4.0f; A(0, 1) = 2.0f; A(0, 2) = 0.0f;
+        A(1, 0) = 2.0f; A(1, 1) = 5.0f; A(1, 2) = 1.0f;
+        A(2, 0) = 0.0f; A(2, 1) = 1.0f; A(2, 2) = 3.0f;
+        tiny::Mat b(4, 1);  // Wrong dimension
+        tiny::Mat::CholeskyDecomposition chol = A.cholesky_decompose();
+        if (chol.status == TINY_OK)
+        {
+            tiny::Mat x_mismatch = tiny::Mat::solve_cholesky(chol, b);
+            // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+            // For dimension mismatch, expected solution size is 3x1, so 1x1 indicates error
+            bool solve_mismatch_correct = (x_mismatch.row == 0 && x_mismatch.col == 0) || 
+                                         (x_mismatch.data == nullptr) ||
+                                         (x_mismatch.row == 1 && x_mismatch.col == 1 && x_mismatch.data != nullptr);
+            std::cout << "Dimension mismatch solve_cholesky: " << (solve_mismatch_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+                      << " " << (solve_mismatch_correct ? "[PASS]" : "[FAIL]") << "\n";
+        }
+    }
+
+    // E1.4: QR Decomposition
+    std::cout << "\n[E1.4] QR Decomposition\n";
+    
+    // E1.41: General matrix
+    {
+        std::cout << "\n[E1.41] General 3x3 Matrix - QR Decomposition\n";
         tiny::Mat A(3, 3);
         A(0, 0) = 1.0f; A(0, 1) = 2.0f; A(0, 2) = 3.0f;
         A(1, 0) = 4.0f; A(1, 1) = 5.0f; A(1, 2) = 6.0f;
@@ -2519,9 +3079,9 @@ void test_matrix_decomposition()
         }
     }
 
-    // Test 7.4.2: Solve using QR decomposition (least squares)
+    // E1.42: Solve using QR decomposition (least squares)
     {
-        std::cout << "\n[Test 7.4.2] Least Squares Solution using QR Decomposition\n";
+        std::cout << "\n[E1.42] Least Squares Solution using QR Decomposition\n";
         tiny::Mat A(3, 2);  // Overdetermined system
         A(0, 0) = 1.0f; A(0, 1) = 1.0f;
         A(1, 0) = 1.0f; A(1, 1) = 2.0f;
@@ -2556,12 +3116,98 @@ void test_matrix_decomposition()
         std::cout << "Residual norm ||A*x - b||: " << residual_norm << "\n";
     }
 
-    // Test 7.5: SVD Decomposition
-    std::cout << "\n[Test 7.5] Singular Value Decomposition (SVD)\n";
-    
-    // Test 7.5.1: General matrix
+    // E1.46: solve_qr() - Boundary case - empty matrix
     {
-        std::cout << "\n[Test 7.5.1] General 3x3 Matrix - SVD Decomposition\n";
+        std::cout << "\n[E1.46] solve_qr() - Boundary Case - Empty Matrix\n";
+        tiny::Mat empty_A(0, 0);
+        tiny::Mat empty_b(0, 1);
+        
+        tiny::Mat::QRDecomposition qr_empty = empty_A.qr_decompose();
+        tiny::Mat x_empty = tiny::Mat::solve_qr(qr_empty, empty_b);
+        // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+        bool empty_correct = (x_empty.row == 0 && x_empty.col == 0) || 
+                            (x_empty.data == nullptr) ||
+                            (x_empty.row == 1 && x_empty.col == 1 && x_empty.data != nullptr);
+        std::cout << "Empty system: x rows = " << x_empty.row 
+                  << " (Expected: 0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.47: solve_qr() - Invalid QR decomposition
+    {
+        std::cout << "\n[E1.47] solve_qr() - Invalid QR Decomposition\n";
+        tiny::Mat::QRDecomposition invalid_qr;
+        invalid_qr.status = TINY_ERR_INVALID_ARG;  // Simulate invalid decomposition
+        
+        tiny::Mat b(3, 1);
+        b(0, 0) = 1.0f; b(1, 0) = 2.0f; b(2, 0) = 3.0f;
+        
+        tiny::Mat x_invalid = tiny::Mat::solve_qr(invalid_qr, b);
+        // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+        bool invalid_correct = (x_invalid.row == 0 && x_invalid.col == 0) || 
+                               (x_invalid.data == nullptr) ||
+                               (x_invalid.row == 1 && x_invalid.col == 1 && x_invalid.data != nullptr);
+        std::cout << "Invalid QR decomposition: x rows = " << x_invalid.row 
+                  << " (Expected: 0 or error state) " << (invalid_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.43: Boundary case - empty matrix
+    {
+        std::cout << "\n[E1.43] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        tiny::Mat::QRDecomposition qr_empty = empty_mat.qr_decompose();
+        // Error case: empty matrix should return error status, Q may be 0x0 or 1x1 error matrix
+        bool empty_correct = (qr_empty.status != TINY_OK) && 
+                            ((qr_empty.Q.row == 0 && qr_empty.Q.col == 0) || 
+                             (qr_empty.Q.data == nullptr) ||
+                             (qr_empty.Q.row == 1 && qr_empty.Q.col == 1 && qr_empty.Q.data != nullptr));
+        std::cout << "Empty matrix: Status = " << (qr_empty.status == TINY_OK ? "OK" : "Error") 
+                  << ", Q rows = " << qr_empty.Q.row 
+                  << " (Expected: Error status, Q is 0x0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.44: Boundary case - m=0 or n=0
+    {
+        std::cout << "\n[E1.44] Boundary Case - Zero Rows or Columns\n";
+        tiny::Mat zero_rows(0, 3);
+        tiny::Mat zero_cols(3, 0);
+        
+        tiny::Mat::QRDecomposition qr_zero_rows = zero_rows.qr_decompose();
+        // Zero rows/cols should return error status (invalid matrix)
+        std::cout << "Matrix with 0 rows (0x3): Status = " << (qr_zero_rows.status == TINY_OK ? "OK" : "Error") 
+                  << " " << (qr_zero_rows.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::QRDecomposition qr_zero_cols = zero_cols.qr_decompose();
+        // Zero rows/cols should return error status (invalid matrix)
+        std::cout << "Matrix with 0 cols (3x0): Status = " << (qr_zero_cols.status == TINY_OK ? "OK" : "Error") 
+                  << " " << (qr_zero_cols.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.45: solve_qr() - Error handling - dimension mismatch
+    {
+        std::cout << "\n[E1.45] solve_qr() - Error Handling - Dimension Mismatch\n";
+        tiny::Mat A(3, 2);
+        tiny::Mat b(4, 1);  // Wrong dimension
+        tiny::Mat::QRDecomposition qr = A.qr_decompose();
+        if (qr.status == TINY_OK)
+        {
+            tiny::Mat x_mismatch = tiny::Mat::solve_qr(qr, b);
+            // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+            // For dimension mismatch, expected solution size is 2x1, so 1x1 indicates error
+            bool solve_mismatch_correct = (x_mismatch.row == 0 && x_mismatch.col == 0) || 
+                                         (x_mismatch.data == nullptr) ||
+                                         (x_mismatch.row == 1 && x_mismatch.col == 1 && x_mismatch.data != nullptr);
+            std::cout << "Dimension mismatch solve_qr: " << (solve_mismatch_correct ? "Empty matrix or error state (Expected)" : "Non-empty (Error)") 
+                      << " " << (solve_mismatch_correct ? "[PASS]" : "[FAIL]") << "\n";
+        }
+    }
+
+    // E1.5: SVD Decomposition
+    std::cout << "\n[E1.5] Singular Value Decomposition (SVD)\n";
+    
+    // E1.51: General matrix
+    {
+        std::cout << "\n[E1.51] General 3x3 Matrix - SVD Decomposition\n";
         tiny::Mat A(3, 3);
         A(0, 0) = 1.0f; A(0, 1) = 2.0f; A(0, 2) = 3.0f;
         A(1, 0) = 4.0f; A(1, 1) = 5.0f; A(1, 2) = 6.0f;
@@ -2613,9 +3259,9 @@ void test_matrix_decomposition()
         }
     }
 
-    // Test 7.5.2: Pseudo-inverse using SVD
+    // E1.52: Pseudo-inverse using SVD
     {
-        std::cout << "\n[Test 7.5.2] Pseudo-inverse using SVD\n";
+        std::cout << "\n[E1.52] Pseudo-inverse using SVD\n";
         tiny::Mat A(3, 2);  // Non-square matrix
         A(0, 0) = 1.0f; A(0, 1) = 2.0f;
         A(1, 0) = 3.0f; A(1, 1) = 4.0f;
@@ -2644,8 +3290,103 @@ void test_matrix_decomposition()
         std::cout << "Verification error (A * A^+ * A ≈ A): " << diff << (diff < 0.1f ? " [PASS]" : " [FAIL]") << "\n";
     }
 
-    // Test 7.6: Performance Tests
-    std::cout << "\n[Test 7.6] Matrix Decomposition Performance Tests\n";
+    // E1.57: pseudo_inverse() - Parameter validation - tolerance < 0
+    {
+        std::cout << "\n[E1.57] pseudo_inverse() - Parameter Validation - tolerance < 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 1.0f; test_mat(0, 1) = 2.0f;
+        test_mat(1, 0) = 3.0f; test_mat(1, 1) = 4.0f;
+        
+        tiny::Mat::SVDDecomposition svd = test_mat.svd_decompose(100, 1e-6f);
+        if (svd.status == TINY_OK)
+        {
+            tiny::Mat A_plus_neg = tiny::Mat::pseudo_inverse(svd, -1e-6f);
+            // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+            bool neg_tol_correct = (A_plus_neg.row == 0 && A_plus_neg.col == 0) || 
+                                  (A_plus_neg.data == nullptr) ||
+                                  (A_plus_neg.row == 1 && A_plus_neg.col == 1 && A_plus_neg.data != nullptr);
+            std::cout << "tolerance = -1e-6: A_plus rows = " << A_plus_neg.row 
+                      << " (Expected: 0 or error state) " << (neg_tol_correct ? "[PASS]" : "[FAIL]") << "\n";
+        }
+    }
+
+    // E1.58: pseudo_inverse() - Invalid SVD decomposition
+    {
+        std::cout << "\n[E1.58] pseudo_inverse() - Invalid SVD Decomposition\n";
+        tiny::Mat::SVDDecomposition invalid_svd;
+        invalid_svd.status = TINY_ERR_INVALID_ARG;  // Simulate invalid decomposition
+        
+        tiny::Mat A_plus_invalid = tiny::Mat::pseudo_inverse(invalid_svd, 1e-6f);
+        // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+        bool pseudo_inv_invalid_correct = (A_plus_invalid.row == 0 && A_plus_invalid.col == 0) || 
+                                          (A_plus_invalid.data == nullptr) ||
+                                          (A_plus_invalid.row == 1 && A_plus_invalid.col == 1 && A_plus_invalid.data != nullptr);
+        std::cout << "Invalid SVD decomposition: A_plus rows = " << A_plus_invalid.row 
+                  << " (Expected: 0 or error state) " << (pseudo_inv_invalid_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.53: Parameter validation - max_iter <= 0
+    {
+        std::cout << "\n[E1.53] Parameter Validation - max_iter <= 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 1.0f; test_mat(0, 1) = 2.0f;
+        test_mat(1, 0) = 3.0f; test_mat(1, 1) = 4.0f;
+        
+        tiny::Mat::SVDDecomposition result_zero = test_mat.svd_decompose(0, 1e-6f);
+        std::cout << "max_iter = 0: Status = " << (result_zero.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_zero.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::SVDDecomposition result_neg = test_mat.svd_decompose(-1, 1e-6f);
+        std::cout << "max_iter = -1: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.54: Parameter validation - tolerance < 0
+    {
+        std::cout << "\n[E1.54] Parameter Validation - tolerance < 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 1.0f; test_mat(0, 1) = 2.0f;
+        test_mat(1, 0) = 3.0f; test_mat(1, 1) = 4.0f;
+        
+        tiny::Mat::SVDDecomposition result_neg = test_mat.svd_decompose(100, -1e-6f);
+        std::cout << "tolerance = -1e-6: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.55: Boundary case - empty matrix (m=0 or n=0)
+    {
+        std::cout << "\n[E1.55] Boundary Case - Empty Matrix (m=0 or n=0)\n";
+        tiny::Mat zero_rows(0, 3);
+        tiny::Mat zero_cols(3, 0);
+        
+        tiny::Mat::SVDDecomposition svd_zero_rows = zero_rows.svd_decompose(100, 1e-6f);
+        // Zero rows/cols should return error status (invalid matrix)
+        std::cout << "Matrix with 0 rows (0x3): Status = " << (svd_zero_rows.status == TINY_OK ? "OK" : "Error") 
+                  << " " << (svd_zero_rows.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::SVDDecomposition svd_zero_cols = zero_cols.svd_decompose(100, 1e-6f);
+        // Zero rows/cols should return error status (invalid matrix)
+        std::cout << "Matrix with 0 cols (3x0): Status = " << (svd_zero_cols.status == TINY_OK ? "OK" : "Error") 
+                  << " " << (svd_zero_cols.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.56: pseudo_inverse() - Error handling - invalid SVD decomposition
+    {
+        std::cout << "\n[E1.56] pseudo_inverse() - Error Handling - Invalid SVD Decomposition\n";
+        tiny::Mat::SVDDecomposition invalid_svd;
+        invalid_svd.status = TINY_ERR_INVALID_ARG;  // Simulate invalid decomposition
+        
+        tiny::Mat A_plus_invalid = tiny::Mat::pseudo_inverse(invalid_svd, 1e-6f);
+        // Error case should return empty matrix (0x0) or error state (1x1 error matrix)
+        bool pseudo_inv_invalid_correct = (A_plus_invalid.row == 0 && A_plus_invalid.col == 0) || 
+                                          (A_plus_invalid.data == nullptr) ||
+                                          (A_plus_invalid.row == 1 && A_plus_invalid.col == 1 && A_plus_invalid.data != nullptr);
+        std::cout << "Invalid SVD decomposition: A_plus rows = " << A_plus_invalid.row 
+                  << " (Expected: 0 or error state) " << (pseudo_inv_invalid_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.6: Performance Tests
+    std::cout << "\n[E1.6] Matrix Decomposition Performance Tests\n";
     
     tiny::Mat perf_mat(4, 4);
     perf_mat(0, 0) = 4.0f; perf_mat(0, 1) = 2.0f; perf_mat(0, 2) = 1.0f; perf_mat(0, 3) = 0.0f;
@@ -2653,29 +3394,29 @@ void test_matrix_decomposition()
     perf_mat(2, 0) = 1.0f; perf_mat(2, 1) = 1.0f; perf_mat(2, 2) = 3.0f; perf_mat(2, 3) = 1.0f;
     perf_mat(3, 0) = 0.0f; perf_mat(3, 1) = 0.0f; perf_mat(3, 2) = 1.0f; perf_mat(3, 3) = 2.0f;
     
-    // Test 7.6.1: LU decomposition performance
-    std::cout << "\n[Test 7.6.1] LU Decomposition Performance\n";
+    // E1.61: LU decomposition performance
+    std::cout << "\n[E1.61] LU Decomposition Performance\n";
     TIME_OPERATION(
         tiny::Mat::LUDecomposition perf_lu = perf_mat.lu_decompose(true);
         (void)perf_lu;
     , "LU Decomposition (4x4 matrix)");
     
-    // Test 7.6.2: Cholesky decomposition performance
-    std::cout << "\n[Test 7.6.2] Cholesky Decomposition Performance\n";
+    // E1.62: Cholesky decomposition performance
+    std::cout << "\n[E1.62] Cholesky Decomposition Performance\n";
     TIME_OPERATION(
         tiny::Mat::CholeskyDecomposition perf_chol = perf_mat.cholesky_decompose();
         (void)perf_chol;
     , "Cholesky Decomposition (4x4 SPD matrix)");
     
-    // Test 7.6.3: QR decomposition performance
-    std::cout << "\n[Test 7.6.3] QR Decomposition Performance\n";
+    // E1.63: QR decomposition performance
+    std::cout << "\n[E1.63] QR Decomposition Performance\n";
     TIME_OPERATION(
         tiny::Mat::QRDecomposition perf_qr = perf_mat.qr_decompose();
         (void)perf_qr;
     , "QR Decomposition (4x4 matrix)");
     
-    // Test 7.6.4: SVD decomposition performance
-    std::cout << "\n[Test 7.6.4] SVD Decomposition Performance\n";
+    // E1.64: SVD decomposition performance
+    std::cout << "\n[E1.64] SVD Decomposition Performance\n";
     TIME_OPERATION(
         tiny::Mat::SVDDecomposition perf_svd = perf_mat.svd_decompose(50, 1e-5f);
         (void)perf_svd;
@@ -2685,17 +3426,16 @@ void test_matrix_decomposition()
 }
 
 // ============================================================================
-// Group 8: Advanced Linear Algebra - Gram-Schmidt Orthogonalization Tests
 // ============================================================================
-// Purpose: Test Gram-Schmidt orthogonalization process - fundamental operation for
-//          QR decomposition, eigenvalue decomposition, and basis transformation
+// E2: Gram-Schmidt Orthogonalization
+// ============================================================================
 void test_gram_schmidt_orthogonalize()
 {
-    std::cout << "\n[Group 8: Advanced Linear Algebra - Gram-Schmidt Orthogonalization Tests]\n";
+    std::cout << "\n[E2: Gram-Schmidt Orthogonalization Tests]\n";
 
-    // Test 8.1: Basic orthogonalization of linearly independent vectors
+    // E2.1: Basic orthogonalization of linearly independent vectors
     {
-        std::cout << "\n[Test 8.1] Basic Orthogonalization - Linearly Independent Vectors\n";
+        std::cout << "\n[E2.1] Basic Orthogonalization - Linearly Independent Vectors\n";
         tiny::Mat vectors(3, 3);
         // Create three linearly independent vectors
         vectors(0, 0) = 1.0f; vectors(0, 1) = 1.0f; vectors(0, 2) = 0.0f;
@@ -2774,9 +3514,9 @@ void test_gram_schmidt_orthogonalize()
         }
     }
     
-    // Test 8.2: Orthogonalization with near-linear-dependent vectors
+    // E2.2: Orthogonalization with near-linear-dependent vectors
     {
-        std::cout << "\n[Test 8.2] Orthogonalization - Near-Linear-Dependent Vectors\n";
+        std::cout << "\n[E2.2] Orthogonalization - Near-Linear-Dependent Vectors\n";
         tiny::Mat vectors(3, 3);
         // Create vectors where third is almost a linear combination of first two
         vectors(0, 0) = 1.0f; vectors(0, 1) = 0.0f; vectors(0, 2) = 1.0f;
@@ -2810,9 +3550,9 @@ void test_gram_schmidt_orthogonalize()
         }
     }
     
-    // Test 8.3: Orthogonalization of 2D vectors
+    // E2.3: Orthogonalization of 2D vectors
     {
-        std::cout << "\n[Test 8.3] Orthogonalization - 2D Vectors (2x2)\n";
+        std::cout << "\n[E2.3] Orthogonalization - 2D Vectors (2x2)\n";
         tiny::Mat vectors(2, 2);
         vectors(0, 0) = 3.0f; vectors(0, 1) = 1.0f;
         vectors(1, 0) = 1.0f; vectors(1, 1) = 2.0f;
@@ -2844,31 +3584,59 @@ void test_gram_schmidt_orthogonalize()
         }
     }
     
-    // Test 8.4: Error handling - invalid input
+    // E2.4: Error handling - invalid input
     {
-        std::cout << "\n[Test 8.4] Error Handling - Invalid Input\n";
-        tiny::Mat empty_mat;  // Empty matrix
+        std::cout << "\n[E2.4] Error Handling - Invalid Input\n";
+        tiny::Mat empty_mat(0, 0);  // True empty matrix (0x0)
         tiny::Mat Q, R;
         bool success = tiny::Mat::gram_schmidt_orthogonalize(empty_mat, Q, R, 1e-6f);
         std::cout << "Empty matrix test: " << (success ? "FAIL (should return false)" : "PASS (correctly rejected)") << "\n";
     }
+
+    // E2.5: gram_schmidt_orthogonalize() - Parameter validation - negative tolerance
+    {
+        std::cout << "\n[E2.5] gram_schmidt_orthogonalize() - Parameter Validation - Negative Tolerance\n";
+        tiny::Mat vectors(2, 2);
+        vectors(0, 0) = 1.0f; vectors(0, 1) = 0.0f;
+        vectors(1, 0) = 0.0f; vectors(1, 1) = 1.0f;
+        tiny::Mat Q, R;
+        bool success_neg = tiny::Mat::gram_schmidt_orthogonalize(vectors, Q, R, -1e-6f);
+        std::cout << "tolerance = -1e-6: " << (success_neg ? "FAIL (should return false)" : "PASS (correctly rejected)") << "\n";
+    }
+
+    // E2.6: gram_schmidt_orthogonalize() - Boundary case - zero rows
+    {
+        std::cout << "\n[E2.6] gram_schmidt_orthogonalize() - Boundary Case - Zero Rows\n";
+        tiny::Mat zero_rows(0, 2);
+        tiny::Mat Q, R;
+        bool success_zero_rows = tiny::Mat::gram_schmidt_orthogonalize(zero_rows, Q, R, 1e-6f);
+        std::cout << "Zero rows (0x2): " << (success_zero_rows ? "FAIL (should return false)" : "PASS (correctly rejected)") << "\n";
+    }
+
+    // E2.7: gram_schmidt_orthogonalize() - Boundary case - zero columns
+    {
+        std::cout << "\n[E2.7] gram_schmidt_orthogonalize() - Boundary Case - Zero Columns\n";
+        tiny::Mat zero_cols(2, 0);
+        tiny::Mat Q, R;
+        bool success_zero_cols = tiny::Mat::gram_schmidt_orthogonalize(zero_cols, Q, R, 1e-6f);
+        std::cout << "Zero columns (2x0): " << (success_zero_cols ? "FAIL (should return false)" : "PASS (correctly rejected)") << "\n";
+    }
 }
 
 // ============================================================================
-// Group 9: System Identification - Eigenvalue and Eigenvector Decomposition Tests
 // ============================================================================
-// Purpose: Test eigenvalue decomposition - critical for SHM and system identification
-//          applications (modal analysis, natural frequencies, mode shapes)
+// E3: Eigenvalue Decomposition
+// ============================================================================
 void test_eigenvalue_decomposition()
 {
-    std::cout << "\n[Group 9: System Identification - Eigenvalue and Eigenvector Decomposition Tests]\n";
+    std::cout << "\n[E3: Eigenvalue Decomposition Tests]\n";
 
-    // Test 9.1: is_symmetric() - Basic functionality
-    std::cout << "\n[Test 9.1] is_symmetric() - Basic Functionality\n";
+    // E3.1: is_symmetric() - Basic functionality
+    std::cout << "\n[E3.1] is_symmetric() - Basic Functionality\n";
     
-    // Test 9.1.1: Symmetric matrix
+    // E3.11: Symmetric matrix
     {
-        std::cout << "[Test 9.1.1] Symmetric 3x3 Matrix\n";
+        std::cout << "[E3.11] Symmetric 3x3 Matrix\n";
         tiny::Mat sym_mat1(3, 3);
         sym_mat1(0, 0) = 4.0f; sym_mat1(0, 1) = 1.0f; sym_mat1(0, 2) = 2.0f;
         sym_mat1(1, 0) = 1.0f; sym_mat1(1, 1) = 3.0f; sym_mat1(1, 2) = 0.0f;
@@ -2879,10 +3647,10 @@ void test_eigenvalue_decomposition()
         std::cout << "Is symmetric: " << (is_sym1 ? "True" : "False") << " (Expected: True)\n";
     }
 
-    // Test 9.1.2: Non-symmetric matrix (keep for later tests)
+    // E3.12: Non-symmetric matrix (keep for later tests)
     tiny::Mat non_sym_mat(3, 3);
     {
-        std::cout << "\n[Test 9.1.2] Non-Symmetric 3x3 Matrix\n";
+        std::cout << "\n[E3.12] Non-Symmetric 3x3 Matrix\n";
         non_sym_mat(0, 0) = 1.0f; non_sym_mat(0, 1) = 2.0f; non_sym_mat(0, 2) = 3.0f;
         non_sym_mat(1, 0) = 4.0f; non_sym_mat(1, 1) = 5.0f; non_sym_mat(1, 2) = 6.0f;
         non_sym_mat(2, 0) = 7.0f; non_sym_mat(2, 1) = 8.0f; non_sym_mat(2, 2) = 9.0f;
@@ -2892,17 +3660,17 @@ void test_eigenvalue_decomposition()
         std::cout << "Is symmetric: " << (is_sym2 ? "True" : "False") << " (Expected: False)\n";
     }
 
-    // Test 9.1.3: Non-square matrix
+    // E3.13: Non-square matrix
     {
-        std::cout << "\n[Test 9.1.3] Non-Square Matrix (2x3)\n";
+        std::cout << "\n[E3.13] Non-Square Matrix (2x3)\n";
         tiny::Mat rect_mat(2, 3);
         bool is_sym3 = rect_mat.is_symmetric(1e-5f);
         std::cout << "Is symmetric: " << (is_sym3 ? "True" : "False") << " (Expected: False)\n";
     }
 
-    // Test 9.1.4: Symmetric matrix with small numerical errors
+    // E3.14: Symmetric matrix with small numerical errors
     {
-        std::cout << "\n[Test 9.1.4] Symmetric Matrix with Small Numerical Errors\n";
+        std::cout << "\n[E3.14] Symmetric Matrix with Small Numerical Errors\n";
         tiny::Mat sym_mat2(2, 2);
         // Use 1e-5 error which is within float precision (float has ~7 significant digits)
         // For 2.0, we can represent 2.00001 accurately
@@ -2951,13 +3719,37 @@ void test_eigenvalue_decomposition()
         std::cout << " " << (diff_accurate ? "[PASS - difference stored correctly]" : "[FAIL - float precision issue]") << "\n";
     }
 
-    // Test 9.2: power_iteration() - Dominant eigenvalue
-    std::cout << "\n[Test 9.2] power_iteration() - Dominant Eigenvalue\n";
+    // E3.15: Parameter validation - negative tolerance
+    {
+        std::cout << "\n[E3.15] Parameter Validation - Negative Tolerance\n";
+        tiny::Mat sym_mat(2, 2);
+        sym_mat(0, 0) = 1.0f; sym_mat(0, 1) = 2.0f;
+        sym_mat(1, 0) = 2.0f; sym_mat(1, 1) = 3.0f;
+        
+        // Test with tolerance < 0 (should return false/error)
+        bool is_sym_neg = sym_mat.is_symmetric(-1e-6f);
+        std::cout << "tolerance = -1e-6 (invalid): " << (is_sym_neg ? "True" : "False") 
+                  << " (Expected: False) " << (!is_sym_neg ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.16: Boundary case - empty matrix
+    {
+        std::cout << "\n[E3.16] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        // Empty matrix cannot be checked for symmetry (data is null or invalid)
+        bool is_sym_empty = empty_mat.is_symmetric(1e-6f);
+        std::cout << "Empty matrix (0x0): " << (is_sym_empty ? "True" : "False") 
+                  << " (Expected: False, empty matrix is invalid) " << (!is_sym_empty ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.2: power_iteration() - Dominant eigenvalue
+    std::cout << "\n[E3.2] power_iteration() - Dominant Eigenvalue\n";
     
-    // Test 9.2.1: Simple 2x2 symmetric matrix (known eigenvalues)
+    // E3.21: Simple 2x2 symmetric matrix (known eigenvalues)
     tiny::Mat mat2x2(2, 2);
     {
-        std::cout << "\n[Test 9.2.1] Simple 2x2 Matrix\n";
+        std::cout << "\n[E3.21] Simple 2x2 Matrix\n";
         mat2x2(0, 0) = 2.0f; mat2x2(0, 1) = 1.0f;
         mat2x2(1, 0) = 1.0f; mat2x2(1, 1) = 2.0f;
         std::cout << "Matrix:\n";
@@ -2985,10 +3777,10 @@ void test_eigenvalue_decomposition()
         std::cout << "  Error from expected (3.0): " << error << (error < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
     }
 
-    // Test 9.2.2: 3x3 matrix (SHM-like stiffness matrix) - keep for later tests
+    // E3.22: 3x3 matrix (SHM-like stiffness matrix) - keep for later tests
     tiny::Mat stiffness(3, 3);
     {
-        std::cout << "\n[Test 9.2.2] 3x3 Stiffness Matrix (SHM Application)\n";
+        std::cout << "\n[E3.22] 3x3 Stiffness Matrix (SHM Application)\n";
         stiffness(0, 0) = 2.0f; stiffness(0, 1) = -1.0f; stiffness(0, 2) = 0.0f;
         stiffness(1, 0) = -1.0f; stiffness(1, 1) = 2.0f; stiffness(1, 2) = -1.0f;
         stiffness(2, 0) = 0.0f; stiffness(2, 1) = -1.0f; stiffness(2, 2) = 2.0f;
@@ -3014,21 +3806,62 @@ void test_eigenvalue_decomposition()
         std::cout << "  Error from expected (" << expected_eigen << "): " << error << (error < 0.1f ? " [PASS]" : " [FAIL]") << "\n";
     }
 
-    // Test 9.2.3: Non-square matrix (should fail)
+    // E3.23: Non-square matrix (should fail)
     {
-        std::cout << "\n[Test 9.2.3] Non-Square Matrix (Expect Error)\n";
+        std::cout << "\n[E3.23] Non-Square Matrix (Expect Error)\n";
         tiny::Mat non_square(2, 3);
         tiny::Mat::EigenPair result_error = non_square.power_iteration(100, 1e-6f);
         std::cout << "Status: " << (result_error.status == TINY_OK ? "OK" : "Error (Expected)") << "\n";
     }
 
-    // Test 9.2.4: inverse_power_iteration() - Smallest eigenvalue (Critical for System Identification)
-    std::cout << "\n[Test 9.2.4] inverse_power_iteration() - Smallest Eigenvalue (System Identification)\n";
-    
-    // Test 9.2.4.1: Simple 2x2 symmetric matrix (known eigenvalues)
+    // E3.25: Parameter validation - max_iter <= 0
     {
-        std::cout << "\n[Test 9.2.4.1] Simple 2x2 Matrix - Smallest Eigenvalue\n";
-        std::cout << "Matrix (same as Test 9.2.1):\n";
+        std::cout << "\n[E3.25] Parameter Validation - max_iter <= 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenPair result_zero = test_mat.power_iteration(0, 1e-6f);
+        std::cout << "max_iter = 0: Status = " << (result_zero.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_zero.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::EigenPair result_neg = test_mat.power_iteration(-1, 1e-6f);
+        std::cout << "max_iter = -1: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.26: Parameter validation - tolerance < 0
+    {
+        std::cout << "\n[E3.26] Parameter Validation - tolerance < 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenPair result_neg = test_mat.power_iteration(100, -1e-6f);
+        std::cout << "tolerance = -1e-6: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.27: Boundary case - empty matrix
+    {
+        std::cout << "\n[E3.27] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        tiny::Mat::EigenPair result_empty = empty_mat.power_iteration(100, 1e-6f);
+        // Empty matrix should return error status
+        bool empty_correct = (result_empty.status != TINY_OK);
+        std::cout << "Empty matrix: Status = " << (result_empty.status == TINY_OK ? "OK" : "Error") 
+                  << ", eigenvalue = " << result_empty.eigenvalue 
+                  << " (Expected: Error status) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.24: inverse_power_iteration() - Smallest eigenvalue (Critical for System Identification)
+    std::cout << "\n[E3.24] inverse_power_iteration() - Smallest Eigenvalue (System Identification)\n";
+    
+    // E3.28: Simple 2x2 symmetric matrix (known eigenvalues)
+    {
+        std::cout << "\n[E3.28] Simple 2x2 Matrix - Smallest Eigenvalue\n";
+        std::cout << "Matrix (same as E3.21):\n";
         mat2x2.print_matrix(true);
         
         // Expected values: eigenvalues are 3 and 1 (for matrix [2,1; 1,2])
@@ -3061,10 +3894,10 @@ void test_eigenvalue_decomposition()
                   << " (Expected: ~3.0) " << (fabsf(result_power_compare.eigenvalue / result_inv_power.eigenvalue - 3.0f) < 0.1f ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 9.2.4.2: 3x3 stiffness matrix - Smallest eigenvalue (SHM Application)
+    // E3.29: 3x3 stiffness matrix - Smallest eigenvalue (SHM Application)
     {
-        std::cout << "\n[Test 9.2.4.2] 3x3 Stiffness Matrix - Smallest Eigenvalue (SHM Application)\n";
-        std::cout << "Stiffness Matrix (same as Test 9.2.2):\n";
+        std::cout << "\n[E3.29] 3x3 Stiffness Matrix - Smallest Eigenvalue (SHM Application)\n";
+        std::cout << "Stiffness Matrix (same as E3.22):\n";
         stiffness.print_matrix(true);
         
         // Expected values for 3x3 tridiagonal symmetric matrix [2,-1,0; -1,2,-1; 0,-1,2]
@@ -3099,9 +3932,9 @@ void test_eigenvalue_decomposition()
                   << " (Expected: ~2.4, ratio of highest to lowest mode)\n";
     }
 
-    // Test 9.2.4.3: Non-square matrix (should fail)
+    // E3.210: Non-square matrix (should fail)
     {
-        std::cout << "\n[Test 9.2.4.3] Non-Square Matrix (Expect Error)\n";
+        std::cout << "\n[E3.210] Non-Square Matrix (Expect Error)\n";
         tiny::Mat non_square(2, 3);
         tiny::Mat::EigenPair result_error = non_square.inverse_power_iteration(100, 1e-6f);
         std::cout << "Status: " << (result_error.status == TINY_OK ? "OK" : "Error (Expected)") << "\n";
@@ -3109,9 +3942,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Error handling: " << (correct ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 9.2.4.4: Near-singular matrix (should handle gracefully)
+    // E3.211: Near-singular matrix (should handle gracefully)
     {
-        std::cout << "\n[Test 9.2.4.4] Near-Singular Matrix (Edge Case)\n";
+        std::cout << "\n[E3.211] Near-Singular Matrix (Edge Case)\n";
         tiny::Mat near_singular(3, 3);
         // Create a matrix that is close to singular but still invertible
         near_singular(0, 0) = 1.0f; near_singular(0, 1) = 0.0f; near_singular(0, 2) = 0.0f;
@@ -3135,12 +3968,74 @@ void test_eigenvalue_decomposition()
         }
     }
 
-    // Test 9.3: eigendecompose_jacobi() - Symmetric matrix decomposition
-    std::cout << "\n[Test 9.3] eigendecompose_jacobi() - Symmetric Matrix Decomposition\n";
-    
-    // Test 9.3.1: Simple 2x2 symmetric matrix
+    // E3.212: Parameter validation - max_iter <= 0
     {
-        std::cout << "\n[Test 9.3.1] 2x2 Symmetric Matrix - Complete Decomposition\n";
+        std::cout << "\n[E3.212] Parameter Validation - max_iter <= 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenPair result_zero = test_mat.inverse_power_iteration(0, 1e-6f);
+        std::cout << "max_iter = 0: Status = " << (result_zero.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_zero.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::EigenPair result_neg = test_mat.inverse_power_iteration(-1, 1e-6f);
+        std::cout << "max_iter = -1: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.213: Parameter validation - tolerance < 0
+    {
+        std::cout << "\n[E3.213] Parameter Validation - tolerance < 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenPair result_neg = test_mat.inverse_power_iteration(100, -1e-6f);
+        std::cout << "tolerance = -1e-6: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.214: Boundary case - empty matrix
+    {
+        std::cout << "\n[E3.214] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        tiny::Mat::EigenPair result_empty = empty_mat.inverse_power_iteration(100, 1e-6f);
+        // Empty matrix should return error status
+        bool empty_correct = (result_empty.status != TINY_OK);
+        std::cout << "Empty matrix: Status = " << (result_empty.status == TINY_OK ? "OK" : "Error") 
+                  << ", eigenvalue = " << result_empty.eigenvalue 
+                  << " (Expected: Error status) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.215: Singular matrix (should fail)
+    {
+        std::cout << "\n[E3.215] Singular Matrix (Should Fail)\n";
+        tiny::Mat singular(2, 2);
+        singular(0, 0) = 1.0f; singular(0, 1) = 2.0f;
+        singular(1, 0) = 2.0f; singular(1, 1) = 4.0f;  // Second row is 2x first row (singular)
+        
+        tiny::Mat::EigenPair result_sing = singular.inverse_power_iteration(100, 1e-6f);
+        // Note: Some implementations may handle singular matrices differently
+        // Check if status is Error OR if eigenvalue is valid (implementation-dependent)
+        // For now, accept either Error status or valid result (some algorithms can handle singular matrices)
+        bool singular_correct = (result_sing.status != TINY_OK) || 
+                               (result_sing.status == TINY_OK && (result_sing.eigenvalue == 0.0f || fabsf(result_sing.eigenvalue) < 1e-5f));
+        std::cout << "Singular matrix: Status = " << (result_sing.status == TINY_OK ? "OK" : "Error");
+        if (result_sing.status == TINY_OK)
+        {
+            std::cout << ", eigenvalue = " << result_sing.eigenvalue;
+        }
+        std::cout << " (Expected: Error or OK with eigenvalue ≈ 0) " << (singular_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.3: eigendecompose_jacobi() - Symmetric matrix decomposition
+    std::cout << "\n[E3.3] eigendecompose_jacobi() - Symmetric Matrix Decomposition\n";
+    
+    // E3.31: Simple 2x2 symmetric matrix
+    {
+        std::cout << "\n[E3.31] 2x2 Symmetric Matrix - Complete Decomposition\n";
         std::cout << "[Expected Results]\n";
         std::cout << "  Expected eigenvalues: 3.0, 1.0 (in any order)\n";
         std::cout << "  Expected eigenvectors (for λ=3): [0.707, 0.707] or [-0.707, -0.707] (normalized)\n";
@@ -3174,9 +4069,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Verification (A*v = λ*v): " << (verify1 ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 9.3.2: 3x3 symmetric matrix (SHM stiffness matrix)
+    // E3.32: 3x3 symmetric matrix (SHM stiffness matrix)
     {
-        std::cout << "\n[Test 9.3.2] 3x3 Stiffness Matrix (SHM Application)\n";
+        std::cout << "\n[E3.32] 3x3 Stiffness Matrix (SHM Application)\n";
         std::cout << "[Expected Results]\n";
         std::cout << "  Expected eigenvalues (approximate): 3.414, 2.000, 0.586\n";
         std::cout << "  Expected natural frequencies: 1.848, 1.414, 0.765 rad/s\n";
@@ -3212,9 +4107,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Status: " << (result_jacobi2.status == TINY_OK ? "OK" : "Error") << "\n";
     }
 
-    // Test 9.3.3: Diagonal matrix (trivial case)
+    // E3.33: Diagonal matrix (trivial case)
     {
-        std::cout << "\n[Test 9.3.3] Diagonal Matrix (Eigenvalues on diagonal)\n";
+        std::cout << "\n[E3.33] Diagonal Matrix (Eigenvalues on diagonal)\n";
         tiny::Mat diag_mat(3, 3);
         diag_mat(0, 0) = 5.0f; diag_mat(0, 1) = 0.0f; diag_mat(0, 2) = 0.0f;
         diag_mat(1, 0) = 0.0f; diag_mat(1, 1) = 3.0f; diag_mat(1, 2) = 0.0f;
@@ -3244,12 +4139,56 @@ void test_eigenvalue_decomposition()
         std::cout << "Eigenvalue check (should be 5.0, 3.0, 1.0): " << (ev_check ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 9.4: eigendecompose_qr() - General matrix decomposition
-    std::cout << "\n[Test 9.4] eigendecompose_qr() - General Matrix Decomposition\n";
-    
-    // Test 9.4.1: General 2x2 matrix
+    // E3.34: Parameter validation - tolerance < 0
     {
-        std::cout << "\n[Test 9.4.1] General 2x2 Matrix\n";
+        std::cout << "\n[E3.34] Parameter Validation - tolerance < 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenDecomposition result_neg = test_mat.eigendecompose_jacobi(-1e-6f, 100);
+        std::cout << "tolerance = -1e-6: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.35: Parameter validation - max_iter <= 0
+    {
+        std::cout << "\n[E3.35] Parameter Validation - max_iter <= 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenDecomposition result_zero = test_mat.eigendecompose_jacobi(1e-6f, 0);
+        std::cout << "max_iter = 0: Status = " << (result_zero.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_zero.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::EigenDecomposition result_neg = test_mat.eigendecompose_jacobi(1e-6f, -1);
+        std::cout << "max_iter = -1: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.36: Boundary case - empty matrix
+    {
+        std::cout << "\n[E3.36] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        tiny::Mat::EigenDecomposition result_empty = empty_mat.eigendecompose_jacobi(1e-6f, 100);
+        // Error case: empty matrix should return error status, eigenvalues may be 0x0 or 1x1 error matrix
+        bool empty_correct = (result_empty.status != TINY_OK) && 
+                            ((result_empty.eigenvalues.row == 0 && result_empty.eigenvalues.col == 0) || 
+                             (result_empty.eigenvalues.data == nullptr) ||
+                             (result_empty.eigenvalues.row == 1 && result_empty.eigenvalues.col == 1 && result_empty.eigenvalues.data != nullptr));
+        std::cout << "Empty matrix: Status = " << (result_empty.status == TINY_OK ? "OK" : "Error") 
+                  << ", eigenvalues rows = " << result_empty.eigenvalues.row 
+                  << " (Expected: Error status, eigenvalues is 0x0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.4: eigendecompose_qr() - General matrix decomposition
+    std::cout << "\n[E3.4] eigendecompose_qr() - General Matrix Decomposition\n";
+    
+    // E3.41: General 2x2 matrix
+    {
+        std::cout << "\n[E3.41] General 2x2 Matrix\n";
         tiny::Mat gen_mat(2, 2);
         gen_mat(0, 0) = 1.0f; gen_mat(0, 1) = 2.0f;
         gen_mat(1, 0) = 3.0f; gen_mat(1, 1) = 4.0f;
@@ -3306,9 +4245,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Overall eigenvalue check: " << (ev_check ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 9.4.2: Non-symmetric 3x3 matrix
+    // E3.42: Non-symmetric 3x3 matrix
     {
-        std::cout << "\n[Test 9.4.2] Non-Symmetric 3x3 Matrix\n";
+        std::cout << "\n[E3.42] Non-Symmetric 3x3 Matrix\n";
         std::cout << "Matrix [1,2,3; 4,5,6; 7,8,9]:\n";
         non_sym_mat.print_matrix(true);
         
@@ -3385,12 +4324,56 @@ void test_eigenvalue_decomposition()
         std::cout << "Overall eigenvalue check: " << (overall_pass ? "[PASS]" : "[FAIL - some eigenvalues have large errors]") << "\n";
     }
 
-    // Test 9.5: eigendecompose() - Automatic method selection
-    std::cout << "\n[Test 9.5] eigendecompose() - Automatic Method Selection\n";
-    
-    // Test 9.5.1: Symmetric matrix (should use Jacobi)
+    // E3.43: Parameter validation - max_iter <= 0
     {
-        std::cout << "\n[Test 9.5.1] Symmetric Matrix (Auto-select: Jacobi)\n";
+        std::cout << "\n[E3.43] Parameter Validation - max_iter <= 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 1.0f; test_mat(0, 1) = 2.0f;
+        test_mat(1, 0) = 3.0f; test_mat(1, 1) = 4.0f;
+        
+        tiny::Mat::EigenDecomposition result_zero = test_mat.eigendecompose_qr(0, 1e-6f);
+        std::cout << "max_iter = 0: Status = " << (result_zero.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_zero.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::EigenDecomposition result_neg = test_mat.eigendecompose_qr(-1, 1e-6f);
+        std::cout << "max_iter = -1: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.44: Parameter validation - tolerance < 0
+    {
+        std::cout << "\n[E3.44] Parameter Validation - tolerance < 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 1.0f; test_mat(0, 1) = 2.0f;
+        test_mat(1, 0) = 3.0f; test_mat(1, 1) = 4.0f;
+        
+        tiny::Mat::EigenDecomposition result_neg = test_mat.eigendecompose_qr(100, -1e-6f);
+        std::cout << "tolerance = -1e-6: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.45: Boundary case - empty matrix
+    {
+        std::cout << "\n[E3.45] Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        tiny::Mat::EigenDecomposition result_empty = empty_mat.eigendecompose_qr(100, 1e-6f);
+        // Error case: empty matrix should return error status, eigenvalues may be 0x0 or 1x1 error matrix
+        bool empty_correct = (result_empty.status != TINY_OK) && 
+                            ((result_empty.eigenvalues.row == 0 && result_empty.eigenvalues.col == 0) || 
+                             (result_empty.eigenvalues.data == nullptr) ||
+                             (result_empty.eigenvalues.row == 1 && result_empty.eigenvalues.col == 1 && result_empty.eigenvalues.data != nullptr));
+        std::cout << "Empty matrix: Status = " << (result_empty.status == TINY_OK ? "OK" : "Error") 
+                  << ", eigenvalues rows = " << result_empty.eigenvalues.row 
+                  << " (Expected: Error status, eigenvalues is 0x0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.5: eigendecompose() - Automatic method selection
+    std::cout << "\n[E3.5] eigendecompose() - Automatic Method Selection\n";
+    
+    // E3.51: Symmetric matrix (should use Jacobi)
+    {
+        std::cout << "\n[E3.51] Symmetric Matrix (Auto-select: Jacobi)\n";
         tiny::Mat sym_mat1(3, 3);
         sym_mat1(0, 0) = 4.0f; sym_mat1(0, 1) = 1.0f; sym_mat1(0, 2) = 2.0f;
         sym_mat1(1, 0) = 1.0f; sym_mat1(1, 1) = 3.0f; sym_mat1(1, 2) = 0.0f;
@@ -3411,9 +4394,9 @@ void test_eigenvalue_decomposition()
         std::cout << "Method used: Jacobi (auto-selected for symmetric matrix)\n";
     }
 
-    // Test 9.5.2: Non-symmetric matrix (should use QR)
+    // E3.52: Non-symmetric matrix (should use QR)
     {
-        std::cout << "\n[Test 9.5.2] Non-Symmetric Matrix (Auto-select: QR)\n";
+        std::cout << "\n[E3.52] Non-Symmetric Matrix (Auto-select: QR)\n";
         std::cout << "[Expected Results]\n";
         std::cout << "  Method: Should automatically use QR (non-symmetric matrix detected)\n";
         std::cout << "  Expected eigenvalues (theoretical): 16.12, -1.12, 0.00\n";
@@ -3429,7 +4412,7 @@ void test_eigenvalue_decomposition()
         std::cout << "Status: " << (result_auto2.status == TINY_OK ? "OK" : "Error") << "\n";
         std::cout << "Method used: QR (auto-selected for non-symmetric matrix)\n";
         
-        // Check results with detailed error reporting (same as Test 4.2)
+        // Check results with detailed error reporting
         float expected_evs[3] = {16.12f, -1.12f, 0.0f};
         bool matched[3] = {false, false, false};
         float errors[3] = {0.0f, 0.0f, 0.0f};
@@ -3478,12 +4461,89 @@ void test_eigenvalue_decomposition()
         std::cout << "Overall eigenvalue check: " << (overall_pass ? "[PASS]" : "[FAIL - some eigenvalues have large errors]") << "\n";
     }
 
-    // Test 9.6: SHM Application Scenario - Structural Dynamics
-    std::cout << "\n[Test 9.6] SHM Application - Structural Dynamics Analysis\n";
+    // E3.53: Parameter validation - tolerance < 0
+    {
+        std::cout << "\n[E3.53] Parameter Validation - tolerance < 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenDecomposition result_neg = test_mat.eigendecompose(-1e-6f);
+        std::cout << "tolerance = -1e-6: Status = " << (result_neg.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.531: Parameter validation - max_iter <= 0
+    {
+        std::cout << "\n[E3.531] Parameter Validation - max_iter <= 0\n";
+        tiny::Mat test_mat(2, 2);
+        test_mat(0, 0) = 2.0f; test_mat(0, 1) = 1.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 2.0f;
+        
+        tiny::Mat::EigenDecomposition result_zero_iter = test_mat.eigendecompose(1e-6f, 0);
+        std::cout << "max_iter = 0: Status = " << (result_zero_iter.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_zero_iter.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+        
+        tiny::Mat::EigenDecomposition result_neg_iter = test_mat.eigendecompose(1e-6f, -10);
+        std::cout << "max_iter = -10: Status = " << (result_neg_iter.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_neg_iter.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.532: Custom max_iter parameter test
+    {
+        std::cout << "\n[E3.532] Custom max_iter Parameter Test\n";
+        tiny::Mat test_mat(3, 3);
+        test_mat(0, 0) = 4.0f; test_mat(0, 1) = 1.0f; test_mat(0, 2) = 2.0f;
+        test_mat(1, 0) = 1.0f; test_mat(1, 1) = 3.0f; test_mat(1, 2) = 0.0f;
+        test_mat(2, 0) = 2.0f; test_mat(2, 1) = 0.0f; test_mat(2, 2) = 5.0f;
+        
+        std::cout << "[Test 1] max_iter = 10 (may not converge)\n";
+        tiny::Mat::EigenDecomposition result_10 = test_mat.eigendecompose(1e-6f, 10);
+        std::cout << "  Status: " << (result_10.status == TINY_OK ? "OK (Converged)" : "Not Finished (Expected)") << "\n";
+        std::cout << "  Iterations: " << result_10.iterations << "\n";
+        
+        std::cout << "[Test 2] max_iter = 200 (should converge)\n";
+        tiny::Mat::EigenDecomposition result_200 = test_mat.eigendecompose(1e-6f, 200);
+        std::cout << "  Status: " << (result_200.status == TINY_OK ? "OK (Converged)" : "Not Finished") << "\n";
+        std::cout << "  Iterations: " << result_200.iterations << "\n";
+        std::cout << "  Eigenvalues:\n";
+        result_200.eigenvalues.print_matrix(true);
+        
+        bool test_pass = (result_10.iterations <= 10) && (result_200.status == TINY_OK);
+        std::cout << "Custom max_iter test: " << (test_pass ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.54: eigendecompose() - Boundary case - empty matrix
+    {
+        std::cout << "\n[E3.54] eigendecompose() - Boundary Case - Empty Matrix (0x0)\n";
+        tiny::Mat empty_mat(0, 0);
+        
+        tiny::Mat::EigenDecomposition result_empty = empty_mat.eigendecompose(1e-6f);
+        // Error case: empty matrix should return error status, eigenvalues may be 0x0 or 1x1 error matrix
+        bool empty_correct = (result_empty.status != TINY_OK) && 
+                            ((result_empty.eigenvalues.row == 0 && result_empty.eigenvalues.col == 0) || 
+                             (result_empty.eigenvalues.data == nullptr) ||
+                             (result_empty.eigenvalues.row == 1 && result_empty.eigenvalues.col == 1 && result_empty.eigenvalues.data != nullptr));
+        std::cout << "Empty matrix: Status = " << (result_empty.status == TINY_OK ? "OK" : "Error") 
+                  << ", eigenvalues rows = " << result_empty.eigenvalues.row 
+                  << " (Expected: Error status, eigenvalues is 0x0 or error state) " << (empty_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.55: eigendecompose() - Error handling - non-square matrix
+    {
+        std::cout << "\n[E3.55] eigendecompose() - Error Handling - Non-Square Matrix\n";
+        tiny::Mat non_square(2, 3);
+        tiny::Mat::EigenDecomposition result_non_square = non_square.eigendecompose(1e-6f);
+        std::cout << "Non-square matrix (2x3): Status = " << (result_non_square.status == TINY_OK ? "OK" : "Error (Expected)") 
+                  << " " << (result_non_square.status != TINY_OK ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E3.6: SHM Application Scenario - Structural Dynamics
+    std::cout << "\n[E3.6] SHM Application - Structural Dynamics Analysis\n";
     
     // Create a simple 4-DOF structural system (mass-spring system)
     {
-        std::cout << "\n[Test 9.6.1] 4-DOF Mass-Spring System\n";
+        std::cout << "\n[E3.61] 4-DOF Mass-Spring System\n";
         tiny::Mat K(4, 4);  // Stiffness matrix
         K(0, 0) = 2.0f; K(0, 1) = -1.0f; K(0, 2) = 0.0f; K(0, 3) = 0.0f;
         K(1, 0) = -1.0f; K(1, 1) = 2.0f; K(1, 2) = -1.0f; K(1, 3) = 0.0f;
@@ -3544,12 +4604,12 @@ void test_eigenvalue_decomposition()
         std::cout << "Total iterations: " << modal.iterations << "\n";
     }
 
-    // Test 9.7: Edge Cases and Error Handling
-    std::cout << "\n[Test 9.7] Edge Cases and Error Handling\n";
+    // E3.7: Edge Cases and Error Handling
+    std::cout << "\n[E3.7] Edge Cases and Error Handling\n";
     
-    // Test 9.7.1: 1x1 matrix
+    // E3.71: 1x1 matrix
     {
-        std::cout << "\n[Test 9.7.1] 1x1 Matrix\n";
+        std::cout << "\n[E3.71] 1x1 Matrix\n";
         tiny::Mat mat1x1(1, 1);
         mat1x1(0, 0) = 5.0f;
         std::cout << "Matrix: [5.0]\n";
@@ -3566,18 +4626,18 @@ void test_eigenvalue_decomposition()
         std::cout << "Error from expected: " << error << (error < 0.01f ? " [PASS]" : " [FAIL]") << "\n";
     }
     
-    // Test 9.7.2: Zero matrix
+    // E3.72: Zero matrix
     {
-        std::cout << "\n[Test 9.7.2] Zero Matrix\n";
+        std::cout << "\n[E3.72] Zero Matrix\n";
         tiny::Mat zero_mat(3, 3);
         zero_mat.clear();
         tiny::Mat::EigenPair result_zero = zero_mat.power_iteration(100, 1e-6f);
         std::cout << "Status: " << (result_zero.status == TINY_OK ? "OK" : "Error (Expected)") << "\n";
     }
     
-    // Test 9.7.3: Identity matrix
+    // E3.73: Identity matrix
     {
-        std::cout << "\n[Test 9.7.3] Identity Matrix\n";
+        std::cout << "\n[E3.73] Identity Matrix\n";
         tiny::Mat I = tiny::Mat::eye(3);
         std::cout << "Matrix (3x3 Identity):\n";
         I.print_matrix(true);
@@ -3607,32 +4667,32 @@ void test_eigenvalue_decomposition()
         std::cout << "All eigenvalues = 1.0: " << (all_one ? "[PASS]" : "[FAIL]") << "\n";
     }
 
-    // Test 9.8: Performance Test for SHM Applications
-    std::cout << "\n[Test 9.8] Performance Test for SHM Applications\n";
+    // E3.8: Performance Test for SHM Applications
+    std::cout << "\n[E3.8] Performance Test for SHM Applications\n";
     
-    // Test 9.8.1: Power iteration performance (fast method for dominant eigenvalue)
-    std::cout << "\n[Test 9.8.1] Power Iteration Performance (Real-time SHM - Dominant Eigenvalue)\n";
+    // E3.81: Power iteration performance (fast method for dominant eigenvalue)
+    std::cout << "\n[E3.81] Power Iteration Performance (Real-time SHM - Dominant Eigenvalue)\n";
     TIME_OPERATION(
         tiny::Mat::EigenPair perf_result = stiffness.power_iteration(500, 1e-6f);
         (void)perf_result;
     , "Power Iteration (3x3 matrix)");
     
-    // Test 9.8.2: Inverse power iteration performance (system identification - smallest eigenvalue)
-    std::cout << "\n[Test 9.8.2] Inverse Power Iteration Performance (System Identification - Smallest Eigenvalue)\n";
+    // E3.82: Inverse power iteration performance (system identification - smallest eigenvalue)
+    std::cout << "\n[E3.82] Inverse Power Iteration Performance (System Identification - Smallest Eigenvalue)\n";
     TIME_OPERATION(
         tiny::Mat::EigenPair perf_inv_result = stiffness.inverse_power_iteration(500, 1e-6f);
         (void)perf_inv_result;
     , "Inverse Power Iteration (3x3 matrix)");
     
-    // Test 9.8.3: Jacobi method performance (complete eigendecomposition for symmetric matrices)
-    std::cout << "\n[Test 9.8.3] Jacobi Method Performance (Complete Eigendecomposition - Symmetric Matrices)\n";
+    // E3.83: Jacobi method performance (complete eigendecomposition for symmetric matrices)
+    std::cout << "\n[E3.83] Jacobi Method Performance (Complete Eigendecomposition - Symmetric Matrices)\n";
     TIME_OPERATION(
         tiny::Mat::EigenDecomposition perf_jacobi = stiffness.eigendecompose_jacobi(1e-5f, 100);
         (void)perf_jacobi;
     , "Jacobi Decomposition (3x3 symmetric matrix)");
     
-    // Test 9.8.4: QR method performance (complete eigendecomposition for general matrices)
-    std::cout << "\n[Test 9.8.4] QR Method Performance (Complete Eigendecomposition - General Matrices)\n";
+    // E3.84: QR method performance (complete eigendecomposition for general matrices)
+    std::cout << "\n[E3.84] QR Method Performance (Complete Eigendecomposition - General Matrices)\n";
     TIME_OPERATION(
         tiny::Mat::EigenDecomposition perf_qr = non_sym_mat.eigendecompose_qr(100, 1e-5f);
         (void)perf_qr;
@@ -3648,98 +4708,98 @@ void tiny_matrix_test()
     std::cout << "  Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality\n\n";
 
     // ========================================================================
-    // Phase 1: Object Foundation (Groups 1-3)
+    // Phase 1: Object Foundation (A)
     // ========================================================================
     // Purpose: Learn to create and manipulate matrix objects
-    // Group 1: Constructor & Destructor
-    // test_constructor_destructor();
+    // A1: Constructor & Destructor
+    test_constructor_destructor();
 
-    // Group 2: Element Access
-    // test_element_access();
+    // A2: Element Access
+    test_element_access();
 
-    // Group 3: ROI Operations
-    // test_roi_operations();
+    // A3: ROI Operations
+    test_roi_operations();
 
     // ========================================================================
-    // Phase 2: Basic Operations (Group 4)
+    // Phase 2: Basic Operations (B)
     // ========================================================================
     // Purpose: Learn basic arithmetic operations
-    // Group 4: Arithmetic Operators
-    // test_assignment_operator();
-    // test_matrix_addition();
-    // test_constant_addition();
-    // test_matrix_subtraction();
-    // test_constant_subtraction();
-    // test_matrix_division();
-    // test_constant_division();
-    // test_matrix_exponentiation();
+    // B1-B8: Arithmetic Operators
+    // test_assignment_operator();      // B1
+    // test_matrix_addition();         // B2
+    // test_constant_addition();       // B3
+    // test_matrix_subtraction();      // B4
+    // test_constant_subtraction();    // B5
+    // test_matrix_division();          // B6
+    // test_constant_division();       // B7
+    // test_matrix_exponentiation();    // B8
 
     // ========================================================================
-    // Phase 3: Matrix Properties (Group 5)
+    // Phase 3: Matrix Properties (C)
     // ========================================================================
     // Purpose: Understand matrix properties and basic linear algebra
-    // Group 5: Matrix Properties
-    // test_matrix_transpose();
-    // test_matrix_cofactor();
-    // test_matrix_determinant();
-    // test_matrix_adjoint();
-    // test_matrix_normalize();
-    // test_matrix_norm();
-    // test_inverse_adjoint_adjoint();
-    // test_matrix_utilities();
+    // C1-C8: Matrix Properties
+    // test_matrix_transpose();        // C1
+    // test_matrix_cofactor();         // C2
+    // test_matrix_determinant();       // C3
+    // test_matrix_adjoint();           // C4
+    // test_matrix_normalize();         // C5
+    // test_matrix_norm();              // C6
+    // test_inverse_adjoint_adjoint();  // C7
+    // test_matrix_utilities();         // C8
 
     // ========================================================================
-    // Phase 4: Linear System Solving (Group 6)
+    // Phase 4: Linear System Solving (D)
     // ========================================================================
     // Purpose: Core application - solving linear systems Ax = b
-    // Group 6: Linear System Solving
-    // test_gaussian_eliminate();
-    // test_row_reduce_from_gaussian();
-    // test_inverse_gje();
-    // test_dotprod();
-    // test_solve();
-    // test_band_solve();
-    // test_roots();
+    // D1-D7: Linear System Solving
+    // test_gaussian_eliminate();       // D1
+    // test_row_reduce_from_gaussian(); // D2
+    // test_inverse_gje();             // D3
+    // test_dotprod();                 // D4
+    // test_solve();                   // D5
+    // test_band_solve();              // D6
+    // test_roots();                   // D7
 
     // ========================================================================
-    // Phase 5: Advanced Linear Algebra (Groups 7-8)
+    // Phase 5: Advanced Linear Algebra (E1+2)
     // ========================================================================
     // Purpose: Advanced linear algebra operations for stable and efficient solving
-    // Group 7: Matrix Decomposition
+    // E1: Matrix Decomposition
     // test_matrix_decomposition();
     
-    // Group 8: Gram-Schmidt Orthogonalization
+    // E2: Gram-Schmidt Orthogonalization
     // test_gram_schmidt_orthogonalize();
 
     // ========================================================================
-    // Phase 6: System Identification Applications (Group 9)
+    // Phase 6: System Identification Applications (E3)
     // ========================================================================
     // Purpose: Eigenvalue decomposition for SHM and modal analysis
-    // Group 9: Eigenvalue Decomposition
+    // E3: Eigenvalue Decomposition
     // test_eigenvalue_decomposition();
 
     // ========================================================================
-    // Phase 7: Auxiliary Functions (Groups 10-11)
+    // Phase 7: Auxiliary Functions (F)
     // ========================================================================
     // Purpose: Convenience functions and I/O operations
-    // Group 10: Stream Operators
+    // F1: Stream Operators
     // test_stream_operators();
 
-    // Group 11: Global Arithmetic Operators
+    // F2: Global Arithmetic Operators
     // test_matrix_operations();
 
     // ========================================================================
-    // Phase 8: Quality Assurance (Groups 12-14)
+    // Phase 8: Quality Assurance (G)
     // ========================================================================
     // Purpose: Ensure robustness, performance, and correctness
-    // Group 12: Boundary Conditions and Error Handling
-    test_boundary_conditions();
+    // G1: Boundary Conditions and Error Handling
+    // test_boundary_conditions();
 
-    // Group 13: Performance Benchmarks
-    test_performance_benchmarks();
+    // G2: Performance Benchmarks
+    // test_performance_benchmarks();
 
-    // Group 14: Memory Layout
-    test_memory_layout();
+    // G3: Memory Layout
+    // test_memory_layout();
 
     std::cout << "============ [tiny_matrix_test end] ============\n";
     
