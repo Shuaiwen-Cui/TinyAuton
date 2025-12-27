@@ -54,11 +54,13 @@ ICA 解决盲源分离问题：
 
 **非线性函数**：
 
-- **tanh**：\( g(u) = \tanh(u) \) - 适用于超高斯源
+- **tanh**：\( g(u) = \tanh(u) \) — 适用于超高斯源
 
-- **exp**：\( g(u) = u \cdot e^{-u^2/2} \) - 适用于次高斯源
+- **cube**：\( g(u) = u^3 \) — 适用于次高斯源
 
-- **cube**：\( g(u) = u^3 \) - 适用于超高斯源
+- **gauss**：高斯型非线性 — 适用于对称分布的源（常用 \( g(u) = u\,e^{-u^2/2} \)）
+
+- **skew**：偏斜敏感的非线性 — 适用于具有偏斜性的源
 
 **算法步骤**：
 
@@ -152,8 +154,9 @@ tiny_error_t tiny_ica_separate_f32(const float *mixed_signals,
 
 - `nonlinearity`: FastICA 的非线性函数：
   - `TINY_ICA_NONLINEARITY_TANH`: tanh（默认，适用于超高斯）
-  - `TINY_ICA_NONLINEARITY_EXP`: exp(-u²/2)（适用于次高斯）
-  - `TINY_ICA_NONLINEARITY_CUBE`: u³（适用于超高斯）
+  - `TINY_ICA_NONLINEARITY_CUBE`: cube（适用于次高斯）
+  - `TINY_ICA_NONLINEARITY_GAUSS`: gauss（适用于对称源）
+  - `TINY_ICA_NONLINEARITY_SKEW`: skew（适用于偏斜源）
 
 - `max_iter`: FastICA 的最大迭代次数。如果 ≤ 0，默认值为 100。
 
@@ -396,8 +399,9 @@ ICA 广泛应用于：
 ### 非线性选择
 
 - **tanh**：默认选择，适用于大多数超高斯源（语音、音乐）
-- **exp**：用于次高斯源（均匀噪声、某些图像信号）
-- **cube**：超高斯源的替代方案，更简单但不太稳健
+- **cube**：用于次高斯源（均匀噪声、某些图像信号）
+- **gauss**：适用于对称分布的源
+- **skew**：当源具有明显偏斜性时有用
 
 ### 收敛参数
 

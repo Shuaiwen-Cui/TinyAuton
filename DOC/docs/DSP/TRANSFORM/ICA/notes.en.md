@@ -54,11 +54,13 @@ The library implements the FastICA algorithm, which is based on maximizing non-G
 
 **Nonlinearity Functions**:
 
-- **tanh**: \( g(u) = \tanh(u) \) - Good for super-Gaussian sources
+- **tanh**: \( g(u) = \tanh(u) \) — Good for super-Gaussian sources
 
-- **exp**: \( g(u) = u \cdot e^{-u^2/2} \) - Good for sub-Gaussian sources
+- **cube**: \( g(u) = u^3 \) — Good for sub-Gaussian sources
 
-- **cube**: \( g(u) = u^3 \) - Good for super-Gaussian sources
+- **gauss**: Gaussian nonlinearity — Good for symmetric sources (commonly \( g(u) = u\,e^{-u^2/2} \))
+
+- **skew**: Skew-sensitive nonlinearity — Good for skewed sources
 
 **Algorithm Steps**:
 
@@ -152,8 +154,9 @@ Performs complete ICA separation in one function call. This is the simplest inte
 
 - `nonlinearity`: Nonlinearity function for FastICA:
   - `TINY_ICA_NONLINEARITY_TANH`: tanh (default, good for super-Gaussian)
-  - `TINY_ICA_NONLINEARITY_EXP`: exp(-u²/2) (good for sub-Gaussian)
-  - `TINY_ICA_NONLINEARITY_CUBE`: u³ (good for super-Gaussian)
+  - `TINY_ICA_NONLINEARITY_CUBE`: cube (good for sub-Gaussian)
+  - `TINY_ICA_NONLINEARITY_GAUSS`: gaussian (good for symmetric sources)
+  - `TINY_ICA_NONLINEARITY_SKEW`: skew (good for skewed sources)
 
 - `max_iter`: Maximum number of iterations for FastICA. Default: 100 if ≤ 0.
 
@@ -394,8 +397,9 @@ ICA is widely used in:
 ### Nonlinearity Selection
 
 - **tanh**: Default choice, works well for most super-Gaussian sources (speech, music)
-- **exp**: Use for sub-Gaussian sources (uniform noise, some image signals)
-- **cube**: Alternative for super-Gaussian sources, simpler but less robust
+- **cube**: Preferred for sub-Gaussian sources (uniform noise, some image signals)
+- **gauss**: Recommended for symmetric source distributions
+- **skew**: Useful when sources exhibit skewness
 
 ### Convergence Parameters
 

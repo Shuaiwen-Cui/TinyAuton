@@ -4,6 +4,7 @@
     This is the main header file of the TinyDSP library. It includes all necessary header files and provides a unified interface to use the functions of the library. After completing the porting of this library in the project, you can insert this header file where you want to use the relevant functions to use all functions in the library. The documentation update speed is slow and may not be consistent with the actual code, please refer to the actual code.
 
 ```c
+
 /**
  * @file tiny_dsp.h
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
@@ -156,24 +157,25 @@
  * Features:
  * - Multiple nonlinearity functions:
  *   - tanh: Good for super-Gaussian sources (default)
- *   - exp(-u²/2): Good for sub-Gaussian sources
- *   - u³: Alternative for super-Gaussian sources
+ *   - cube: Good for sub-Gaussian sources
+ *   - gauss: Alternative for symmetric sources
+ *   - skew: Good for skewed sources
  * - Orthogonalization: Ensures extracted components are independent
  * - Iterative convergence with configurable tolerance
  * 
  * API Modes:
- * - Batch processing: Direct separation via tiny_ica_separate_f32()
- * - Structure-based: Initialize once, fit model, transform multiple times
- *   (efficient for repeated separations with same mixing model)
+ * - C++ class-based API: ICA class with decompose() method
+ * - Batch processing: Direct separation via decompose()
+ * - Reconstruction: Reconstruct mixed signals from sources
  * 
  * Requirements:
- * - num_sources <= num_obs (cannot extract more sources than observations)
+ * - num_sources <= num_sensors (cannot extract more sources than sensors)
  * - Sufficient samples for stable statistics (recommended: > 100 samples)
  * - Sources must be statistically independent and non-Gaussian
  * 
  * Dependencies:
- * - Reuses tiny_math matrix operations (tiny_mat_mult_f32)
- * - Implements eigenvalue decomposition for whitening (Jacobi method)
+ * - Uses tiny_math matrix operations (Mat class)
+ * - Implements eigenvalue decomposition for whitening
  * 
  * Applications:
  * - Audio source separation (cocktail party problem)
@@ -181,8 +183,10 @@
  * - Feature extraction from sensor arrays
  * - Biomedical signal processing (EEG, ECG artifact removal)
  */
-#include "tiny_ica.h"
-#include "tiny_ica_test.h"
+#ifdef __cplusplus
+#include "tiny_ica.hpp"
+#include "tiny_ica_test.hpp"
+#endif
 
 /* ============================================================================
  * SUPPORT MODULES
@@ -214,5 +218,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
 ```

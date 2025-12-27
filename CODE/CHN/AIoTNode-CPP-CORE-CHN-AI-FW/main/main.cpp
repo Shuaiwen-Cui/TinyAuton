@@ -1,4 +1,4 @@
-#include "tiny_math.h"
+#include "tiny_dsp.h"
 
 #ifdef ESP_PLATFORM
 #include "freertos/FreeRTOS.h"
@@ -8,12 +8,18 @@
 
 extern "C" void app_main(void)
 {
+#ifdef ESP_PLATFORM
+    // Add current task to watchdog (watchdog is already initialized by ESP-IDF)
+    esp_task_wdt_add(NULL);
+#endif
 
-    // Run TinyMath unit tests (vector, matrix, C++ matrix)
-    // tiny_vec_test();
-    // tiny_mat_test();
-    tiny_matrix_test();
+    tiny::tiny_ica_test_all();
 
-    printf("\n\n");
-
+#ifdef ESP_PLATFORM
+    while (1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        esp_task_wdt_reset();
+    }
+#endif
 }
