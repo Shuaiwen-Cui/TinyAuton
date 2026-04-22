@@ -84,6 +84,16 @@ extern "C"
 #endif
 ```
 
+## Design Notes
+
+The core idea of this module is to separate two time concepts that often get mixed together in embedded code: monotonic running time and synchronized wall-clock time. `tiny_get_running_time()` is built on `esp_timer_get_time()`, so it gives a stable microsecond counter that is ideal for measuring intervals, delays, and callback timing. `sync_time_with_timezone()` handles the other side of the problem: it applies the timezone, starts SNTP, waits until the system clock becomes valid, and then writes the result into the RTC path so the device can keep a usable local time after synchronization.
+
+The API stays small on purpose. `TinyTimeMark_t` uses `int64_t` to avoid overflow and preserve microsecond precision, while `TinyDateTime_t` provides a readable calendar representation for application logs and UI output. This keeps the module easy to reuse: applications can measure duration, fetch current local time, or perform both without needing to understand the lower-level synchronization sequence.
+
+The test program reflects those design goals directly. Test 1 checks the running-time counter and confirms it returns a microsecond-scale value suitable for interval measurement. Test 2 exercises timezone setup plus SNTP synchronization, which verifies that the module can move from boot-time reference to a correct local clock. Test 3 prints the current date and time, showing that the synchronized result is usable as a normal calendar time. Test 4 measures elapsed time by subtracting two `tiny_get_running_time()` samples, which demonstrates that the monotonic counter behaves as the timing foundation for the module.
+
+The timer precision test is the most important proof of the timing design. It records 15 timestamps at 2-second intervals, avoids printing inside the callback to reduce overhead, and then reports each interval, error, total drift, and average spacing. If the intervals stay close to 2,000,000 microseconds, the result shows that the module preserves microsecond precision and that the callback path is light enough to observe real timer behavior instead of logging noise. In other words, the test does not just show that the code runs; it shows that the design choices around precision, low overhead, and time synchronization are working together.
+
 ## tiny_time.c
 
 ```c
@@ -748,3 +758,11 @@ I (41912) tiny_time_test:   Test Complete
 I (41915) tiny_time_test: ========================================
 
 ```
+
+## Result Interpretation
+
+The output logs confirm the design in a concrete way. The early boot lines only show platform startup, which is expected and not part of the TIME module itself. The important evidence starts when the test program prints the running time and later the elapsed time: these values come from `esp_timer_get_time()`, so they demonstrate that the module is using a monotonic microsecond source as the base for measurement. That is exactly why the API separates running time from wall-clock time.
+
+The synchronization part is validated by the SNTP-related messages. After `sync_time_with_timezone("CST-8")`, the module waits until the system time becomes valid and then reports that the system time is set. This confirms that the timezone setup, SNTP initialization, and RTC write-back all happen in the intended order. In practice, it means the module does not just fetch a network time value; it turns that value into a usable local clock.
+
+The precision test gives the strongest confirmation. The printed timestamps stay very close to the expected 2,000,000 microseconds per interval, and the final statistics show a total error of only a few microseconds with an average interval essentially equal to 2.000000 seconds. That is the clearest sign that the timer path is stable, the callback remains lightweight, and the module preserves the precision needed for measurement work. In other words, the output matches the design claim that this module can both synchronize real time and measure elapsed time with microsecond-level accuracy.

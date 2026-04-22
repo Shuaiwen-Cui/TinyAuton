@@ -32,6 +32,12 @@ This project dedicates to the development of a library for tiny agent related co
 
 ![DNESP32S3M-BACK](DNESP32S3M-BACK.png){width=800px}
 
+- NexNode AIoT Node
+
+![PCB](PCB.png){width=800px}
+
+![WSN](WSN.jpg){width=800px}
+
 <div class="grid cards" markdown>
 
 -   :simple-github:{ .lg .middle } __NexNode__

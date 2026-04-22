@@ -1,0 +1,13 @@
+idf_component_register(
+    SRCS
+        "node_acc_adxl355.c"
+        "node_acc_adxl355_test.c"
+    INCLUDE_DIRS
+        "include"
+    REQUIRES
+        node_spi
+        freertos
+        log
+        esp_driver_gpio
+        esp_driver_spi
+)

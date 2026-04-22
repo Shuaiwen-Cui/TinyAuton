@@ -32,6 +32,12 @@
 
 ![DNESP32S3M-BACK](DNESP32S3M-BACK.png){width=800px}
 
+- NexNode AIoT节点
+
+![PCB](PCB.png){width=800px}
+
+![WSN](WSN.jpg){width=800px}
+
 <div class="grid cards" markdown>
 
 -   :simple-github:{ .lg .middle } __NexNode__
