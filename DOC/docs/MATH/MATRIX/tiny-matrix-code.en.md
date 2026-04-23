@@ -1,5 +1,4 @@
 # CODE 
-
 ## tiny_matrix.hpp
 
 ```cpp
@@ -7,6 +6,13 @@
  * @file tiny_matrix.hpp
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
  * @brief This file is the header file for the submodule matrix (advanced matrix operations) of the tiny_math middleware.
+ *
+ * Terminology conventions:
+ * - pad / padding: number of padded elements at row end (not part of logical matrix values).
+ * - step: total elements per physical row (logical + padding).
+ * - stride: spacing for strided sampling in one row.
+ *   In this matrix class, row indexing uses `step`; column sampling stride is fixed to 1.
+ *   `stride` is kept as a backward-compatible alias to `step`.
  * @version 1.0
  * @date 2025-04-17
  * @note This file is built on top of the mat.h file from the ESP-DSP library.
@@ -41,10 +47,14 @@ namespace tiny
         // ============================================================================
         int row;         //< number of rows
         int col;         //< number of columns
-        int pad;         //< number of paddings between 2 rows
-        int stride;      //< stride = (number of elements in a row) + padding
+        int pad;         //< placeholder elements in storage; not used in math ops
+        union
+        {
+            int step;    //< total elements per row (logical + padding)
+            int stride;  //< backward-compatible alias for `step`
+        };
         int element;     //< number of elements = rows * cols
-        int memory;      //< size of the data buffer = rows * stride
+        int memory;      //< size of the data buffer = rows * step
         float *data;     //< pointer to the data buffer
         float *temp;     //< pointer to the temporary data buffer
         bool ext_buff;   //< flag indicates that matrix use external buffer
@@ -81,7 +91,7 @@ namespace tiny
         /**
          * @brief Allocate memory for the matrix according to the memory required.
          * @note For ESP32, it will automatically determine if using RAM or PSRAM based on the size of the matrix.
-         * @note This function sets ext_buff to false and allocates memory based on row * stride.
+         * @note This function sets ext_buff to false and allocates memory based on row * step.
          *       If allocation fails or parameters are invalid, data will be set to nullptr.
          */
         void alloc_mem();
@@ -101,12 +111,12 @@ namespace tiny
         Mat(int rows, int cols);
         
         /**
-         * @brief Constructor - create a matrix with the specified number of rows, columns and stride.
+         * @brief Constructor - create a matrix with the specified number of rows, columns and step.
          * @param rows Number of rows
          * @param cols Number of columns
-         * @param stride Stride (number of elements in a row)
+         * @param step Total number of elements in a row (including padding)
          */
-        Mat(int rows, int cols, int stride);
+        Mat(int rows, int cols, int step);
         
         /**
          * @brief Constructor - create a matrix with the specified number of rows, columns and external data.
@@ -121,9 +131,9 @@ namespace tiny
          * @param data Pointer to external data buffer
          * @param rows Number of rows
          * @param cols Number of columns
-         * @param stride Stride (number of elements in a row)
+         * @param step Total number of elements in a row (including padding)
          */
-        Mat(float *data, int rows, int cols, int stride);
+        Mat(float *data, int rows, int cols, int step);
         
         /**
          * @brief Copy constructor - create a matrix with the same properties as the source matrix.
@@ -139,8 +149,8 @@ namespace tiny
         // ============================================================================
         // Element Access
         // ============================================================================
-        inline float &operator()(int row, int col) { return data[row * stride + col]; }
-        inline const float &operator()(int row, int col) const { return data[row * stride + col]; }
+        inline float &operator()(int row, int col) { return data[row * step + col]; }
+        inline const float &operator()(int row, int col) const { return data[row * step + col]; }
 
         // ============================================================================
         // Data Manipulation
@@ -535,7 +545,7 @@ namespace tiny
         std::cout << "\n";
 
         std::cout << "paddings        " << this->pad << "\n";
-        std::cout << "stride          " << this->stride << "\n";
+        std::cout << "step            " << this->step << "\n";
         std::cout << "memory          " << this->memory << "\n";
 
         // Pointer information
@@ -585,15 +595,15 @@ namespace tiny
             return;
         }
         
-        if (this->row < 0 || this->col < 0 || this->stride < 0)
+        if (this->row < 0 || this->col < 0 || this->step < 0)
         {
             std::cout << "[Error] Invalid matrix dimensions\n";
             return;
         }
         
-        if (this->stride < this->col)
+        if (this->step < this->col)
         {
-            std::cout << "[Warning] Stride < cols, potential data corruption\n";
+            std::cout << "[Warning] step < cols, potential data corruption\n";
         }
 
         std::cout << "Matrix Elements >>>\n";
@@ -602,7 +612,7 @@ namespace tiny
             // print the non-padding elements
             for (int j = 0; j < this->col; ++j)
             {
-                std::cout << std::setw(12) << this->data[i * this->stride + j] << " ";
+                std::cout << std::setw(12) << this->data[i * this->step + j] << " ";
             }
 
             // if padding is enabled, print the padding elements
@@ -612,16 +622,16 @@ namespace tiny
                 std::cout << "      |";
 
                 // print the padding elements
-                for (int j = this->col; j < this->stride; ++j)
+                for (int j = this->col; j < this->step; ++j)
                 {
                     if (j == this->col)
                     {
-                        std::cout << std::setw(7) << this->data[i * this->stride + j] << " ";
+                        std::cout << std::setw(7) << this->data[i * this->step + j] << " ";
                     }
                     else
                     {
                         // print the padding elements
-                        std::cout << std::setw(12) << this->data[i * this->stride + j] << " ";
+                        std::cout << std::setw(12) << this->data[i * this->step + j] << " ";
                     }
                 }
             }
@@ -642,27 +652,27 @@ namespace tiny
      * @name Mat::alloc_mem()
      * @brief Allocate memory for the matrix according to the memory required.
      * @note For ESP32, it will automatically determine if using RAM or PSRAM based on the size of the matrix.
-     * @note This function sets ext_buff to false and allocates memory based on row * stride.
+     * @note This function sets ext_buff to false and allocates memory based on row * step.
      *       If allocation fails or parameters are invalid, data will be set to nullptr.
      */
     void Mat::alloc_mem()
     {
-        // Parameter validation: check if row and stride are non-negative
-        if (this->row < 0 || this->stride < 0)
+        // Parameter validation: check if row and step are non-negative
+        if (this->row < 0 || this->step < 0)
         {
             std::cerr << "[Error] Invalid matrix dimensions in alloc_mem(): row=" << this->row 
-                      << ", stride=" << this->stride << "\n";
+                      << ", step=" << this->step << "\n";
             this->data = nullptr;
             this->ext_buff = false;
             this->memory = 0;
             return;
         }
         
-        // Check for integer overflow: row * stride might overflow
-        if (this->row > 0 && this->stride > INT_MAX / this->row)
+        // Check for integer overflow: row * step might overflow
+        if (this->row > 0 && this->step > INT_MAX / this->row)
         {
             std::cerr << "[Error] Matrix size too large, integer overflow: row=" << this->row 
-                      << ", stride=" << this->stride << "\n";
+                      << ", step=" << this->step << "\n";
             this->data = nullptr;
             this->ext_buff = false;
             this->memory = 0;
@@ -670,7 +680,7 @@ namespace tiny
         }
         
         this->ext_buff = false;
-        this->memory = this->row * this->stride;
+        this->memory = this->row * this->step;
         
         // Handle empty matrix case (memory = 0)
         if (this->memory == 0)
@@ -697,11 +707,11 @@ namespace tiny
      *       Caller should check the data pointer before using the matrix.
      */
     Mat::Mat()
-        : row(1), col(1), pad(0), stride(1), element(1), memory(1),
+        : row(1), col(1), pad(0), step(1), element(1), memory(1),
           data(nullptr), temp(nullptr),
           ext_buff(false), sub_matrix(false)
     {
-        // memory will be recalculated by alloc_mem() based on row * stride
+        // memory will be recalculated by alloc_mem() based on row * step
         alloc_mem();
         if (this->data == nullptr)
         {
@@ -724,7 +734,7 @@ namespace tiny
      *       Caller should check the data pointer before using the matrix.
      */
     Mat::Mat(int rows, int cols)
-        : row(rows), col(cols), pad(0), stride(cols),
+        : row(rows), col(cols), pad(0), step(cols),
           element(rows * cols), memory(rows * cols),
           data(nullptr), temp(nullptr),
           ext_buff(false), sub_matrix(false)
@@ -749,7 +759,7 @@ namespace tiny
             return;
         }
         
-        // memory will be recalculated by alloc_mem() based on row * stride
+        // memory will be recalculated by alloc_mem() based on row * step
         alloc_mem();
         if (this->data == nullptr)
         {
@@ -762,18 +772,18 @@ namespace tiny
         std::memset(this->data, 0, this->memory * sizeof(float));
     }
     /**
-     * @name Mat::Mat(int rows, int cols, int stride)
-     * @brief Constructor - create a matrix with the specified number of rows, columns and stride.
+     * @name Mat::Mat(int rows, int cols, int step)
+     * @brief Constructor - create a matrix with the specified number of rows, columns and step.
      * @param rows Number of rows (must be non-negative)
      * @param cols Number of columns (must be non-negative)
-     * @param stride Stride (number of elements in a row, must be >= cols)
-     * @note If rows, cols is negative, or stride < cols, the object will be in an invalid state.
+     * @param step Total number of elements in a row (must be >= cols)
+     * @note If rows, cols is negative, or step < cols, the object will be in an invalid state.
      * @note If memory allocation fails, the object will be in an invalid state (data = nullptr).
      *       Caller should check the data pointer before using the matrix.
      */
-    Mat::Mat(int rows, int cols, int stride)
-        : row(rows), col(cols), pad(stride - cols), stride(stride),
-          element(rows * cols), memory(rows * stride),
+    Mat::Mat(int rows, int cols, int step)
+        : row(rows), col(cols), pad(step - cols), step(step),
+          element(rows * cols), memory(rows * step),
           data(nullptr), temp(nullptr),
           ext_buff(false), sub_matrix(false)
     {
@@ -787,10 +797,10 @@ namespace tiny
             return;
         }
         
-        // Validate stride: must be >= cols (padding cannot be negative)
-        if (stride < cols)
+        // Validate step: must be >= cols (padding cannot be negative)
+        if (step < cols)
         {
-            std::cerr << "[Error] Invalid stride: stride=" << stride 
+            std::cerr << "[Error] Invalid step: step=" << step 
                       << " must be >= cols=" << cols << "\n";
             this->data = nullptr;
             this->memory = 0;
@@ -798,7 +808,7 @@ namespace tiny
             return;
         }
         
-        // Check for integer overflow: rows * cols and rows * stride might overflow
+        // Check for integer overflow: rows * cols and rows * step might overflow
         if (rows > 0 && cols > INT_MAX / rows)
         {
             std::cerr << "[Error] Matrix size too large, integer overflow: rows=" << rows 
@@ -808,16 +818,16 @@ namespace tiny
             return;
         }
         
-        if (rows > 0 && stride > INT_MAX / rows)
+        if (rows > 0 && step > INT_MAX / rows)
         {
             std::cerr << "[Error] Matrix size too large, integer overflow: rows=" << rows 
-                      << ", stride=" << stride << "\n";
+                      << ", step=" << step << "\n";
             this->data = nullptr;
             this->memory = 0;
             return;
         }
         
-        // memory will be recalculated by alloc_mem() based on row * stride
+        // memory will be recalculated by alloc_mem() based on row * step
         alloc_mem();
         if (this->data == nullptr)
         {
@@ -841,7 +851,7 @@ namespace tiny
      * @note The caller is responsible for ensuring the buffer is large enough and valid.
      */
     Mat::Mat(float *data, int rows, int cols)
-        : row(rows), col(cols), pad(0), stride(cols),
+        : row(rows), col(cols), pad(0), step(cols),
           element(rows * cols), memory(rows * cols),
           data(data), temp(nullptr),
           ext_buff(true), sub_matrix(false)
@@ -870,19 +880,19 @@ namespace tiny
     }
 
     /**
-     * @name Mat::Mat(float *data, int rows, int cols, int stride)
+     * @name Mat::Mat(float *data, int rows, int cols, int step)
      * @brief Constructor - create a matrix with the specified number of rows, columns and external data.
      * @param data Pointer to external data buffer (can be nullptr for empty matrix)
      * @param rows Number of rows (must be non-negative)
      * @param cols Number of columns (must be non-negative)
-     * @param stride Stride (number of elements in a row, must be >= cols)
+     * @param step Total number of elements in a row (must be >= cols)
      * @note This constructor does not allocate memory. The matrix uses the external buffer.
-     * @note If rows, cols is negative, or stride < cols, the object will be in an invalid state.
+     * @note If rows, cols is negative, or step < cols, the object will be in an invalid state.
      * @note The caller is responsible for ensuring the buffer is large enough and valid.
      */
-    Mat::Mat(float *data, int rows, int cols, int stride)
-        : row(rows), col(cols), pad(stride - cols), stride(stride),
-          element(rows * cols), memory(rows * stride),
+    Mat::Mat(float *data, int rows, int cols, int step)
+        : row(rows), col(cols), pad(step - cols), step(step),
+          element(rows * cols), memory(rows * step),
           data(data), temp(nullptr),
           ext_buff(true), sub_matrix(false)
     {
@@ -896,10 +906,10 @@ namespace tiny
             return;
         }
         
-        // Validate stride: must be >= cols (padding cannot be negative)
-        if (stride < cols)
+        // Validate step: must be >= cols (padding cannot be negative)
+        if (step < cols)
         {
-            std::cerr << "[Error] Invalid stride: stride=" << stride 
+            std::cerr << "[Error] Invalid step: step=" << step 
                       << " must be >= cols=" << cols << "\n";
             this->data = nullptr;
             this->memory = 0;
@@ -907,7 +917,7 @@ namespace tiny
             return;
         }
         
-        // Check for integer overflow: rows * cols and rows * stride might overflow
+        // Check for integer overflow: rows * cols and rows * step might overflow
         if (rows > 0 && cols > INT_MAX / rows)
         {
             std::cerr << "[Error] Matrix size too large, integer overflow: rows=" << rows 
@@ -917,10 +927,10 @@ namespace tiny
             return;
         }
         
-        if (rows > 0 && stride > INT_MAX / rows)
+        if (rows > 0 && step > INT_MAX / rows)
         {
             std::cerr << "[Error] Matrix size too large, integer overflow: rows=" << rows 
-                      << ", stride=" << stride << "\n";
+                      << ", step=" << step << "\n";
             this->data = nullptr;
             this->memory = 0;
             return;
@@ -940,7 +950,7 @@ namespace tiny
      * @warning Shallow copy: If source is destroyed, the copied matrix's data pointer will be invalid.
      */
     Mat::Mat(const Mat &src)
-        : row(src.row), col(src.col), pad(src.pad), stride(src.stride),
+        : row(src.row), col(src.col), pad(src.pad), step(src.step),
           element(src.element), memory(src.memory),
           data(nullptr), temp(nullptr),
           ext_buff(false), sub_matrix(false)
@@ -975,8 +985,8 @@ namespace tiny
                 for (int i = 0; i < this->row; ++i)
                 {
                     std::memcpy(
-                        &this->data[i * this->stride],
-                        &src.data[i * src.stride],
+                        &this->data[i * this->step],
+                        &src.data[i * src.step],
                         this->col * sizeof(float)
                     );
                 }
@@ -1086,8 +1096,8 @@ namespace tiny
         // Copy data row by row (handles different strides correctly)
         for (int r = 0; r < src.row; r++)
         {
-            memcpy(&this->data[(r + row_pos) * this->stride + col_pos], 
-                   &src.data[r * src.stride], 
+            memcpy(&this->data[(r + row_pos) * this->step + col_pos], 
+                   &src.data[r * src.step], 
                    src.col * sizeof(float));
         }
 
@@ -1137,7 +1147,7 @@ namespace tiny
         this->col = src.col;
         this->element = src.element;
         this->pad = src.pad;
-        this->stride = src.stride;
+        this->step = src.step;
         this->memory = src.memory;
         
         // Share data pointer regardless of source ownership
@@ -1164,8 +1174,8 @@ namespace tiny
     /**
      * @name Mat::view_roi(int start_row, int start_col, int roi_rows, int roi_cols)
      * @brief Make a shallow copy of ROI matrix. Create a view of the ROI matrix. 
-     *        Low level function. Unlike ESP-DSP, it is not allowed to setup stride here, 
-     *        stride is automatically calculated inside the function.
+     *        Low level function. Unlike ESP-DSP, it is not allowed to setup step here, 
+     *        step is automatically calculated inside the function.
      * @param start_row Start row position of source matrix (must be non-negative)
      * @param start_col Start column position of source matrix (must be non-negative)
      * @param roi_rows Size of row elements of source matrix to copy (must be positive)
@@ -1173,7 +1183,7 @@ namespace tiny
      * @return result matrix size roi_rows x roi_cols, or empty matrix on error
      * @warning The returned matrix is a VIEW (shallow copy) that shares data with the source matrix.
      *          If the source matrix is destroyed, the view's data pointer will become invalid.
-     * @note The stride of the result matrix is inherited from the source matrix.
+     * @note The step of the result matrix is inherited from the source matrix.
      */
     Mat Mat::view_roi(int start_row, int start_col, int roi_rows, int roi_cols) const
     {
@@ -1222,19 +1232,19 @@ namespace tiny
             return Mat();
         }
         
-        // Validate stride: must be >= roi_cols (padding cannot be negative)
-        if (this->stride < roi_cols)
+        // Validate step: must be >= roi_cols (padding cannot be negative)
+        if (this->step < roi_cols)
         {
-            std::cerr << "[Error] view_roi: stride < roi_cols: stride=" << this->stride 
+            std::cerr << "[Error] view_roi: step < roi_cols: step=" << this->step 
                       << ", roi_cols=" << roi_cols << "\n";
             return Mat();
         }
         
         // Check for integer overflow
-        if (roi_rows > 0 && this->stride > INT_MAX / roi_rows)
+        if (roi_rows > 0 && this->step > INT_MAX / roi_rows)
         {
             std::cerr << "[Error] view_roi: integer overflow: roi_rows=" << roi_rows 
-                      << ", stride=" << this->stride << "\n";
+                      << ", step=" << this->step << "\n";
             return Mat();
         }
         if (roi_rows > 0 && roi_cols > INT_MAX / roi_rows)
@@ -1248,11 +1258,11 @@ namespace tiny
         Mat result;
         result.row = roi_rows;
         result.col = roi_cols;
-        result.stride = this->stride;
-        result.pad = this->stride - roi_cols;  // Now guaranteed to be non-negative
+        result.step = this->step;
+        result.pad = this->step - roi_cols;  // Now guaranteed to be non-negative
         result.element = roi_rows * roi_cols;
-        result.memory = roi_rows * this->stride;
-        result.data = this->data + (start_row * this->stride + start_col);
+        result.memory = roi_rows * this->step;
+        result.data = this->data + (start_row * this->step + start_col);
         result.temp = nullptr;
         result.ext_buff = true;
         result.sub_matrix = true;
@@ -1345,11 +1355,11 @@ namespace tiny
         }
 
         // Deep copy the data from the source matrix row by row
-        // This handles different strides correctly
+        // This handles different step values correctly
         for (int r = 0; r < result.row; r++)
         {
-            memcpy(&result.data[r * result.stride], 
-                   &this->data[(r + start_row) * this->stride + start_col], 
+            memcpy(&result.data[r * result.step], 
+                   &this->data[(r + start_row) * this->step + start_col], 
                    result.col * sizeof(float));
         }
 
@@ -1443,7 +1453,7 @@ namespace tiny
         }
         
         // Copy block data element by element
-        // Note: This uses operator() which handles stride correctly, but is slower than memcpy
+        // Note: This uses operator() which handles step correctly, but is slower than memcpy
         // For better performance, consider using copy_roi() which uses memcpy
         for (int i = 0; i < block_rows; ++i)
         {
@@ -1511,10 +1521,10 @@ namespace tiny
             return;
         }
         
-        // Swap rows using memcpy (handles stride correctly)
-        memcpy(temp_row, &this->data[row1 * this->stride], this->col * sizeof(float));
-        memcpy(&this->data[row1 * this->stride], &this->data[row2 * this->stride], this->col * sizeof(float));
-        memcpy(&this->data[row2 * this->stride], temp_row, this->col * sizeof(float));
+        // Swap rows using memcpy (handles step correctly)
+        memcpy(temp_row, &this->data[row1 * this->step], this->col * sizeof(float));
+        memcpy(&this->data[row1 * this->step], &this->data[row2 * this->step], this->col * sizeof(float));
+        memcpy(&this->data[row2 * this->step], temp_row, this->col * sizeof(float));
         
         delete[] temp_row;
     }
@@ -1526,7 +1536,7 @@ namespace tiny
      * @param col2 The index of the second column to swap (must be in range [0, col-1])
      * @note If col1 == col2, the function returns immediately without doing anything.
      * @note Useful for column pivoting in algorithms like Gaussian elimination with column pivoting.
-     * @note This function swaps columns element by element, which correctly handles stride.
+     * @note This function swaps columns element by element, which correctly handles step.
      */
     void Mat::swap_cols(int col1, int col2)
     {
@@ -1565,8 +1575,8 @@ namespace tiny
             return;
         }
         
-        // Swap columns element by element (considering stride)
-        // Note: This approach correctly handles different stride values
+        // Swap columns element by element (considering step)
+        // Note: This approach correctly handles different step values
         for (int i = 0; i < this->row; ++i)
         {
             float temp = (*this)(i, col1);
@@ -1579,7 +1589,7 @@ namespace tiny
      * @name Mat::clear()
      * @brief Clear the matrix by setting all elements to zero.
      * @note Only clears the actual matrix elements (col elements per row), not the padding area.
-     * @note If the matrix has padding (stride > col), the padding elements are not cleared.
+     * @note If the matrix has padding (step > col), the padding elements are not cleared.
      */
     void Mat::clear(void)
     {
@@ -1597,11 +1607,11 @@ namespace tiny
             return;
         }
         
-        // Clear matrix row by row (handles stride correctly)
+        // Clear matrix row by row (handles step correctly)
         // Only clear the actual matrix elements (col elements), not the padding
         for (int row = 0; row < this->row; row++)
         {
-            memset(this->data + (row * this->stride), 0, this->col * sizeof(float));
+            memset(this->data + (row * this->step), 0, this->col * sizeof(float));
         }
     }
 
@@ -1652,7 +1662,7 @@ namespace tiny
             // Update dimensions and memory info
             this->row = src.row;
             this->col = src.col;
-            this->stride = src.col; // Follow source's logical stride (no padding)
+            this->step = src.col; // Follow source's logical step (no padding)
             this->pad = 0;
             
             // Check for integer overflow
@@ -1664,13 +1674,13 @@ namespace tiny
             }
             this->element = this->row * this->col;
             
-            if (this->row > 0 && this->stride > INT_MAX / this->row)
+            if (this->row > 0 && this->step > INT_MAX / this->row)
             {
                 std::cerr << "[Error] operator=: integer overflow in memory calculation\n";
                 this->data = nullptr;
                 return *this;
             }
-            this->memory = this->row * this->stride;
+            this->memory = this->row * this->step;
 
             this->ext_buff = false;
             this->sub_matrix = false;
@@ -1695,8 +1705,8 @@ namespace tiny
         // 4. Data copy (row-wise, handles different strides correctly)
         for (int r = 0; r < this->row; ++r)
         {
-            std::memcpy(this->data + r * this->stride, 
-                       src.data + r * src.stride, 
+            std::memcpy(this->data + r * this->step, 
+                       src.data + r * src.step, 
                        this->col * sizeof(float));
         }
 
@@ -2282,7 +2292,7 @@ namespace tiny
         if (num == 0)
         {
             // Any number to the power of 0 is 1
-            Mat result(this->row, this->col, this->stride);
+            Mat result(this->row, this->col, this->step);
             if (result.data == nullptr)
             {
                 std::cerr << "[Error] operator^: failed to allocate memory for result matrix\n";
@@ -2311,7 +2321,7 @@ namespace tiny
             // Compute positive power first, then take reciprocal
             int abs_num = -num;  // Positive exponent value
             
-            Mat result(this->row, this->col, this->stride);
+            Mat result(this->row, this->col, this->step);
             if (result.data == nullptr)
             {
                 std::cerr << "[Error] operator^: failed to allocate memory for result matrix\n";
@@ -2364,7 +2374,7 @@ namespace tiny
         }
 
         // General case: positive exponent > 1
-        Mat result(this->row, this->col, this->stride);
+        Mat result(this->row, this->col, this->step);
         if (result.data == nullptr)
         {
             std::cerr << "[Error] operator^: failed to allocate memory for result matrix\n";
@@ -2433,7 +2443,7 @@ namespace tiny
         {
             for (int j = 0; j < this->col; ++j)
             {
-                result(j, i) = this->data[i * this->stride + j];
+                result(j, i) = this->data[i * this->step + j];
             }
         }
         
@@ -2545,8 +2555,8 @@ namespace tiny
         // Base case: 2x2 matrix (direct formula)
         if (n == 2)
         {
-            return this->data[0] * this->data[this->stride + 1] - 
-                   this->data[1] * this->data[this->stride];
+            return this->data[0] * this->data[this->step + 1] - 
+                   this->data[1] * this->data[this->step];
         }
 
         // Recursive case: use Laplace expansion along first row
@@ -3775,7 +3785,7 @@ namespace tiny
                 if (j == target_col)
                     continue;
 
-                result.data[res_i * result.stride + res_j] = this->data[i * this->stride + j];
+                result.data[res_i * result.step + res_j] = this->data[i * this->step + j];
                 res_j++;
             }
             res_i++;

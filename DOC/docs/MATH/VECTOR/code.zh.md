@@ -7,6 +7,12 @@
  * @file tiny_vec.h
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
  * @brief This file is the header file for the submodule vec of the tiny_math middleware. This module is correspondign to the math & dotprod functions in the ESP-DSP library.
+ *
+ * Naming convention used by tiny_vec APIs:
+ * - stride: element spacing for strided access in 1D vectors.
+ *   Example: stride=1 means contiguous access, stride=2 means take every other element.
+ * - padd and step (row-size) are matrix-layout concepts and are not used in tiny_vec.
+ *
  * @version 1.0
  * @date 2025-04-15
  * @copyright Copyright (c) 2025
@@ -31,23 +37,24 @@ extern "C"
 #endif
 
 /* FUNCTION PROTOTYPES */
-tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out);
-tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float C, int step_in, int step_out);
-tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out);
-tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float C, int step_in, int step_out);
-tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out);
-tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float C, int step_in, int step_out);
-tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out, bool allow_divide_by_zero);
-tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float C, int step_in, int step_out, bool allow_divide_by_zero);
+tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
+tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
+tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
+tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out, bool allow_divide_by_zero);
+tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out, bool allow_divide_by_zero);
 tiny_error_t tiny_vec_sqrt_f32(const float *input, float *output, int len);
 tiny_error_t tiny_vec_sqrtf_f32(const float *input, float *output, int len);
 tiny_error_t tiny_vec_inv_sqrt_f32(const float *input, float *output, int len);
 tiny_error_t tiny_vec_inv_sqrtf_f32(const float *input, float *output, int len);
 tiny_error_t tiny_vec_dotprod_f32(const float *src1, const float *src2, float *dest, int len);
-tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *dest, int len, int step1, int step2);
+tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *dest, int len, int stride1, int stride2);
 #ifdef __cplusplus
 }
 #endif
+
 
 ```
 
@@ -63,12 +70,16 @@ tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *
  * @copyright Copyright (c) 2025
  *
  * @note IMPORTANT: Buffer Overflow Prevention
- *       When using step parameters, ensure that array bounds are respected:
- *       - For input arrays: (len-1) * step < array_size
- *       - For output arrays: (len-1) * step_out < array_size
- *       Example: If array has 10 elements and step=2, max safe len is 5.
+ *       When using stride parameters, ensure that array bounds are respected:
+ *       - For input arrays: (len-1) * stride < array_size
+ *       - For output arrays: (len-1) * stride_out < array_size
+ *       Example: If array has 10 elements and stride=2, max safe len is 5.
  *       The library does not perform runtime bounds checking for performance reasons.
  *       Users must ensure valid array sizes before calling these functions.
+ *
+ * Naming convention in tiny_vec:
+ * - stride: spacing in elements for strided vector access.
+ * - padd and step (row element count) are not used in this 1D module.
  */
 
 #include "tiny_vec.h"
@@ -86,31 +97,31 @@ tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *
  * @param input2 Pointer to the second input vector.
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
- * @param step1 Step size for the first input vector.
- * @param step2 Step size for the second input vector.
- * @param step_out Step size for the output vector.
+ * @param stride1 Stride for the first input vector.
+ * @param stride2 Stride for the second input vector.
+ * @param stride_out Stride for the output vector.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function performs element-wise addition of two vectors with specified step sizes, and the output is also specified with a step size.
+ * @note This function performs element-wise addition of two vectors with specified strides, and the output is also specified with a stride.
  */
-tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out)
+tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out)
 {
     if (NULL == input1 || NULL == input2 || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    if (len <= 0 || step1 <= 0 || step2 <= 0 || step_out <= 0)
+    if (len <= 0 || stride1 <= 0 || stride2 <= 0 || stride_out <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
 
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     // Use the ESP-DSP library for optimized vector addition
-    dsps_add_f32(input1, input2, output, len, step1, step2, step_out);
+    dsps_add_f32(input1, input2, output, len, stride1, stride2, stride_out);
 #else
     // Fallback to a simple loop for vector addition
     for (int i = 0; i < len; i++)
     {
-        output[i * step_out] = input1[i * step1] + input2[i * step2];
+        output[i * stride_out] = input1[i * stride1] + input2[i * stride2];
     }
 
 #endif
@@ -126,30 +137,30 @@ tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *o
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
  * @param C Constant value to be added.
- * @param step_in Step size for the input vector.
- * @param step_out Step size for the output vector.
+ * @param stride_in Stride for the input vector.
+ * @param stride_out Stride for the output vector.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function adds a constant value to each element of the input vector, with specified step sizes for both input and output vectors.
+ * @note This function adds a constant value to each element of the input vector, with specified strides for both input and output vectors.
  */
-tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float C, int step_in, int step_out)
+tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out)
 {
     if (NULL == input || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    if (len <= 0 || step_in <= 0 || step_out <= 0)
+    if (len <= 0 || stride_in <= 0 || stride_out <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
 
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     // Use the ESP-DSP library for optimized vector addition
-    dsps_addc_f32(input, output, len, C, step_in, step_out);
+    dsps_addc_f32(input, output, len, C, stride_in, stride_out);
 #else
     // Fallback to a simple loop for vector addition
     for (int i = 0; i < len; i++)
     {
-        output[i * step_out] = input[i * step_in] + C;
+        output[i * stride_out] = input[i * stride_in] + C;
     }
 #endif
     return TINY_OK;
@@ -165,30 +176,30 @@ tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float
  * @param input2 Pointer to the second input vector.
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
- * @param step1 Step size for the first input vector.
- * @param step2 Step size for the second input vector.
- * @param step_out Step size for the output vector.
+ * @param stride1 Stride for the first input vector.
+ * @param stride2 Stride for the second input vector.
+ * @param stride_out Stride for the output vector.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function performs element-wise subtraction of two vectors with specified step sizes, and the output is also specified with a step size.
+ * @note This function performs element-wise subtraction of two vectors with specified strides, and the output is also specified with a stride.
  */
-tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out)
+tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out)
 {
     if (NULL == input1 || NULL == input2 || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    if (len <= 0 || step1 <= 0 || step2 <= 0 || step_out <= 0)
+    if (len <= 0 || stride1 <= 0 || stride2 <= 0 || stride_out <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     // Use the ESP-DSP library for optimized vector subtraction
-    dsps_sub_f32(input1, input2, output, len, step1, step2, step_out);
+    dsps_sub_f32(input1, input2, output, len, stride1, stride2, stride_out);
 #else
     // Fallback to a simple loop for vector subtraction
     for (int i = 0; i < len; i++)
     {
-        output[i * step_out] = input1[i * step1] - input2[i * step2];
+        output[i * stride_out] = input1[i * stride1] - input2[i * stride2];
     }
 #endif
     return TINY_OK;
@@ -202,29 +213,29 @@ tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *o
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
  * @param C Constant value to be subtracted.
- * @param step_in Step size for the input vector.
- * @param step_out Step size for the output vector.
+ * @param stride_in Stride for the input vector.
+ * @param stride_out Stride for the output vector.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function subtracts a constant value from each element of the input vector, with specified step sizes for both input and output vectors.
+ * @note This function subtracts a constant value from each element of the input vector, with specified strides for both input and output vectors.
  */
-tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float C, int step_in, int step_out)
+tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out)
 {
     if (NULL == input || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    if (len <= 0 || step_in <= 0 || step_out <= 0)
+    if (len <= 0 || stride_in <= 0 || stride_out <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     // Use the ESP-DSP library for optimized vector subtraction
-    dsps_addc_f32(input, output, len, -C, step_in, step_out);
+    dsps_addc_f32(input, output, len, -C, stride_in, stride_out);
 #else
     // Fallback to a simple loop for vector subtraction
     for (int i = 0; i < len; i++)
     {
-        output[i * step_out] = input[i * step_in] - C;
+        output[i * stride_out] = input[i * stride_in] - C;
     }
 #endif
     return TINY_OK;
@@ -240,30 +251,30 @@ tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float
  * @param input2 Pointer to the second input vector.
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
- * @param step1 Step size for the first input vector.
- * @param step2 Step size for the second input vector.
- * @param step_out Step size for the output vector.
+ * @param stride1 Stride for the first input vector.
+ * @param stride2 Stride for the second input vector.
+ * @param stride_out Stride for the output vector.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function performs element-wise multiplication of two vectors with specified step sizes, and the output is also specified with a step size.
+ * @note This function performs element-wise multiplication of two vectors with specified strides, and the output is also specified with a stride.
  */
-tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out)
+tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out)
 {
     if (NULL == input1 || NULL == input2 || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    if (len <= 0 || step1 <= 0 || step2 <= 0 || step_out <= 0)
+    if (len <= 0 || stride1 <= 0 || stride2 <= 0 || stride_out <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     // Use the ESP-DSP library for optimized vector multiplication
-    dsps_mul_f32(input1, input2, output, len, step1, step2, step_out);
+    dsps_mul_f32(input1, input2, output, len, stride1, stride2, stride_out);
 #else
     // Fallback to a simple loop for vector multiplication
     for (int i = 0; i < len; i++)
     {
-        output[i * step_out] = input1[i * step1] * input2[i * step2];
+        output[i * stride_out] = input1[i * stride1] * input2[i * stride2];
     }
 #endif
     return TINY_OK;
@@ -277,29 +288,29 @@ tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *o
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
  * @param C Constant value to be multiplied.
- * @param step_in Step size for the input vector.
- * @param step_out Step size for the output vector.
+ * @param stride_in Stride for the input vector.
+ * @param stride_out Stride for the output vector.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function multiplies each element of the input vector by a constant value, with specified step sizes for both input and output vectors.
+ * @note This function multiplies each element of the input vector by a constant value, with specified strides for both input and output vectors.
  */
-tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float C, int step_in, int step_out)
+tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out)
 {
     if (NULL == input || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    if (len <= 0 || step_in <= 0 || step_out <= 0)
+    if (len <= 0 || stride_in <= 0 || stride_out <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     // Use the ESP-DSP library for optimized vector multiplication
-    dsps_mulc_f32(input, output, len, C, step_in, step_out);
+    dsps_mulc_f32(input, output, len, C, stride_in, stride_out);
 #else
     // Fallback to a simple loop for vector multiplication
     for (int i = 0; i < len; i++)
     {
-        output[i * step_out] = input[i * step_in] * C;
+        output[i * stride_out] = input[i * stride_in] * C;
     }
 #endif
     return TINY_OK;
@@ -315,21 +326,21 @@ tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float
  * @param input2 Pointer to the denominator vector.
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
- * @param step1 Step size for the numerator vector.
- * @param step2 Step size for the denominator vector.
- * @param step_out Step size for the output vector.
+ * @param stride1 Stride for the numerator vector.
+ * @param stride2 Stride for the denominator vector.
+ * @param stride_out Stride for the output vector.
  * @param allow_divide_by_zero Whether to safely handle zero denominators (true: set output to 0; false: return error if any zero is found).
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function performs element-wise division with specified step sizes.
+ * @note This function performs element-wise division with specified strides.
  *       If allow_divide_by_zero is false, the function will first scan for zero denominators and return an error immediately if any are found.
  */
-tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out, bool allow_divide_by_zero)
+tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out, bool allow_divide_by_zero)
 {
     if (NULL == input1 || NULL == input2 || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    if (len <= 0 || step1 <= 0 || step2 <= 0 || step_out <= 0)
+    if (len <= 0 || stride1 <= 0 || stride2 <= 0 || stride_out <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
@@ -341,7 +352,7 @@ tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *o
     {
         for (int i = 0; i < len; i++)
         {
-            if (fabsf(input2[i * step2]) < epsilon)
+            if (fabsf(input2[i * stride2]) < epsilon)
             {
                 return TINY_ERR_MATH_ZERO_DIVISION;
             }
@@ -352,8 +363,8 @@ tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *o
     // Note: If allow_divide_by_zero=false, pre-check already passed, but we double-check for safety
     for (int i = 0; i < len; i++)
     {
-        float denom = input2[i * step2];
-        float numer = input1[i * step1];
+        float denom = input2[i * stride2];
+        float numer = input1[i * stride1];
         
         if (fabsf(denom) < epsilon)
         {
@@ -363,13 +374,13 @@ tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *o
                 if (fabsf(numer) < epsilon)
                 {
                     // 0/0 case: undefined, return 0.0f as safe fallback
-                    output[i * step_out] = 0.0f;
+                    output[i * stride_out] = 0.0f;
                 }
                 else
                 {
                     // Non-zero divided by near-zero: return signed infinity
                     // Use large number instead of INFINITY for compatibility
-                    output[i * step_out] = (numer > 0.0f) ? TINY_MATH_LARGE_VALUE_F32 : -TINY_MATH_LARGE_VALUE_F32;
+                    output[i * stride_out] = (numer > 0.0f) ? TINY_MATH_LARGE_VALUE_F32 : -TINY_MATH_LARGE_VALUE_F32;
                 }
             }
             else
@@ -380,7 +391,7 @@ tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *o
         }
         else
         {
-            output[i * step_out] = numer / denom;
+            output[i * stride_out] = numer / denom;
         }
     }
 
@@ -395,22 +406,22 @@ tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *o
  * @param output Pointer to the output vector.
  * @param len Length of the vectors.
  * @param C Constant value to divide by.
- * @param step_in Step size for the input vector.
- * @param step_out Step size for the output vector.
+ * @param stride_in Stride for the input vector.
+ * @param stride_out Stride for the output vector.
  * @param allow_divide_by_zero Whether to safely handle zero constant (true: set output to 0; false: return error if C is near zero).
  * @return tiny_error_t Error code indicating success or failure.
  * @note This function divides each element of the input vector by a constant using multiplication for performance.
  *       If allow_divide_by_zero is false and C is near zero, the function returns an error.
  *       Otherwise, 1/C is precomputed and used as a multiplier.
  */
-tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float C, int step_in, int step_out, bool allow_divide_by_zero)
+tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out, bool allow_divide_by_zero)
 {
     if (NULL == input || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
 
-    if (len <= 0 || step_in <= 0 || step_out <= 0)
+    if (len <= 0 || stride_in <= 0 || stride_out <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
@@ -429,16 +440,16 @@ tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float
         // For vector / near-zero, each element should approach infinity
         for (int i = 0; i < len; i++)
         {
-            float val = input[i * step_in];
+            float val = input[i * stride_in];
             if (fabsf(val) < epsilon)
             {
                 // 0 / near-zero: undefined, return 0.0f as safe fallback
-                output[i * step_out] = 0.0f;
+                output[i * stride_out] = 0.0f;
             }
             else
             {
                 // Non-zero divided by near-zero: return signed large value
-                output[i * step_out] = (val > 0.0f) ? TINY_MATH_LARGE_VALUE_F32 : -TINY_MATH_LARGE_VALUE_F32;
+                output[i * stride_out] = (val > 0.0f) ? TINY_MATH_LARGE_VALUE_F32 : -TINY_MATH_LARGE_VALUE_F32;
             }
         }
         return TINY_OK;
@@ -448,11 +459,11 @@ tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float
     float invC = 1.0f / C;
 
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    dsps_mulc_f32(input, output, len, invC, step_in, step_out);
+    dsps_mulc_f32(input, output, len, invC, stride_in, stride_out);
 #else
     for (int i = 0; i < len; i++)
     {
-        output[i * step_out] = input[i * step_in] * invC;
+        output[i * stride_out] = input[i * stride_in] * invC;
     }
 #endif
 
@@ -547,7 +558,6 @@ inline float tiny_sqrtf_f32(float f)
  *       WARNING: This is a fast approximation. Typical relative error is < 1%.
  *       For high-precision applications, use tiny_vec_sqrt_f32() instead.
  *       NOTE: Ensure input/output arrays have sufficient size: at least len elements.
- *       When using step parameters, ensure: (len-1)*step < array_size to avoid buffer overflow.
  */
 tiny_error_t tiny_vec_sqrtf_f32(const float *input, float *output, int len)
 {
@@ -665,7 +675,6 @@ float tiny_inverted_sqrtf_f32(float data)
  *       WARNING: This is a fast approximation. Typical relative error is < 0.2%.
  *       For high-precision applications, use tiny_vec_inv_sqrt_f32() instead.
  *       NOTE: Ensure input/output arrays have sufficient size: at least len elements.
- *       When using step parameters, ensure: (len-1)*step < array_size to avoid buffer overflow.
  */
 tiny_error_t tiny_vec_inv_sqrtf_f32(const float *input, float *output, int len)
 {
@@ -738,39 +747,39 @@ tiny_error_t tiny_vec_dotprod_f32(const float *src1, const float *src2, float *d
     return TINY_OK;
 }
 
-// vector * vector (dot product - step support) | float
+// vector * vector (dot product - stride support) | float
 /**
  * @name tiny_vec_dotprode_f32
- * @brief Computes the dot product of two vectors with step support.
+ * @brief Computes the dot product of two vectors with stride support.
  * @param src1 Pointer to the first input vector.
  * @param src2 Pointer to the second input vector.
  * @param dest Pointer to the output scalar result.
  * @param len Length of the vectors.
- * @param step1 Step size for the first input vector.
- * @param step2 Step size for the second input vector.
+ * @param stride1 Stride for the first input vector.
+ * @param stride2 Stride for the second input vector.
  * @return tiny_error_t Error code indicating success or failure.
- * @note This function computes the dot product of two vectors with specified step sizes and stores the result in a single float value.
+ * @note This function computes the dot product of two vectors with specified strides and stores the result in a single float value.
  */
-tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *dest, int len, int step1, int step2)
+tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *dest, int len, int stride1, int stride2)
 {
     if (NULL == src1 || NULL == src2 || NULL == dest)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
 
-    if (len <= 0 || step1 <= 0 || step2 <= 0)
+    if (len <= 0 || stride1 <= 0 || stride2 <= 0)
     {
         return TINY_ERR_INVALID_ARG;
     }
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Use the ESP-DSP library for optimized dot product with step support
-    dsps_dotprode_f32(src1, src2, dest, len, step1, step2);
+    // Use the ESP-DSP library for optimized dot product with stride support
+    dsps_dotprode_f32(src1, src2, dest, len, stride1, stride2);
 #else
-    // Fallback to a simple loop for dot product with step support
+    // Fallback to a simple loop for dot product with stride support
     float acc = 0.0f;
     for (int i = 0; i < len; i++)
     {
-        acc += src1[i * step1] * src2[i * step2];
+        acc += src1[i * stride1] * src2[i * stride2];
     }
     *dest = acc;
 #endif

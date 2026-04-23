@@ -20,18 +20,18 @@ TinyMath
 ```c
 // print matrix
 void print_matrix(const char *name, const float *mat, int rows, int cols);
-// print matrix padded (row-major)
+// print matrix padded (row-major; step = total elements per row)
 void print_matrix_padded(const char *name, const float *mat, int rows, int cols, int step);
 // addition
-tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
-tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 // subtraction
-tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
-tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 // multiplication
 tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, int n, int k);
 tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int A_rows, int A_cols, int B_cols, int A_padding, int B_padding, int C_padding);
-tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
 ## 工具函数
@@ -78,7 +78,7 @@ void print_matrix_padded(const char *name, const float *mat, int rows, int cols,
 
 ### 矩阵加法
 ```c
-tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
+tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
 ```
 
 **函数:** 矩阵加法。
@@ -101,17 +101,17 @@ tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *o
 
 - `padd_out`: 输出矩阵的填充。
 
-- `step1`: 输入矩阵1的步长。
+- `stride1`: 输入矩阵1的步长。
 
-- `step2`: 输入矩阵2的步长。
+- `stride2`: 输入矩阵2的步长。
 
-- `step_out`: 输出矩阵的步长。
+- `stride_out`: 输出矩阵的步长。
 
 **返回:** 错误码。
 
 ### 矩阵加常数
 ```c
-tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
 **函数:** 矩阵加常数。
@@ -132,15 +132,15 @@ tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int r
 
 - `padd_out`: 输出矩阵的填充。
 
-- `step_in`: 输入矩阵的步长。
+- `stride_in`: 输入矩阵的步长。
 
-- `step_out`: 输出矩阵的步长。
+- `stride_out`: 输出矩阵的步长。
 
 **返回:** 错误码。
 
 ### 矩阵减法
 ```c
-tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
+tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
 ```
 
 **函数:** 矩阵减法。
@@ -163,17 +163,17 @@ tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *o
 
 - `padd_out`: 输出矩阵的填充。
 
-- `step1`: 输入矩阵1的步长。
+- `stride1`: 输入矩阵1的步长。
 
-- `step2`: 输入矩阵2的步长。
+- `stride2`: 输入矩阵2的步长。
 
-- `step_out`: 输出矩阵的步长。
+- `stride_out`: 输出矩阵的步长。
 
 **返回:** 错误码。
 
 ### 矩阵减常数
 ```c
-tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
 **函数:** 矩阵减常数。
@@ -194,9 +194,9 @@ tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int r
 
 - `padd_out`: 输出矩阵的填充。
 
-- `step_in`: 输入矩阵的步长。
+- `stride_in`: 输入矩阵的步长。
 
-- `step_out`: 输出矩阵的步长。
+- `stride_out`: 输出矩阵的步长。
 
 **返回:** 错误码。
 
@@ -255,7 +255,7 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
 
 ### 矩阵乘常数
 ```c
-tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
 **函数:** 矩阵乘常数。
@@ -276,8 +276,8 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
 
 - `padd_out`: 输出矩阵的填充。
 
-- `step_in`: 输入矩阵的步长。
+- `stride_in`: 输入矩阵的步长。
 
-- `step_out`: 输出矩阵的步长。
+- `stride_out`: 输出矩阵的步长。
 
 **返回:** 错误码。

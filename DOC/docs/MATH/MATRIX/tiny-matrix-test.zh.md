@@ -172,8 +172,8 @@ void test_constructor_destructor()
     mat2.print_info();
     mat2.print_matrix(true);
 
-    // A1.3: constructor with rows and cols, specifying stride, using internal allocation
-    std::cout << "[A1.3] Constructor with Rows, Cols and Stride\n";
+    // A1.3: constructor with rows and cols, specifying step, using internal allocation
+    std::cout << "[A1.3] Constructor with Rows, Cols and Step\n";
     tiny::Mat mat3(3, 4, 5);
     mat3.print_info();
     mat3.print_matrix(true);
@@ -185,10 +185,10 @@ void test_constructor_destructor()
     mat4.print_info();
     mat4.print_matrix(true);
 
-    // A1.5: constructor with external data and stride
-    std::cout << "[A1.5] Constructor with External Data and Stride\n";
-    float data_stride[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
-    tiny::Mat mat5(data_stride, 3, 4, 5);
+    // A1.5: constructor with external data and step
+    std::cout << "[A1.5] Constructor with External Data and Step\n";
+    float data_step[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
+    tiny::Mat mat5(data_step, 3, 4, 5);
     mat5.print_info();
     mat5.print_matrix(true);
 
@@ -735,9 +735,9 @@ void test_matrix_transpose()
     std::cout << "Transposed 3x3 Matrix:\n";
     transposed2.print_matrix(true);
 
-    // C1.3: Matrix with padding (4x2, stride=3)
+    // C1.3: Matrix with padding (4x2, step=3)
     std::cout << "\n[C1.3] Transpose of Matrix with Padding\n";
-    float data[12] = {1, 2, 0, 3, 4, 0, 5, 6, 0, 7, 8, 0};  // stride=3, 4 rows
+    float data[12] = {1, 2, 0, 3, 4, 0, 5, 6, 0, 7, 8, 0};  // step=3, 4 rows
     tiny::Mat mat3(data, 4, 2, 3);
     std::cout << "Original 4x2 Matrix (with padding):\n";
     mat3.print_matrix(true);
@@ -1140,7 +1140,7 @@ void test_matrix_normalize()
     // C5.2: Matrix with padding
     std::cout << "\n[C5.2] Normalize a 2x2 Matrix with Stride=4 (Padding Test)\n";
     float data_with_padding[8] = {3.0f, 4.0f, 0.0f, 0.0f, 3.0f, 4.0f, 0.0f, 0.0f};
-    tiny::Mat mat2(data_with_padding, 2, 2, 4);  // 2x2 matrix, stride 4
+    tiny::Mat mat2(data_with_padding, 2, 2, 4);  // 2x2 matrix, step 4
 
     std::cout << "Before normalization:\n";
     mat2.print_matrix(true);
@@ -1198,7 +1198,7 @@ void test_matrix_norm()
     // C6.4: Matrix with Padding
     std::cout << "\n[C6.4] 2x2 Matrix with Stride=4 (Padding Test)\n";
     float data4[8] = {1.0f, 2.0f, 0.0f, 0.0f, 3.0f, 4.0f, 0.0f, 0.0f};
-    tiny::Mat mat4(data4, 2, 2, 4);  // 2x2 matrix, stride 4
+    tiny::Mat mat4(data4, 2, 2, 4);  // 2x2 matrix, step 4
     std::cout << "Matrix:\n";
     mat4.print_matrix(true);
     float norm4 = mat4.norm();
@@ -2550,7 +2550,7 @@ void test_performance_benchmarks()
     std::cout << "\n[G2.5] Matrix Copy with Padding Performance\n";
     float data[80] = {0};  // Reduced from 150 to 80
     for (int i = 0; i < 80; ++i) data[i] = static_cast<float>(i);
-    tiny::Mat J(data, 8, 8, 10);  // Reduced from 10x10 stride 15 to 8x8 stride 10
+    tiny::Mat J(data, 8, 8, 10);  // Reduced from 10x10 step 15 to 8x8 step 10
     TIME_REPEATED_OPERATION(tiny::Mat K = J.copy_roi(0, 0, 8, 8);, PERFORMANCE_TEST_ITERATIONS, "8x8 Copy ROI (with padding)");
 
     // G2.6: Element Access Performance (reduced size)
@@ -2593,28 +2593,28 @@ void test_performance_benchmarks()
 }
 
 // ============================================================================
-// G3: Quality Assurance - Memory Layout Tests (Padding and Stride)
+// G3: Quality Assurance - Memory Layout Tests (Padding and Step)
 // ============================================================================
 // Purpose: Test memory layout handling - important for performance and compatibility
 void test_memory_layout()
 {
-    std::cout << "\n[G3: Quality Assurance - Memory Layout Tests (Padding and Stride)]\n";
+    std::cout << "\n[G3: Quality Assurance - Memory Layout Tests (Padding and Step)]\n";
 
-    // G3.1: Contiguous memory (pad=0, step=1)
+    // G3.1: Contiguous memory (pad=0, step=4, stride=1)
     std::cout << "\n[G3.1] Contiguous Memory (no padding)\n";
     tiny::Mat mat1(3, 4);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 4; ++j)
             mat1(i, j) = static_cast<float>(i * 4 + j);
-    std::cout << "Matrix 3x4 (stride=4, pad=0):\n";
+    std::cout << "Matrix 3x4 (step=4, pad=0):\n";
     mat1.print_info();
     mat1.print_matrix(true);
 
-    // G3.2: Padded memory (stride > col)
-    std::cout << "\n[G3.2] Padded Memory (stride > col)\n";
+    // G3.2: Padded memory (step > col)
+    std::cout << "\n[G3.2] Padded Memory (step > col)\n";
     float data[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
     tiny::Mat mat2(data, 3, 4, 5);
-    std::cout << "Matrix 3x4 (stride=5, pad=1):\n";
+    std::cout << "Matrix 3x4 (step=5, pad=1):\n";
     mat2.print_info();
     mat2.print_matrix(true);
 
@@ -2636,10 +2636,10 @@ void test_memory_layout()
     roi.print_info();
     roi.print_matrix(true);
 
-    // G3.5: Copy operations preserve stride
-    std::cout << "\n[G3.5] Copy Operations Preserve Stride\n";
+    // G3.5: Copy operations preserve step
+    std::cout << "\n[G3.5] Copy Operations Preserve Step\n";
     tiny::Mat copied = mat2.copy_roi(0, 0, 3, 4);
-    std::cout << "Copied matrix (should have stride=4, no padding):\n";
+    std::cout << "Copied matrix (should have step=4, no padding):\n";
     copied.print_info();
     copied.print_matrix(true);
 }
@@ -4865,9 +4865,9 @@ rows            1
 cols            1
 elements        1
 paddings        0
-stride          1
+step            1
 memory          1
-data pointer    0x3fce9a78
+data pointer    0x3fce9a7c
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -4882,9 +4882,9 @@ rows            3
 cols            4
 elements        12
 paddings        0
-stride          4
+step            4
 memory          12
-data pointer    0x3fce9a9c
+data pointer    0x3fce9a8c
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -4895,15 +4895,15 @@ Matrix Elements >>>
            0            0            0            0       |
 <<< Matrix Elements
 
-[A1.3] Constructor with Rows, Cols and Stride
+[A1.3] Constructor with Rows, Cols and Step
 Matrix Info >>>
 rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fce9ad0
+data pointer    0x3fce9ac0
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -4920,9 +4920,9 @@ rows            3
 cols            4
 elements        12
 paddings        0
-stride          4
+step            4
 memory          12
-data pointer    0x3fc9a49c
+data pointer    0x3fc9a4ac
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -4933,15 +4933,15 @@ Matrix Elements >>>
            8            9           10           11       |
 <<< Matrix Elements
 
-[A1.5] Constructor with External Data and Stride
+[A1.5] Constructor with External Data and Step
 Matrix Info >>>
 rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a4f0
+data pointer    0x3fc9a500
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -4958,17 +4958,17 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fce9bd8
+data pointer    0x3fce9b00
 temp pointer    0
 ext_buff        0
 sub_matrix      0
 <<< Matrix Info
 Matrix Elements >>>
-           0            1            2            3       |1.89175e-43 
-           4            5            6            7       |1.61149e-43 
-           8            9           10           11       |1.61413 
+           0            1            2            3       |-1.65083e-22 
+           4            5            6            7       |1.97967e+18 
+           8            9           10           11       | 1.6141 
 <<< Matrix Elements
 
 
@@ -4979,9 +4979,9 @@ rows            2
 cols            3
 elements        6
 paddings        0
-stride          3
+step            3
 memory          6
-data pointer    0x3fce9a9c
+data pointer    0x3fce9a7c
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -5002,9 +5002,9 @@ rows            2
 cols            3
 elements        6
 paddings        0
-stride          3
+step            3
 memory          6
-data pointer    0x3fce9a9c
+data pointer    0x3fce9a7c
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -5020,9 +5020,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5039,9 +5039,9 @@ rows            1
 cols            1
 elements        1
 paddings        0
-stride          1
+step            1
 memory          1
-data pointer    0x3fce9a78
+data pointer    0x3fce9a98
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -5067,9 +5067,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5088,9 +5088,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5109,9 +5109,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5125,8 +5125,7 @@ Matrix Elements >>>
 
 [A3.5] copy_paste() - Error Handling - Negative Position
 [Error] copy_paste: invalid position: row_pos=-1, col_pos=0 (must be non-negative)
-copy_paste with row_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
-[Error] copy_paste: invalid position: row_pos=0, col_pos=-1 (must be non-negative)
+ (must be non-negative)
 copy_paste with col_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
 
 [A3.6] copy_paste() - Error Handling - Out of Bounds
@@ -5165,9 +5164,9 @@ rows            2
 cols            2
 elements        4
 paddings        3
-stride          5
+step            5
 memory          10
-data pointer    0x3fc9a29c
+data pointer    0x3fc9a2ac
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      1   (This is a Sub-Matrix View)
@@ -5183,9 +5182,9 @@ rows            2
 cols            2
 elements        4
 paddings        3
-stride          5
+step            5
 memory          10
-data pointer    0x3fc9a29c
+data pointer    0x3fc9a2ac
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      1   (This is a Sub-Matrix View)
@@ -5201,9 +5200,9 @@ rows            2
 cols            2
 elements        4
 paddings        0
-stride          2
+step            2
 memory          4
-data pointer    0x3fce9ca8
+data pointer    0x3fce9bd0
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -5214,15 +5213,15 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 [A3.12] Copy ROI - Using ROI Structure
-time for copy_roi using ROI structure: 43 ms
+time for copy_roi using ROI structure: 38 ms
 Matrix Info >>>
 rows            2
 cols            2
 elements        4
 paddings        0
-stride          2
+step            2
 memory          4
-data pointer    0x3fce9cbc
+data pointer    0x3fce9be4
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -5242,15 +5241,15 @@ ROI resize test: [PASS]
 ROI(0, 0, 3, 4) area: 12 (Expected: 12) [PASS]
 ROI(1, 2, 5, 6) area: 30 (Expected: 30) [PASS]
 [A3.15] Block
-time for block: 53 ms
+time for block: 43 ms
 Matrix Info >>>
 rows            2
 cols            2
 elements        4
 paddings        0
-stride          2
+step            2
 memory          4
-data pointer    0x3fce9cd0
+data pointer    0x3fce9bf8
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -5267,9 +5266,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5286,9 +5285,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5306,9 +5305,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5325,9 +5324,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5345,9 +5344,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5364,9 +5363,9 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a284
+data pointer    0x3fc9a294
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5378,7 +5377,9 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 ============ [tiny_matrix_test end] ============
+
 ```
+
 ### 第二阶段： 基础操作 （B）
 
 ```c

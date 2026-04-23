@@ -38,6 +38,7 @@ extern "C"
 #endif
 
 
+
 ```
 
 ### tiny_vec_test.c
@@ -163,12 +164,33 @@ void tiny_vec_test(void)
 ### main.cpp
 
 ```cpp
+/**
+ * @file AIoTNode.cpp
+ * @brief Main program entry for tiny_vec test.
+ */
+
+#include "esp_log.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "tiny_vec_test.h"
 
-extern "C" void app_main(void)
+static const char *TAG = "tiny_vec_test";
+
+void app_main(void)
 {
+    ESP_LOGI(TAG, "========================================");
+    ESP_LOGI(TAG, "  tiny_vec Module Test Program");
+    ESP_LOGI(TAG, "========================================");
     tiny_vec_test();
+    ESP_LOGI(TAG, "tiny_vec test complete.");
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 ```
 

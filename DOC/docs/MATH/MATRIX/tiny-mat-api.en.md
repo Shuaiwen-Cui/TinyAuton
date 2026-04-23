@@ -21,18 +21,18 @@ TinyMath
 ```c
 // print matrix
 void print_matrix(const char *name, const float *mat, int rows, int cols);
-// print matrix padded (row-major)
+// print matrix padded (row-major; step = total elements per row)
 void print_matrix_padded(const char *name, const float *mat, int rows, int cols, int step);
 // addition
-tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
-tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 // subtraction
-tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
-tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 // multiplication
 tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, int n, int k);
 tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int A_rows, int A_cols, int B_cols, int A_padding, int B_padding, int C_padding);
-tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
 ## UTILITY FUNCTIONS
@@ -78,7 +78,7 @@ void print_matrix_padded(const char *name, const float *mat, int rows, int cols,
 
 ### Matrix Addition
 ```c
-tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
+tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
 ```
 
 **Function:** Add two matrices.
@@ -101,17 +101,17 @@ tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *o
 
 - `padd_out`: Padding for the output matrix.
 
-- `step1`: Step size for the first input matrix.
+- `stride1`: Step size for the first input matrix.
 
-- `step2`: Step size for the second input matrix.
+- `stride2`: Step size for the second input matrix.
 
-- `step_out`: Step size for the output matrix.
+- `stride_out`: Step size for the output matrix.
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
 ### Matrix Addition with Constant
 ```c
-tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
 **Function:** Add a constant to a matrix.
@@ -132,9 +132,9 @@ tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int r
 
 - `padd_out`: Padding for the output matrix.
 
-- `step_in`: Step size for the input matrix.
+- `stride_in`: Step size for the input matrix.
 
-- `step_out`: Step size for the output matrix.
+- `stride_out`: Step size for the output matrix.
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
@@ -142,7 +142,7 @@ tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int r
 
 ### Matrix Subtraction
 ```c
-tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
+tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
 ```
 
 **Function:** Subtract two matrices.
@@ -165,17 +165,17 @@ tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *o
 
 - `padd_out`: Padding for the output matrix.
 
-- `step1`: Step size for the first input matrix.
+- `stride1`: Step size for the first input matrix.
 
-- `step2`: Step size for the second input matrix.
+- `stride2`: Step size for the second input matrix.
 
-- `step_out`: Step size for the output matrix.
+- `stride_out`: Step size for the output matrix.
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
 ### Matrix Subtraction with Constant
 ```c
-tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
 **Function:** Subtract a constant from a matrix.
@@ -196,9 +196,9 @@ tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int r
 
 - `padd_out`: Padding for the output matrix.
 
-- `step_in`: Step size for the input matrix.
+- `stride_in`: Step size for the input matrix.
 
-- `step_out`: Step size for the output matrix.
+- `stride_out`: Step size for the output matrix.
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
@@ -258,7 +258,7 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
 
 ### Matrix Multiplication with Constant
 ```c
-tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
 **Function:** Multiply a matrix by a constant.
@@ -279,9 +279,9 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
 
 - `padd_out`: Padding for the output matrix.
 
-- `step_in`: Step size for the input matrix.
+- `stride_in`: Step size for the input matrix.
 
-- `step_out`: Step size for the output matrix.
+- `stride_out`: Step size for the output matrix.
 
 **Returns:** `tiny_error_t` indicating success or failure.
 ```

@@ -7,6 +7,15 @@
  * @file tiny_mat.h
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
  * @brief This file is the header file for the submodule mat (basic matrix operations) of the tiny_math middleware.
+ *
+ * Terminology conventions for tiny_mat APIs:
+ * - padd / padding: placeholder elements reserved in storage that do not
+ *   participate in math operations.
+ * - step: total elements in one physical row (including padd), usually cols + padd.
+ * - stride: spacing (in elements) between adjacent logical columns in a row.
+ *   General index model:
+ *     idx = row * step + col * stride
+ *
  * @version 1.0
  * @date 2025-04-17
  * @copyright Copyright (c) 2025
@@ -31,22 +40,23 @@ extern "C"
 /* FUNCTION PROTOTYPES */
 // print matrix
 void print_matrix(const char *name, const float *mat, int rows, int cols);
-// print matrix padded (row-major)
+// print matrix padded (row-major; step = total elements per row)
 void print_matrix_padded(const char *name, const float *mat, int rows, int cols, int step);
 // addition
-tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
-tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 // subtraction
-tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out);
-tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
+tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 // multiplication
 tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, int n, int k);
 tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int A_rows, int A_cols, int B_cols, int A_padding, int B_padding, int C_padding);
-tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out);
+tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 
 #ifdef __cplusplus
 }
 #endif
+
 
 ```
 
@@ -57,6 +67,15 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
  * @file tiny_mat.c
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
  * @brief This file is the source file for the submodule mat (basic matrix operations) of the tiny_math middleware.
+ *
+ * Terminology conventions for tiny_mat APIs:
+ * - padd / padding: placeholder elements reserved in storage that do not
+ *   participate in math operations.
+ * - step: total elements in one physical row (including padd), usually cols + padd.
+ * - stride: spacing (in elements) between adjacent logical columns in a row.
+ *   General index model:
+ *     idx = row * step + col * stride
+ *
  * @version 1.0
  * @date 2025-04-17
  * @copyright Copyright (c) 2025
@@ -98,7 +117,7 @@ void print_matrix(const char *name, const float *mat, int rows, int cols)
  * @param mat Pointer to the matrix data.
  * @param rows Number of rows in the matrix.
  * @param cols Number of columns in the matrix.
- * @param step Step size (how many elements in a row) for the matrix data. row-major order.
+ * @param step Total number of elements in one row (including padding), row-major order.
  */
 void print_matrix_padded(const char *name, const float *mat, int rows, int cols, int step)
 {
@@ -129,21 +148,21 @@ void print_matrix_padded(const char *name, const float *mat, int rows, int cols,
  * @param padd1 Number of padding columns in the first input matrix.
  * @param padd2 Number of padding columns in the second input matrix.
  * @param padd_out Number of padding columns in the output matrix.
- * @param step1 Step size for the first input matrix.
- * @param step2 Step size for the second input matrix.
- * @param step_out Step size for the output matrix.
+ * @param stride1 Stride for the first input matrix.
+ * @param stride2 Stride for the second input matrix.
+ * @param stride_out Stride for the output matrix.
  * @return Returns TINY_OK on success, or an error code on failure.
- * @note This function performs matrix addition with the specified padding and step sizes.
+ * @note This function performs matrix addition with the specified paddings and strides.
  * @note The function assumes that the input matrices are in row-major order.
  */
-tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out)
+tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out)
 {
     if (NULL == input1 || NULL == input2 || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    // paddings must be non-negative, steps must be at least 1.
-    if (rows <= 0 || cols <= 0 || padd1 < 0 || padd2 < 0 || padd_out < 0 || step1 <= 0 || step2 <= 0 || step_out <= 0)
+    // paddings must be non-negative, strides must be at least 1.
+    if (rows <= 0 || cols <= 0 || padd1 < 0 || padd2 < 0 || padd_out < 0 || stride1 <= 0 || stride2 <= 0 || stride_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
@@ -151,31 +170,30 @@ tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *o
     // pad refers to the columns that are not used in the matrix operation
 
     /* Use explicit index math instead of mutating the caller pointers.
-       This keeps input pointers const and avoids surprises from pointer
-       arithmetic. The storage model is row-major with per-row reserved
-       length = cols + padd. Logical column c is at base + c * step. */
-    const int in1_row_stride = cols + padd1;
-    const int in2_row_stride = cols + padd2;
-    const int out_row_stride = cols + padd_out;
+       The storage model is row-major:
+       step = cols + padd, logical column c at base + c * stride. */
+    const int in1_step = cols + padd1;
+    const int in2_step = cols + padd2;
+    const int out_step = cols + padd_out;
 
-    // If we're on ESP32 and all paddings are 0 and all steps are 1 (contiguous),
+    // If we're on ESP32 and all paddings are 0 and all strides are 1 (contiguous),
     // prefer to call the optimized ESP-DSP implementation.
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    if (padd1 == 0 && padd2 == 0 && padd_out == 0 && step1 == 1 && step2 == 1 && step_out == 1) {
+    if (padd1 == 0 && padd2 == 0 && padd_out == 0 && stride1 == 1 && stride2 == 1 && stride_out == 1) {
         dspm_add_f32(input1, input2, output, rows, cols, 0, 0, 0, 1, 1, 1);
         return TINY_OK;
     }
 #endif
 
     for (int row = 0; row < rows; row++) {
-        int base_in1 = row * in1_row_stride;
-        int base_in2 = row * in2_row_stride;
-        int base_out = row * out_row_stride;
+        int base_in1 = row * in1_step;
+        int base_in2 = row * in2_step;
+        int base_out = row * out_step;
 
         for (int col = 0; col < cols; col++) {
-            int idx_in1 = base_in1 + col * step1;
-            int idx_in2 = base_in2 + col * step2;
-            int idx_out = base_out + col * step_out;
+            int idx_in1 = base_in1 + col * stride1;
+            int idx_in2 = base_in2 + col * stride2;
+            int idx_out = base_out + col * stride_out;
 
             /* bounds are the caller's responsibility, but avoid undefined
                behavior by checking indices minimally in debug builds if
@@ -198,43 +216,43 @@ tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *o
  * @param cols Number of columns in the matrices.
  * @param padd_in Number of padding columns in the input matrix.
  * @param padd_out Number of padding columns in the output matrix.
- * @param step_in Step size for the input matrix.
- * @param step_out Step size for the output matrix.
+ * @param stride_in Stride for the input matrix.
+ * @param stride_out Stride for the output matrix.
  * @return Returns TINY_OK on success, or an error code on failure.
- * @note This function performs matrix addition with a constant with the specified padding and step sizes.
+ * @note This function performs matrix addition with a constant with the specified paddings and strides.
  * @note The function assumes that the input matrix is in row-major order.
  */
-tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out)
+tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out)
 {
     if (NULL == input || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    // paddings must be non-negative, steps must be at least 1.
-    if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || step_in <= 0 || step_out <= 0)
+    // paddings must be non-negative, strides must be at least 1.
+    if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || stride_in <= 0 || stride_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
     // pad refers to the columns that are not used in the matrix operation
-    // If running on ESP32 and all paddings are 0 and all steps are 1 (contiguous),
+    // If running on ESP32 and all paddings are 0 and all strides are 1 (contiguous),
     // prefer the optimized ESP-DSP implementation.
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    if (padd_in == 0 && padd_out == 0 && step_in == 1 && step_out == 1) {
+    if (padd_in == 0 && padd_out == 0 && stride_in == 1 && stride_out == 1) {
         dspm_addc_f32(input, output, C, rows, cols, 0, 0, 1, 1);
         return TINY_OK;
     }
 #endif
 
-    const int in_row_stride = cols + padd_in;
-    const int out_row_stride = cols + padd_out;
+    const int in_step = cols + padd_in;
+    const int out_step = cols + padd_out;
 
     for (int row = 0; row < rows; row++) {
-        int base_in = row * in_row_stride;
-        int base_out = row * out_row_stride;
+        int base_in = row * in_step;
+        int base_out = row * out_step;
 
         for (int col = 0; col < cols; col++) {
-            int idx_in = base_in + col * step_in;
-            int idx_out = base_out + col * step_out;
+            int idx_in = base_in + col * stride_in;
+            int idx_out = base_out + col * stride_out;
 
             output[idx_out] = input[idx_in] + C;
         }
@@ -257,46 +275,46 @@ tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int r
  * @param padd1 Number of padding columns in the first input matrix.
  * @param padd2 Number of padding columns in the second input matrix.
  * @param padd_out Number of padding columns in the output matrix.
- * @param step1 Step size for the first input matrix.
- * @param step2 Step size for the second input matrix.
- * @param step_out Step size for the output matrix.
+ * @param stride1 Stride for the first input matrix.
+ * @param stride2 Stride for the second input matrix.
+ * @param stride_out Stride for the output matrix.
  * @return Returns TINY_OK on success, or an error code on failure.
- * @note This function performs matrix subtraction with the specified padding and step sizes.
+ * @note This function performs matrix subtraction with the specified paddings and strides.
  * @note The function assumes that the input matrices are in row-major order.
  */
-tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int step1, int step2, int step_out)
+tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out)
 {
     if (NULL == input1 || NULL == input2 || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    // paddings must be non-negative, steps must be at least 1.
-    if (rows <= 0 || cols <= 0 || padd1 < 0 || padd2 < 0 || padd_out < 0 || step1 <= 0 || step2 <= 0 || step_out <= 0)
+    // paddings must be non-negative, strides must be at least 1.
+    if (rows <= 0 || cols <= 0 || padd1 < 0 || padd2 < 0 || padd_out < 0 || stride1 <= 0 || stride2 <= 0 || stride_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
     // pad refers to the columns that are not used in the matrix operation
-    // Prefer ESP-DSP only when all paddings are 0 and all steps are 1 (contiguous)
+    // Prefer ESP-DSP only when all paddings are 0 and all strides are 1 (contiguous)
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    if (padd1 == 0 && padd2 == 0 && padd_out == 0 && step1 == 1 && step2 == 1 && step_out == 1) {
+    if (padd1 == 0 && padd2 == 0 && padd_out == 0 && stride1 == 1 && stride2 == 1 && stride_out == 1) {
         dspm_sub_f32(input1, input2, output, rows, cols, 0, 0, 0, 1, 1, 1);
         return TINY_OK;
     }
 #endif
 
-    const int in1_row_stride = cols + padd1;
-    const int in2_row_stride = cols + padd2;
-    const int out_row_stride = cols + padd_out;
+    const int in1_step = cols + padd1;
+    const int in2_step = cols + padd2;
+    const int out_step = cols + padd_out;
 
     for (int row = 0; row < rows; row++) {
-        int base_in1 = row * in1_row_stride;
-        int base_in2 = row * in2_row_stride;
-        int base_out = row * out_row_stride;
+        int base_in1 = row * in1_step;
+        int base_in2 = row * in2_step;
+        int base_out = row * out_step;
 
         for (int col = 0; col < cols; col++) {
-            int idx_in1 = base_in1 + col * step1;
-            int idx_in2 = base_in2 + col * step2;
-            int idx_out = base_out + col * step_out;
+            int idx_in1 = base_in1 + col * stride1;
+            int idx_in2 = base_in2 + col * stride2;
+            int idx_out = base_out + col * stride_out;
 
             output[idx_out] = input1[idx_in1] - input2[idx_in2];
         }
@@ -316,43 +334,43 @@ tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *o
  * @param cols Number of columns in the matrices.
  * @param padd_in Number of padding columns in the input matrix.
  * @param padd_out Number of padding columns in the output matrix.
- * @param step_in Step size for the input matrix.
- * @param step_out Step size for the output matrix.
+ * @param stride_in Stride for the input matrix.
+ * @param stride_out Stride for the output matrix.
  * @return Returns TINY_OK on success, or an error code on failure.
- * @note This function performs matrix subtraction with a constant with the specified padding and step sizes.
+ * @note This function performs matrix subtraction with a constant with the specified paddings and strides.
  * @note The function assumes that the input matrix is in row-major order.
  */
-tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out)
+tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out)
 {
     if (NULL == input || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    // paddings must be non-negative, steps must be at least 1.
-    if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || step_in <= 0 || step_out <= 0)
+    // paddings must be non-negative, strides must be at least 1.
+    if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || stride_in <= 0 || stride_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
     // pad refers to the columns that are not used in the matrix operation
-    // Prefer ESP-DSP only when all paddings are 0 and all steps are 1 (contiguous)
+    // Prefer ESP-DSP only when all paddings are 0 and all strides are 1 (contiguous)
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    if (padd_in == 0 && padd_out == 0 && step_in == 1 && step_out == 1) {
+    if (padd_in == 0 && padd_out == 0 && stride_in == 1 && stride_out == 1) {
         // dspm_addc_f32 performs addition; pass -C to implement subtraction-constant
         dspm_addc_f32(input, output, -C, rows, cols, 0, 0, 1, 1);
         return TINY_OK;
     }
 #endif
 
-    const int in_row_stride = cols + padd_in;
-    const int out_row_stride = cols + padd_out;
+    const int in_step = cols + padd_in;
+    const int out_step = cols + padd_out;
 
     for (int row = 0; row < rows; row++) {
-        int base_in = row * in_row_stride;
-        int base_out = row * out_row_stride;
+        int base_in = row * in_step;
+        int base_out = row * out_step;
 
         for (int col = 0; col < cols; col++) {
-            int idx_in = base_in + col * step_in;
-            int idx_out = base_out + col * step_out;
+            int idx_in = base_in + col * stride_in;
+            int idx_out = base_out + col * stride_out;
 
             output[idx_out] = input[idx_in] - C;
         }
@@ -374,7 +392,7 @@ tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int r
  * @param n Number of columns in the first matrix and rows in the second matrix.
  * @param k Number of columns in the second matrix.
  * @return Returns TINY_OK on success, or an error code on failure.
- * @note This function performs matrix multiplication with the specified padding and step sizes.
+ * @note This function performs matrix multiplication with the specified paddings.
  * @note The function assumes that the input matrices are in row-major order.
  */
 tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, int n, int k)
@@ -418,7 +436,7 @@ tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, 
  * @param B_padding Number of padding columns in the second matrix.
  * @param C_padding Number of padding columns in the output matrix.
  * @return Returns TINY_OK on success, or an error code on failure.
- * @note This function performs matrix multiplication with the specified padding and step sizes.
+ * @note This function performs matrix multiplication with the specified paddings.
  * @note The function assumes that the input matrices are in row-major order.
  */
 tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int A_rows, int A_cols, int B_cols, int A_padding, int B_padding, int C_padding)
@@ -476,42 +494,42 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
  * @param cols Number of columns in the matrices.
  * @param padd_in Number of padding columns in the input matrix.
  * @param padd_out Number of padding columns in the output matrix.
- * @param step_in Step size for the input matrix.
- * @param step_out Step size for the output matrix.
+ * @param stride_in Stride for the input matrix.
+ * @param stride_out Stride for the output matrix.
  * @return Returns TINY_OK on success, or an error code on failure.
- * @note This function performs matrix multiplication with a constant with the specified padding and step sizes.
+ * @note This function performs matrix multiplication with a constant with the specified paddings and strides.
  * @note The function assumes that the input matrix is in row-major order.
  */
-tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int step_in, int step_out)
+tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out)
 {
     if (NULL == input || NULL == output)
     {
         return TINY_ERR_MATH_NULL_POINTER;
     }
-    // paddings must be non-negative, steps must be at least 1.
-    if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || step_in <= 0 || step_out <= 0)
+    // paddings must be non-negative, strides must be at least 1.
+    if (rows <= 0 || cols <= 0 || padd_in < 0 || padd_out < 0 || stride_in <= 0 || stride_out <= 0)
     {
         return TINY_ERR_MATH_INVALID_PARAM;
     }
     // pad refers to the columns that are not used in the matrix operation
-    // Prefer ESP-DSP only when all paddings are 0 and all steps are 1 (contiguous)
+    // Prefer ESP-DSP only when all paddings are 0 and all strides are 1 (contiguous)
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    if (padd_in == 0 && padd_out == 0 && step_in == 1 && step_out == 1) {
+    if (padd_in == 0 && padd_out == 0 && stride_in == 1 && stride_out == 1) {
         dspm_mulc_f32(input, output, C, rows, cols, 0, 0, 1, 1);
         return TINY_OK;
     }
 #endif
 
-    const int in_row_stride = cols + padd_in;
-    const int out_row_stride = cols + padd_out;
+    const int in_step = cols + padd_in;
+    const int out_step = cols + padd_out;
 
     for (int row = 0; row < rows; row++) {
-        int base_in = row * in_row_stride;
-        int base_out = row * out_row_stride;
+        int base_in = row * in_step;
+        int base_out = row * out_step;
 
         for (int col = 0; col < cols; col++) {
-            int idx_in = base_in + col * step_in;
-            int idx_out = base_out + col * step_out;
+            int idx_in = base_in + col * stride_in;
+            int idx_out = base_out + col * stride_out;
 
             output[idx_out] = input[idx_in] * C;
         }

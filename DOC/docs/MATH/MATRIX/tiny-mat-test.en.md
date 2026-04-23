@@ -32,6 +32,7 @@ void tiny_mat_test(void);
 }
 #endif
 
+
 ```
 
 ### tiny_mat_test.c
@@ -40,7 +41,7 @@ void tiny_mat_test(void);
 /**
  * @file tiny_mat_test.c
  * @brief Comprehensive stress tests for tiny_mat module, targeting edge cases and potential weaknesses.
- * @note Tests include: step parameters, different paddings, extreme values, boundary cases, and complex memory layouts.
+ * @note Tests include: stride/step parameters, different paddings, extreme values, boundary cases, and complex memory layouts.
  */
 
 #include "tiny_mat_test.h"
@@ -48,10 +49,10 @@ void tiny_mat_test(void);
 #include <string.h>
 
 /**
- * @brief Test tiny_mat_add_f32 with pad=0 and step=1 (contiguous memory layout)
+ * @brief Test tiny_mat_add_f32 with pad=0 and stride=1 (contiguous memory layout)
  * 
  * Test Scenario:
- *   - This test case uses contiguous memory layout (no padding, step=1)
+ *   - This test case uses contiguous memory layout (no padding, stride=1)
  *   - On ESP32 platform, this should trigger ESP-DSP optimized implementation
  *   - On other platforms, uses the standard implementation
  * 
@@ -80,15 +81,15 @@ void tiny_mat_test(void);
  * Parameters:
  *   - rows = 3, cols = 4
  *   - padd1 = 0, padd2 = 0, padd_out = 0 (no padding)
- *   - step1 = 1, step2 = 1, step_out = 1 (contiguous access)
+ *   - stride1 = 1, stride2 = 1, stride_out = 1 (contiguous access)
  */
 void test_tiny_mat_add_f32_contiguous(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 1: tiny_mat_add_f32 - Contiguous Memory Layout (pad=0, step=1)\n\r");
+    printf("Test Case 1: tiny_mat_add_f32 - Contiguous Memory Layout (pad=0, stride=1)\n\r");
     printf("================================================================================\n\r");
-    printf("Parameters: rows=3, cols=4, pad=0, step=1\n\r");
+    printf("Parameters: rows=3, cols=4, pad=0, stride=1, step=cols+padd\n\r");
     printf("\n\r");
     
     const int rows = 3;
@@ -142,10 +143,10 @@ void test_tiny_mat_add_f32_contiguous(void)
     printf("          [17.5 19.5 21.5 23.5] <- Row 2\n\r");
     printf("\n\r");
     
-    // Test with pad=0, step=1 (should use ESP-DSP on ESP32)
+    // Test with pad=0, stride=1 (should use ESP-DSP on ESP32)
     tiny_error_t err = tiny_mat_add_f32(input1, input2, output, rows, cols, 
                                         0, 0, 0,  // padd1=0, padd2=0, padd_out=0
-                                        1, 1, 1); // step1=1, step2=1, step_out=1
+                                        1, 1, 1); // stride1=1, stride2=1, stride_out=1
     
     if (err == TINY_OK) {
         printf("Output Memory Layout (12 elements, contiguous):\n\r");
@@ -185,17 +186,17 @@ void test_tiny_mat_add_f32_contiguous(void)
 }
 
 /**
- * @brief Test tiny_mat_add_f32 with pad!=0 and step>1 (non-contiguous memory layout)
+ * @brief Test tiny_mat_add_f32 with pad!=0 and stride>1 (non-contiguous memory layout)
  * 
  * ================================================================================
  * Test Scenario:
  * ================================================================================
  * This test case demonstrates how to handle matrix addition with non-contiguous
  * memory layout. In real applications, matrix data may not be stored contiguously:
- *   1. Padding: Extra space at the end of each row
- *   2. Stride/Step: Gaps between elements
+ *   1. Padding: Placeholder space in storage that does not participate in calculations
+ *   2. Stride: Gaps between selected elements in one row
  * 
- * For example, a 2x3 logical matrix with padding=2 and step=2 may have memory layout:
+ * For example, a 2x3 logical matrix with padding=2 and stride=2 may have memory layout:
  *   Logical matrix:        Memory array (first 10 elements):
  *   [1.0  2.0  3.0]  [1.0, 0, 2.0, 0, 3.0, 0, 0, 0, 0, 0, ...]
  *   [4.0  5.0  6.0]  [4.0, 0, 5.0, 0, 6.0, 0, 0, 0, 0, 0, ...]
@@ -204,17 +205,17 @@ void test_tiny_mat_add_f32_contiguous(void)
  * Index Calculation Formula:
  * ================================================================================
  * For matrix element [row][col], the memory index is calculated as:
- *   index = row * (cols + padding) + col * step
+ *   index = row * (cols + padding) + col * stride
  * 
  * Where:
  *   - row: Row number (starting from 0)
  *   - col: Column number (starting from 0)
  *   - cols: Number of columns in the matrix
- *   - padding: Number of padding elements at the end of each row
- *   - step: Stride between columns (element spacing)
+ *   - padding: Number of placeholder elements that do not participate in calculations
+ *   - stride: Spacing between logical columns (element spacing)
  * 
  * ================================================================================
- * Input1 Details (2x3 matrix, padding=2, step=2):
+ * Input1 Details (2x3 matrix, padding=2, stride=2):
  * ================================================================================
  * Logical matrix view:
  *   [1.0  2.0  3.0]
@@ -239,7 +240,7 @@ void test_tiny_mat_add_f32_contiguous(void)
  *   Label:     R0C0      R0C1      R0C2  pad  pad  pad  pad  R1C2   pad   pad   pad ...
  * 
  * ================================================================================
- * Input2 Details (2x3 matrix, padding=1, step=3):
+ * Input2 Details (2x3 matrix, padding=1, stride=3):
  * ================================================================================
  * Logical matrix view:
  *   [0.5  1.5  2.5]
@@ -264,7 +265,7 @@ void test_tiny_mat_add_f32_contiguous(void)
  *   Label:     R0C0      R0C1      R1C0      R0C2  R1C1      R1C2   pad ...
  * 
  * ================================================================================
- * Expected Output (2x3 matrix, padding=2, step=2):
+ * Expected Output (2x3 matrix, padding=2, stride=2):
  * ================================================================================
  * Logical matrix view:
  *   [1.5  3.5  5.5]
@@ -288,89 +289,89 @@ void test_tiny_mat_add_f32_contiguous(void)
  * ================================================================================
  *   rows = 2, cols = 3
  *   padd1 = 4, padd2 = 4, padd_out = 4 (larger padding)
- *   step1 = 2, step2 = 3, step_out = 2 (non-contiguous access)
+ *   stride1 = 2, stride2 = 3, stride_out = 2 (non-contiguous access)
  */
 void test_tiny_mat_add_f32_padded_strided(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 2: tiny_mat_add_f32 - Non-contiguous memory (pad!=0, step>1)\n\r");
+    printf("Test Case 2: tiny_mat_add_f32 - Non-contiguous memory (pad!=0, stride>1)\n\r");
     printf("================================================================================\n\r");
 
     const int rows = 2;
     const int cols = 3;
-    // Use larger padding so that stride comfortably covers sparse steps.
+    // Use larger padding so that step (row size) comfortably covers sparse strided access.
     // This avoids any ambiguity about padding location and keeps indices in-bounds.
-    const int padd1 = 4;     // stride1 = 3 + 4 = 7
-    const int padd2 = 4;     // stride2 = 3 + 4 = 7
-    const int padd_out = 4;  // stride_out = 3 + 4 = 7
-    const int step1 = 2;     // indices for cols: 0,2,4 (all < stride1=7)
-    const int step2 = 3;     // indices for cols: 0,3,6 (all < stride2=7)
-    const int step_out = 2;  // indices for cols: 0,2,4 (all < stride_out=7)
+    const int padd1 = 4;     // row_step1 = 3 + 4 = 7
+    const int padd2 = 4;     // row_step2 = 3 + 4 = 7
+    const int padd_out = 4;  // row_step_out = 3 + 4 = 7
+    const int stride1 = 2;     // sampled cols: 0,2,4 (all < row step 7)
+    const int stride2 = 3;     // sampled cols: 0,3,6 (all < row step 7)
+    const int stride_out = 2;  // sampled cols: 0,2,4 (all < row step 7)
 
-    printf("Params: rows=%d, cols=%d, pad1=%d, pad2=%d, pad_out=%d, step1=%d, step2=%d, step_out=%d\n\r",
-           rows, cols, padd1, padd2, padd_out, step1, step2, step_out);
-    printf("Index formula: idx = row * (cols + padding) + col * step\n\r\n\r");
+    printf("Params: rows=%d, cols=%d, pad1=%d, pad2=%d, pad_out=%d, stride1=%d, stride2=%d, stride_out=%d\n\r",
+           rows, cols, padd1, padd2, padd_out, stride1, stride2, stride_out);
+    printf("Index formula: idx = row * step + col * stride (step = cols + padding)\n\r\n\r");
 
     // Prepare inputs
     float input1[32] = {0};
     float input2[32] = {0};
     float output[32] = {0};
-    const int stride1 = cols + padd1; // 7
-    const int stride2 = cols + padd2; // 7
-    const int stride_out = cols + padd_out; // 7
+    const int row_step1 = cols + padd1; // 7
+    const int row_step2 = cols + padd2; // 7
+    const int row_step_out = cols + padd_out; // 7
 
-    // input1: pad=4, step=2
-    input1[0 * stride1 + 0 * step1] = 1.0f;
-    input1[0 * stride1 + 1 * step1] = 2.0f;
-    input1[0 * stride1 + 2 * step1] = 3.0f;
-    input1[1 * stride1 + 0 * step1] = 4.0f;
-    input1[1 * stride1 + 1 * step1] = 5.0f;
-    input1[1 * stride1 + 2 * step1] = 6.0f;
+    // input1: pad=4, stride=2
+    input1[0 * row_step1 + 0 * stride1] = 1.0f;
+    input1[0 * row_step1 + 1 * stride1] = 2.0f;
+    input1[0 * row_step1 + 2 * stride1] = 3.0f;
+    input1[1 * row_step1 + 0 * stride1] = 4.0f;
+    input1[1 * row_step1 + 1 * stride1] = 5.0f;
+    input1[1 * row_step1 + 2 * stride1] = 6.0f;
 
-    // input2: pad=4, step=3
-    input2[0 * stride2 + 0 * step2] = 0.5f;
-    input2[0 * stride2 + 1 * step2] = 1.5f;
-    input2[0 * stride2 + 2 * step2] = 2.5f;
-    input2[1 * stride2 + 0 * step2] = 3.5f;
-    input2[1 * stride2 + 1 * step2] = 4.5f;
-    input2[1 * stride2 + 2 * step2] = 5.5f;
+    // input2: pad=4, stride=3
+    input2[0 * row_step2 + 0 * stride2] = 0.5f;
+    input2[0 * row_step2 + 1 * stride2] = 1.5f;
+    input2[0 * row_step2 + 2 * stride2] = 2.5f;
+    input2[1 * row_step2 + 0 * stride2] = 3.5f;
+    input2[1 * row_step2 + 1 * stride2] = 4.5f;
+    input2[1 * row_step2 + 2 * stride2] = 5.5f;
 
     // expected output
     float expected_output[32] = {0};
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
-            int idx1 = r * stride1 + c * step1;
-            int idx2 = r * stride2 + c * step2;
-            int idxo = r * stride_out + c * step_out;
+            int idx1 = r * row_step1 + c * stride1;
+            int idx2 = r * row_step2 + c * stride2;
+            int idxo = r * row_step_out + c * stride_out;
             expected_output[idxo] = input1[idx1] + input2[idx2];
         }
     }
 
     // Print raw buffers and per-row memory distribution (C = column, P = padding)
-    printf("[input1 raw len=%d] ", stride1 * rows);
-    for (int i = 0; i < stride1 * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", input1[i]); }
-    printf(" (pad=%d, step=%d)\n\r", padd1, step1);
+    printf("[input1 raw len=%d] ", row_step1 * rows);
+    for (int i = 0; i < row_step1 * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", input1[i]); }
+    printf(" (pad=%d, stride=%d)\n\r", padd1, stride1);
     for (int r = 0; r < rows; r++) {
-        printf("  input1 row%d (stride=%d):", r, stride1);
-        for (int j = 0; j < stride1; j++) {
-            int col = (j % step1 == 0) ? j / step1 : -1;
+        printf("  input1 row%d (step=%d):", r, row_step1);
+        for (int j = 0; j < row_step1; j++) {
+            int col = (j % stride1 == 0) ? j / stride1 : -1;
             int is_col = (col >= 0 && col < cols);
-            printf(" [%d:%4.1f %s]", j, input1[r * stride1 + j], is_col ? "C" : "P");
+            printf(" [%d:%4.1f %s]", j, input1[r * row_step1 + j], is_col ? "C" : "P");
         }
         printf("\n\r");
     }
     printf("\n\r");
 
-    printf("[input2 raw len=%d] ", stride2 * rows);
-    for (int i = 0; i < stride2 * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", input2[i]); }
-    printf(" (pad=%d, step=%d)\n\r", padd2, step2);
+    printf("[input2 raw len=%d] ", row_step2 * rows);
+    for (int i = 0; i < row_step2 * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", input2[i]); }
+    printf(" (pad=%d, stride=%d)\n\r", padd2, stride2);
     for (int r = 0; r < rows; r++) {
-        printf("  input2 row%d (stride=%d):", r, stride2);
-        for (int j = 0; j < stride2; j++) {
-            int col = (j % step2 == 0) ? j / step2 : -1;
+        printf("  input2 row%d (step=%d):", r, row_step2);
+        for (int j = 0; j < row_step2; j++) {
+            int col = (j % stride2 == 0) ? j / stride2 : -1;
             int is_col = (col >= 0 && col < cols);
-            printf(" [%d:%4.1f %s]", j, input2[r * stride2 + j], is_col ? "C" : "P");
+            printf(" [%d:%4.1f %s]", j, input2[r * row_step2 + j], is_col ? "C" : "P");
         }
         printf("\n\r");
     }
@@ -381,7 +382,7 @@ void test_tiny_mat_add_f32_padded_strided(void)
     for (int r = 0; r < rows; r++) {
         printf("  input1 row%d:", r);
         for (int c = 0; c < cols; c++) {
-            int idx = r * stride1 + c * step1;
+            int idx = r * row_step1 + c * stride1;
             printf(" %4.1f", input1[idx]);
         }
         printf("\n\r");
@@ -389,7 +390,7 @@ void test_tiny_mat_add_f32_padded_strided(void)
     for (int r = 0; r < rows; r++) {
         printf("  input2 row%d:", r);
         for (int c = 0; c < cols; c++) {
-            int idx = r * stride2 + c * step2;
+            int idx = r * row_step2 + c * stride2;
             printf(" %4.1f", input2[idx]);
         }
         printf("\n\r");
@@ -398,7 +399,7 @@ void test_tiny_mat_add_f32_padded_strided(void)
 
     tiny_error_t err = tiny_mat_add_f32(input1, input2, output, rows, cols,
                                         padd1, padd2, padd_out,
-                                        step1, step2, step_out);
+                                        stride1, stride2, stride_out);
 
     if (err != TINY_OK) {
         printf("✗ Call failed, err=%d\n\r", err);
@@ -407,31 +408,31 @@ void test_tiny_mat_add_f32_padded_strided(void)
     }
 
     // Print output raw and per-row memory distribution
-    printf("[output raw len=%d] ", stride_out * rows);
-    for (int i = 0; i < stride_out * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", output[i]); }
-    printf(" (pad_out=%d, step_out=%d)\n\r\n\r", padd_out, step_out);
+    printf("[output raw len=%d] ", row_step_out * rows);
+    for (int i = 0; i < row_step_out * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", output[i]); }
+    printf(" (pad_out=%d, stride_out=%d)\n\r\n\r", padd_out, stride_out);
     for (int r = 0; r < rows; r++) {
-        printf("  output row%d (stride=%d):", r, stride_out);
-        for (int j = 0; j < stride_out; j++) {
-            int col = (j % step_out == 0) ? j / step_out : -1;
+        printf("  output row%d (step=%d):", r, row_step_out);
+        for (int j = 0; j < row_step_out; j++) {
+            int col = (j % stride_out == 0) ? j / stride_out : -1;
             int is_col = (col >= 0 && col < cols);
-            printf(" [%d:%4.1f %s]", j, output[r * stride_out + j], is_col ? "C" : "P");
+            printf(" [%d:%4.1f %s]", j, output[r * row_step_out + j], is_col ? "C" : "P");
         }
         printf("\n\r");
     }
     printf("\n\r");
 
     // Expected vs actual (logical)
-    printf("[expected raw len=%d] ", stride_out * rows);
-    for (int i = 0; i < stride_out * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", expected_output[i]); }
-    printf(" (pad_out=%d, step_out=%d)\n\r\n\r", padd_out, step_out);
+    printf("[expected raw len=%d] ", row_step_out * rows);
+    for (int i = 0; i < row_step_out * rows; i++) { printf("%s%4.1f", (i==0) ? "" : " ", expected_output[i]); }
+    printf(" (pad_out=%d, stride_out=%d)\n\r\n\r", padd_out, stride_out);
 
     int mismatches = 0;
     printf("Logical matrix comparison (expected | actual | diff):\n\r");
     for (int r = 0; r < rows; r++) {
         printf("  row%d:", r);
         for (int c = 0; c < cols; c++) {
-            int idxo = r * stride_out + c * step_out;
+            int idxo = r * row_step_out + c * stride_out;
             float expv = expected_output[idxo];
             float actv = output[idxo];
             float diff = actv - expv;
@@ -452,15 +453,15 @@ void test_tiny_mat_add_f32_padded_strided(void)
 }
 
 /**
- * @brief Test tiny_mat_addc_f32 with pad=0 and step=1 (contiguous memory layout)
+ * @brief Test tiny_mat_addc_f32 with pad=0 and stride=1 (contiguous memory layout)
  */
 void test_tiny_mat_addc_f32_contiguous(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 3: tiny_mat_addc_f32 - Contiguous Memory Layout (pad=0, step=1)\n\r");
+    printf("Test Case 3: tiny_mat_addc_f32 - Contiguous Memory Layout (pad=0, stride=1)\n\r");
     printf("================================================================================\n\r");
-    printf("Parameters: rows=3, cols=4, pad=0, step=1, C=2.5\n\r");
+    printf("Parameters: rows=3, cols=4, pad=0, stride=1, step=cols+padd, C=2.5\n\r");
     printf("\n\r");
     
     const int rows = 3;
@@ -502,10 +503,10 @@ void test_tiny_mat_addc_f32_contiguous(void)
     printf("          [11.5 12.5 13.5 14.5] <- Row 2\n\r");
     printf("\n\r");
     
-    // Test with pad=0, step=1 (should use ESP-DSP on ESP32)
+    // Test with pad=0, stride=1 (should use ESP-DSP on ESP32)
     tiny_error_t err = tiny_mat_addc_f32(input, output, C, rows, cols,
                                          0, 0,  // padd_in=0, padd_out=0
-                                         1, 1); // step_in=1, step_out=1
+                                         1, 1); // stride_in=1, stride_out=1
     
     if (err == TINY_OK) {
         printf("Output Memory Layout (12 elements, contiguous):\n\r");
@@ -545,30 +546,30 @@ void test_tiny_mat_addc_f32_contiguous(void)
 }
 
 /**
- * @brief Test tiny_mat_addc_f32 with pad!=0 and step>1 (non-contiguous memory layout)
+ * @brief Test tiny_mat_addc_f32 with pad!=0 and stride>1 (non-contiguous memory layout)
  */
 void test_tiny_mat_addc_f32_padded_strided(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 4: tiny_mat_addc_f32 - Non-Contiguous Memory Layout (pad!=0, step>1)\n\r");
+    printf("Test Case 4: tiny_mat_addc_f32 - Non-Contiguous Memory Layout (pad!=0, stride>1)\n\r");
     printf("================================================================================\n\r");
     
     const int rows = 2;
     const int cols = 3;
     const int padd_in = 2;
     const int padd_out = 2;
-    const int step_in = 2;
-    const int step_out = 2;
+    const int stride_in = 2;
+    const int stride_out = 2;
     const float C = 1.5f;
     
-    printf("Parameters: rows=%d, cols=%d, pad_in=%d, pad_out=%d, step_in=%d, step_out=%d, C=%5.1f\n\r",
-           rows, cols, padd_in, padd_out, step_in, step_out, C);
-    printf("Index formula: index = row * (cols + padding) + col * step\n\r");
+    printf("Parameters: rows=%d, cols=%d, pad_in=%d, pad_out=%d, stride_in=%d, stride_out=%d, C=%5.1f\n\r",
+           rows, cols, padd_in, padd_out, stride_in, stride_out, C);
+    printf("Index formula: index = row * step + col * stride (step = cols + padding)\n\r");
     printf("\n\r");
     
-    // Input: 2 rows, 3 cols, padding=2, step=2
-    // Row stride = cols + padd_in = 3 + 2 = 5
+    // Input: 2 rows, 3 cols, padding=2, stride=2
+    // Row step = cols + padd_in = 3 + 2 = 5
     float input[20] = {0}; // Allocate enough space, initialize to zero
     // Row 0: elements at indices 0, 2, 4
     input[0 * 5 + 0 * 2] = 1.0f; // row 0, col 0: index = 0*5 + 0*2 = 0
@@ -579,11 +580,11 @@ void test_tiny_mat_addc_f32_padded_strided(void)
     input[1 * 5 + 1 * 2] = 5.0f; // row 1, col 1: index = 1*5 + 1*2 = 7
     input[1 * 5 + 2 * 2] = 6.0f; // row 1, col 2: index = 1*5 + 2*2 = 9
     
-    // Output: 2 rows, 3 cols, padding=2, step=2
-    // Row stride = cols + padd_out = 3 + 2 = 5
+    // Output: 2 rows, 3 cols, padding=2, stride=2
+    // Row step = cols + padd_out = 3 + 2 = 5
     float output[20] = {0}; // Allocate enough space, initialize to zero
     
-    printf("Input Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_in, step_in);
+    printf("Input Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd_in, stride_in);
     printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 15; i++) {
@@ -602,13 +603,13 @@ void test_tiny_mat_addc_f32_padded_strided(void)
     float expected_output[20] = {0};
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {
-            int idx_in = row * (cols + padd_in) + col * step_in;
-            int idx_out = row * (cols + padd_out) + col * step_out;
+            int idx_in = row * (cols + padd_in) + col * stride_in;
+            int idx_out = row * (cols + padd_out) + col * stride_out;
             expected_output[idx_out] = input[idx_in] + C;
         }
     }
     
-    printf("Expected Output Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_out, step_out);
+    printf("Expected Output Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd_out, stride_out);
     printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 15; i++) {
@@ -622,10 +623,10 @@ void test_tiny_mat_addc_f32_padded_strided(void)
     
     tiny_error_t err = tiny_mat_addc_f32(input, output, C, rows, cols,
                                          padd_in, padd_out,
-                                         step_in, step_out);
+                                         stride_in, stride_out);
     
     if (err == TINY_OK) {
-        printf("Output Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_out, step_out);
+        printf("Output Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd_out, stride_out);
         printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
         printf("  Value:  ");
         for (int i = 0; i < 15; i++) {
@@ -641,8 +642,8 @@ void test_tiny_mat_addc_f32_padded_strided(void)
         int all_correct = 1;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                int idx_in = row * (cols + padd_in) + col * step_in;
-                int idx_out = row * (cols + padd_out) + col * step_out;
+                int idx_in = row * (cols + padd_in) + col * stride_in;
+                int idx_out = row * (cols + padd_out) + col * stride_out;
                 float expected = input[idx_in] + C;
                 float tolerance = 1e-6f;
                 float diff = (output[idx_out] > expected) ? (output[idx_out] - expected) : (expected - output[idx_out]);
@@ -667,15 +668,15 @@ void test_tiny_mat_addc_f32_padded_strided(void)
 }
 
 /**
- * @brief Test tiny_mat_sub_f32 with pad=0 and step=1 (contiguous memory layout)
+ * @brief Test tiny_mat_sub_f32 with pad=0 and stride=1 (contiguous memory layout)
  */
 void test_tiny_mat_sub_f32_contiguous(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 5: tiny_mat_sub_f32 - Contiguous Memory Layout (pad=0, step=1)\n\r");
+    printf("Test Case 5: tiny_mat_sub_f32 - Contiguous Memory Layout (pad=0, stride=1)\n\r");
     printf("================================================================================\n\r");
-    printf("Parameters: rows=3, cols=4, pad=0, step=1\n\r");
+    printf("Parameters: rows=3, cols=4, pad=0, stride=1, step=cols+padd\n\r");
     printf("\n\r");
     
     const int rows = 3;
@@ -729,10 +730,10 @@ void test_tiny_mat_sub_f32_contiguous(void)
     printf("          [0.5  0.5  0.5  0.5] <- Row 2\n\r");
     printf("\n\r");
     
-    // Test with pad=0, step=1 (should use ESP-DSP on ESP32)
+    // Test with pad=0, stride=1 (should use ESP-DSP on ESP32)
     tiny_error_t err = tiny_mat_sub_f32(input1, input2, output, rows, cols, 
                                         0, 0, 0,  // padd1=0, padd2=0, padd_out=0
-                                        1, 1, 1); // step1=1, step2=1, step_out=1
+                                        1, 1, 1); // stride1=1, stride2=1, stride_out=1
     
     if (err == TINY_OK) {
         printf("Output Memory Layout (12 elements, contiguous):\n\r");
@@ -772,13 +773,13 @@ void test_tiny_mat_sub_f32_contiguous(void)
 }
 
 /**
- * @brief Test tiny_mat_sub_f32 with pad!=0 and step>1 (non-contiguous memory layout)
+ * @brief Test tiny_mat_sub_f32 with pad!=0 and stride>1 (non-contiguous memory layout)
  */
 void test_tiny_mat_sub_f32_padded_strided(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 6: tiny_mat_sub_f32 - Non-Contiguous Memory Layout (pad!=0, step>1)\n\r");
+    printf("Test Case 6: tiny_mat_sub_f32 - Non-Contiguous Memory Layout (pad!=0, stride>1)\n\r");
     printf("================================================================================\n\r");
     
     const int rows = 2;
@@ -786,17 +787,17 @@ void test_tiny_mat_sub_f32_padded_strided(void)
     const int padd1 = 2;
     const int padd2 = 1;
     const int padd_out = 2;
-    const int step1 = 2;
-    const int step2 = 3;
-    const int step_out = 2;
+    const int stride1 = 2;
+    const int stride2 = 3;
+    const int stride_out = 2;
     
-    printf("Parameters: rows=%d, cols=%d, pad1=%d, pad2=%d, pad_out=%d, step1=%d, step2=%d, step_out=%d\n\r",
-           rows, cols, padd1, padd2, padd_out, step1, step2, step_out);
-    printf("Index formula: index = row * (cols + padding) + col * step\n\r");
+    printf("Parameters: rows=%d, cols=%d, pad1=%d, pad2=%d, pad_out=%d, stride1=%d, stride2=%d, stride_out=%d\n\r",
+           rows, cols, padd1, padd2, padd_out, stride1, stride2, stride_out);
+    printf("Index formula: index = row * step + col * stride (step = cols + padding)\n\r");
     printf("\n\r");
     
-    // Input1: 2 rows, 3 cols, padding=2, step=2
-    // Row stride = cols + padd1 = 3 + 2 = 5
+    // Input1: 2 rows, 3 cols, padding=2, stride=2
+    // Row step = cols + padd1 = 3 + 2 = 5
     float input1[20] = {0}; // Allocate enough space, initialize to zero
     // Row 0: elements at indices 0, 2, 4
     input1[0 * 5 + 0 * 2] = 1.0f; // row 0, col 0: index = 0*5 + 0*2 = 0
@@ -807,8 +808,8 @@ void test_tiny_mat_sub_f32_padded_strided(void)
     input1[1 * 5 + 1 * 2] = 5.0f; // row 1, col 1: index = 1*5 + 1*2 = 7
     input1[1 * 5 + 2 * 2] = 6.0f; // row 1, col 2: index = 1*5 + 2*2 = 9
     
-    // Input2: 2 rows, 3 cols, padding=1, step=3
-    // Row stride = cols + padd2 = 3 + 1 = 4
+    // Input2: 2 rows, 3 cols, padding=1, stride=3
+    // Row step = cols + padd2 = 3 + 1 = 4
     float input2[16] = {0}; // Allocate enough space, initialize to zero
     // Row 0: elements at indices 0, 3, 6
     input2[0 * 4 + 0 * 3] = 0.5f; // row 0, col 0: index = 0*4 + 0*3 = 0
@@ -819,11 +820,11 @@ void test_tiny_mat_sub_f32_padded_strided(void)
     input2[1 * 4 + 1 * 3] = 4.5f; // row 1, col 1: index = 1*4 + 1*3 = 7
     input2[1 * 4 + 2 * 3] = 5.5f; // row 1, col 2: index = 1*4 + 2*3 = 10
     
-    // Output: 2 rows, 3 cols, padding=2, step=2
-    // Row stride = cols + padd_out = 3 + 2 = 5
+    // Output: 2 rows, 3 cols, padding=2, stride=2
+    // Row step = cols + padd_out = 3 + 2 = 5
     float output[20] = {0}; // Allocate enough space, initialize to zero
     
-    printf("Input1 Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd1, step1);
+    printf("Input1 Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd1, stride1);
     printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 15; i++) {
@@ -835,7 +836,7 @@ void test_tiny_mat_sub_f32_padded_strided(void)
     printf("          (X = padding/unused)\n\r");
     printf("\n\r");
     
-    printf("Input2 Memory Layout (16 elements, pad=%d, step=%d):\n\r", padd2, step2);
+    printf("Input2 Memory Layout (16 elements, pad=%d, stride=%d):\n\r", padd2, stride2);
     printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] ...\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 12; i++) {
@@ -851,14 +852,14 @@ void test_tiny_mat_sub_f32_padded_strided(void)
     float expected_output[20] = {0};
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {
-            int idx1 = row * (cols + padd1) + col * step1;
-            int idx2 = row * (cols + padd2) + col * step2;
-            int idx_out = row * (cols + padd_out) + col * step_out;
+            int idx1 = row * (cols + padd1) + col * stride1;
+            int idx2 = row * (cols + padd2) + col * stride2;
+            int idx_out = row * (cols + padd_out) + col * stride_out;
             expected_output[idx_out] = input1[idx1] - input2[idx2];
         }
     }
     
-    printf("Expected Output Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_out, step_out);
+    printf("Expected Output Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd_out, stride_out);
     printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 15; i++) {
@@ -872,10 +873,10 @@ void test_tiny_mat_sub_f32_padded_strided(void)
     
     tiny_error_t err = tiny_mat_sub_f32(input1, input2, output, rows, cols,
                                         padd1, padd2, padd_out,
-                                        step1, step2, step_out);
+                                        stride1, stride2, stride_out);
     
     if (err == TINY_OK) {
-        printf("Output Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_out, step_out);
+        printf("Output Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd_out, stride_out);
         printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
         printf("  Value:  ");
         for (int i = 0; i < 15; i++) {
@@ -891,9 +892,9 @@ void test_tiny_mat_sub_f32_padded_strided(void)
         int all_correct = 1;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                int idx1 = row * (cols + padd1) + col * step1;
-                int idx2 = row * (cols + padd2) + col * step2;
-                int idx_out = row * (cols + padd_out) + col * step_out;
+                int idx1 = row * (cols + padd1) + col * stride1;
+                int idx2 = row * (cols + padd2) + col * stride2;
+                int idx_out = row * (cols + padd_out) + col * stride_out;
                 float expected = input1[idx1] - input2[idx2];
                 float tolerance = 1e-6f;
                 float diff = (output[idx_out] > expected) ? (output[idx_out] - expected) : (expected - output[idx_out]);
@@ -918,15 +919,15 @@ void test_tiny_mat_sub_f32_padded_strided(void)
 }
 
 /**
- * @brief Test tiny_mat_subc_f32 with pad=0 and step=1 (contiguous memory layout)
+ * @brief Test tiny_mat_subc_f32 with pad=0 and stride=1 (contiguous memory layout)
  */
 void test_tiny_mat_subc_f32_contiguous(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 7: tiny_mat_subc_f32 - Contiguous Memory Layout (pad=0, step=1)\n\r");
+    printf("Test Case 7: tiny_mat_subc_f32 - Contiguous Memory Layout (pad=0, stride=1)\n\r");
     printf("================================================================================\n\r");
-    printf("Parameters: rows=3, cols=4, pad=0, step=1, C=2.5\n\r");
+    printf("Parameters: rows=3, cols=4, pad=0, stride=1, step=cols+padd, C=2.5\n\r");
     printf("\n\r");
     
     const int rows = 3;
@@ -968,10 +969,10 @@ void test_tiny_mat_subc_f32_contiguous(void)
     printf("          [ 6.5  7.5  8.5  9.5] <- Row 2\n\r");
     printf("\n\r");
     
-    // Test with pad=0, step=1 (should use ESP-DSP on ESP32)
+    // Test with pad=0, stride=1 (should use ESP-DSP on ESP32)
     tiny_error_t err = tiny_mat_subc_f32(input, output, C, rows, cols,
                                          0, 0,  // padd_in=0, padd_out=0
-                                         1, 1); // step_in=1, step_out=1
+                                         1, 1); // stride_in=1, stride_out=1
     
     if (err == TINY_OK) {
         printf("Output Memory Layout (12 elements, contiguous):\n\r");
@@ -1011,30 +1012,30 @@ void test_tiny_mat_subc_f32_contiguous(void)
 }
 
 /**
- * @brief Test tiny_mat_subc_f32 with pad!=0 and step>1 (non-contiguous memory layout)
+ * @brief Test tiny_mat_subc_f32 with pad!=0 and stride>1 (non-contiguous memory layout)
  */
 void test_tiny_mat_subc_f32_padded_strided(void)
 {
     printf("\n");
     printf("================================================================================\n\r");
-    printf("Test Case 8: tiny_mat_subc_f32 - Non-Contiguous Memory Layout (pad!=0, step>1)\n\r");
+    printf("Test Case 8: tiny_mat_subc_f32 - Non-Contiguous Memory Layout (pad!=0, stride>1)\n\r");
     printf("================================================================================\n\r");
     
     const int rows = 2;
     const int cols = 3;
     const int padd_in = 2;
     const int padd_out = 2;
-    const int step_in = 2;
-    const int step_out = 2;
+    const int stride_in = 2;
+    const int stride_out = 2;
     const float C = 1.5f;
     
-    printf("Parameters: rows=%d, cols=%d, pad_in=%d, pad_out=%d, step_in=%d, step_out=%d, C=%5.1f\n\r",
-           rows, cols, padd_in, padd_out, step_in, step_out, C);
-    printf("Index formula: index = row * (cols + padding) + col * step\n\r");
+    printf("Parameters: rows=%d, cols=%d, pad_in=%d, pad_out=%d, stride_in=%d, stride_out=%d, C=%5.1f\n\r",
+           rows, cols, padd_in, padd_out, stride_in, stride_out, C);
+    printf("Index formula: index = row * step + col * stride (step = cols + padding)\n\r");
     printf("\n\r");
     
-    // Input: 2 rows, 3 cols, padding=2, step=2
-    // Row stride = cols + padd_in = 3 + 2 = 5
+    // Input: 2 rows, 3 cols, padding=2, stride=2
+    // Row step = cols + padd_in = 3 + 2 = 5
     float input[20] = {0}; // Allocate enough space, initialize to zero
     // Row 0: elements at indices 0, 2, 4
     input[0 * 5 + 0 * 2] = 1.0f; // row 0, col 0: index = 0*5 + 0*2 = 0
@@ -1045,11 +1046,11 @@ void test_tiny_mat_subc_f32_padded_strided(void)
     input[1 * 5 + 1 * 2] = 5.0f; // row 1, col 1: index = 1*5 + 1*2 = 7
     input[1 * 5 + 2 * 2] = 6.0f; // row 1, col 2: index = 1*5 + 2*2 = 9
     
-    // Output: 2 rows, 3 cols, padding=2, step=2
-    // Row stride = cols + padd_out = 3 + 2 = 5
+    // Output: 2 rows, 3 cols, padding=2, stride=2
+    // Row step = cols + padd_out = 3 + 2 = 5
     float output[20] = {0}; // Allocate enough space, initialize to zero
     
-    printf("Input Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_in, step_in);
+    printf("Input Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd_in, stride_in);
     printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 15; i++) {
@@ -1068,13 +1069,13 @@ void test_tiny_mat_subc_f32_padded_strided(void)
     float expected_output[20] = {0};
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {
-            int idx_in = row * (cols + padd_in) + col * step_in;
-            int idx_out = row * (cols + padd_out) + col * step_out;
+            int idx_in = row * (cols + padd_in) + col * stride_in;
+            int idx_out = row * (cols + padd_out) + col * stride_out;
             expected_output[idx_out] = input[idx_in] - C;
         }
     }
     
-    printf("Expected Output Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_out, step_out);
+    printf("Expected Output Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd_out, stride_out);
     printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 15; i++) {
@@ -1088,10 +1089,10 @@ void test_tiny_mat_subc_f32_padded_strided(void)
     
     tiny_error_t err = tiny_mat_subc_f32(input, output, C, rows, cols,
                                          padd_in, padd_out,
-                                         step_in, step_out);
+                                         stride_in, stride_out);
     
     if (err == TINY_OK) {
-        printf("Output Memory Layout (20 elements, pad=%d, step=%d):\n\r", padd_out, step_out);
+        printf("Output Memory Layout (20 elements, pad=%d, stride=%d):\n\r", padd_out, stride_out);
         printf("  Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...\n\r");
         printf("  Value:  ");
         for (int i = 0; i < 15; i++) {
@@ -1107,8 +1108,8 @@ void test_tiny_mat_subc_f32_padded_strided(void)
         int all_correct = 1;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                int idx_in = row * (cols + padd_in) + col * step_in;
-                int idx_out = row * (cols + padd_out) + col * step_out;
+                int idx_in = row * (cols + padd_in) + col * stride_in;
+                int idx_out = row * (cols + padd_out) + col * stride_out;
                 float expected = input[idx_in] - C;
                 float tolerance = 1e-6f;
                 float diff = (output[idx_out] > expected) ? (output[idx_out] - expected) : (expected - output[idx_out]);
@@ -1678,7 +1679,7 @@ void test_tiny_mat_mult_ex_f32_padded(void)
 }
 
 /**
- * @brief Test tiny_mat_multc_f32 with contiguous matrix (pad=0, step=1)
+ * @brief Test tiny_mat_multc_f32 with contiguous matrix (pad=0, stride=1)
  */
 void test_tiny_mat_multc_f32_contiguous(void)
 {
@@ -1686,22 +1687,22 @@ void test_tiny_mat_multc_f32_contiguous(void)
     printf("================================================================================\n\r");
     printf("Test Case 13: tiny_mat_multc_f32 - Contiguous Matrix Multiply Constant\n\r");
     printf("================================================================================\n\r");
-    printf("Parameters: rows=3, cols=3, padd_in=0, padd_out=0, step_in=1, step_out=1\n\r");
+    printf("Parameters: rows=3, cols=3, padd_in=0, padd_out=0, stride_in=1, stride_out=1\n\r");
     printf("Matrix dimensions: 3x3\n\r");
     printf("Constant C: 2.5\n\r");
-    printf("Note: This should use ESP-DSP on ESP32 when all paddings are 0 and all steps are 1\n\r");
+    printf("Note: This should use ESP-DSP on ESP32 when all paddings are 0 and all strides are 1\n\r");
     printf("\n\r");
     
     const int rows = 3;
     const int cols = 3;
     const int padd_in = 0;
     const int padd_out = 0;
-    const int step_in = 1;
-    const int step_out = 1;
+    const int stride_in = 1;
+    const int stride_out = 1;
     const float C = 2.5f;
     
-    const int in_row_stride = cols + padd_in;  // 3
-    const int out_row_stride = cols + padd_out; // 3
+    const int in_row_step = cols + padd_in;  // 3
+    const int out_row_step = cols + padd_out; // 3
     
     // Input matrix: 3x3 (contiguous, no padding)
     float input[9] = {1.0f, 2.0f, 3.0f,
@@ -1712,7 +1713,7 @@ void test_tiny_mat_multc_f32_contiguous(void)
     float output[9];
     memset(output, 0, sizeof(output));
     
-    printf("Input Matrix Memory Layout (3x3, 9 elements, contiguous, pad=%d, step=%d):\n\r", padd_in, step_in);
+    printf("Input Matrix Memory Layout (3x3, 9 elements, contiguous, pad=%d, stride=%d):\n\r", padd_in, stride_in);
     printf("  Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 9; i++) {
@@ -1722,23 +1723,23 @@ void test_tiny_mat_multc_f32_contiguous(void)
     printf("  Matrix: [1.0  2.0  3.0]  <- Row 0 (indices: 0, 1, 2)\n\r");
     printf("          [4.0  5.0  6.0]  <- Row 1 (indices: 3, 4, 5)\n\r");
     printf("          [7.0  8.0  9.0]  <- Row 2 (indices: 6, 7, 8)\n\r");
-    printf("  Row stride: %d (cols + padd_in = %d + %d)\n\r", in_row_stride, cols, padd_in);
-    printf("  Index calculation: input[i][j] = input[i * %d + j * %d]\n\r", in_row_stride, step_in);
+    printf("  Row step: %d (cols + padd_in = %d + %d)\n\r", in_row_step, cols, padd_in);
+    printf("  Index calculation: input[i][j] = input[i * %d + j * %d]\n\r", in_row_step, stride_in);
     printf("\n\r");
     
     // Calculate expected output: output[i][j] = input[i][j] * C
     float expected_output[9] = {0};
     for (int row = 0; row < rows; row++) {
-        int base_in = row * in_row_stride;
-        int base_out = row * out_row_stride;
+        int base_in = row * in_row_step;
+        int base_out = row * out_row_step;
         for (int col = 0; col < cols; col++) {
-            int idx_in = base_in + col * step_in;
-            int idx_out = base_out + col * step_out;
+            int idx_in = base_in + col * stride_in;
+            int idx_out = base_out + col * stride_out;
             expected_output[idx_out] = input[idx_in] * C;
         }
     }
     
-    printf("Expected Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=%d, step=%d):\n\r", padd_out, step_out);
+    printf("Expected Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=%d, stride=%d):\n\r", padd_out, stride_out);
     printf("  Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 9; i++) {
@@ -1751,17 +1752,17 @@ void test_tiny_mat_multc_f32_contiguous(void)
            expected_output[3], expected_output[4], expected_output[5]);
     printf("          [%5.1f  %5.1f  %5.1f] <- Row 2 (indices: 6, 7, 8)\n\r", 
            expected_output[6], expected_output[7], expected_output[8]);
-    printf("  Row stride: %d (cols + padd_out = %d + %d)\n\r", out_row_stride, cols, padd_out);
-    printf("  Index calculation: output[i][j] = output[i * %d + j * %d]\n\r", out_row_stride, step_out);
+    printf("  Row step: %d (cols + padd_out = %d + %d)\n\r", out_row_step, cols, padd_out);
+    printf("  Index calculation: output[i][j] = output[i * %d + j * %d]\n\r", out_row_step, stride_out);
     printf("  Calculation: output[i][j] = input[i][j] * %.1f\n\r", C);
     printf("    Example: output[0][0] = input[0][0] * %.1f = 1.0 * %.1f = %.1f\n\r", C, C, expected_output[0]);
     printf("\n\r");
     
     // Test matrix multiply constant
-    tiny_error_t err = tiny_mat_multc_f32(input, output, C, rows, cols, padd_in, padd_out, step_in, step_out);
+    tiny_error_t err = tiny_mat_multc_f32(input, output, C, rows, cols, padd_in, padd_out, stride_in, stride_out);
     
     if (err == TINY_OK) {
-        printf("Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=%d, step=%d):\n\r", padd_out, step_out);
+        printf("Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=%d, stride=%d):\n\r", padd_out, stride_out);
         printf("  Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]\n\r");
         printf("  Value:  ");
         for (int i = 0; i < 9; i++) {
@@ -1779,9 +1780,9 @@ void test_tiny_mat_multc_f32_contiguous(void)
         // Verify results
         int all_correct = 1;
         for (int row = 0; row < rows; row++) {
-            int base_out = row * out_row_stride;
+            int base_out = row * out_row_step;
             for (int col = 0; col < cols; col++) {
-                int idx_out = base_out + col * step_out;
+                int idx_out = base_out + col * stride_out;
                 float tolerance = 1e-5f;
                 float diff = (output[idx_out] > expected_output[idx_out]) ? 
                             (output[idx_out] - expected_output[idx_out]) : 
@@ -1807,7 +1808,7 @@ void test_tiny_mat_multc_f32_contiguous(void)
 }
 
 /**
- * @brief Test tiny_mat_multc_f32 with padded and strided matrix (pad!=0, step>1)
+ * @brief Test tiny_mat_multc_f32 with padded and strided matrix (pad!=0, stride>1)
  */
 void test_tiny_mat_multc_f32_padded_strided(void)
 {
@@ -1815,38 +1816,38 @@ void test_tiny_mat_multc_f32_padded_strided(void)
     printf("================================================================================\n\r");
     printf("Test Case 14: tiny_mat_multc_f32 - Padded and Strided Matrix Multiply Constant\n\r");
     printf("================================================================================\n\r");
-    printf("Parameters: rows=2, cols=3, padd_in=2, padd_out=1, step_in=2, step_out=1\n\r");
+    printf("Parameters: rows=2, cols=3, padd_in=2, padd_out=1, stride_in=2, stride_out=1\n\r");
     printf("Matrix dimensions: 2x3\n\r");
     printf("Constant C: 3.0\n\r");
-    printf("Note: This should use own implementation when padding is non-zero or step > 1\n\r");
+    printf("Note: This should use own implementation when padding is non-zero or stride > 1\n\r");
     printf("\n\r");
     
     const int rows = 2;
     const int cols = 3;
     const int padd_in = 2;
     const int padd_out = 1;
-    const int step_in = 2;
-    const int step_out = 1;
+    const int stride_in = 2;
+    const int stride_out = 1;
     const float C = 3.0f;
     
-    const int in_row_stride = cols + padd_in;  // 3 + 2 = 5
-    const int out_row_stride = cols + padd_out; // 3 + 1 = 4
+    const int in_row_step = cols + padd_in;  // 3 + 2 = 5
+    const int out_row_step = cols + padd_out; // 3 + 1 = 4
     
-    // Input matrix: 2x3 with padding=2, step=2
-    // Each row has 5 elements in memory, but we only use every 2nd element (step=2)
+    // Input matrix: 2x3 with padding=2, stride=2
+    // Each row has 5 elements in memory, but we only use every 2nd element (stride=2)
     // Total memory: 2 rows * 5 elements = 10 elements
     // Row 0: indices 0, 2, 4 (data), 1, 3 (unused)
     // Row 1: indices 5, 7, 9 (data), 6, 8 (unused)
     float input[10] = {1.0f, 0.0f, 2.0f, 0.0f, 3.0f,  // Row 0: [1.0, X, 2.0, X, 3.0]
                        4.0f, 0.0f, 5.0f, 0.0f, 6.0f}; // Row 1: [4.0, X, 5.0, X, 6.0]
     
-    // Output matrix: 2x3 with padding=1, step=1
+    // Output matrix: 2x3 with padding=1, stride=1
     // Each row has 4 elements (3 data + 1 padding)
     // Total memory: 2 rows * 4 elements = 8 elements
     float output[8];
     memset(output, 0, sizeof(output));
     
-    printf("Input Matrix Memory Layout (2x3, pad=%d, step=%d, 10 elements):\n\r", padd_in, step_in);
+    printf("Input Matrix Memory Layout (2x3, pad=%d, stride=%d, 10 elements):\n\r", padd_in, stride_in);
     printf("  Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 10; i++) {
@@ -1856,31 +1857,31 @@ void test_tiny_mat_multc_f32_padded_strided(void)
     printf("  Matrix: [1.0  X  2.0  X  3.0]  <- Row 0 (data indices: 0, 2, 4)\n\r");
     printf("          [4.0  X  5.0  X  6.0]  <- Row 1 (data indices: 5, 7, 9)\n\r");
     printf("          (X = unused/padding)\n\r");
-    printf("  Row stride: %d (cols + padd_in = %d + %d)\n\r", in_row_stride, cols, padd_in);
-    printf("  Index calculation: input[i][j] = input[i * %d + j * %d]\n\r", in_row_stride, step_in);
+    printf("  Row step: %d (cols + padd_in = %d + %d)\n\r", in_row_step, cols, padd_in);
+    printf("  Index calculation: input[i][j] = input[i * %d + j * %d]\n\r", in_row_step, stride_in);
     printf("    Row 0: input[0][0]=input[%d]=%.1f, input[0][1]=input[%d]=%.1f, input[0][2]=input[%d]=%.1f\n\r",
-           0*in_row_stride+0*step_in, input[0*in_row_stride+0*step_in],
-           0*in_row_stride+1*step_in, input[0*in_row_stride+1*step_in],
-           0*in_row_stride+2*step_in, input[0*in_row_stride+2*step_in]);
+           0*in_row_step+0*stride_in, input[0*in_row_step+0*stride_in],
+           0*in_row_step+1*stride_in, input[0*in_row_step+1*stride_in],
+           0*in_row_step+2*stride_in, input[0*in_row_step+2*stride_in]);
     printf("    Row 1: input[1][0]=input[%d]=%.1f, input[1][1]=input[%d]=%.1f, input[1][2]=input[%d]=%.1f\n\r",
-           1*in_row_stride+0*step_in, input[1*in_row_stride+0*step_in],
-           1*in_row_stride+1*step_in, input[1*in_row_stride+1*step_in],
-           1*in_row_stride+2*step_in, input[1*in_row_stride+2*step_in]);
+           1*in_row_step+0*stride_in, input[1*in_row_step+0*stride_in],
+           1*in_row_step+1*stride_in, input[1*in_row_step+1*stride_in],
+           1*in_row_step+2*stride_in, input[1*in_row_step+2*stride_in]);
     printf("\n\r");
     
     // Calculate expected output: output[i][j] = input[i][j] * C
     float expected_output[8] = {0};
     for (int row = 0; row < rows; row++) {
-        int base_in = row * in_row_stride;
-        int base_out = row * out_row_stride;
+        int base_in = row * in_row_step;
+        int base_out = row * out_row_step;
         for (int col = 0; col < cols; col++) {
-            int idx_in = base_in + col * step_in;
-            int idx_out = base_out + col * step_out;
+            int idx_in = base_in + col * stride_in;
+            int idx_out = base_out + col * stride_out;
             expected_output[idx_out] = input[idx_in] * C;
         }
     }
     
-    printf("Expected Output Matrix Memory Layout (2x3, pad=%d, step=%d, 8 elements):\n\r", padd_out, step_out);
+    printf("Expected Output Matrix Memory Layout (2x3, pad=%d, stride=%d, 8 elements):\n\r", padd_out, stride_out);
     printf("  Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]\n\r");
     printf("  Value:  ");
     for (int i = 0; i < 8; i++) {
@@ -1892,22 +1893,22 @@ void test_tiny_mat_multc_f32_padded_strided(void)
     printf("          [%5.1f  %5.1f  %5.1f  X]  <- Row 1 (indices: 4, 5, 6, 7)\n\r", 
            expected_output[4], expected_output[5], expected_output[6]);
     printf("          (X = padding/unused)\n\r");
-    printf("  Row stride: %d (cols + padd_out = %d + %d)\n\r", out_row_stride, cols, padd_out);
-    printf("  Index calculation: output[i][j] = output[i * %d + j * %d]\n\r", out_row_stride, step_out);
+    printf("  Row step: %d (cols + padd_out = %d + %d)\n\r", out_row_step, cols, padd_out);
+    printf("  Index calculation: output[i][j] = output[i * %d + j * %d]\n\r", out_row_step, stride_out);
     printf("  Calculation: output[i][j] = input[i][j] * %.1f\n\r", C);
     printf("    Row 0: output[0][0] = input[0][0] * %.1f = %.1f * %.1f = %.1f (index %d)\n\r",
-           C, input[0*in_row_stride+0*step_in], C, expected_output[0*out_row_stride+0*step_out], 0*out_row_stride+0*step_out);
+           C, input[0*in_row_step+0*stride_in], C, expected_output[0*out_row_step+0*stride_out], 0*out_row_step+0*stride_out);
     printf("           output[0][1] = input[0][1] * %.1f = %.1f * %.1f = %.1f (index %d)\n\r",
-           C, input[0*in_row_stride+1*step_in], C, expected_output[0*out_row_stride+1*step_out], 0*out_row_stride+1*step_out);
+           C, input[0*in_row_step+1*stride_in], C, expected_output[0*out_row_step+1*stride_out], 0*out_row_step+1*stride_out);
     printf("           output[0][2] = input[0][2] * %.1f = %.1f * %.1f = %.1f (index %d)\n\r",
-           C, input[0*in_row_stride+2*step_in], C, expected_output[0*out_row_stride+2*step_out], 0*out_row_stride+2*step_out);
+           C, input[0*in_row_step+2*stride_in], C, expected_output[0*out_row_step+2*stride_out], 0*out_row_step+2*stride_out);
     printf("\n\r");
     
     // Test matrix multiply constant
-    tiny_error_t err = tiny_mat_multc_f32(input, output, C, rows, cols, padd_in, padd_out, step_in, step_out);
+    tiny_error_t err = tiny_mat_multc_f32(input, output, C, rows, cols, padd_in, padd_out, stride_in, stride_out);
     
     if (err == TINY_OK) {
-        printf("Output Matrix Memory Layout (2x3, pad=%d, step=%d, 8 elements):\n\r", padd_out, step_out);
+        printf("Output Matrix Memory Layout (2x3, pad=%d, stride=%d, 8 elements):\n\r", padd_out, stride_out);
         printf("  Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]\n\r");
         printf("  Value:  ");
         for (int i = 0; i < 8; i++) {
@@ -1923,9 +1924,9 @@ void test_tiny_mat_multc_f32_padded_strided(void)
         // Verify results
         int all_correct = 1;
         for (int row = 0; row < rows; row++) {
-            int base_out = row * out_row_stride;
+            int base_out = row * out_row_step;
             for (int col = 0; col < cols; col++) {
-                int idx_out = base_out + col * step_out;
+                int idx_out = base_out + col * stride_out;
                 float tolerance = 1e-5f;
                 float diff = (output[idx_out] > expected_output[idx_out]) ? 
                             (output[idx_out] - expected_output[idx_out]) : 
@@ -1954,28 +1955,28 @@ void tiny_mat_test(void)
 {
     printf("============ [tiny_mat_test] ============\n\r");
     
-    // Test 1: Contiguous matrices (pad=0, step=1) - should use ESP-DSP on ESP32
+    // Test 1: Contiguous matrices (pad=0, stride=1) - should use ESP-DSP on ESP32
     test_tiny_mat_add_f32_contiguous();
     
-    // Test 2: Padded and strided matrices (pad!=0, step>1) - should use own implementation
+    // Test 2: Padded and strided matrices (pad!=0, stride>1) - should use own implementation
     test_tiny_mat_add_f32_padded_strided();
     
-    // Test 3: Contiguous matrix add constant (pad=0, step=1) - should use ESP-DSP on ESP32
+    // Test 3: Contiguous matrix add constant (pad=0, stride=1) - should use ESP-DSP on ESP32
     test_tiny_mat_addc_f32_contiguous();
     
-    // Test 4: Padded and strided matrix add constant (pad!=0, step>1) - should use own implementation
+    // Test 4: Padded and strided matrix add constant (pad!=0, stride>1) - should use own implementation
     test_tiny_mat_addc_f32_padded_strided();
     
-    // Test 5: Contiguous matrices subtraction (pad=0, step=1) - should use ESP-DSP on ESP32
+    // Test 5: Contiguous matrices subtraction (pad=0, stride=1) - should use ESP-DSP on ESP32
     test_tiny_mat_sub_f32_contiguous();
     
-    // Test 6: Padded and strided matrices subtraction (pad!=0, step>1) - should use own implementation
+    // Test 6: Padded and strided matrices subtraction (pad!=0, stride>1) - should use own implementation
     test_tiny_mat_sub_f32_padded_strided();
     
-    // Test 7: Contiguous matrix subtract constant (pad=0, step=1) - should use ESP-DSP on ESP32
+    // Test 7: Contiguous matrix subtract constant (pad=0, stride=1) - should use ESP-DSP on ESP32
     test_tiny_mat_subc_f32_contiguous();
     
-    // Test 8: Padded and strided matrix subtract constant (pad!=0, step>1) - should use own implementation
+    // Test 8: Padded and strided matrix subtract constant (pad!=0, stride>1) - should use own implementation
     test_tiny_mat_subc_f32_padded_strided();
     
     // Test 9: Basic matrix multiplication (3x4 * 4x2 = 3x2)
@@ -1990,15 +1991,14 @@ void tiny_mat_test(void)
     // Test 12: Padded matrix multiplication (pad!=0) - should use own implementation
     test_tiny_mat_mult_ex_f32_padded();
     
-    // Test 13: Contiguous matrix multiply constant (pad=0, step=1) - should use ESP-DSP on ESP32
+    // Test 13: Contiguous matrix multiply constant (pad=0, stride=1) - should use ESP-DSP on ESP32
     test_tiny_mat_multc_f32_contiguous();
     
-    // Test 14: Padded and strided matrix multiply constant (pad!=0, step>1) - should use own implementation
+    // Test 14: Padded and strided matrix multiply constant (pad!=0, stride>1) - should use own implementation
     test_tiny_mat_multc_f32_padded_strided();
     
     printf("============ [test complete] ============\n\r");
 }
-
 
 ```
 
@@ -2006,7 +2006,7 @@ void tiny_mat_test(void)
 
 ```c
 
-#include "tiny_mat_test.hpp"
+#include "tiny_mat_test.h"
 
 extern "C" void app_main(void)
 {
@@ -2021,9 +2021,9 @@ extern "C" void app_main(void)
 ============ [tiny_mat_test] ============
 
 ================================================================================
-Test Case 1: tiny_mat_add_f32 - Contiguous Memory Layout (pad=0, step=1)
+Test Case 1: tiny_mat_add_f32 - Contiguous Memory Layout (pad=0, stride=1)
 ================================================================================
-Parameters: rows=3, cols=4, pad=0, step=1
+Parameters: rows=3, cols=4, pad=0, stride=1, step=cols+padd
 
 Input1 Memory Layout (12 elements, contiguous):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]  [11]
@@ -2058,18 +2058,18 @@ Output Memory Layout (12 elements, contiguous):
 
 
 ================================================================================
-Test Case 2: tiny_mat_add_f32 - Non-contiguous memory (pad!=0, step>1)
+Test Case 2: tiny_mat_add_f32 - Non-contiguous memory (pad!=0, stride>1)
 ================================================================================
-Params: rows=2, cols=3, pad1=4, pad2=4, pad_out=4, step1=2, step2=3, step_out=2
-Index formula: idx = row * (cols + padding) + col * step
+Params: rows=2, cols=3, pad1=4, pad2=4, pad_out=4, stride1=2, stride2=3, stride_out=2
+Index formula: idx = row * step + col * stride (step = cols + padding)
 
-[input1 raw len=14]  1.0  0.0  2.0  0.0  3.0  0.0  0.0  4.0  0.0  5.0  0.0  6.0  0.0  0.0 (pad=4, step=2)
-  input1 row0 (stride=7): [0: 1.0 C] [1: 0.0 P] [2: 2.0 C] [3: 0.0 P] [4: 3.0 C] [5: 0.0 P] [6: 0.0 P]
-  input1 row1 (stride=7): [0: 4.0 C] [1: 0.0 P] [2: 5.0 C] [3: 0.0 P] [4: 6.0 C] [5: 0.0 P] [6: 0.0 P]
+[input1 raw len=14]  1.0  0.0  2.0  0.0  3.0  0.0  0.0  4.0  0.0  5.0  0.0  6.0  0.0  0.0 (pad=4, stride=2)
+  input1 row0 (step=7): [0: 1.0 C] [1: 0.0 P] [2: 2.0 C] [3: 0.0 P] [4: 3.0 C] [5: 0.0 P] [6: 0.0 P]
+  input1 row1 (step=7): [0: 4.0 C] [1: 0.0 P] [2: 5.0 C] [3: 0.0 P] [4: 6.0 C] [5: 0.0 P] [6: 0.0 P]
 
-[input2 raw len=14]  0.5  0.0  0.0  1.5  0.0  0.0  2.5  3.5  0.0  0.0  4.5  0.0  0.0  5.5 (pad=4, step=3)
-  input2 row0 (stride=7): [0: 0.5 C] [1: 0.0 P] [2: 0.0 P] [3: 1.5 C] [4: 0.0 P] [5: 0.0 P] [6: 2.5 C]
-  input2 row1 (stride=7): [0: 3.5 C] [1: 0.0 P] [2: 0.0 P] [3: 4.5 C] [4: 0.0 P] [5: 0.0 P] [6: 5.5 C]
+[input2 raw len=14]  0.5  0.0  0.0  1.5  0.0  0.0  2.5  3.5  0.0  0.0  4.5  0.0  0.0  5.5 (pad=4, stride=3)
+  input2 row0 (step=7): [0: 0.5 C] [1: 0.0 P] [2: 0.0 P] [3: 1.5 C] [4: 0.0 P] [5: 0.0 P] [6: 2.5 C]
+  input2 row1 (step=7): [0: 3.5 C] [1: 0.0 P] [2: 0.0 P] [3: 4.5 C] [4: 0.0 P] [5: 0.0 P] [6: 5.5 C]
 
 Logical matrices (no padding):
   input1 row0:  1.0  2.0  3.0
@@ -2077,12 +2077,12 @@ Logical matrices (no padding):
   input2 row0:  0.5  1.5  2.5
   input2 row1:  3.5  4.5  5.5
 
-[output raw len=14]  1.5  0.0  3.5  0.0  5.5  0.0  0.0  7.5  0.0  9.5  0.0 11.5  0.0  0.0 (pad_out=4, step_out=2)
+[output raw len=14]  1.5  0.0  3.5  0.0  5.5  0.0  0.0  7.5  0.0  9.5  0.0 11.5  0.0  0.0 (pad_out=4, stride_out=2)
 
-  output row0 (stride=7): [0: 1.5 C] [1: 0.0 P] [2: 3.5 C] [3: 0.0 P] [4: 5.5 C] [5: 0.0 P] [6: 0.0 P]
-  output row1 (stride=7): [0: 7.5 C] [1: 0.0 P] [2: 9.5 C] [3: 0.0 P] [4:11.5 C] [5: 0.0 P] [6: 0.0 P]
+  output row0 (step=7): [0: 1.5 C] [1: 0.0 P] [2: 3.5 C] [3: 0.0 P] [4: 5.5 C] [5: 0.0 P] [6: 0.0 P]
+  output row1 (step=7): [0: 7.5 C] [1: 0.0 P] [2: 9.5 C] [3: 0.0 P] [4:11.5 C] [5: 0.0 P] [6: 0.0 P]
 
-[expected raw len=14]  1.5  0.0  3.5  0.0  5.5  0.0  0.0  7.5  0.0  9.5  0.0 11.5  0.0  0.0 (pad_out=4, step_out=2)
+[expected raw len=14]  1.5  0.0  3.5  0.0  5.5  0.0  0.0  7.5  0.0  9.5  0.0 11.5  0.0  0.0 (pad_out=4, stride_out=2)
 
 Logical matrix comparison (expected | actual | diff):
   row0: [ 1.5 |  1.5 | 0.0e+00] [ 3.5 |  3.5 | 0.0e+00] [ 5.5 |  5.5 | 0.0e+00]
@@ -2092,9 +2092,9 @@ Logical matrix comparison (expected | actual | diff):
 
 
 ================================================================================
-Test Case 3: tiny_mat_addc_f32 - Contiguous Memory Layout (pad=0, step=1)
+Test Case 3: tiny_mat_addc_f32 - Contiguous Memory Layout (pad=0, stride=1)
 ================================================================================
-Parameters: rows=3, cols=4, pad=0, step=1, C=2.5
+Parameters: rows=3, cols=4, pad=0, stride=1, step=cols+padd, C=2.5
 
 Input Memory Layout (12 elements, contiguous):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]  [11]
@@ -2124,12 +2124,12 @@ Output Memory Layout (12 elements, contiguous):
 
 
 ================================================================================
-Test Case 4: tiny_mat_addc_f32 - Non-Contiguous Memory Layout (pad!=0, step>1)
+Test Case 4: tiny_mat_addc_f32 - Non-Contiguous Memory Layout (pad!=0, stride>1)
 ================================================================================
-Parameters: rows=2, cols=3, pad_in=2, pad_out=2, step_in=2, step_out=2, C=  1.5
-Index formula: index = row * (cols + padding) + col * step
+Parameters: rows=2, cols=3, pad_in=2, pad_out=2, stride_in=2, stride_out=2, C=  1.5
+Index formula: index = row * step + col * stride (step = cols + padding)
 
-Input Memory Layout (20 elements, pad=2, step=2):
+Input Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:   1.0  0.0  2.0  0.0  3.0  4.0  0.0  5.0  0.0  6.0  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [1.0  X  2.0  X  3.0]  <- Row 0 (indices: 0, 2, 4)
@@ -2138,14 +2138,14 @@ Input Memory Layout (20 elements, pad=2, step=2):
 
 Constant C =   1.5
 
-Expected Output Memory Layout (20 elements, pad=2, step=2):
+Expected Output Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:   2.5  0.0  3.5  0.0  4.5  5.5  0.0  6.5  0.0  7.5  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [2.5  X  3.5  X  4.5]  <- Row 0 (indices: 0, 2, 4)
           [5.5  X  6.5  X  7.5]  <- Row 1 (indices: 5, 7, 9)
           (X = padding/unused)
 
-Output Memory Layout (20 elements, pad=2, step=2):
+Output Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:   2.5  0.0  3.5  0.0  4.5  5.5  0.0  6.5  0.0  7.5  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [2.5  X  3.5  X  4.5]  <- Row 0 (indices: 0, 2, 4)
@@ -2157,9 +2157,9 @@ Output Memory Layout (20 elements, pad=2, step=2):
 
 
 ================================================================================
-Test Case 5: tiny_mat_sub_f32 - Contiguous Memory Layout (pad=0, step=1)
+Test Case 5: tiny_mat_sub_f32 - Contiguous Memory Layout (pad=0, stride=1)
 ================================================================================
-Parameters: rows=3, cols=4, pad=0, step=1
+Parameters: rows=3, cols=4, pad=0, stride=1, step=cols+padd
 
 Input1 Memory Layout (12 elements, contiguous):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]  [11]
@@ -2194,33 +2194,33 @@ Output Memory Layout (12 elements, contiguous):
 
 
 ================================================================================
-Test Case 6: tiny_mat_sub_f32 - Non-Contiguous Memory Layout (pad!=0, step>1)
+Test Case 6: tiny_mat_sub_f32 - Non-Contiguous Memory Layout (pad!=0, stride>1)
 ================================================================================
-Parameters: rows=2, cols=3, pad1=2, pad2=1, pad_out=2, step1=2, step2=3, step_out=2
-Index formula: index = row * (cols + padding) + col * step
+Parameters: rows=2, cols=3, pad1=2, pad2=1, pad_out=2, stride1=2, stride2=3, stride_out=2
+Index formula: index = row * step + col * stride (step = cols + padding)
 
-Input1 Memory Layout (20 elements, pad=2, step=2):
+Input1 Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:   1.0  0.0  2.0  0.0  3.0  4.0  0.0  5.0  0.0  6.0  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [1.0  X  2.0  X  3.0]  <- Row 0 (indices: 0, 2, 4)
           [4.0  X  5.0  X  6.0]  <- Row 1 (indices: 5, 7, 9)
           (X = padding/unused)
 
-Input2 Memory Layout (16 elements, pad=1, step=3):
+Input2 Memory Layout (16 elements, pad=1, stride=3):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] ...
   Value:   0.5  0.0  0.0  1.5  3.5  0.0  2.5  4.5  0.0  0.0  5.5  0.0 ...
   Matrix: [0.5  X  X  1.5  X  X  2.5]  <- Row 0 (indices: 0, 3, 6)
           [3.5  X  X  4.5  X  X  5.5]  <- Row 1 (indices: 4, 7, 10)
           (X = padding/unused)
 
-Expected Output Memory Layout (20 elements, pad=2, step=2):
+Expected Output Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:   0.5  0.0  0.5  0.0  0.5  0.5  0.0  0.5  0.0  0.5  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [0.5  X  0.5  X  0.5]  <- Row 0 (indices: 0, 2, 4)
           [0.5  X  0.5  X  0.5]  <- Row 1 (indices: 5, 7, 9)
           (X = padding/unused)
 
-Output Memory Layout (20 elements, pad=2, step=2):
+Output Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:   0.5  0.0  0.5  0.0  0.5  0.5  0.0  0.5  0.0  0.5  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [0.5  X  0.5  X  0.5]  <- Row 0 (indices: 0, 2, 4)
@@ -2232,9 +2232,9 @@ Output Memory Layout (20 elements, pad=2, step=2):
 
 
 ================================================================================
-Test Case 7: tiny_mat_subc_f32 - Contiguous Memory Layout (pad=0, step=1)
+Test Case 7: tiny_mat_subc_f32 - Contiguous Memory Layout (pad=0, stride=1)
 ================================================================================
-Parameters: rows=3, cols=4, pad=0, step=1, C=2.5
+Parameters: rows=3, cols=4, pad=0, stride=1, step=cols+padd, C=2.5
 
 Input Memory Layout (12 elements, contiguous):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]  [11]
@@ -2264,12 +2264,12 @@ Output Memory Layout (12 elements, contiguous):
 
 
 ================================================================================
-Test Case 8: tiny_mat_subc_f32 - Non-Contiguous Memory Layout (pad!=0, step>1)
+Test Case 8: tiny_mat_subc_f32 - Non-Contiguous Memory Layout (pad!=0, stride>1)
 ================================================================================
-Parameters: rows=2, cols=3, pad_in=2, pad_out=2, step_in=2, step_out=2, C=  1.5
-Index formula: index = row * (cols + padding) + col * step
+Parameters: rows=2, cols=3, pad_in=2, pad_out=2, stride_in=2, stride_out=2, C=  1.5
+Index formula: index = row * step + col * stride (step = cols + padding)
 
-Input Memory Layout (20 elements, pad=2, step=2):
+Input Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:   1.0  0.0  2.0  0.0  3.0  4.0  0.0  5.0  0.0  6.0  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [1.0  X  2.0  X  3.0]  <- Row 0 (indices: 0, 2, 4)
@@ -2278,14 +2278,14 @@ Input Memory Layout (20 elements, pad=2, step=2):
 
 Constant C =   1.5
 
-Expected Output Memory Layout (20 elements, pad=2, step=2):
+Expected Output Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:  -0.5  0.0  0.5  0.0  1.5  2.5  0.0  3.5  0.0  4.5  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [-0.5  X  0.5  X  1.5]  <- Row 0 (indices: 0, 2, 4)
           [ 2.5  X  3.5  X  4.5]  <- Row 1 (indices: 5, 7, 9)
           (X = padding/unused)
 
-Output Memory Layout (20 elements, pad=2, step=2):
+Output Memory Layout (20 elements, pad=2, stride=2):
   Index:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]  [8]  [9]  [10] [11] [12] [13] [14] ...
   Value:  -0.5  0.0  0.5  0.0  1.5  2.5  0.0  3.5  0.0  4.5  0.0  0.0  0.0  0.0  0.0 ...
   Matrix: [-0.5  X  0.5  X  1.5]  <- Row 0 (indices: 0, 2, 4)
@@ -2484,32 +2484,32 @@ Output Matrix C Memory Layout (2x2, pad=1, step=3, 6 elements):
 ================================================================================
 Test Case 13: tiny_mat_multc_f32 - Contiguous Matrix Multiply Constant
 ================================================================================
-Parameters: rows=3, cols=3, padd_in=0, padd_out=0, step_in=1, step_out=1
+Parameters: rows=3, cols=3, padd_in=0, padd_out=0, stride_in=1, stride_out=1
 Matrix dimensions: 3x3
 Constant C: 2.5
-Note: This should use ESP-DSP on ESP32 when all paddings are 0 and all steps are 1
+Note: This should use ESP-DSP on ESP32 when all paddings are 0 and all strides are 1
 
-Input Matrix Memory Layout (3x3, 9 elements, contiguous, pad=0, step=1):
+Input Matrix Memory Layout (3x3, 9 elements, contiguous, pad=0, stride=1):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]
   Value:    1.0   2.0   3.0   4.0   5.0   6.0   7.0   8.0   9.0 
   Matrix: [1.0  2.0  3.0]  <- Row 0 (indices: 0, 1, 2)
           [4.0  5.0  6.0]  <- Row 1 (indices: 3, 4, 5)
           [7.0  8.0  9.0]  <- Row 2 (indices: 6, 7, 8)
-  Row stride: 3 (cols + padd_in = 3 + 0)
+  Row step: 3 (cols + padd_in = 3 + 0)
   Index calculation: input[i][j] = input[i * 3 + j * 1]
 
-Expected Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=0, step=1):
+Expected Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=0, stride=1):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]
   Value:     2.5    5.0    7.5   10.0   12.5   15.0   17.5   20.0   22.5 
   Matrix: [  2.5    5.0    7.5]  <- Row 0 (indices: 0, 1, 2)
           [ 10.0   12.5   15.0]  <- Row 1 (indices: 3, 4, 5)
           [ 17.5   20.0   22.5] <- Row 2 (indices: 6, 7, 8)
-  Row stride: 3 (cols + padd_out = 3 + 0)
+  Row step: 3 (cols + padd_out = 3 + 0)
   Index calculation: output[i][j] = output[i * 3 + j * 1]
   Calculation: output[i][j] = input[i][j] * 2.5
     Example: output[0][0] = input[0][0] * 2.5 = 1.0 * 2.5 = 2.5
 
-Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=0, step=1):
+Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=0, stride=1):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]
   Value:     2.5    5.0    7.5   10.0   12.5   15.0   17.5   20.0   22.5 
   Matrix: [  2.5    5.0    7.5]  <- Row 0 (indices: 0, 1, 2)
@@ -2523,36 +2523,36 @@ Output Matrix Memory Layout (3x3, 9 elements, contiguous, pad=0, step=1):
 ================================================================================
 Test Case 14: tiny_mat_multc_f32 - Padded and Strided Matrix Multiply Constant
 ================================================================================
-Parameters: rows=2, cols=3, padd_in=2, padd_out=1, step_in=2, step_out=1
+Parameters: rows=2, cols=3, padd_in=2, padd_out=1, stride_in=2, stride_out=1
 Matrix dimensions: 2x3
 Constant C: 3.0
-Note: This should use own implementation when padding is non-zero or step > 1
+Note: This should use own implementation when padding is non-zero or stride > 1
 
-Input Matrix Memory Layout (2x3, pad=2, step=2, 10 elements):
+Input Matrix Memory Layout (2x3, pad=2, stride=2, 10 elements):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]
   Value:   1.0  0.0  2.0  0.0  3.0  4.0  0.0  5.0  0.0  6.0 
   Matrix: [1.0  X  2.0  X  3.0]  <- Row 0 (data indices: 0, 2, 4)
           [4.0  X  5.0  X  6.0]  <- Row 1 (data indices: 5, 7, 9)
           (X = unused/padding)
-  Row stride: 5 (cols + padd_in = 3 + 2)
+  Row step: 5 (cols + padd_in = 3 + 2)
   Index calculation: input[i][j] = input[i * 5 + j * 2]
     Row 0: input[0][0]=input[0]=1.0, input[0][1]=input[2]=2.0, input[0][2]=input[4]=3.0
     Row 1: input[1][0]=input[5]=4.0, input[1][1]=input[7]=5.0, input[1][2]=input[9]=6.0
 
-Expected Output Matrix Memory Layout (2x3, pad=1, step=1, 8 elements):
+Expected Output Matrix Memory Layout (2x3, pad=1, stride=1, 8 elements):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]
   Value:     3.0    6.0    9.0    0.0   12.0   15.0   18.0    0.0 
   Matrix: [  3.0    6.0    9.0  X]  <- Row 0 (indices: 0, 1, 2, 3)
           [ 12.0   15.0   18.0  X]  <- Row 1 (indices: 4, 5, 6, 7)
           (X = padding/unused)
-  Row stride: 4 (cols + padd_out = 3 + 1)
+  Row step: 4 (cols + padd_out = 3 + 1)
   Index calculation: output[i][j] = output[i * 4 + j * 1]
   Calculation: output[i][j] = input[i][j] * 3.0
     Row 0: output[0][0] = input[0][0] * 3.0 = 1.0 * 3.0 = 3.0 (index 0)
            output[0][1] = input[0][1] * 3.0 = 2.0 * 3.0 = 6.0 (index 1)
            output[0][2] = input[0][2] * 3.0 = 3.0 * 3.0 = 9.0 (index 2)
 
-Output Matrix Memory Layout (2x3, pad=1, step=1, 8 elements):
+Output Matrix Memory Layout (2x3, pad=1, stride=1, 8 elements):
   Index:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]
   Value:     3.0    6.0    9.0    0.0   12.0   15.0   18.0    0.0 
   Matrix: [  3.0    6.0    9.0  X]  <- Row 0 (indices: 0, 1, 2, 3)
@@ -2562,4 +2562,6 @@ Output Matrix Memory Layout (2x3, pad=1, step=1, 8 elements):
 ================================================================================
 
 ============ [test complete] ============
+I (3170) main_task: Returned from app_main()
+
 ```

@@ -22,6 +22,13 @@ TinyMath
  * @file tiny_matrix.hpp
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
  * @brief This file is the header file for the submodule matrix (advanced matrix operations) of the tiny_math middleware.
+ *
+ * Terminology conventions:
+ * - pad / padding: number of padded elements at row end (not part of logical matrix values).
+ * - step: total elements per physical row (logical + padding).
+ * - stride: spacing for strided sampling in one row.
+ *   In this matrix class, row indexing uses `step`; column sampling stride is fixed to 1.
+ *   `stride` is kept as a backward-compatible alias to `step`.
  * @version 1.0
  * @date 2025-04-17
  * @note This file is built on top of the mat.h file from the ESP-DSP library.
@@ -56,10 +63,14 @@ namespace tiny
         // ============================================================================
         int row;         //< number of rows
         int col;         //< number of columns
-        int pad;         //< number of paddings between 2 rows
-        int stride;      //< stride = (number of elements in a row) + padding
+        int pad;         //< placeholder elements in storage; not used in math ops
+        union
+        {
+            int step;    //< total elements per row (logical + padding)
+            int stride;  //< backward-compatible alias for `step`
+        };
         int element;     //< number of elements = rows * cols
-        int memory;      //< size of the data buffer = rows * stride
+        int memory;      //< size of the data buffer = rows * step
         float *data;     //< pointer to the data buffer
         float *temp;     //< pointer to the temporary data buffer
         bool ext_buff;   //< flag indicates that matrix use external buffer
@@ -96,7 +107,7 @@ namespace tiny
         /**
          * @brief Allocate memory for the matrix according to the memory required.
          * @note For ESP32, it will automatically determine if using RAM or PSRAM based on the size of the matrix.
-         * @note This function sets ext_buff to false and allocates memory based on row * stride.
+         * @note This function sets ext_buff to false and allocates memory based on row * step.
          *       If allocation fails or parameters are invalid, data will be set to nullptr.
          */
         void alloc_mem();
@@ -116,12 +127,12 @@ namespace tiny
         Mat(int rows, int cols);
         
         /**
-         * @brief Constructor - create a matrix with the specified number of rows, columns and stride.
+         * @brief Constructor - create a matrix with the specified number of rows, columns and step.
          * @param rows Number of rows
          * @param cols Number of columns
-         * @param stride Stride (number of elements in a row)
+         * @param step Total number of elements in a row (including padding)
          */
-        Mat(int rows, int cols, int stride);
+        Mat(int rows, int cols, int step);
         
         /**
          * @brief Constructor - create a matrix with the specified number of rows, columns and external data.
@@ -136,9 +147,9 @@ namespace tiny
          * @param data Pointer to external data buffer
          * @param rows Number of rows
          * @param cols Number of columns
-         * @param stride Stride (number of elements in a row)
+         * @param step Total number of elements in a row (including padding)
          */
-        Mat(float *data, int rows, int cols, int stride);
+        Mat(float *data, int rows, int cols, int step);
         
         /**
          * @brief Copy constructor - create a matrix with the same properties as the source matrix.
@@ -154,8 +165,8 @@ namespace tiny
         // ============================================================================
         // Element Access
         // ============================================================================
-        inline float &operator()(int row, int col) { return data[row * stride + col]; }
-        inline const float &operator()(int row, int col) const { return data[row * stride + col]; }
+        inline float &operator()(int row, int col) { return data[row * step + col]; }
+        inline const float &operator()(int row, int col) const { return data[row * step + col]; }
 
         // ============================================================================
         // Data Manipulation
@@ -451,11 +462,10 @@ namespace tiny
 
 ```
 
-
 ## MATRIX METADATA
 
 !!! INFO "Matrix Structure"
-    The Mat class uses a row-major storage layout with support for padding and stride. This design enables efficient memory access patterns and compatibility with DSP libraries.
+    The Mat class uses a row-major storage layout with support for padding and step. In this class, `stride` is a backward-compatible alias of `step`. This design enables efficient memory access patterns and compatibility with DSP libraries.
 
 ### Core Dimensions
 
@@ -467,15 +477,15 @@ namespace tiny
 
 ### Memory Layout
 
-- **`int stride`** : Stride = (number of elements in a row) + padding. The stride determines how many elements to skip to move to the next row in memory.
+- **`int step` / `int stride`** : Total elements per row (logical columns + padding). In this class they are equivalent, and `stride` is an alias of `step`.
 
 - **`int pad`** : Number of padding elements between two rows. Padding is used for memory alignment and DSP optimization.
 
-- **`int memory`** : Size of the data buffer = rows × stride (in number of float elements).
+- **`int memory`** : Size of the data buffer = rows × step (in number of float elements).
 
 ### Data Pointers
 
-- **`float *data`** : Pointer to the data buffer containing matrix elements. Elements are stored in row-major order: element at (i, j) is at `data[i * stride + j]`.
+- **`float *data`** : Pointer to the data buffer containing matrix elements. Elements are stored in row-major order: element at (i, j) is at `data[i * step + j]`.
 
 - **`float *temp`** : Pointer to the temporary data buffer (if allocated). Used internally for certain operations.
 
@@ -657,7 +667,7 @@ void Mat::alloc_mem();
 
 **Description**: 
 
-Internal function that allocates memory for the matrix according to the computed memory requirements. Sets `ext_buff = false` and allocates `row * stride` float elements.
+Internal function that allocates memory for the matrix according to the computed memory requirements. Sets `ext_buff = false` and allocates `row * step` float elements.
 
 **Parameters**:
 
@@ -671,7 +681,7 @@ void
 
 - **Automatic Call**: Called automatically by constructors. Rarely needs manual invocation.
 
-- **Memory Calculation**: Allocates `row * stride` elements, which may include padding.
+- **Memory Calculation**: Allocates `row * step` elements, which may include padding.
 
 - **Error Handling**: If allocation fails, `data` remains `nullptr`. Always check `data` after construction.
 
@@ -725,15 +735,15 @@ Mat - A rows×cols matrix with all elements initialized to 0.
 
 - **Error Handling**: If memory allocation fails, `data` will be `nullptr`. Always verify allocation success.
 
-### Constructor - Mat(int rows, int cols, int stride)
+### Constructor - Mat(int rows, int cols, int step)
 
 ```cpp
-Mat::Mat(int rows, int cols, int stride);
+Mat::Mat(int rows, int cols, int step);
 ```
 
 **Description**: 
 
-Constructor creates a matrix with specified dimensions and stride. Useful when you need padding for memory alignment or DSP optimization.
+Constructor creates a matrix with specified dimensions and step. Useful when you need padding for memory alignment or DSP optimization.
 
 **Parameters**:
 
@@ -741,11 +751,11 @@ Constructor creates a matrix with specified dimensions and stride. Useful when y
 
 - `int cols` : Number of columns.
 
-- `int stride` : Stride (must be ≥ cols). Padding = stride - cols.
+- `int step` : Total elements per row (must be ≥ cols). Padding = step - cols.
 
 **Returns**:
 
-Mat - A rows×cols matrix with stride, all elements initialized to 0.
+Mat - A rows×cols matrix with step, all elements initialized to 0.
 
 **Usage Insights**:
 
@@ -793,15 +803,15 @@ Mat - A matrix view with `ext_buff = true`.
 
   - Avoiding unnecessary copies
 
-### Constructor - Mat(float *data, int rows, int cols, int stride)
+### Constructor - Mat(float *data, int rows, int cols, int step)
 
 ```cpp
-Mat::Mat(float *data, int rows, int cols, int stride);
+Mat::Mat(float *data, int rows, int cols, int step);
 ```
 
 **Description**: 
 
-Constructor creates a matrix view over an external data buffer with specified stride. Supports strided memory layouts for DSP compatibility.
+Constructor creates a matrix view over an external data buffer with specified step. Supports padded row-major layouts for DSP compatibility.
 
 **Parameters**:
 
@@ -811,11 +821,11 @@ Constructor creates a matrix view over an external data buffer with specified st
 
 - `int cols` : Number of columns.
 
-- `int stride` : Stride (must be ≥ cols).
+- `int step` : Total elements per row (must be ≥ cols).
 
 **Returns**:
 
-Mat - A matrix view with `ext_buff = true` and specified stride.
+Mat - A matrix view with `ext_buff = true` and specified step.
 
 **Usage Insights**:
 
@@ -892,7 +902,7 @@ void
 ## ELEMENT ACCESS
 
 !!! INFO "Matrix Indexing"
-    The Mat class uses operator overloading to provide intuitive matrix element access. The `operator()` allows natural syntax like `A(i, j)` instead of `A.data[i * stride + j]`. The implementation automatically handles stride and padding.
+    The Mat class uses operator overloading to provide intuitive matrix element access. The `operator()` allows natural syntax like `A(i, j)` instead of `A.data[i * step + j]`. The implementation automatically handles step and padding.
 
 ### Access Matrix Elements (Non-Const)
 
@@ -906,7 +916,7 @@ Accesses matrix elements with read-write capability. Returns a reference to the 
 
 **Mathematical Principle**:
 
-Element at position (row, col) is accessed as `data[row * stride + col]`, where stride accounts for padding.
+Element at position (row, col) is accessed as `data[row * step + col]`, where step accounts for padding.
 
 **Parameters**：
 
@@ -1041,7 +1051,7 @@ Gets a view (shallow copy) of the sub-matrix (ROI) from this matrix using the sp
 
 ### Get a replica (deep copy) of sub-matrix (ROI)
 ```cpp
-Mat Mat::copy_roi(int start_row, int start_col, int roi_rows, int roi_cols);
+Mat Mat::copy_roi(int start_row, int start_col, int height, int width);
 ```
 
 **Description**:
@@ -1054,9 +1064,9 @@ Gets a replica (deep copy) of the sub-matrix (ROI) from this matrix starting fro
 
 - `int start_col` : Starting column position.
 
-- `int roi_rows` : Number of rows in the ROI.
+- `int height` : Number of rows in the ROI.
 
-- `int roi_cols` : Number of columns in the ROI.
+- `int width` : Number of columns in the ROI.
 
 ### Get a replica (deep copy) of sub-matrix (ROI) using ROI structure
 ```cpp
@@ -1405,7 +1415,7 @@ Mat - Transposed matrix (col × row).
 ### Minor matrix
 
 ```cpp
-Mat Mat::minor(int row, int col);
+Mat Mat::minor(int target_row, int target_col);
 ```
 
 **Description**:
@@ -1414,9 +1424,9 @@ Calculates the minor matrix by removing the specified row and column. The minor 
 
 **Parameters**: 
 
-- `int row`: Row index to remove.
+- `int target_row`: Row index to remove.
 
-- `int col`: Column index to remove.
+- `int target_col`: Column index to remove.
 
 **Returns**:
 
@@ -1425,7 +1435,7 @@ Mat - The (n-1)x(n-1) minor matrix.
 ### Cofactor matrix
 
 ```cpp
-Mat Mat::cofactor(int row, int col);
+Mat Mat::cofactor(int target_row, int target_col);
 ```
 
 **Description**:
@@ -1434,9 +1444,9 @@ Calculates the cofactor matrix (same as minor matrix). The cofactor matrix is th
 
 **Parameters**: 
 
-- `int row`: Row index to remove.
+- `int target_row`: Row index to remove.
 
-- `int col`: Column index to remove.
+- `int target_col`: Column index to remove.
 
 **Returns**:
 
@@ -2092,7 +2102,7 @@ For a symmetric matrix, all eigenvalues are real, and eigenvectors can be chosen
 #### Check Positive Definiteness
 
 ```cpp
-bool Mat::is_positive_definite(float tolerance = 1e-6f) const;
+bool Mat::is_positive_definite(float tolerance = 1e-6f, int max_minors_to_check = -1) const;
 ```
 
 **Description**:
@@ -2106,6 +2116,7 @@ Sylvester's criterion states that a symmetric matrix is positive definite if and
 **Parameters**:
 
 - `float tolerance` : Tolerance for numerical checks (default: 1e-6).
+- `int max_minors_to_check` : Number of leading principal minors to check. `-1` checks all; `>0` checks only the first N.
 
 **Returns**:
 
