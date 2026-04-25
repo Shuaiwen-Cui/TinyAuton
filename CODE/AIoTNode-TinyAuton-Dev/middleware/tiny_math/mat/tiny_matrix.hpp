@@ -6,9 +6,9 @@
  * Terminology conventions:
  * - pad / padding: number of padded elements at row end (not part of logical matrix values).
  * - step: total elements per physical row (logical + padding).
- * - stride: spacing for strided sampling in one row.
- *   In this matrix class, row indexing uses `step`; column sampling stride is fixed to 1.
- *   `stride` is kept as a backward-compatible alias to `step`.
+ * - stride: spacing for strided sampling in one row (general concept in low-level kernels).
+ *   In this matrix class, row indexing uses `step`; column sampling spacing is fixed to 1.
+ *   The field name `stride` exists only as a deprecated backward-compatible alias of `step`.
  * @version 1.0
  * @date 2025-04-17
  * @note This file is built on top of the mat.h file from the ESP-DSP library.
@@ -47,7 +47,7 @@ namespace tiny
         union
         {
             int step;    //< total elements per row (logical + padding)
-            int stride;  //< backward-compatible alias for `step`
+            int stride;  //< deprecated backward-compatible alias for `step` (not sampling stride)
         };
         int element;     //< number of elements = rows * cols
         int memory;      //< size of the data buffer = rows * step

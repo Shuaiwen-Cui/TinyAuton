@@ -22,19 +22,19 @@
 #include <vector>
 #include <limits>
 
-/* LIBRARIE CONTENTS */
+/* LIBRARY CONTENTS */
 namespace tiny
 {
     // ============================================================================
     // Rectangular ROI Structure
     // ============================================================================
     /**
-     * @brief Construct a new Mat:: R O I:: R O I object
-     * 
-     * @param pos_x 
-     * @param pos_y 
-     * @param width 
-     * @param height 
+     * @brief Construct a new Mat::ROI object.
+     *
+     * @param pos_x
+     * @param pos_y
+     * @param width
+     * @param height
      */
     Mat::ROI::ROI(int pos_x, int pos_y, int width, int height)
     {
@@ -67,6 +67,10 @@ namespace tiny
      */
     int Mat::ROI::area_roi(void) const
     {
+        if (this->width < 0 || this->height < 0)
+        {
+            return 0;
+        }
         return this->width * this->height;
     }
 
@@ -150,16 +154,18 @@ namespace tiny
             return;
         }
         
+        const int print_cols = (this->step < this->col) ? this->step : this->col;
         if (this->step < this->col)
         {
-            std::cout << "[Warning] step < cols, potential data corruption\n";
+            std::cout << "[Warning] step < cols; printing only the first " << print_cols
+                      << " column(s) per row to avoid out-of-bounds access.\n";
         }
 
         std::cout << "Matrix Elements >>>\n";
         for (int i = 0; i < this->row; ++i)
         {
-            // print the non-padding elements
-            for (int j = 0; j < this->col; ++j)
+            // print the non-padding elements (bounded by step)
+            for (int j = 0; j < print_cols; ++j)
             {
                 std::cout << std::setw(12) << this->data[i * this->step + j] << " ";
             }
@@ -1573,6 +1579,16 @@ namespace tiny
             return *this;
         }
 
+        // 1.5. In-place matrix multiplication may change output width (this->col -> m.col).
+        // For views/external buffers, resizing is unsafe because ownership/capacity is unknown.
+        if ((this->sub_matrix || this->ext_buff) && (this->col != m.col))
+        {
+            std::cerr << "[Error] operator*=: cannot reshape sub-matrix/external-buffer matrix ("
+                      << this->row << "x" << this->col << " -> "
+                      << this->row << "x" << m.col << ")\n";
+            return *this;
+        }
+
         // 2. Prepare temp matrix (in case overwriting the original data)
         // Create a copy of this matrix to avoid overwriting during computation
         Mat temp = this->copy_roi(0, 0, this->row, this->col);
@@ -1582,6 +1598,49 @@ namespace tiny
         {
             std::cerr << "[Error] operator*=: failed to create temporary matrix copy\n";
             return *this;
+        }
+
+        // 2.5. Ensure destination buffer/metadata can hold the multiplication result.
+        // Result shape: this->row x m.col
+        const int result_col = m.col;
+        if (this->col != result_col)
+        {
+            // We only reach here when this matrix owns its buffer (checked above).
+            if (!this->ext_buff && this->data != nullptr)
+            {
+                delete[] this->data;
+                this->data = nullptr;
+            }
+
+            this->col = result_col;
+            this->step = result_col;  // keep destination contiguous after reshape
+            this->pad = 0;
+
+            if (this->row > 0 && this->col > INT_MAX / this->row)
+            {
+                std::cerr << "[Error] operator*=: integer overflow in element calculation\n";
+                this->data = nullptr;
+                this->element = 0;
+                this->memory = 0;
+                return *this;
+            }
+            this->element = this->row * this->col;
+
+            if (this->row > 0 && this->step > INT_MAX / this->row)
+            {
+                std::cerr << "[Error] operator*=: integer overflow in memory calculation\n";
+                this->data = nullptr;
+                this->memory = 0;
+                return *this;
+            }
+            this->memory = this->row * this->step;
+
+            alloc_mem();
+            if (this->data == nullptr)
+            {
+                std::cerr << "[Error] operator*=: memory allocation failed for result matrix\n";
+                return *this;
+            }
         }
 
         // 3. Check whether padding is present in either matrix
@@ -2449,15 +2508,8 @@ namespace tiny
      */
     void Mat::normalize()
     {
-        // Check for null pointer
-        if (this->data == nullptr)
-        {
-            std::cerr << "[Error] normalize: matrix data pointer is null\n";
-            return;
-        }
-        
         // Validate matrix dimensions
-        if (this->row <= 0 || this->col <= 0)
+        if (this->row < 0 || this->col < 0)
         {
             std::cerr << "[Error] normalize: invalid matrix dimensions: rows=" 
                       << this->row << ", cols=" << this->col << "\n";
@@ -2468,6 +2520,13 @@ namespace tiny
         if (this->row == 0 || this->col == 0)
         {
             // Empty matrix, nothing to normalize
+            return;
+        }
+
+        // For non-empty matrices, data pointer must be valid
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] normalize: matrix data pointer is null\n";
             return;
         }
         
@@ -2516,15 +2575,8 @@ namespace tiny
      */
     float Mat::norm() const
     {
-        // Check for null pointer
-        if (this->data == nullptr)
-        {
-            std::cerr << "[Error] norm: matrix data pointer is null\n";
-            return 0.0f;
-        }
-        
         // Validate matrix dimensions
-        if (this->row <= 0 || this->col <= 0)
+        if (this->row < 0 || this->col < 0)
         {
             std::cerr << "[Error] norm: invalid matrix dimensions: rows=" 
                       << this->row << ", cols=" << this->col << "\n";
@@ -2534,6 +2586,13 @@ namespace tiny
         // Handle empty matrix
         if (this->row == 0 || this->col == 0)
         {
+            return 0.0f;
+        }
+
+        // For non-empty matrices, data pointer must be valid
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] norm: matrix data pointer is null\n";
             return 0.0f;
         }
         
@@ -2868,19 +2927,6 @@ namespace tiny
      */
     Mat Mat::augment(const Mat &A, const Mat &B)
     {
-        // Check for null pointers
-        if (A.data == nullptr)
-        {
-            std::cerr << "[Error] augment: matrix A data pointer is null\n";
-            return Mat();
-        }
-        
-        if (B.data == nullptr)
-        {
-            std::cerr << "[Error] augment: matrix B data pointer is null\n";
-            return Mat();
-        }
-        
         // Validate matrix dimensions
         if (A.row < 0 || A.col < 0)
         {
@@ -2909,6 +2955,19 @@ namespace tiny
         {
             std::cerr << "[Error] augment: combined column count too large, integer overflow "
                       << "(A.col=" << A.col << ", B.col=" << B.col << ")\n";
+            return Mat();
+        }
+
+        // For non-empty matrices, data pointers must be valid.
+        // Empty matrices (rows==0 or cols==0) are allowed to have nullptr data.
+        if (A.row > 0 && A.col > 0 && A.data == nullptr)
+        {
+            std::cerr << "[Error] augment: matrix A data pointer is null\n";
+            return Mat();
+        }
+        if (B.row > 0 && B.col > 0 && B.data == nullptr)
+        {
+            std::cerr << "[Error] augment: matrix B data pointer is null\n";
             return Mat();
         }
         
@@ -2964,19 +3023,6 @@ namespace tiny
      */
     Mat Mat::vstack(const Mat &A, const Mat &B)
     {
-        // Check for null pointers
-        if (A.data == nullptr)
-        {
-            std::cerr << "[Error] vstack: matrix A data pointer is null\n";
-            return Mat();
-        }
-        
-        if (B.data == nullptr)
-        {
-            std::cerr << "[Error] vstack: matrix B data pointer is null\n";
-            return Mat();
-        }
-        
         // Validate matrix dimensions
         if (A.row < 0 || A.col < 0)
         {
@@ -3005,6 +3051,19 @@ namespace tiny
         {
             std::cerr << "[Error] vstack: combined row count too large, integer overflow "
                       << "(A.row=" << A.row << ", B.row=" << B.row << ")\n";
+            return Mat();
+        }
+
+        // For non-empty matrices, data pointers must be valid.
+        // Empty matrices (rows==0 or cols==0) are allowed to have nullptr data.
+        if (A.row > 0 && A.col > 0 && A.data == nullptr)
+        {
+            std::cerr << "[Error] vstack: matrix A data pointer is null\n";
+            return Mat();
+        }
+        if (B.row > 0 && B.col > 0 && B.data == nullptr)
+        {
+            std::cerr << "[Error] vstack: matrix B data pointer is null\n";
             return Mat();
         }
         
@@ -7308,7 +7367,8 @@ namespace tiny
     Mat operator/(const Mat &m, float num)
     {
         // Check division by zero
-        if (num == 0.0f)
+        const float epsilon = 1e-9f;
+        if (fabs(num) < epsilon)
         {
             std::cerr << "[Error] Division by zero in operator/.\n";
             Mat err_ret;
@@ -7345,6 +7405,20 @@ namespace tiny
      */
     Mat operator/(const Mat &A, const Mat &B)
     {
+        if (A.data == nullptr || B.data == nullptr)
+        {
+            std::cerr << "operator / Error: null matrix data pointer\n";
+            Mat err_ret;
+            return err_ret;
+        }
+
+        if (A.row <= 0 || A.col <= 0 || B.row <= 0 || B.col <= 0)
+        {
+            std::cerr << "operator / Error: invalid matrix dimensions\n";
+            Mat err_ret;
+            return err_ret;
+        }
+
         if ((A.row != B.row) || (A.col != B.col))
         {
             std::cerr << "operator / Error: matrices do not have equal dimensions" << std::endl;
@@ -7352,11 +7426,19 @@ namespace tiny
             return err_ret;
         }
 
+        const float epsilon = 1e-9f;
         Mat temp(A.row, A.col);
         for (int row = 0; row < A.row; row++)
         {
             for (int col = 0; col < A.col; col++)
             {
+                if (fabs(B(row, col)) < epsilon)
+                {
+                    std::cerr << "operator / Error: division by zero detected at ("
+                              << row << ", " << col << ")\n";
+                    Mat err_ret;
+                    return err_ret;
+                }
                 temp(row, col) = A(row, col) / B(row, col);
             }
         }
