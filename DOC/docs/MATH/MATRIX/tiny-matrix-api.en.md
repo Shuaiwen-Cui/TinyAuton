@@ -7,6 +7,8 @@
 !!! TIP "Usage Scenario"
     Compared to the TINY_MAT library, the TINY_MATRIX library offers richer functionality and higher flexibility, suitable for applications that require complex matrix computations. However, please note that this library is written in C++.
 
+This page documents the full `tiny::Mat` interface, including core matrix storage, element access, ROI helpers, arithmetic operators, linear-system solvers, matrix decompositions, and eigenvalue routines.
+
 ## LIST OF FUNCTIONS
 
 ```c
@@ -26,9 +28,9 @@ TinyMath
  * Terminology conventions:
  * - pad / padding: number of padded elements at row end (not part of logical matrix values).
  * - step: total elements per physical row (logical + padding).
- * - stride: spacing for strided sampling in one row.
- *   In this matrix class, row indexing uses `step`; column sampling stride is fixed to 1.
- *   `stride` is kept as a backward-compatible alias to `step`.
+ * - stride: spacing for strided sampling in one row (general concept in low-level kernels).
+ *   In this matrix class, row indexing uses `step`; column sampling spacing is fixed to 1.
+ *   The field name `stride` exists only as a deprecated backward-compatible alias of `step`.
  * @version 1.0
  * @date 2025-04-17
  * @note This file is built on top of the mat.h file from the ESP-DSP library.
@@ -67,7 +69,7 @@ namespace tiny
         union
         {
             int step;    //< total elements per row (logical + padding)
-            int stride;  //< backward-compatible alias for `step`
+            int stride;  //< deprecated backward-compatible alias for `step` (not sampling stride)
         };
         int element;     //< number of elements = rows * cols
         int memory;      //< size of the data buffer = rows * step
@@ -234,18 +236,18 @@ namespace tiny
         // ============================================================================
         // Linear Algebra - Matrix Operations
         // ============================================================================
-        Mat minor(int target_row, int target_col);       // Minor matrix (submatrix after removing row and col)
-        Mat cofactor(int target_row, int target_col);    // Cofactor matrix
+        Mat minor(int target_row, int target_col) const;       // Submatrix after removing one row + one column (works on any m x n matrix)
+        Mat cofactor(int target_row, int target_col) const;    // Cofactor submatrix; requires the matrix to be square
         Mat gaussian_eliminate() const;    // Gaussian elimination
-        Mat row_reduce_from_gaussian();   // Row reduction from Gaussian form
-        Mat inverse_gje();                 // Inverse using Gaussian-Jordan elimination
+        Mat row_reduce_from_gaussian() const;   // REF -> RREF via back-substitution
+        Mat inverse_gje() const;           // Inverse using Gauss-Jordan elimination on [A | I]
 
         // ============================================================================
         // Linear Algebra - Linear System Solving
         // ============================================================================
         Mat solve(const Mat &A, const Mat &b) const;  // Solve Ax = b using Gaussian elimination
-        Mat band_solve(Mat A, Mat b, int k);          // Solve banded system
-        Mat roots(Mat A, Mat y);                      // Alternative solve method
+        Mat band_solve(Mat A, Mat b, int k) const;    // Solve banded system
+        Mat roots(Mat A, Mat y) const;                // Alternative solve method
 
         // ============================================================================
         // Matrix Decomposition
@@ -1908,15 +1910,43 @@ Mat - The upper triangular matrix (REF form).
 
 - **Performance**: O(n³) for n×n matrices. For multiple systems, prefer LU decomposition.
 
+**Pitfalls**:
+
+- **Near-zero pivots**: If a pivot is tiny, the elimination can amplify round-off error. Partial pivoting reduces, but does not eliminate, this risk.
+
+- **Singular or rank-deficient input**: You may still obtain a visually valid REF with zero rows; that does not imply the system has a unique solution.
+
+- **Determinant sign**: Each row swap flips the determinant sign. If you use REF to estimate det(A), track swaps carefully.
+
+- **In-place mental model**: The algorithm mutates an equivalent working copy, not the mathematical object you started with. Do not assume the original row order survives.
+
 ### Row Reduce from Gaussian
 
 ```cpp
-Mat Mat::row_reduce_from_gaussian();
+Mat Mat::row_reduce_from_gaussian() const;
 ```
 
 **Description**:
 
 Converts a matrix (assumed in row echelon form) to Reduced Row Echelon Form (RREF).
+
+**Mathematical Principle**:
+
+This is the back-substitution phase of Gaussian elimination turned into a normalization pass. Each pivot row is scaled to make the pivot 1, then the entries above each pivot are eliminated so the pivot becomes the only non-zero element in its column.
+
+**Usage Insights**:
+
+- **Assumes REF first**: This function is best used after `gaussian_eliminate()`. Calling it on an arbitrary matrix can still work sometimes, but the result is not guaranteed to be meaningful.
+
+- **Not a solver by itself**: RREF exposes solution structure, free variables, and inconsistency, but you still need to interpret the reduced form.
+
+- **Numerical cleanup**: Very small values may survive as floating-point noise. Compare against a tolerance instead of expecting exact zeros.
+
+**Pitfalls**:
+
+- **Pivot normalization**: If a pivot is close to zero, dividing by it can blow up noise. This is one reason to start from a pivoted REF.
+
+- **Exact vs approximate algebra**: Symbolic expectations like perfect zeros are too strict in floating-point arithmetic.
 
 **Parameters**:
 
@@ -1929,12 +1959,32 @@ Mat - The matrix in RREF form.
 ### Inverse using Gaussian-Jordan Elimination
 
 ```cpp
-Mat Mat::inverse_gje();
+Mat Mat::inverse_gje() const;
 ```
 
 **Description**:
 
 Computes the inverse of a square matrix using Gauss-Jordan elimination.
+
+**Mathematical Principle**:
+
+The method forms the augmented matrix [A | I] and applies row operations until the left block becomes I. The right block then becomes A⁻¹. This is conceptually simple, but it is also one of the most numerically sensitive ways to invert a matrix.
+
+**Usage Insights**:
+
+- **Good for pedagogy and small matrices**: It makes the inverse construction explicit and easy to inspect.
+
+- **Bad for repeated solves**: If you only need x from Ax = b, solve the system directly instead of computing A⁻¹.
+
+- **Use conditioning awareness**: A matrix can be invertible but still numerically dangerous if it is ill-conditioned.
+
+**Pitfalls**:
+
+- **Square matrix required**: Non-square input should be treated as invalid.
+
+- **Singular / near-singular matrices**: Exact singular matrices fail, but near-singular matrices may also produce unstable results.
+
+- **Prefer factorization**: For repeated right-hand sides, LU or Cholesky is usually a better engineering choice.
 
 **Parameters**:
 
@@ -2018,15 +2068,43 @@ Mat - Solution vector (N×1) containing the roots of the equation Ax = b. Return
 
   - For overdetermined: Use QR decomposition + `solve_qr()` (least squares)
 
+**Pitfalls**:
+
+- **Dimension compatibility**: `A` must be square and `b` must have matching rows. A mismatch usually means the model, not just the inputs, is wrong.
+
+- **Hidden inconsistency**: If the augmented system contains contradictory rows, elimination will expose it only after the fact. Do not assume every linear system has a solution.
+
+- **No inverse shortcut**: Forming A⁻¹ and multiplying by b is less stable and usually slower than direct solve.
+
 ### Band Solve
 
 ```cpp
-Mat Mat::band_solve(Mat A, Mat b, int k);
+Mat Mat::band_solve(Mat A, Mat b, int k) const;
 ```
 
 **Description**:
 
 Solves the system of equations Ax = b using optimized Gaussian elimination for banded matrices.
+
+**Mathematical Principle**:
+
+This is still Gaussian elimination, but the elimination is restricted to the non-zero band around the diagonal. When the matrix really is banded, this avoids touching far-off-zero entries and reduces wasted work. The gain comes from exploiting structure, not from using a different algebraic method.
+
+**Usage Insights**:
+
+- **Best when the band is real**: If the matrix is only “roughly” banded and the off-band entries matter, the optimization is less useful.
+
+- **Bandwidth matters**: Smaller `k` means less work. If `k` is large enough to cover most of the matrix, the benefit collapses toward ordinary elimination.
+
+- **Structured problems**: Common in discretized differential equations, spline systems, and local-coupling models.
+
+**Pitfalls**:
+
+- **Wrong bandwidth**: Underestimating `k` can silently ignore influential couplings and give a wrong answer.
+
+- **Singularity still applies**: A banded matrix can still be singular or ill-conditioned.
+
+- **No magic stability**: The method is an optimization of elimination, not a numerical cure-all.
 
 **Parameters**:
 
@@ -2045,12 +2123,22 @@ Mat - Solution vector (Nx1) containing the roots of the equation Ax = b.
 ### Roots
 
 ```cpp
-Mat Mat::roots(Mat A, Mat y);
+Mat Mat::roots(Mat A, Mat y) const;
 ```
 
 **Description**:
 
 Solves the matrix using a different method. Another implementation of the 'solve' function, no difference in principle. This method solves the linear system A * x = y using Gaussian elimination.
+
+**Insight**:
+
+`roots()` is effectively a semantic alias for `solve()` with the same algebraic core. It is kept for compatibility and readability when the problem is framed as “finding roots” rather than “solving a linear system.”
+
+**Pitfalls**:
+
+- **Do not expect different numerics**: If `solve()` is unstable for a case, `roots()` will not rescue it.
+
+- **Same preconditions**: `A` must still be square and nonsingular, and `y` must have matching rows.
 
 **Parameters**:
 
@@ -2258,6 +2346,14 @@ The decomposition enables solving Ax = b by solving Ly = Pb (forward substitutio
 
 - **Performance**: O(n³) for decomposition, O(n²) for each solve after decomposition.
 
+**Pitfalls**:
+
+- **Pivoting is not optional in practice**: Without pivoting, a perfectly valid matrix can still produce catastrophic round-off error.
+
+- **L is unit-diagonal**: Do not expect diagonal values in `L` to carry scale information; the scale lives in `U`.
+
+- **Sign matters for determinants**: Every row permutation changes the determinant sign through `P`.
+
 #### Cholesky Decomposition
 
 ```cpp
@@ -2296,6 +2392,14 @@ None (matrix must be symmetric positive definite).
 
 - **Error Handling**: Returns error if matrix is not symmetric or not positive definite.
 
+**Pitfalls**:
+
+- **SPD only**: A matrix that is merely symmetric is not enough; positive definiteness is required.
+
+- **Symmetry tolerance**: In floating-point code, tiny asymmetries can cause a failure unless the implementation tolerates them.
+
+- **Best when structure is known**: If you already know the matrix is SPD, this is the right solver family; otherwise check first with `is_symmetric()` and `is_positive_definite()`.
+
 #### QR Decomposition
 
 ```cpp
@@ -2327,6 +2431,14 @@ None.
 - **Eigendecomposition**: QR algorithm uses QR decomposition iteratively to find eigenvalues.
 
 - **Rank Revealing**: The rank of A equals the number of non-zero diagonal elements of R.
+
+**Pitfalls**:
+
+- **Orthogonality can drift**: Gram-Schmidt based QR is convenient, but for badly conditioned matrices it is less robust than Householder QR.
+
+- **Not a general inverse**: QR is excellent for least squares, but not the first choice for square exact solves unless you need its stability properties.
+
+- **Rank deficiency**: Small diagonal values in `R` usually mean near-dependence. Treat them with tolerance, not exact comparisons.
 
 #### SVD Decomposition
 
@@ -2379,6 +2491,16 @@ The singular values reveal the matrix's fundamental properties: rank, condition 
 
   - Noise reduction
 
+**Pitfalls**:
+
+- **Cost**: SVD is the most informative decomposition, but also one of the most expensive.
+
+- **Tolerance defines rank**: Numerical rank is not absolute; it changes with the threshold you choose.
+
+- **Memory footprint**: Full U and V storage can be heavy on embedded targets.
+
+- **Interpretation**: Singular values tell you conditioning and energy concentration, but they do not by themselves solve a model-selection problem.
+
 ### Solving Linear Systems Using Decompositions
 
 #### Solve using LU Decomposition
@@ -2415,6 +2537,12 @@ Mat - Solution vector (N×1).
 
 - **Memory**: Reuses the decomposition, avoiding repeated computation.
 
+**Pitfalls**:
+
+- **Same matrix, many right-hand sides**: This is where LU shines. If A changes every time, the gain shrinks quickly.
+
+- **Pivot information matters**: The permutation matrix is part of the solve; ignoring it gives the wrong answer.
+
 #### Solve using Cholesky Decomposition
 
 ```cpp
@@ -2448,6 +2576,12 @@ Mat - Solution vector (N×1).
 - **Stability**: More numerically stable for SPD matrices.
 
 - **Applications**: Structural dynamics, optimization, statistics.
+
+**Pitfalls**:
+
+- **Only SPD**: If the matrix is not SPD, this method is not just inefficient; it is invalid.
+
+- **Check before decomposing**: A quick symmetry/positive-definite check is cheaper than debugging a failed factorization later.
 
 #### Solve using QR Decomposition (Least Squares)
 
@@ -2489,6 +2623,12 @@ Mat - Least squares solution vector (N×1).
   - Data regression
 
   - Signal processing
+
+**Pitfalls**:
+
+- **Least squares, not exact solve**: If the system is inconsistent, QR gives the best fit, not a contradiction-free exact answer.
+
+- **Still needs rank awareness**: Very small diagonal values in `R` mean the fit may be ill-conditioned or underdetermined.
 
 ### Pseudo-Inverse
 
@@ -2540,6 +2680,14 @@ Mat - Pseudo-inverse matrix.
 
   - Machine learning (regularization)
 
+**Pitfalls**:
+
+- **Tolerance is a modeling choice**: The pseudo-inverse depends on the singular-value cutoff. Changing tolerance can change the effective solution.
+
+- **Not always sparse-friendly**: A dense pseudo-inverse can destroy structure and inflate memory use.
+
+- **Prefer solve when possible**: If the system is square and well-conditioned, direct solving is usually cheaper.
+
 ## LINEAR ALGEBRA - Eigenvalues & Eigenvectors
 
 ### Struct: `Mat::EigenPair`
@@ -2557,6 +2705,10 @@ Mat::EigenPair::EigenPair();
 
 Container for a single eigenvalue/eigenvector result and related metadata. Typically returned by `power_iteration` or `inverse_power_iteration`.
 
+**Insight**:
+
+The pair is intentionally minimal: one eigenvalue, one eigenvector, and convergence metadata. That makes it practical for iterative methods where you care about one mode, not the full spectrum.
+
 ### Struct: `Mat::EigenDecomposition`
 
 ```cpp
@@ -2571,6 +2723,10 @@ Mat::EigenDecomposition::EigenDecomposition();
 **Description**:
 
 Container for a full eigendecomposition result (all eigenvalues and eigenvectors).
+
+**Insight**:
+
+This is a full spectral snapshot. It is valuable when the matrix is small enough that the cost and memory are acceptable, and when you need more than one mode or a basis change.
 
 ### Power Iteration (dominant eigenpair)
 
@@ -2633,6 +2789,14 @@ The method converges to the dominant eigenvalue if:
   - PageRank algorithm
 
   - Structural dynamics (fundamental frequency)
+
+**Pitfalls**:
+
+- **Only one mode**: It will not tell you the rest of the spectrum.
+
+- **Dominance requirement**: If the largest-magnitude eigenvalue is not clearly separated, convergence slows or becomes ambiguous.
+
+- **Scaling matters**: Poorly scaled matrices can slow convergence or worsen the eigenvector estimate.
 
 ### Inverse Power Iteration (smallest eigenpair)
 
@@ -2720,6 +2884,14 @@ Converges to the smallest eigenvalue if:
 
 - This method is complementary to power iteration: power iteration finds the largest eigenvalue, while inverse power iteration finds the smallest eigenvalue.
 
+**Pitfalls**:
+
+- **Requires invertibility**: Singular or near-singular matrices can make each iteration unstable or impossible.
+
+- **Solve step dominates cost**: Each iteration calls a linear solver, so the method is only attractive when you need a single extremal eigenpair.
+
+- **Smallest magnitude is not always smallest numeric value**: For signed spectra, “minimum magnitude” and “most negative” are different concepts.
+
 ### Jacobi Eigendecomposition (symmetric matrices)
 
 ```cpp
@@ -2780,6 +2952,14 @@ The method converges when the maximum off-diagonal element is below tolerance. E
 
 If the matrix is not approximately symmetric the function will warn, though it may still run. For non-symmetric matrices prefer the QR method.
 
+**Pitfalls**:
+
+- **Symmetry is the contract**: The method is designed around orthogonal similarity transforms. Non-symmetric input breaks the assumption behind the algorithm.
+
+- **Iteration budget**: Very tight tolerances may require many rotations; keep an eye on `max_iter`.
+
+- **Off-diagonal noise**: Floating-point cleanup can leave tiny residuals. Treat the result as approximate diagonalization.
+
 ### QR Eigendecomposition (general matrices)
 
 ```cpp
@@ -2838,6 +3018,14 @@ The algorithm converges when Aₖ is approximately upper triangular (sub-diagona
 
 QR uses Gram–Schmidt for Q/R in this implementation; it can be less stable for ill-conditioned matrices. For symmetric matrices, Jacobi is preferred due to better stability and accuracy.
 
+**Pitfalls**:
+
+- **Complex spectrum caveat**: The current interface keeps only the real part of eigenvalues, so it is not a full complex eigensolver.
+
+- **Convergence can be slow**: Without shifts, QR can need many iterations on difficult matrices.
+
+- **Orthogonalization quality matters**: Because Q is built through Gram-Schmidt, ill-conditioned inputs can degrade the iteration.
+
 ### Automatic Eigendecomposition
 
 ```cpp
@@ -2883,6 +3071,14 @@ Convenience interface that automatically selects the optimal algorithm based on 
   - For real-time applications, use `power_iteration()` or `inverse_power_iteration()` for single eigenvalues
 
 - **Memory Usage**: Full eigendecomposition requires storing all eigenvectors (n×n matrix), which can be memory-intensive for large matrices.
+
+**Pitfalls**:
+
+- **Automatic does not mean free**: The symmetry test and the decomposition both cost time. If you already know the matrix class, call the specialized method directly.
+
+- **Tolerance is dual-purpose**: It influences both symmetry detection and convergence behavior, so changing it affects algorithm selection as well as numerical stopping.
+
+- **Large matrices**: For embedded use, full eigendecomposition can dominate both compute time and RAM.
 
 ## STREAM OPERATORS
 

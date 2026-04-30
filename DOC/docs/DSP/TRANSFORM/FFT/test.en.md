@@ -29,6 +29,7 @@ void tiny_fft_test(void);
 }
 #endif
 
+
 ```
 
 ## tiny_fft_test.c
@@ -39,7 +40,7 @@ void tiny_fft_test(void);
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
  * @brief tiny_fft | test | source
  * @version 1.0
- * @date 2025-04-29
+ * @date 2025-11-16
  * @copyright Copyright (c) 2025
  *
  */
@@ -55,12 +56,14 @@ void tiny_fft_test(void);
  */
 static void generate_test_signal(float *signal, int len, float sample_rate)
 {
-    // Generate signal: sin(2*pi*10*t) + 0.5*sin(2*pi*50*t)
-    // Frequencies: 10 Hz and 50 Hz
+    // Generate signal: 0.9*sin(2*pi*15*t) + 0.4*cos(2*pi*70*t) + 0.2*sin(2*pi*120*t)
+    // Frequencies: 15 Hz, 70 Hz, and 120 Hz
     for (int i = 0; i < len; i++)
     {
         float t = (float)i / sample_rate;
-        signal[i] = sinf(2.0f * M_PI * 10.0f * t) + 0.5f * sinf(2.0f * M_PI * 50.0f * t);
+        signal[i] = 0.9f * sinf(2.0f * M_PI * 15.0f * t) +
+                    0.4f * cosf(2.0f * M_PI * 70.0f * t) +
+                    0.2f * sinf(2.0f * M_PI * 120.0f * t);
     }
 }
 
@@ -71,6 +74,7 @@ void tiny_fft_test(void)
     const int fft_size = 256;
     const float sample_rate = 1000.0f; // 1 kHz sampling rate
     const int signal_len = fft_size;
+    int fft_test_pass = 1;
 
     // Initialize FFT
     printf("1. FFT Initialization:\n");
@@ -98,7 +102,7 @@ void tiny_fft_test(void)
     generate_test_signal(input_signal, signal_len, sample_rate);
 
     printf("2. Test Signal Generation:\n");
-    printf("  Input: Signal with frequencies 10 Hz and 50 Hz\n");
+    printf("  Input: Signal with frequencies 15 Hz, 70 Hz, and 120 Hz\n");
     printf("  Sample rate: %.1f Hz\n", sample_rate);
     printf("  Signal length: %d samples\n", signal_len);
     printf("  First 10 samples: ");
@@ -154,7 +158,11 @@ void tiny_fft_test(void)
         goto cleanup;
     }
     printf("  Output: Peak frequency = %.2f Hz (power = %.3f)\n", peak_freq, peak_power);
-    printf("  Expected: ~10 Hz or ~50 Hz (strongest component)\n\n");
+    printf("  Expected: strongest peak near ~15 Hz\n\n");
+    if (fabsf(peak_freq - 15.0f) > 5.0f)
+    {
+        fft_test_pass = 0;
+    }
 
     // Find top frequencies
     printf("5. Top Frequencies Detection:\n");
@@ -179,7 +187,11 @@ void tiny_fft_test(void)
     {
         printf("    [%d] %.2f Hz (power = %.3f)\n", i + 1, top_freqs[i], top_powers[i]);
     }
-    printf("  Expected: ~10 Hz and ~50 Hz should be in top frequencies\n\n");
+    printf("  Expected: top frequencies should include ~15 Hz and ~70 Hz\n\n");
+    if (top_freqs[0] <= 0.0f || top_freqs[1] <= 0.0f)
+    {
+        fft_test_pass = 0;
+    }
 
     // Test IFFT
     printf("6. IFFT (Signal Reconstruction):\n");
@@ -210,6 +222,10 @@ void tiny_fft_test(void)
     }
     printf("  Max difference from original: %.6f\n", max_diff);
     printf("  ✓ IFFT reconstruction completed\n\n");
+    if (max_diff > 1e-3f)
+    {
+        fft_test_pass = 0;
+    }
 
     // Test with window
     printf("7. FFT with Hanning Window:\n");
@@ -254,9 +270,11 @@ cleanup:
     tiny_fft_deinit();
     printf("8. FFT Deinitialization:\n");
     printf("  ✓ FFT deinitialized\n");
+    printf("  Result: %s\n", fft_test_pass ? "PASS" : "FAIL");
 
     printf("\n========================================\n");
 }
+
 
 ```
 
@@ -270,44 +288,45 @@ cleanup:
   ✓ FFT initialized (max size: 256)
 
 2. Test Signal Generation:
-  Input: Signal with frequencies 10 Hz and 50 Hz
+  Input: Signal with frequencies 15 Hz, 70 Hz, and 120 Hz
   Sample rate: 1000.0 Hz
   Signal length: 256 samples
-  First 10 samples: 0.000 0.217 0.419 0.592 0.724 0.809 0.844 0.830 0.776 0.690 
+  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
 
 3. FFT (No Window):
   Input: Test signal (length=256)
   ✓ FFT completed
   Output: FFT result (complex, length=256)
-  Magnitude spectrum: First 10 values: 32.216 37.858 81.243 82.696 20.529 9.805 5.459 3.052 1.398 0.332 
+  Magnitude spectrum: First 10 values: 4.801 5.603 8.669 20.017 111.409 16.176 9.060 6.401 4.987 4.095 
 
 4. Peak Frequency Detection:
   Input: Power spectrum (length=256)
-  Output: Peak frequency = 9.91 Hz (power = 26.714)
-  Expected: ~10 Hz or ~50 Hz (strongest component)
+  Output: Peak frequency = 15.61 Hz (power = 48.484)
+  Expected: strongest peak near ~15 Hz
 
 5. Top Frequencies Detection:
   Input: Power spectrum (length=256)
   Output: Top 3 frequencies:
-    [1] 9.91 Hz (power = 26.714)
-    [2] 50.77 Hz (power = 14.756)
-    [3] 0.00 Hz (power = 0.000)
-  Expected: ~10 Hz and ~50 Hz should be in top frequencies
+    [1] 15.61 Hz (power = 48.484)
+    [2] 70.32 Hz (power = 10.440)
+    [3] 120.99 Hz (power = 1.998)
+  Expected: top frequencies should include ~15 Hz and ~70 Hz
 
 6. IFFT (Signal Reconstruction):
   Input: FFT result (complex, length=256)
   Output: Reconstructed signal (length=256)
-  First 10 samples: 0.000 0.217 0.419 0.592 0.724 0.809 0.844 0.830 0.776 0.690 
-  Max difference from original: 0.000003
+  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
+  Max difference from original: 0.000002
   ✓ IFFT reconstruction completed
 
 7. FFT with Hanning Window:
   Input: Test signal (length=256) with Hanning window
-  Output: Peak frequency = 10.32 Hz (power = 12.407)
+  Output: Peak frequency = 15.29 Hz (power = 12.439)
   Note: Window reduces spectral leakage, improving frequency resolution
 
 8. FFT Deinitialization:
   ✓ FFT deinitialized
+  Result: PASS
 
 ========================================
 ```

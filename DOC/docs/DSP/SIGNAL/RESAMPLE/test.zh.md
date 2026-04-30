@@ -3,7 +3,6 @@
 ## tiny_resample.h
 
 ```c
-
 /**
  * @file tiny_resample_test.h
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
@@ -65,21 +64,35 @@ void tiny_resample_test(void)
 
     // ============================================================
     // Test 1: Downsampling
+    // Pattern: copy `keep` samples, drop the next `skip` samples, repeat.
+    // With keep=1, skip=1 the effective stride is 2 (drop every second
+    // sample) -> from input[1..8] we should get [1, 3, 5, 7].
     // ============================================================
-    printf("Test 1: Downsampling (keep=1, skip=2)\n");
-    printf("  Description: Keep every 2nd sample, discard others\n");
+    printf("Test 1: Downsampling (keep=1, skip=1, effective stride=2)\n");
+    printf("  Description: Keep one sample then skip one, repeat\n");
     printf("  Input:  ");
     for (int i = 0; i < input_len; i++) printf(" %.2f", input[i]);
     printf("  (length=%d)\n", input_len);
-    
+
     float downsampled[8];
-    int down_len = 0;
-    tiny_downsample_skip_f32(input, input_len, downsampled, &down_len, 1, 2);
-    
+    int   down_len = 0;
+    tiny_downsample_skip_f32(input, input_len, downsampled, &down_len, 1, 1);
+
     printf("  Output: ");
     for (int i = 0; i < down_len; i++) printf(" %.2f", downsampled[i]);
     printf("  (length=%d)\n", down_len);
-    printf("  Mapping: input[0,2,4,6] -> output[0,1,2,3] = [1.00, 3.00, 5.00, 7.00]\n\n");
+    printf("  Expected: input[0,2,4,6] -> [1.00, 3.00, 5.00, 7.00]\n\n");
+
+    // Optional second case to demonstrate keep > 1.
+    printf("Test 1b: Downsampling (keep=2, skip=1)\n");
+    printf("  Description: Keep two samples then skip one, repeat\n");
+    float down2[8];
+    int   down2_len = 0;
+    tiny_downsample_skip_f32(input, input_len, down2, &down2_len, 2, 1);
+    printf("  Output: ");
+    for (int i = 0; i < down2_len; i++) printf(" %.2f", down2[i]);
+    printf("  (length=%d)\n", down2_len);
+    printf("  Expected: input[0,1,3,4,6,7] -> [1.00, 2.00, 4.00, 5.00, 7.00, 8.00]\n\n");
 
     // ============================================================
     // Test 2: Upsampling
@@ -122,9 +135,9 @@ void tiny_resample_test(void)
     // Test 4: Validation - Verify interpolation correctness
     // ============================================================
     printf("Test 4: Validation - Verify Linear Interpolation Correctness\n");
-    printf("  Purpose: Verify that interpolated values are correctly calculated\n");
-    printf("           using the formula: output[i] = input[index]*(1-frac) + input[index+1]*frac\n");
-    printf("           where pos = i/ratio, index = floor(pos), frac = pos - index\n\n");
+    printf("  Purpose: Verify interpolation / edge clamping behavior\n");
+    printf("           if index < input_len-1: output = input[index]*(1-frac) + input[index+1]*frac\n");
+    printf("           else (tail): output = input[input_len-1] (clamped)\n\n");
     
     float ratio = 12.0f / 8.0f;
     int validation_errors = 0;
@@ -142,28 +155,33 @@ void tiny_resample_test(void)
             expected = input[index] * (1.0f - frac) + input[index + 1] * frac;
         }
         
-        float diff = fabs(resampled[i] - expected);
+        float diff = fabsf(resampled[i] - expected);
         if (diff > 0.01f) {
             validation_errors++;
         }
         
         // Only print a few key points to avoid clutter
         if (i == 0 || i == 1 || i == 2 || i == 6 || i == 11) {
-            printf("    output[%2d]: pos=%.3f, index=%d, frac=%.3f -> %.2f (expected: %.2f) %s\n",
-                   i, pos, index, frac, resampled[i], expected,
-                   (diff < 0.01f) ? "✓" : "✗");
+            if (index >= input_len - 1) {
+                printf("    output[%2d]: pos=%.3f, index=%d (tail clamp) -> %.2f (expected: %.2f) %s\n",
+                       i, pos, index, resampled[i], expected,
+                       (diff < 0.01f) ? "[OK]" : "[X]");
+            } else {
+                printf("    output[%2d]: pos=%.3f, index=%d, frac=%.3f -> %.2f (expected: %.2f) %s\n",
+                       i, pos, index, frac, resampled[i], expected,
+                       (diff < 0.01f) ? "[OK]" : "[X]");
+            }
         }
     }
-    
+
     if (validation_errors == 0) {
-        printf("  ✓ All interpolated values are correct!\n");
+        printf("  [PASS] All interpolated values are correct.\n");
     } else {
-        printf("  ✗ Found %d interpolation errors\n", validation_errors);
+        printf("  [FAIL] Found %d interpolation errors\n", validation_errors);
     }
 
     printf("\n========================================\n");
 }
-
 ```
 
 ## 测试结果
@@ -174,11 +192,16 @@ void tiny_resample_test(void)
 Original Signal (length=8):
   Input:  1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00
 
-Test 1: Downsampling (keep=1, skip=2)
-  Description: Keep every 2nd sample, discard others
+Test 1: Downsampling (keep=1, skip=1, effective stride=2)
+  Description: Keep one sample then skip one, repeat
   Input:   1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00  (length=8)
   Output:  1.00 3.00 5.00 7.00  (length=4)
-  Mapping: input[0,2,4,6] -> output[0,1,2,3] = [1.00, 3.00, 5.00, 7.00]
+  Expected: input[0,2,4,6] -> [1.00, 3.00, 5.00, 7.00]
+
+Test 1b: Downsampling (keep=2, skip=1)
+  Description: Keep two samples then skip one, repeat
+  Output:  1.00 2.00 4.00 5.00 7.00 8.00  (length=6)
+  Expected: input[0,1,3,4,6,7] -> [1.00, 2.00, 4.00, 5.00, 7.00, 8.00]
 
 Test 2: Upsampling (Zero-insertion)
   Description: Insert zeros between samples to increase length
@@ -196,17 +219,17 @@ Test 3: Resampling (Linear Interpolation)
            output[1,3,5,7,9,11] = interpolated midpoints
 
 Test 4: Validation - Verify Linear Interpolation Correctness
-  Purpose: Verify that interpolated values are correctly calculated
-           using the formula: output[i] = input[index]*(1-frac) + input[index+1]*frac
-           where pos = i/ratio, index = floor(pos), frac = pos - index
+  Purpose: Verify interpolation / edge clamping behavior
+           if index < input_len-1: output = input[index]*(1-frac) + input[index+1]*frac
+           else (tail): output = input[input_len-1] (clamped)
 
   Sample verification (checking a few key points):
-    output[ 0]: pos=0.000, index=0, frac=0.000 -> 1.00 (expected: 1.00) ✓
-    output[ 1]: pos=0.667, index=0, frac=0.667 -> 1.67 (expected: 1.67) ✓
-    output[ 2]: pos=1.333, index=1, frac=0.333 -> 2.33 (expected: 2.33) ✓
-    output[ 6]: pos=4.000, index=4, frac=0.000 -> 5.00 (expected: 5.00) ✓
-    output[11]: pos=7.333, index=7, frac=0.333 -> 8.00 (expected: 8.00) ✓
-  ✓ All interpolated values are correct!
+    output[ 0]: pos=0.000, index=0, frac=0.000 -> 1.00 (expected: 1.00) [OK]
+    output[ 1]: pos=0.667, index=0, frac=0.667 -> 1.67 (expected: 1.67) [OK]
+    output[ 2]: pos=1.333, index=1, frac=0.333 -> 2.33 (expected: 2.33) [OK]
+    output[ 6]: pos=4.000, index=4, frac=0.000 -> 5.00 (expected: 5.00) [OK]
+    output[11]: pos=7.333, index=7 (tail clamp) -> 8.00 (expected: 8.00) [OK]
+  [PASS] All interpolated values are correct.
 
 ========================================
 ```

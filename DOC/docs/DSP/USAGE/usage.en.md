@@ -29,7 +29,7 @@
 // Transform modules (transform/)
 #include "tiny_fft.h"         // fast fourier transform module
 #include "tiny_dwt.h"         // discrete wavelet transform module
-#include "tiny_ica.h"         // independent component analysis module
+#include "tiny_ica.hpp"         // independent component analysis module
 
 // Support modules (support/)
 #include "tiny_view.h"        // signal view/support module

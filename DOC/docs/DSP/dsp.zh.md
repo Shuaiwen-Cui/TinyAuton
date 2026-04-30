@@ -83,10 +83,10 @@ tiny_dsp/
 │   ├── tiny_dwt.c               # discrete wavelet transform - source file
 │   ├── tiny_dwt_test.h          # discrete wavelet transform - test header file
 │   ├── tiny_dwt_test.c          # discrete wavelet transform - test source file
-│   ├── tiny_ica.h               # independent component analysis - header file
-│   ├── tiny_ica.c               # independent component analysis - source file
-│   ├── tiny_ica_test.h          # independent component analysis - test header file
-│   └── tiny_ica_test.c          # independent component analysis - test source file
+│   ├── tiny_ica.hpp               # independent component analysis - header file
+│   ├── tiny_ica.cpp               # independent component analysis - source file
+│   ├── tiny_ica_test.hpp          # independent component analysis - test header file
+│   └── tiny_ica_test.cpp          # independent component analysis - test source file
 │
 └── support/
     ├── tiny_view.h              # signal view/support - header file

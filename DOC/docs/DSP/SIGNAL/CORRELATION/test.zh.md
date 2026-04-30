@@ -30,6 +30,7 @@ void tiny_signal_corr_ccorr_test(void);
 }
 #endif
 
+
 ```
 
 ## tiny_corr_test.c
@@ -89,7 +90,7 @@ void tiny_signal_corr_ccorr_test(void)
         int pass = 1;
         for (int i = 0; i < corr_len; i++) {
             printf("  [%d] Output = %.3f | Expected = %.3f\n", i, corr_output[i], expected_corr[i]);
-            if (fabs(corr_output[i] - expected_corr[i]) > EPSILON) {
+            if (fabsf(corr_output[i] - expected_corr[i]) > EPSILON) {
                 pass = 0;
             }
         }
@@ -119,7 +120,7 @@ void tiny_signal_corr_ccorr_test(void)
         int pass = 1;
         for (int i = 0; i < ccorr_len; i++) {
             printf("  [%d] Output = %.3f | Expected = %.3f\n", i, ccorr_output[i], expected_ccorr[i]);
-            if (fabs(ccorr_output[i] - expected_ccorr[i]) > EPSILON) {
+            if (fabsf(ccorr_output[i] - expected_ccorr[i]) > EPSILON) {
                 pass = 0;
             }
         }
@@ -128,7 +129,6 @@ void tiny_signal_corr_ccorr_test(void)
 
     printf("==========================================================\n");
 }
-
 ```
 
 ## 测试结果

@@ -30,7 +30,7 @@
 // 变换模块 (transform/)
 #include "tiny_fft.h"         // 快速傅里叶变换模块
 #include "tiny_dwt.h"         // 离散小波变换模块
-#include "tiny_ica.h"         // 独立成分分析模块
+#include "tiny_ica.hpp"         // 独立成分分析模块
 
 // 支持功能模块 (support/)
 #include "tiny_view.h"        // 信号查看/支持模块

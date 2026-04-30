@@ -5,7 +5,7 @@
 
 ## tiny_matrix_test.hpp
 
-```c
+```cpp
 /**
  * @file tiny_matrix_test.hpp
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
@@ -28,7 +28,7 @@ void tiny_matrix_test();  // C-compatible test entry
 
 ## tiny_matrix_test.cpp
 
-```c
+```cpp
 /**
  * @file tiny_matrix_test.cpp
  * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
@@ -415,6 +415,36 @@ void test_roi_operations()
     std::cout << "ROI(1, 2, 5, 6) area: " << area2 << " (Expected: 30) ";
     std::cout << (area2 == 30 ? "[PASS]" : "[FAIL]") << "\n";
 
+    // A3.14.1: ROI area_roi() - negative dimensions (new guard branch)
+    std::cout << "\n[A3.14.1] ROI area_roi() - Negative Dimensions\n";
+    tiny::Mat::ROI area_roi_neg_w(0, 0, -3, 4);
+    int area_neg_w = area_roi_neg_w.area_roi();
+    std::cout << "ROI(0, 0, -3, 4) area: " << area_neg_w << " (Expected: 0) ";
+    std::cout << (area_neg_w == 0 ? "[PASS]" : "[FAIL]") << "\n";
+
+    tiny::Mat::ROI area_roi_neg_h(0, 0, 3, -4);
+    int area_neg_h = area_roi_neg_h.area_roi();
+    std::cout << "ROI(0, 0, 3, -4) area: " << area_neg_h << " (Expected: 0) ";
+    std::cout << (area_neg_h == 0 ? "[PASS]" : "[FAIL]") << "\n";
+
+    // A3.14.2: print_matrix() - step < col (new safety branch)
+    std::cout << "\n[A3.14.2] print_matrix() - step < col Safety Branch\n";
+    tiny::Mat step_guard_mat(2, 4);  // valid shape first (step == col == 4)
+    for (int i = 0; i < 2; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            step_guard_mat(i, j) = static_cast<float>(10 * (i + 1) + j);
+        }
+    }
+    // Force an inconsistent header only in test to hit print_matrix safety path.
+    // This should print only first 3 columns per row and must not crash.
+    step_guard_mat.step = 3;
+    std::cout << "Expect warning and bounded printing without out-of-bounds access:\n";
+    step_guard_mat.print_info();
+    step_guard_mat.print_matrix(true);
+    std::cout << "step < col safety print completed [PASS]\n";
+
     // A3.15: Block
     std::cout << "[A3.15] Block\n";
     TinyTimeMark_t tic2 = tiny_get_running_time();
@@ -464,27 +494,51 @@ void test_assignment_operator()
     std::cout << "\n[B1: Assignment Operator Tests]\n";
 
     std::cout << "\n[B1.1] Assignment (Same Dimensions)\n";
+    std::cout << "Test setup: src(2x3) = [[1,2,3],[4,5,6]], dst(2x3) initialized to zeros\n";
+    std::cout << "Expected: dst becomes exactly equal to src\n";
     tiny::Mat dst(2, 3), src(2, 3);
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 3; ++j)
             src(i, j) = static_cast<float>(i * 3 + j + 1);
+    std::cout << "Source matrix src before assignment:\n";
+    src.print_matrix(true);
+    std::cout << "Destination matrix dst before assignment:\n";
+    dst.print_matrix(true);
     dst = src;
+    std::cout << "Destination matrix dst after 'dst = src':\n";
     dst.print_matrix(true);
 
     std::cout << "\n[B1.2] Assignment (Different Dimensions)\n";
+    std::cout << "Test setup: dst2 starts as 4x2, then execute dst2 = src(2x3)\n";
+    std::cout << "Expected: dst2 is reshaped to 2x3 and data equals src\n";
     tiny::Mat dst2(4, 2);
+    std::cout << "dst2 before assignment:\n";
+    dst2.print_info();
+    dst2.print_matrix(true);
     dst2 = src;
+    std::cout << "dst2 after assignment:\n";
+    dst2.print_info();
     dst2.print_matrix(true);
 
     std::cout << "\n[B1.3] Assignment to Sub-Matrix (Expect Error)\n";
+    std::cout << "Test setup: subView is a ROI view (non-owning). Execute subView = src\n";
+    std::cout << "Expected: error message, and subView should remain a view without reshape\n";
     float data[15] = {0, 1, 2, 3, 0, 4, 5, 6, 7, 0, 8, 9, 10, 11, 0};
     tiny::Mat base(data, 3, 4, 5);
     tiny::Mat subView = base.view_roi(1, 1, 2, 2);
+    std::cout << "subView before assignment:\n";
+    subView.print_info();
+    subView.print_matrix(true);
     subView = src;
+    std::cout << "subView after assignment attempt:\n";
+    subView.print_info();
     subView.print_matrix(true);
 
     std::cout << "\n[B1.4] Self-Assignment\n";
+    std::cout << "Test setup: execute src = src\n";
+    std::cout << "Expected: no change, no crash\n";
     src = src;
+    std::cout << "src after self-assignment:\n";
     src.print_matrix(true);
 }
 
@@ -496,6 +550,8 @@ void test_matrix_addition()
     std::cout << "\n[B2: Matrix Addition Tests]\n";
 
     std::cout << "\n[B2.1] Matrix Addition (Same Dimensions)\n";
+    std::cout << "Test setup: A(2x3)=[[1,2,3],[4,5,6]], B(2x3)=all ones\n";
+    std::cout << "Expected: A+=B => [[2,3,4],[5,6,7]]\n";
     tiny::Mat A(2, 3), B(2, 3);
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 3; ++j)
@@ -503,26 +559,51 @@ void test_matrix_addition()
             A(i, j) = static_cast<float>(i * 3 + j + 1);
             B(i, j) = 1.0f;
         }
+    std::cout << "A before +=:\n";
+    A.print_matrix(true);
+    std::cout << "B:\n";
+    B.print_matrix(true);
     A += B;
+    std::cout << "A after += B:\n";
     A.print_matrix(true);
 
     std::cout << "\n[B2.2] Sub-Matrix Addition\n";
+    std::cout << "Test setup: subA/subB are both ROI(1,1,2,2) views from same padded base\n";
+    std::cout << "Expected: subA += subB (element-wise), only ROI region changes\n";
     float data[20] = {0,1,2,3,0,4,5,6,7,0,8,9,10,11,0,12,13,14,15,0};
     tiny::Mat base(data, 4, 4, 5);
     tiny::Mat subA = base.view_roi(1,1,2,2);
     tiny::Mat subB = base.view_roi(1,1,2,2);
+    std::cout << "subA before +=:\n";
+    subA.print_matrix(true);
+    std::cout << "subB:\n";
+    subB.print_matrix(true);
     subA += subB;
+    std::cout << "subA after += subB:\n";
     subA.print_matrix(true);
 
     std::cout << "\n[B2.3] Full Matrix + Sub-Matrix Addition\n";
+    std::cout << "Test setup: full(2x2)=all twos, add subB(2x2)\n";
+    std::cout << "Expected: full += subB succeeds with same shape\n";
     tiny::Mat full(2,2);
     for(int i=0;i<2;++i) for(int j=0;j<2;++j) full(i,j)=2.0f;
+    std::cout << "full before +=:\n";
+    full.print_matrix(true);
+    std::cout << "subB:\n";
+    subB.print_matrix(true);
     full += subB;
+    std::cout << "full after += subB:\n";
     full.print_matrix(true);
 
     std::cout << "\n[B2.4] Addition Dimension Mismatch (Expect Error)\n";
+    std::cout << "Test setup: full is 2x2, wrongDim is 3x3\n";
+    std::cout << "Expected: error message, full remains unchanged\n";
     tiny::Mat wrongDim(3,3);
+    std::cout << "full before invalid +=:\n";
+    full.print_matrix(true);
     full += wrongDim;
+    std::cout << "full after invalid +=:\n";
+    full.print_matrix(true);
 }
 
 // ============================================================================
@@ -533,30 +614,50 @@ void test_constant_addition()
     std::cout << "\n[B3: Constant Addition Tests]\n";
 
     std::cout << "\n[B3.1] Full Matrix + Constant\n";
+    std::cout << "Test setup: mat1(2x3)=[[0,1,2],[3,4,5]], add C=5\n";
+    std::cout << "Expected: [[5,6,7],[8,9,10]]\n";
     tiny::Mat mat1(2,3);
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 3; ++j)
             mat1(i,j) = static_cast<float>(i*3 + j);
+    std::cout << "mat1 before += 5:\n";
+    mat1.print_matrix(true);
     mat1 += 5.0f;
+    std::cout << "mat1 after += 5:\n";
     mat1.print_matrix(true);
 
     std::cout << "\n[B3.2] Sub-Matrix + Constant\n";
+    std::cout << "Test setup: sub is ROI(1,1,2,2) view from padded base, add C=3\n";
+    std::cout << "Expected: ROI elements increase by 3\n";
     float data[20] = {0,1,2,3,0,4,5,6,7,0,8,9,10,11,0,12,13,14,15,0};
     tiny::Mat base(data,4,4,5);
     tiny::Mat sub = base.view_roi(1,1,2,2);
+    std::cout << "sub before += 3:\n";
+    sub.print_matrix(true);
     sub += 3.0f;
+    std::cout << "sub after += 3:\n";
     sub.print_matrix(true);
 
     std::cout << "\n[B3.3] Add Zero\n";
+    std::cout << "Test setup: mat2=[[1,2],[3,4]], add C=0\n";
+    std::cout << "Expected: unchanged matrix\n";
     tiny::Mat mat2(2,2);
     mat2(0,0)=1; mat2(0,1)=2; mat2(1,0)=3; mat2(1,1)=4;
+    std::cout << "mat2 before += 0:\n";
+    mat2.print_matrix(true);
     mat2 += 0.0f;
+    std::cout << "mat2 after += 0:\n";
     mat2.print_matrix(true);
 
     std::cout << "\n[B3.4] Add Negative Constant\n";
+    std::cout << "Test setup: mat3=[[10,20],[30,40]], add C=-15\n";
+    std::cout << "Expected: [[-5,5],[15,25]]\n";
     tiny::Mat mat3(2,2);
     mat3(0,0)=10; mat3(0,1)=20; mat3(1,0)=30; mat3(1,1)=40;
+    std::cout << "mat3 before += -15:\n";
+    mat3.print_matrix(true);
     mat3 += -15.0f;
+    std::cout << "mat3 after += -15:\n";
     mat3.print_matrix(true);
 }
 
@@ -568,15 +669,28 @@ void test_matrix_subtraction()
     std::cout << "\n[B4: Matrix Subtraction Tests]\n";
 
     std::cout << "\n[B4.1] Matrix Subtraction\n";
+    std::cout << "Test setup: A=[[5,7],[9,11]], B=[[1,2],[3,4]]\n";
+    std::cout << "Expected: A-=B => [[4,5],[6,7]]\n";
     tiny::Mat A(2,2), B(2,2);
     A(0,0)=5; A(0,1)=7; A(1,0)=9; A(1,1)=11;
     B(0,0)=1; B(0,1)=2; B(1,0)=3; B(1,1)=4;
+    std::cout << "A before -=:\n";
+    A.print_matrix(true);
+    std::cout << "B:\n";
+    B.print_matrix(true);
     A -= B;
+    std::cout << "A after -= B:\n";
     A.print_matrix(true);
 
     std::cout << "\n[B4.2] Subtraction Dimension Mismatch (Expect Error)\n";
+    std::cout << "Test setup: A is 2x2, wrong is 3x3\n";
+    std::cout << "Expected: error message, A remains unchanged\n";
     tiny::Mat wrong(3,3);
+    std::cout << "A before invalid -=:\n";
+    A.print_matrix(true);
     A -= wrong;
+    std::cout << "A after invalid -=:\n";
+    A.print_matrix(true);
 }
 
 // ============================================================================
@@ -587,16 +701,26 @@ void test_constant_subtraction()
     std::cout << "\n[B5: Constant Subtraction Tests]\n";
 
     std::cout << "\n[B5.1] Full Matrix - Constant\n";
+    std::cout << "Test setup: mat(2x3)=[[1,2,3],[4,5,6]], subtract C=2\n";
+    std::cout << "Expected: [[-1,0,1],[2,3,4]]\n";
     tiny::Mat mat(2,3);
     for (int i=0;i<2;++i) for(int j=0;j<3;++j) mat(i,j) = i*3+j+1;
+    std::cout << "mat before -= 2:\n";
+    mat.print_matrix(true);
     mat -= 2.0f;
+    std::cout << "mat after -= 2:\n";
     mat.print_matrix(true);
 
     std::cout << "\n[B5.2] Sub-Matrix - Constant\n";
+    std::cout << "Test setup: sub is ROI(1,1,2,2) view from padded base, subtract C=1.5\n";
+    std::cout << "Expected: ROI elements decrease by 1.5\n";
     float data[15] = {0,1,2,3,0,4,5,6,7,0,8,9,10,11,0};
     tiny::Mat base(data,3,4,5);
     tiny::Mat sub = base.view_roi(1,1,2,2);
+    std::cout << "sub before -= 1.5:\n";
+    sub.print_matrix(true);
     sub -= 1.5f;
+    std::cout << "sub after -= 1.5:\n";
     sub.print_matrix(true);
 }
 
@@ -608,22 +732,42 @@ void test_matrix_division()
     std::cout << "\n[B6: Matrix Element-wise Division Tests]\n";
 
     std::cout << "\n[B6.1] Element-wise Division (Same Dimensions, No Zero)\n";
+    std::cout << "Test setup: A=[[10,20],[30,40]], B=[[2,4],[5,8]]\n";
+    std::cout << "Expected: A/=B => [[5,5],[6,5]]\n";
     tiny::Mat A(2, 2), B(2, 2);
     A(0,0) = 10; A(0,1) = 20; A(1,0) = 30; A(1,1) = 40;
     B(0,0) = 2;  B(0,1) = 4;  B(1,0) = 5;  B(1,1) = 8;
+    std::cout << "A before /=:\n";
+    A.print_matrix(true);
+    std::cout << "B:\n";
+    B.print_matrix(true);
     A /= B;
+    std::cout << "A after /= B:\n";
     A.print_matrix(true);
 
     std::cout << "\n[B6.2] Dimension Mismatch (Expect Error)\n";
+    std::cout << "Test setup: A is 2x2, wrongDim is 3x3\n";
+    std::cout << "Expected: error message, A remains unchanged\n";
     tiny::Mat wrongDim(3, 3);
+    std::cout << "A before invalid /=:\n";
+    A.print_matrix(true);
     A /= wrongDim;
+    std::cout << "A after invalid /=:\n";
+    A.print_matrix(true);
 
     std::cout << "\n[B6.3] Division by Matrix Containing Zero (Expect Error)\n";
+    std::cout << "Test setup: C=[[5,10],[15,20]], D contains zero at (0,1)\n";
+    std::cout << "Expected: error message, C remains unchanged\n";
     tiny::Mat C(2, 2), D(2, 2);
     C(0,0)=5; C(0,1)=10; C(1,0)=15; C(1,1)=20;
     D(0,0)=1; D(0,1)=0;  D(1,0)=3;  D(1,1)=4;  // Contains zero
+    std::cout << "C before invalid /=:\n";
+    C.print_matrix(true);
+    std::cout << "D:\n";
+    D.print_matrix(true);
     C /= D;
-    C.print_matrix(true);  // Should remain unchanged
+    std::cout << "C after invalid /= (should be unchanged):\n";
+    C.print_matrix(true);
 }
 
 // ============================================================================
@@ -634,24 +778,39 @@ void test_constant_division()
     std::cout << "\n[B7: Matrix Division by Constant Tests]\n";
 
     std::cout << "\n[B7.1] Divide Full Matrix by Positive Constant\n";
+    std::cout << "Test setup: mat1(2x3)=[[2,3,4],[5,6,7]], divide by 2\n";
+    std::cout << "Expected: [[1,1.5,2],[2.5,3,3.5]]\n";
     tiny::Mat mat1(2, 3);
     for (int i = 0; i < 2; ++i)
         for (int j = 0; j < 3; ++j)
             mat1(i, j) = static_cast<float>(i * 3 + j + 2);  // Avoid zero
+    std::cout << "mat1 before /= 2:\n";
+    mat1.print_matrix(true);
     mat1 /= 2.0f;
+    std::cout << "mat1 after /= 2:\n";
     mat1.print_matrix(true);
 
     std::cout << "\n[B7.2] Divide Matrix by Negative Constant\n";
+    std::cout << "Test setup: mat2=[[6,12],[18,24]], divide by -3\n";
+    std::cout << "Expected: [[-2,-4],[-6,-8]]\n";
     tiny::Mat mat2(2, 2);
     mat2(0,0)=6; mat2(0,1)=12; mat2(1,0)=18; mat2(1,1)=24;
+    std::cout << "mat2 before /= -3:\n";
+    mat2.print_matrix(true);
     mat2 /= -3.0f;
+    std::cout << "mat2 after /= -3:\n";
     mat2.print_matrix(true);
 
     std::cout << "\n[B7.3] Division by Zero Constant (Expect Error)\n";
+    std::cout << "Test setup: mat3=[[1,2],[3,4]], divide by 0\n";
+    std::cout << "Expected: error message, mat3 remains unchanged\n";
     tiny::Mat mat3(2, 2);
     mat3(0,0)=1; mat3(0,1)=2; mat3(1,0)=3; mat3(1,1)=4;
+    std::cout << "mat3 before invalid /= 0:\n";
+    mat3.print_matrix(true);
     mat3 /= 0.0f;
-    mat3.print_matrix(true);  // Should remain unchanged
+    std::cout << "mat3 after invalid /= 0 (should be unchanged):\n";
+    mat3.print_matrix(true);
 }
 
 // ============================================================================
@@ -662,39 +821,69 @@ void test_matrix_exponentiation()
     std::cout << "\n[B8: Matrix Exponentiation Tests]\n";
 
     std::cout << "\n[B8.1] Raise Each Element to Power of 2\n";
+    std::cout << "Test setup: mat1=[[2,3],[4,5]], exponent=2\n";
+    std::cout << "Expected: [[4,9],[16,25]]\n";
     tiny::Mat mat1(2, 2);
     mat1(0,0)=2; mat1(0,1)=3; mat1(1,0)=4; mat1(1,1)=5;
+    std::cout << "mat1 input:\n";
+    mat1.print_matrix(true);
     tiny::Mat result1 = mat1 ^ 2;
+    std::cout << "result:\n";
     result1.print_matrix(true);
 
     std::cout << "\n[B8.2] Raise Each Element to Power of 0\n";
+    std::cout << "Test setup: mat2=[[7,-3],[0.5,10]], exponent=0\n";
+    std::cout << "Expected: all ones\n";
     tiny::Mat mat2(2, 2);
     mat2(0,0)=7; mat2(0,1)=-3; mat2(1,0)=0.5f; mat2(1,1)=10;
+    std::cout << "mat2 input:\n";
+    mat2.print_matrix(true);
     tiny::Mat result2 = mat2 ^ 0;
+    std::cout << "result:\n";
     result2.print_matrix(true);  // Expect all 1
 
     std::cout << "\n[B8.3] Raise Each Element to Power of 1\n";
+    std::cout << "Test setup: mat3=[[9,8],[7,6]], exponent=1\n";
+    std::cout << "Expected: same as input\n";
     tiny::Mat mat3(2, 2);
     mat3(0,0)=9; mat3(0,1)=8; mat3(1,0)=7; mat3(1,1)=6;
+    std::cout << "mat3 input:\n";
+    mat3.print_matrix(true);
     tiny::Mat result3 = mat3 ^ 1;
+    std::cout << "result:\n";
     result3.print_matrix(true);  // Expect same as original
 
     std::cout << "\n[B8.4] Raise Each Element to Power of -1 (Element-wise Reciprocal)\n";
+    std::cout << "Test setup: mat4=[[1,2],[4,5]], exponent=-1\n";
+    std::cout << "Expected: [[1,0.5],[0.25,0.2]]\n";
     tiny::Mat mat4(2, 2);
     mat4(0,0)=1; mat4(0,1)=2; mat4(1,0)=4; mat4(1,1)=5;
+    std::cout << "mat4 input:\n";
+    mat4.print_matrix(true);
     tiny::Mat result4 = mat4 ^ -1;
+    std::cout << "result:\n";
     result4.print_matrix(true);  // Expect: [1.0, 0.5; 0.25, 0.2]
 
     std::cout << "\n[B8.5] Raise Matrix Containing Zero to Power of 3\n";
+    std::cout << "Test setup: mat5=[[0,2],[-1,3]], exponent=3\n";
+    std::cout << "Expected: [[0,8],[-1,27]]\n";
     tiny::Mat mat5(2, 2);
     mat5(0,0)=0; mat5(0,1)=2; mat5(1,0)=-1; mat5(1,1)=3;
+    std::cout << "mat5 input:\n";
+    mat5.print_matrix(true);
     tiny::Mat result5 = mat5 ^ 3;
+    std::cout << "result:\n";
     result5.print_matrix(true);
 
     std::cout << "\n[B8.6] Raise Matrix Containing Zero to Power of -1 (Expect Warning)\n";
+    std::cout << "Test setup: mat6=[[0,2],[-1,3]], exponent=-1\n";
+    std::cout << "Expected: warning for zero element and non-finite value at (0,0)\n";
     tiny::Mat mat6(2, 2);
     mat6(0,0)=0; mat6(0,1)=2; mat6(1,0)=-1; mat6(1,1)=3;
+    std::cout << "mat6 input:\n";
+    mat6.print_matrix(true);
     tiny::Mat result6 = mat6 ^ -1;
+    std::cout << "result:\n";
     result6.print_matrix(true);  // Expect warning for zero element, Inf or NaN for (0,0)
 }
 
@@ -704,9 +893,12 @@ void test_matrix_exponentiation()
 void test_matrix_transpose()
 {
     std::cout << "\n[C1: Matrix Transpose Tests]\n";
+    std::cout << "Goal: Verify transpose swaps rows/cols and preserves values.\n";
 
     // C1.1: Basic 2x3 matrix transpose
     std::cout << "\n[C1.1] Transpose of 2x3 Matrix\n";
+    std::cout << "Test setup: input shape 2x3, values 1..6 row-major.\n";
+    std::cout << "Expected: output shape 3x2, with out(j,i)=in(i,j).\n";
     tiny::Mat mat1(2, 3);
     int val = 1;
     for (int i = 0; i < 2; ++i)
@@ -719,9 +911,17 @@ void test_matrix_transpose()
     tiny::Mat transposed1 = mat1.transpose();
     std::cout << "Transposed 3x2 Matrix:\n";
     transposed1.print_matrix(true);
+    bool c11_shape_ok = (transposed1.row == 3 && transposed1.col == 2);
+    bool c11_val_ok = c11_shape_ok &&
+                      transposed1(0,0) == 1 && transposed1(0,1) == 4 &&
+                      transposed1(1,0) == 2 && transposed1(1,1) == 5 &&
+                      transposed1(2,0) == 3 && transposed1(2,1) == 6;
+    std::cout << "Result check: " << (c11_val_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C1.2: Square matrix transpose (3x3)
     std::cout << "\n[C1.2] Transpose of 3x3 Square Matrix\n";
+    std::cout << "Test setup: square matrix 3x3 values 1..9.\n";
+    std::cout << "Expected: diagonal unchanged, off-diagonal mirrored.\n";
     tiny::Mat mat2(3, 3);
     val = 1;
     for (int i = 0; i < 3; ++i)
@@ -734,9 +934,16 @@ void test_matrix_transpose()
     tiny::Mat transposed2 = mat2.transpose();
     std::cout << "Transposed 3x3 Matrix:\n";
     transposed2.print_matrix(true);
+    bool c12_shape_ok = (transposed2.row == 3 && transposed2.col == 3);
+    bool c12_val_ok = c12_shape_ok &&
+                      transposed2(0,0) == 1 && transposed2(1,1) == 5 && transposed2(2,2) == 9 &&
+                      transposed2(0,1) == 4 && transposed2(1,0) == 2;
+    std::cout << "Result check: " << (c12_val_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C1.3: Matrix with padding (4x2, step=3)
     std::cout << "\n[C1.3] Transpose of Matrix with Padding\n";
+    std::cout << "Test setup: external-buffer matrix 4x2 with step=3 (padding present).\n";
+    std::cout << "Expected: transpose reads only logical cols (ignores padding values).\n";
     float data[12] = {1, 2, 0, 3, 4, 0, 5, 6, 0, 7, 8, 0};  // step=3, 4 rows
     tiny::Mat mat3(data, 4, 2, 3);
     std::cout << "Original 4x2 Matrix (with padding):\n";
@@ -745,9 +952,18 @@ void test_matrix_transpose()
     tiny::Mat transposed3 = mat3.transpose();
     std::cout << "Transposed 2x4 Matrix:\n";
     transposed3.print_matrix(true);
+    bool c13_shape_ok = (transposed3.row == 2 && transposed3.col == 4);
+    bool c13_val_ok = c13_shape_ok &&
+                      transposed3(0,0) == 1 && transposed3(0,1) == 3 &&
+                      transposed3(0,2) == 5 && transposed3(0,3) == 7 &&
+                      transposed3(1,0) == 2 && transposed3(1,1) == 4 &&
+                      transposed3(1,2) == 6 && transposed3(1,3) == 8;
+    std::cout << "Result check: " << (c13_val_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C1.4: Transpose of empty matrix
     std::cout << "\n[C1.4] Transpose of Empty Matrix\n";
+    std::cout << "Test setup: default matrix (implementation-defined, typically 1x1 or error state).\n";
+    std::cout << "Expected: function should not crash; inspect printed error/state.\n";
     tiny::Mat mat4;
     mat4.print_matrix(true);
 
@@ -761,6 +977,8 @@ void test_matrix_transpose()
 void test_matrix_cofactor()
 {
     std::cout << "\n[C2: Matrix Minor and Cofactor Tests]\n";
+    std::cout << "Goal: Verify minor/cofactor matrix extraction semantics and boundary behavior.\n";
+    std::cout << "Reminder: in this implementation, cofactor() returns the same submatrix as minor().\n";
 
     // C2.1: Minor of 3x3 Matrix - Standard Case
     std::cout << "\n[C2.1] Minor of 3x3 Matrix (Remove Row 1, Col 1)\n";
@@ -836,18 +1054,31 @@ void test_matrix_cofactor()
     std::cout << "Cofactor Matrix (same as minor):\n";
     cof4.print_matrix(true);
 
-    // C2.10: Non-square Matrix (Expect Error)
-    std::cout << "\n[C2.10] Non-square Matrix (Expect Error)\n";
+    // C2.10: Non-square Matrix
+    //   - minor()    : works on any m x n -> expect (m-1) x (n-1) result.
+    //   - cofactor() : requires square    -> expect empty Mat(0, 0).
+    std::cout << "\n[C2.10] Non-square Matrix\n";
     tiny::Mat rectMat(3, 4);
-    std::cout << "Testing minor():\n";
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 4; ++j)
+            rectMat(i, j) = static_cast<float>(i * 4 + j + 1);
+
+    std::cout << "Testing minor() on a 3x4 matrix (expect 2x3 result):\n";
     tiny::Mat minor_rect = rectMat.minor(1, 1);
-    bool minor_rect_empty = (minor_rect.row == 0 && minor_rect.col == 0);
-    std::cout << "minor() result: " << (minor_rect_empty ? "Empty matrix (Expected)" : "Non-empty (Error)") 
-              << " " << (minor_rect_empty ? "[PASS]" : "[FAIL]") << "\n";
-    std::cout << "Testing cofactor():\n";
+    bool minor_rect_ok = (minor_rect.row == 2 && minor_rect.col == 3);
+    std::cout << "minor() result shape: " << minor_rect.row << "x" << minor_rect.col
+              << " " << (minor_rect_ok ? "[PASS]" : "[FAIL]") << "\n";
+    if (minor_rect_ok)
+    {
+        std::cout << "minor() content:\n";
+        minor_rect.print_matrix(true);
+    }
+
+    std::cout << "Testing cofactor() on a 3x4 matrix (expect empty - square required):\n";
     tiny::Mat cof_rect = rectMat.cofactor(1, 1);
     bool cof_rect_empty = (cof_rect.row == 0 && cof_rect.col == 0);
-    std::cout << "cofactor() result: " << (cof_rect_empty ? "Empty matrix (Expected)" : "Non-empty (Error)") 
+    std::cout << "cofactor() result: "
+              << (cof_rect_empty ? "Empty matrix (Expected)" : "Non-empty (Error)")
               << " " << (cof_rect_empty ? "[PASS]" : "[FAIL]") << "\n";
 
     // C2.11: minor() - Boundary case - out of bounds indices
@@ -888,6 +1119,8 @@ void test_matrix_cofactor()
 void test_matrix_determinant()
 {
     std::cout << "\n[C3: Matrix Determinant Tests]\n";
+    std::cout << "Goal: Verify determinant correctness across sizes and methods.\n";
+    std::cout << "Auto strategy: n<=4 uses Laplace, n>4 uses LU.\n";
 
     // C3.1: 1x1 Matrix
     std::cout << "\n[C3.1] 1x1 Matrix Determinant\n";
@@ -895,7 +1128,9 @@ void test_matrix_determinant()
     mat1(0, 0) = 7;
     std::cout << "Matrix:\n";
     mat1.print_matrix(true);
-    std::cout << "Determinant: " << mat1.determinant() << "  (Expected: 7)\n";
+    float det1 = mat1.determinant();
+    std::cout << "Determinant: " << det1 << "  (Expected: 7) "
+              << (fabsf(det1 - 7.0f) < 1e-5f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C3.2: 2x2 Matrix
     std::cout << "\n[C3.2] 2x2 Matrix Determinant\n";
@@ -904,7 +1139,9 @@ void test_matrix_determinant()
     mat2(1, 0) = 4; mat2(1, 1) = 6;
     std::cout << "Matrix:\n";
     mat2.print_matrix(true);
-    std::cout << "Determinant: " << mat2.determinant() << "  (Expected: -14)\n";
+    float det2 = mat2.determinant();
+    std::cout << "Determinant: " << det2 << "  (Expected: -14) "
+              << (fabsf(det2 + 14.0f) < 1e-5f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C3.3: 3x3 Matrix
     std::cout << "\n[C3.3] 3x3 Matrix Determinant\n";
@@ -914,7 +1151,9 @@ void test_matrix_determinant()
     mat3(2,0) = 1; mat3(2,1) = 0; mat3(2,2) = 6;
     std::cout << "Matrix:\n";
     mat3.print_matrix(true);
-    std::cout << "Determinant: " << mat3.determinant() << "  (Expected: 22)\n";
+    float det3 = mat3.determinant();
+    std::cout << "Determinant: " << det3 << "  (Expected: 22) "
+              << (fabsf(det3 - 22.0f) < 1e-5f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C3.4: 4x4 Matrix
     std::cout << "\n[C3.4] 4x4 Matrix Determinant\n";
@@ -927,7 +1166,9 @@ void test_matrix_determinant()
     mat4.print_matrix(true);
     std::cout << "Note: This matrix has linearly dependent rows (each row differs by constant 4),\n";
     std::cout << "      so the determinant should be 0.\n";
-    std::cout << "Determinant: " << mat4.determinant() << "  (Expected: 0)\n";  
+    float det4 = mat4.determinant();
+    std::cout << "Determinant: " << det4 << "  (Expected: 0) "
+              << (fabsf(det4) < 1e-5f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C3.5: 5x5 Matrix (Tests Auto-select Mechanism)
     std::cout << "\n[C3.5] 5x5 Matrix Determinant (Tests Auto-select to LU Method)\n";
@@ -1070,6 +1311,7 @@ void test_matrix_determinant()
 void test_matrix_adjoint()
 {
     std::cout << "\n[C4: Matrix Adjoint Tests]\n";
+    std::cout << "Goal: Verify adj(A)=cofactor(A)^T behavior and error handling for non-square matrices.\n";
 
     // C4.1: 1x1 Matrix
     std::cout << "\n[C4.1] Adjoint of 1x1 Matrix\n";
@@ -1080,6 +1322,8 @@ void test_matrix_adjoint()
     tiny::Mat adj1 = mat1.adjoint();
     std::cout << "Adjoint Matrix:\n";
     adj1.print_matrix(true);  // Expected: [1]
+    bool c41_ok = (adj1.row == 1 && adj1.col == 1 && fabsf(adj1(0,0) - 1.0f) < 1e-6f);
+    std::cout << "Result check: " << (c41_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C4.2: 2x2 Matrix
     std::cout << "\n[C4.2] Adjoint of 2x2 Matrix\n";
@@ -1091,6 +1335,12 @@ void test_matrix_adjoint()
     tiny::Mat adj2 = mat2.adjoint();
     std::cout << "Adjoint Matrix:\n";
     adj2.print_matrix(true);  // Expected: [4, -2; -3, 1]
+    bool c42_ok = (adj2.row == 2 && adj2.col == 2 &&
+                   fabsf(adj2(0,0) - 4.0f) < 1e-5f &&
+                   fabsf(adj2(0,1) + 2.0f) < 1e-5f &&
+                   fabsf(adj2(1,0) + 3.0f) < 1e-5f &&
+                   fabsf(adj2(1,1) - 1.0f) < 1e-5f);
+    std::cout << "Result check: " << (c42_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C4.3: 3x3 Matrix
     std::cout << "\n[C4.3] Adjoint of 3x3 Matrix\n";
@@ -1113,6 +1363,8 @@ void test_matrix_adjoint()
     tiny::Mat adjRect = rectMat.adjoint();
     std::cout << "Adjoint Matrix (should be empty due to error):\n";
     adjRect.print_matrix(true);  // Should be empty or default matrix
+    bool c44_ok = (adjRect.data == nullptr) || (adjRect.row == 0 && adjRect.col == 0);
+    std::cout << "Result check: " << (c44_ok ? "[PASS]" : "[FAIL]") << "\n";
 
 }
 
@@ -1122,6 +1374,7 @@ void test_matrix_adjoint()
 void test_matrix_normalize()
 {
     std::cout << "\n[C5: Matrix Normalization Tests]\n";
+    std::cout << "Goal: Verify in-place normalization by Frobenius norm and edge-case handling.\n";
 
     // C5.1: Standard normalization
     std::cout << "\n[C5.1] Normalize a Standard 2x2 Matrix\n";
@@ -1136,9 +1389,13 @@ void test_matrix_normalize()
 
     std::cout << "After normalization (Expected L2 norm = 1):\n";
     mat1.print_matrix(true);
+    float c51_norm = mat1.norm();
+    std::cout << "Norm after normalize: " << c51_norm
+              << " (Expected: 1.0) "
+              << (fabsf(c51_norm - 1.0f) < 1e-5f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C5.2: Matrix with padding
-    std::cout << "\n[C5.2] Normalize a 2x2 Matrix with Stride=4 (Padding Test)\n";
+    std::cout << "\n[C5.2] Normalize a 2x2 Matrix with step=4 (Padding Test)\n";
     float data_with_padding[8] = {3.0f, 4.0f, 0.0f, 0.0f, 3.0f, 4.0f, 0.0f, 0.0f};
     tiny::Mat mat2(data_with_padding, 2, 2, 4);  // 2x2 matrix, step 4
 
@@ -1149,6 +1406,10 @@ void test_matrix_normalize()
 
     std::cout << "After normalization:\n";
     mat2.print_matrix(true);
+    float c52_norm = mat2.norm();
+    std::cout << "Norm after normalize (padding case): " << c52_norm
+              << " (Expected: 1.0) "
+              << (fabsf(c52_norm - 1.0f) < 1e-5f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C5.3: Zero matrix normalization
     std::cout << "\n[C5.3] Normalize a Zero Matrix (Expect Warning)\n";
@@ -1157,6 +1418,10 @@ void test_matrix_normalize()
 
     mat3.print_matrix(true);
     mat3.normalize();  // Should trigger warning
+    float c53_norm = mat3.norm();
+    std::cout << "Norm after normalize attempt on zero matrix: " << c53_norm
+              << " (Expected: 0.0, unchanged) "
+              << (fabsf(c53_norm) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
 }
 
 // ============================================================================
@@ -1165,6 +1430,7 @@ void test_matrix_normalize()
 void test_matrix_norm()
 {
     std::cout << "\n[C6: Matrix Norm Calculation Tests]\n";
+    std::cout << "Goal: Verify Frobenius norm values including padding and empty matrix behavior.\n";
 
     // C6.1: Simple 2x2 Matrix
     std::cout << "\n[C6.1] 2x2 Matrix Norm (Expect 5.0)\n";
@@ -1174,7 +1440,8 @@ void test_matrix_norm()
     std::cout << "Matrix:\n";
     mat1.print_matrix(true);
     float norm1 = mat1.norm();
-    std::cout << "Calculated Norm: " << norm1 << "\n";
+    std::cout << "Calculated Norm: " << norm1 << " (Expected: 5.0) "
+              << (fabsf(norm1 - 5.0f) < 1e-5f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C6.2: Zero Matrix
     std::cout << "\n[C6.2] Zero Matrix Norm (Expect 0.0)\n";
@@ -1183,7 +1450,8 @@ void test_matrix_norm()
     std::cout << "Matrix:\n";
     mat2.print_matrix(true);
     float norm2 = mat2.norm();
-    std::cout << "Calculated Norm: " << norm2 << "\n";
+    std::cout << "Calculated Norm: " << norm2 << " (Expected: 0.0) "
+              << (fabsf(norm2) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C6.3: Matrix with Negative Values
     std::cout << "\n[C6.3] Matrix with Negative Values\n";
@@ -1193,16 +1461,26 @@ void test_matrix_norm()
     std::cout << "Matrix:\n";
     mat3.print_matrix(true);
     float norm3 = mat3.norm();
-    std::cout << "Calculated Norm: " << norm3 << "  (Expect sqrt(30) ≈ 5.477)\n";
+    std::cout << "Calculated Norm: " << norm3 << "  (Expect sqrt(30) ≈ 5.477) "
+              << (fabsf(norm3 - 5.4772256f) < 1e-3f ? "[PASS]" : "[FAIL]") << "\n";
 
     // C6.4: Matrix with Padding
-    std::cout << "\n[C6.4] 2x2 Matrix with Stride=4 (Padding Test)\n";
+    std::cout << "\n[C6.4] 2x2 Matrix with step=4 (Padding Test)\n";
     float data4[8] = {1.0f, 2.0f, 0.0f, 0.0f, 3.0f, 4.0f, 0.0f, 0.0f};
     tiny::Mat mat4(data4, 2, 2, 4);  // 2x2 matrix, step 4
     std::cout << "Matrix:\n";
     mat4.print_matrix(true);
     float norm4 = mat4.norm();
-    std::cout << "Calculated Norm: " << norm4 << "  (Expect sqrt(30) ≈ 5.477)\n";
+    std::cout << "Calculated Norm: " << norm4 << "  (Expect sqrt(30) ≈ 5.477) "
+              << (fabsf(norm4 - 5.4772256f) < 1e-3f ? "[PASS]" : "[FAIL]") << "\n";
+
+    // C6.5: Empty Matrix Norm
+    std::cout << "\n[C6.5] Empty Matrix Norm (Expect 0.0, No Error)\n";
+    tiny::Mat empty_norm(0, 0);
+    float norm_empty = empty_norm.norm();
+    std::cout << "Calculated Norm (0x0): " << norm_empty
+              << "  (Expected: 0.0) "
+              << (fabsf(norm_empty - 0.0f) < 1e-6f ? "[PASS]" : "[FAIL]") << "\n";
 }
 
 // ============================================================================
@@ -1211,6 +1489,7 @@ void test_matrix_norm()
 void test_inverse_adjoint_adjoint()
 {
     std::cout << "\n[C7: Matrix Inversion Tests]\n";
+    std::cout << "Goal: Verify inverse_adjoint() on invertible/singular/non-square matrices.\n";
 
     // C7.1: 2x2 Regular Matrix
     std::cout << "\n[C7.1] Inverse of 2x2 Matrix\n";
@@ -1223,6 +1502,12 @@ void test_inverse_adjoint_adjoint()
     std::cout << "Inverse Matrix:\n";
     inv1.print_matrix(true);
     std::cout << "Expected Approx:\n[ 0.6  -0.7 ]\n[ -0.2  0.4 ]\n";
+    bool c71_ok = (inv1.row == 2 && inv1.col == 2 &&
+                   fabsf(inv1(0,0) - 0.6f) < 1e-3f &&
+                   fabsf(inv1(0,1) + 0.7f) < 1e-3f &&
+                   fabsf(inv1(1,0) + 0.2f) < 1e-3f &&
+                   fabsf(inv1(1,1) - 0.4f) < 1e-3f);
+    std::cout << "Result check: " << (c71_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C7.2: Singular Matrix (Determinant = 0)
     std::cout << "\n[C7.2] Singular Matrix (Expect Error)\n";
@@ -1235,6 +1520,10 @@ void test_inverse_adjoint_adjoint()
     tiny::Mat inv2 = mat2.inverse_adjoint();
     std::cout << "Inverse Matrix (Should be zero matrix):\n";
     inv2.print_matrix(true);
+    bool c72_ok = (inv2.data == nullptr) ||
+                  (inv2.row == 0 && inv2.col == 0) ||
+                  (inv2.row == 1 && inv2.col == 1);
+    std::cout << "Result check: " << (c72_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C7.3: 3x3 Regular Matrix
     std::cout << "\n[C7.3] Inverse of 3x3 Matrix\n";
@@ -1256,6 +1545,10 @@ void test_inverse_adjoint_adjoint()
     tiny::Mat inv4 = mat4.inverse_adjoint();
     std::cout << "Inverse Matrix (should be empty due to error):\n";
     inv4.print_matrix(true);
+    bool c74_ok = (inv4.data == nullptr) ||
+                  (inv4.row == 0 && inv4.col == 0) ||
+                  (inv4.row == 1 && inv4.col == 1);
+    std::cout << "Result check: " << (c74_ok ? "[PASS]" : "[FAIL]") << "\n";
 }
 
 // ============================================================================
@@ -1264,12 +1557,17 @@ void test_inverse_adjoint_adjoint()
 void test_matrix_utilities()
 {
     std::cout << "\n[C8: Matrix Utilities Tests]\n";
+    std::cout << "Goal: Verify eye/ones/augment/vstack shapes and representative values.\n";
 
     // C8.1: Identity Matrix (eye)
     std::cout << "\n[C8.1] Generate Identity Matrix (eye)\n";
     tiny::Mat I3 = tiny::Mat::eye(3);
     std::cout << "3x3 Identity Matrix:\n";
     I3.print_matrix(true);
+    bool c81_ok = (I3.row == 3 && I3.col == 3 &&
+                   I3(0,0) == 1 && I3(1,1) == 1 && I3(2,2) == 1 &&
+                   I3(0,1) == 0 && I3(1,0) == 0);
+    std::cout << "Result check (I3): " << (c81_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     tiny::Mat I5 = tiny::Mat::eye(5);
     std::cout << "5x5 Identity Matrix:\n";
@@ -1280,6 +1578,10 @@ void test_matrix_utilities()
     tiny::Mat ones_3x4 = tiny::Mat::ones(3, 4);
     std::cout << "3x4 Ones Matrix:\n";
     ones_3x4.print_matrix(true);
+    bool c82_ok = (ones_3x4.row == 3 && ones_3x4.col == 4 &&
+                   fabsf(ones_3x4(0,0) - 1.0f) < 1e-6f &&
+                   fabsf(ones_3x4(2,3) - 1.0f) < 1e-6f);
+    std::cout << "Result check (ones 3x4): " << (c82_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     tiny::Mat ones_4x4 = tiny::Mat::ones(4);
     std::cout << "4x4 Ones Matrix (Square):\n";
@@ -1305,12 +1607,20 @@ void test_matrix_utilities()
     tiny::Mat AB = tiny::Mat::augment(A, B);
     std::cout << "Augmented Matrix [A | B]:\n";
     AB.print_matrix(true);
+    bool c83_ok = (AB.row == 2 && AB.col == 5 &&
+                   AB(0,0) == 1 && AB(0,1) == 2 && AB(0,2) == 5 && AB(0,4) == 7 &&
+                   AB(1,0) == 3 && AB(1,1) == 4 && AB(1,2) == 8 && AB(1,4) == 10);
+    std::cout << "Result check: " << (c83_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C8.4: Row mismatch case
     std::cout << "\n[C8.4] Augment with Row Mismatch (Expect Error)\n";
     tiny::Mat C(3, 2);  // 3x2 matrix
     tiny::Mat invalidAug = tiny::Mat::augment(A, C);
     invalidAug.print_info();  // Should show empty matrix due to error
+    bool c84_ok = (invalidAug.data == nullptr) ||
+                  (invalidAug.row == 0 && invalidAug.col == 0) ||
+                  (invalidAug.row == 1 && invalidAug.col == 1);
+    std::cout << "Result check: " << (c84_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C8.5: Vertical Stack (vstack)
     std::cout << "\n[C8.5] Vertically Stack Two Matrices [A; B]\n";
@@ -1333,6 +1643,10 @@ void test_matrix_utilities()
     std::cout << "Vertically Stacked Matrix [A; B]:\n";
     AB_vstack.print_matrix(true);
     std::cout << "Expected: 4x3 matrix with A on top, B on bottom\n";
+    bool c85_ok = (AB_vstack.row == 4 && AB_vstack.col == 3 &&
+                   AB_vstack(0,0) == 1 && AB_vstack(1,2) == 6 &&
+                   AB_vstack(2,0) == 7 && AB_vstack(3,2) == 12);
+    std::cout << "Result check: " << (c85_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C8.6: Vertical Stack with different row counts
     std::cout << "\n[C8.6] Vertical Stack with Different Row Counts (Same Columns)\n";
@@ -1352,6 +1666,9 @@ void test_matrix_utilities()
     tiny::Mat AB_mixed = tiny::Mat::vstack(A_small, B_large);
     std::cout << "Vertically Stacked Matrix [A; B] (1x3 + 3x3 = 4x3):\n";
     AB_mixed.print_matrix(true);
+    bool c86_ok = (AB_mixed.row == 4 && AB_mixed.col == 3 &&
+                   AB_mixed(0,0) == 1 && AB_mixed(3,2) == 12);
+    std::cout << "Result check: " << (c86_ok ? "[PASS]" : "[FAIL]") << "\n";
 
     // C8.7: Column mismatch case (Expect Error)
     std::cout << "\n[C8.7] VStack with Column Mismatch (Expect Error)\n";
@@ -1371,6 +1688,10 @@ void test_matrix_utilities()
     tiny::Mat invalidVStack = tiny::Mat::vstack(A_col, B_col);
     std::cout << "Result (should be empty due to error):\n";
     invalidVStack.print_info();  // Should show empty matrix due to error
+    bool c87_ok = (invalidVStack.data == nullptr) ||
+                  (invalidVStack.row == 0 && invalidVStack.col == 0) ||
+                  (invalidVStack.row == 1 && invalidVStack.col == 1);
+    std::cout << "Result check: " << (c87_ok ? "[PASS]" : "[FAIL]") << "\n";
 
 }
 
@@ -2278,6 +2599,42 @@ void test_matrix_operations()
     matF.print_matrix(true);
     isEqual = (matE == matF);
     std::cout << "matE == matF after modification: " << (isEqual ? "True" : "False") << std::endl;  // Expected: False
+
+    // F2.10: In-place matrix multiplication with shape change (operator*=)
+    std::cout << "\n[F2.10] In-place Matrix Multiplication Shape Change (operator*=)\n";
+    tiny::Mat matG(2, 3);
+    tiny::Mat matH(3, 4);
+    for (int i = 0; i < matG.row; ++i)
+    {
+        for (int j = 0; j < matG.col; ++j)
+        {
+            matG(i, j) = static_cast<float>(i * matG.col + j + 1);
+        }
+    }
+    for (int i = 0; i < matH.row; ++i)
+    {
+        for (int j = 0; j < matH.col; ++j)
+        {
+            matH(i, j) = static_cast<float>(i * matH.col + j + 1);
+        }
+    }
+    matG *= matH;  // Expected shape: 2x4
+    std::cout << "matG *= matH -> shape: " << matG.row << "x" << matG.col
+              << " (expected 2x4)\n";
+    std::cout << matG << std::endl;
+
+    // F2.11: Element-wise matrix division by matrix with zero element
+    std::cout << "\n[F2.11] Element-wise Matrix Division Zero Check (operator/)\n";
+    tiny::Mat divA(2, 2);
+    tiny::Mat divB(2, 2);
+    divA(0, 0) = 1; divA(0, 1) = 2;
+    divA(1, 0) = 3; divA(1, 1) = 4;
+    divB(0, 0) = 1; divB(0, 1) = 0;
+    divB(1, 0) = 3; divB(1, 1) = 4;
+    tiny::Mat divRes = divA / divB;
+    std::cout << "divA / divB with zero element: "
+              << (divRes.data == nullptr ? "Empty (expected)" : "Non-empty (check)")
+              << "\n";
 }
 
 // ============================================================================
@@ -2600,7 +2957,7 @@ void test_memory_layout()
 {
     std::cout << "\n[G3: Quality Assurance - Memory Layout Tests (Padding and Step)]\n";
 
-    // G3.1: Contiguous memory (pad=0, step=4, stride=1)
+    // G3.1: Contiguous memory (pad=0, step=4)
     std::cout << "\n[G3.1] Contiguous Memory (no padding)\n";
     tiny::Mat mat1(3, 4);
     for (int i = 0; i < 3; ++i)
@@ -3416,6 +3773,166 @@ void test_matrix_decomposition()
                   << " (Expected: 0 or error state) " << (pseudo_inv_invalid_correct ? "[PASS]" : "[FAIL]") << "\n";
     }
 
+    // E1.59: SVD - Singular values are sorted in descending order.
+    // Use an unsorted-diagonal A: sigma_i should be |diag| but emitted in
+    // descending order regardless of where they sit in A.
+    {
+        std::cout << "\n[E1.59] SVD - Singular Values Descending Order\n";
+        tiny::Mat A(4, 4);
+        // Diagonal {5, 1, 3, 2} -> expected sorted sigma: 5, 3, 2, 1
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j) A(i, j) = 0.0f;
+        A(0, 0) = 5.0f;
+        A(1, 1) = 1.0f;
+        A(2, 2) = 3.0f;
+        A(3, 3) = 2.0f;
+
+        tiny::Mat::SVDDecomposition svd = A.svd_decompose(200, 1e-6f);
+        std::cout << "Status: " << (svd.status == TINY_OK ? "OK" : "Error") << "\n";
+
+        bool sorted_correct = (svd.status == TINY_OK);
+        if (sorted_correct)
+        {
+            std::cout << "Singular values: ";
+            for (int i = 0; i < svd.S.row; ++i) std::cout << svd.S(i, 0) << " ";
+            std::cout << "\n";
+            for (int i = 1; i < svd.S.row; ++i)
+            {
+                if (svd.S(i, 0) > svd.S(i - 1, 0) + 1e-4f)
+                {
+                    sorted_correct = false;
+                    break;
+                }
+            }
+        }
+        std::cout << "Descending order check: " << (sorted_correct ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
+    // E1.510: SVD - V is orthogonal (V^T * V == I).
+    // This is the regression test for the "V trailing columns left at zero" bug.
+    {
+        std::cout << "\n[E1.510] SVD - V Orthogonality (V^T * V approx I)\n";
+        // Use a rank-2 3x3 so we exercise V's null-space column too.
+        tiny::Mat A(3, 3);
+        A(0, 0) = 1.0f; A(0, 1) = 2.0f; A(0, 2) = 3.0f;
+        A(1, 0) = 4.0f; A(1, 1) = 5.0f; A(1, 2) = 6.0f;
+        A(2, 0) = 7.0f; A(2, 1) = 8.0f; A(2, 2) = 9.0f;
+
+        tiny::Mat::SVDDecomposition svd = A.svd_decompose(200, 1e-6f);
+        bool ortho_ok = false;
+        float max_err = 0.0f;
+        if (svd.status == TINY_OK && svd.V.row == 3 && svd.V.col == 3)
+        {
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    float sum = 0.0f;
+                    for (int k = 0; k < 3; ++k) sum += svd.V(k, i) * svd.V(k, j);
+                    const float expected = (i == j) ? 1.0f : 0.0f;
+                    const float err = fabsf(sum - expected);
+                    if (err > max_err) max_err = err;
+                }
+            }
+            ortho_ok = (max_err < 1e-3f);
+        }
+        std::cout << "Max |V^T*V - I| = " << max_err
+                  << (ortho_ok ? " [PASS]" : " [FAIL]") << "\n";
+    }
+
+    // E1.511: SVD - U columns 0..rank-1 are orthonormal (U^T * U == I block).
+    {
+        std::cout << "\n[E1.511] SVD - U Orthogonality (first rank columns)\n";
+        // 4x3 full-column-rank matrix — rank should be 3, U(:, 0..2) orthonormal.
+        tiny::Mat A(4, 3);
+        A(0, 0) = 1.0f; A(0, 1) = 2.0f; A(0, 2) = 1.0f;
+        A(1, 0) = 0.0f; A(1, 1) = 1.0f; A(1, 2) = 3.0f;
+        A(2, 0) = 4.0f; A(2, 1) = 0.0f; A(2, 2) = 2.0f;
+        A(3, 0) = 1.0f; A(3, 1) = 1.0f; A(3, 2) = 1.0f;
+
+        tiny::Mat::SVDDecomposition svd = A.svd_decompose(200, 1e-6f);
+        bool ortho_ok = false;
+        float max_err = 0.0f;
+        if (svd.status == TINY_OK && svd.rank > 0)
+        {
+            for (int i = 0; i < svd.rank; ++i)
+            {
+                for (int j = 0; j < svd.rank; ++j)
+                {
+                    float sum = 0.0f;
+                    for (int k = 0; k < svd.U.row; ++k) sum += svd.U(k, i) * svd.U(k, j);
+                    const float expected = (i == j) ? 1.0f : 0.0f;
+                    const float err = fabsf(sum - expected);
+                    if (err > max_err) max_err = err;
+                }
+            }
+            ortho_ok = (max_err < 1e-3f);
+        }
+        std::cout << "Detected rank = " << svd.rank << "\n";
+        std::cout << "Max |U^T*U - I|_rank = " << max_err
+                  << (ortho_ok ? " [PASS]" : " [FAIL]") << "\n";
+    }
+
+    // E1.512: SVD - Wide matrix (m < n). Regression for the case where A^T*A
+    // has n - m zero eigenvalues; V must remain orthogonal and reconstruction
+    // must hold using only the first `rank` outer products.
+    {
+        std::cout << "\n[E1.512] SVD - Wide Matrix (2x3)\n";
+        tiny::Mat A(2, 3);
+        A(0, 0) = 1.0f; A(0, 1) = 2.0f; A(0, 2) = 3.0f;
+        A(1, 0) = 4.0f; A(1, 1) = 5.0f; A(1, 2) = 6.0f;
+
+        tiny::Mat::SVDDecomposition svd = A.svd_decompose(200, 1e-6f);
+        const bool dim_ok = (svd.status == TINY_OK)
+                         && (svd.U.row == 2 && svd.U.col == 2)
+                         && (svd.S.row == 2 && svd.S.col == 1)
+                         && (svd.V.row == 3 && svd.V.col == 3);
+        std::cout << "Dimensions (U=2x2, S=2x1, V=3x3): "
+                  << (dim_ok ? "[PASS]" : "[FAIL]") << "\n";
+
+        bool reconstruct_ok = false;
+        float diff = 0.0f;
+        if (svd.status == TINY_OK && svd.rank > 0)
+        {
+            for (int i = 0; i < 2; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    float sum = 0.0f;
+                    for (int k = 0; k < svd.rank; ++k)
+                        sum += svd.U(i, k) * svd.S(k, 0) * svd.V(j, k);
+                    diff += fabsf(sum - A(i, j));
+                }
+            }
+            reconstruct_ok = (diff < 0.5f);
+        }
+        std::cout << "Reconstruction error: " << diff
+                  << (reconstruct_ok ? " [PASS]" : " [FAIL]") << "\n";
+    }
+
+    // E1.513: SVD - Rank-deficient detection.
+    // A = [[1,2,3],[4,5,6],[7,8,9]] has row-3 = 2*row-2 - row-1, so rank == 2.
+    // Last sigma should be (numerically) ~0.
+    {
+        std::cout << "\n[E1.513] SVD - Rank-Deficient Detection\n";
+        tiny::Mat A(3, 3);
+        A(0, 0) = 1.0f; A(0, 1) = 2.0f; A(0, 2) = 3.0f;
+        A(1, 0) = 4.0f; A(1, 1) = 5.0f; A(1, 2) = 6.0f;
+        A(2, 0) = 7.0f; A(2, 1) = 8.0f; A(2, 2) = 9.0f;
+
+        tiny::Mat::SVDDecomposition svd = A.svd_decompose(200, 1e-6f);
+        std::cout << "Status: " << (svd.status == TINY_OK ? "OK" : "Error") << "\n";
+        if (svd.status == TINY_OK && svd.S.row >= 3)
+        {
+            std::cout << "S = [" << svd.S(0, 0) << ", "
+                                 << svd.S(1, 0) << ", "
+                                 << svd.S(2, 0) << "]  (last expected ~0)\n";
+        }
+        const bool rank_ok = (svd.status == TINY_OK) && (svd.rank == 2);
+        std::cout << "Detected rank = " << svd.rank
+                  << " (expected 2) " << (rank_ok ? "[PASS]" : "[FAIL]") << "\n";
+    }
+
     // E1.6: Performance Tests
     std::cout << "\n[E1.6] Matrix Decomposition Performance Tests\n";
     
@@ -3768,10 +4285,10 @@ void test_eigenvalue_decomposition()
         std::cout << "\n[E3.16] Boundary Case - Empty Matrix (0x0)\n";
         tiny::Mat empty_mat(0, 0);
         
-        // Empty matrix cannot be checked for symmetry (data is null or invalid)
+        // By definition, 0x0 is vacuously symmetric.
         bool is_sym_empty = empty_mat.is_symmetric(1e-6f);
         std::cout << "Empty matrix (0x0): " << (is_sym_empty ? "True" : "False") 
-                  << " (Expected: False, empty matrix is invalid) " << (!is_sym_empty ? "[PASS]" : "[FAIL]") << "\n";
+                  << " (Expected: True, 0x0 is vacuously symmetric) " << (is_sym_empty ? "[PASS]" : "[FAIL]") << "\n";
     }
 
     // E3.2: power_iteration() - Dominant eigenvalue
@@ -4846,12 +5363,11 @@ void tiny_matrix_test()
 }
 ```
 
-
 ## 测试输出
 
 ### 第一阶段： 对象基础 （A）
 
-```c
+```cpp
 ============ [tiny_matrix_test start] ============
 
 [Test Organization: Application-Oriented Logic]
@@ -4966,8 +5482,8 @@ ext_buff        0
 sub_matrix      0
 <<< Matrix Info
 Matrix Elements >>>
-           0            1            2            3       |-1.65083e-22 
-           4            5            6            7       |1.97967e+18 
+           0            1            2            3       |      7 
+           4            5            6            7       |2.97902e-41 
            8            9           10           11       | 1.6141 
 <<< Matrix Elements
 
@@ -5022,7 +5538,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5069,7 +5585,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5090,7 +5606,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5111,7 +5627,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5125,7 +5641,8 @@ Matrix Elements >>>
 
 [A3.5] copy_paste() - Error Handling - Negative Position
 [Error] copy_paste: invalid position: row_pos=-1, col_pos=0 (must be non-negative)
- (must be non-negative)
+copy_paste with row_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+[Error] copy_paste: invalid position: row_pos=0, col_pos=-1 (must be non-negative)
 copy_paste with col_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
 
 [A3.6] copy_paste() - Error Handling - Out of Bounds
@@ -5135,7 +5652,6 @@ copy_paste 3x3 into 2x2 at (0,0): error = 258 (Expected: TINY_ERR_INVALID_ARG) [
 copy_paste 2x2 into 2x2 at (1,1): error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
 
 [A3.7] copy_paste() - Boundary Case - Empty Source Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 [Error] copy_paste: source matrix data pointer is null
 copy_paste empty matrix: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
 
@@ -5166,7 +5682,7 @@ elements        4
 paddings        3
 step            5
 memory          10
-data pointer    0x3fc9a2ac
+data pointer    0x3fc9a26c
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      1   (This is a Sub-Matrix View)
@@ -5184,7 +5700,7 @@ elements        4
 paddings        3
 step            5
 memory          10
-data pointer    0x3fc9a2ac
+data pointer    0x3fc9a26c
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      1   (This is a Sub-Matrix View)
@@ -5213,7 +5729,7 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 [A3.12] Copy ROI - Using ROI Structure
-time for copy_roi using ROI structure: 38 ms
+time for copy_roi using ROI structure: 34 ms
 Matrix Info >>>
 rows            2
 cols            2
@@ -5240,6 +5756,32 @@ ROI resize test: [PASS]
 [A3.14] ROI area_roi() Function
 ROI(0, 0, 3, 4) area: 12 (Expected: 12) [PASS]
 ROI(1, 2, 5, 6) area: 30 (Expected: 30) [PASS]
+
+[A3.14.1] ROI area_roi() - Negative Dimensions
+ROI(0, 0, -3, 4) area: 0 (Expected: 0) [PASS]
+ROI(0, 0, 3, -4) area: 0 (Expected: 0) [PASS]
+
+[A3.14.2] print_matrix() - step < col Safety Branch
+Expect warning and bounded printing without out-of-bounds access:
+Matrix Info >>>
+rows            2
+cols            4
+elements        8
+paddings        0
+step            3
+memory          8
+data pointer    0x3fce9bf8
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+[Warning] step < cols; printing only the first 3 column(s) per row to avoid out-of-bounds access.
+Matrix Elements >>>
+          10           11           12       |
+          13           20           21       |
+<<< Matrix Elements
+
+step < col safety print completed [PASS]
 [A3.15] Block
 time for block: 43 ms
 Matrix Info >>>
@@ -5249,7 +5791,7 @@ elements        4
 paddings        0
 step            2
 memory          4
-data pointer    0x3fce9bf8
+data pointer    0x3fce9c1c
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -5268,7 +5810,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5287,7 +5829,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5307,7 +5849,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5326,7 +5868,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5346,7 +5888,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5365,7 +5907,7 @@ elements        12
 paddings        1
 step            5
 memory          15
-data pointer    0x3fc9a294
+data pointer    0x3fc9a254
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -5377,219 +5919,559 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 ============ [tiny_matrix_test end] ============
-
 ```
 
 ### 第二阶段： 基础操作 （B）
 
-```c
+```cpp
 ============ [tiny_matrix_test start] ============
 
 [Test Organization: Application-Oriented Logic]
   Foundation → Basic Ops → Properties → Linear Systems → Decompositions → Applications → Quality
 
 
-[B1: Assignment Operator Tests]
-
-[B1.1] Assignment (Same Dimensions)
+[A1: Constructor & Destructor Tests]
+[A1.1] Default Constructor
+Matrix Info >>>
+rows            1
+cols            1
+elements        1
+paddings        0
+step            1
+memory          1
+data pointer    0x3fce9a7c
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-           1            2            3       |
-           4            5            6       |
+           0       |
+<<< Matrix Elements
+
+[A1.2] Constructor with Rows and Cols
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        0
+step            4
+memory          12
+data pointer    0x3fce9a8c
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0            0            0            0       |
+           0            0            0            0       |
+           0            0            0            0       |
+<<< Matrix Elements
+
+[A1.3] Constructor with Rows, Cols and Step
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fce9ac0
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0            0            0            0       |      0 
+           0            0            0            0       |      0 
+           0            0            0            0       |      0 
+<<< Matrix Elements
+
+[A1.4] Constructor with External Data
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        0
+step            4
+memory          12
+data pointer    0x3fc9a4ac
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0            1            2            3       |
+           4            5            6            7       |
+           8            9           10           11       |
+<<< Matrix Elements
+
+[A1.5] Constructor with External Data and Step
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a500
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0            1            2            3       |      0 
+           4            5            6            7       |      0 
+           8            9           10           11       |      0 
+<<< Matrix Elements
+
+[A1.6] Copy Constructor
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fce9b00
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0            1            2            3       |      7 
+           4            5            6            7       |2.97902e-41 
+           8            9           10           11       | 1.6141 
 <<< Matrix Elements
 
 
-[B1.2] Assignment (Different Dimensions)
+[A2: Element Access Tests]
+[A2.1] Non-const Access
+Matrix Info >>>
+rows            2
+cols            3
+elements        6
+paddings        0
+step            3
+memory          6
+data pointer    0x3fce9a7c
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-           1            2            3       |
-           4            5            6       |
+         1.1          2.2          3.3       |
+         4.4          5.5          6.6       |
+<<< Matrix Elements
+
+[A2.2] Const Access
+const_mat(0, 0): 1.1
+
+[A3: ROI Operations Tests]
+[Material Matrices]
+matA:
+Matrix Info >>>
+rows            2
+cols            3
+elements        6
+paddings        0
+step            3
+memory          6
+data pointer    0x3fce9a7c
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+         0.1          0.2          0.3       |
+         0.4          0.5          0.6       |
+<<< Matrix Elements
+
+matB:
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0            1            2            3       |      0 
+           4            5            6            7       |      0 
+           8            9           10           11       |      0 
+<<< Matrix Elements
+
+matC:
+Matrix Info >>>
+rows            1
+cols            1
+elements        1
+paddings        0
+step            1
+memory          1
+data pointer    0x3fce9a98
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0       |
+<<< Matrix Elements
+
+[A3.1] Copy ROI - Over Range Case
+[Error] copy_paste: source matrix exceeds destination column boundary: col_pos=2, src.cols=3, dest.cols=4
+matB after copy_paste matA at (1, 2):
+Matrix Elements >>>
+           0            1            2            3       |      0 
+           4            5            6            7       |      0 
+           8            9           10           11       |      0 
+<<< Matrix Elements
+
+nothing changed.
+[A3.2] Copy ROI - Suitable Range Case
+matB after copy_paste matA at (1, 1):
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0            1            2            3       |      0 
+           4          0.1          0.2          0.3       |      0 
+           8          0.4          0.5          0.6       |      0 
+<<< Matrix Elements
+
+successfully copied.
+[A3.3] Copy Head
+matC after copy_head matB:
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+           0            1            2            3       |      0 
+           4          0.1          0.2          0.3       |      0 
+           8          0.4          0.5          0.6       |      0 
+<<< Matrix Elements
+
+[A3.4] Copy Head - Memory Sharing Check
+matB(0, 0) = 99.99f
+matC:
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+       99.99            1            2            3       |      0 
+           4          0.1          0.2          0.3       |      0 
+           8          0.4          0.5          0.6       |      0 
 <<< Matrix Elements
 
 
-[B1.3] Assignment to Sub-Matrix (Expect Error)
-[Error] Assignment to a sub-matrix is not allowed.
+[A3.5] copy_paste() - Error Handling - Negative Position
+[Error] copy_paste: invalid position: row_pos=-1, col_pos=0 (must be non-negative)
+copy_paste with row_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+[Error] copy_paste: invalid position: row_pos=0, col_pos=-1 (must be non-negative)
+copy_paste with col_pos=-1: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+
+[A3.6] copy_paste() - Error Handling - Out of Bounds
+[Error] copy_paste: source matrix exceeds destination row boundary: row_pos=0, src.rows=3, dest.rows=2
+copy_paste 3x3 into 2x2 at (0,0): error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+[Error] copy_paste: source matrix exceeds destination row boundary: row_pos=1, src.rows=2, dest.rows=2
+copy_paste 2x2 into 2x2 at (1,1): error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+
+[A3.7] copy_paste() - Boundary Case - Empty Source Matrix
+[Error] copy_paste: source matrix data pointer is null
+copy_paste empty matrix: error = 258 (Expected: TINY_ERR_INVALID_ARG) [PASS]
+
+[A3.8] copy_head() - Share Data from Owned-Memory Source (Double-Free Prevention)
+Before copy_head:
+  owned_src: ext_buff=0
+  dest4: ext_buff=0
+copy_head from matrix with owned memory: error = 0 (Expected: TINY_OK) [PASS]
+After copy_head:
+  owned_src: ext_buff=0 (still owns memory)
+  dest4: ext_buff=1 (view, does not own)
+Verify data sharing:
+  dest4(0,0)=1 (should be 1.0)
+  dest4(1,1)=4 (should be 4.0)
+After modifying owned_src(0,0) to 99.0:
+  dest4(0,0)=99 (should be 99.0, confirming shared data)
+[A3.9] Get a View of ROI - Low Level Function
+get a view of ROI with overrange dimensions - rows:
+[Error] view_roi: ROI exceeds row boundary: start_row=1, roi_rows=3, source.rows=3
+get a view of ROI with overrange dimensions - cols:
+[Error] view_roi: ROI exceeds column boundary: start_col=1, roi_cols=4, source.cols=4
+get a view of ROI with suitable dimensions:
+roi3:
+Matrix Info >>>
+rows            2
+cols            2
+elements        4
+paddings        3
+step            5
+memory          10
+data pointer    0x3fc9a26c
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      1   (This is a Sub-Matrix View)
+<<< Matrix Info
 Matrix Elements >>>
-           5            6       |      7            0            8 
-           9           10       |     11            0   4.2039e-45 
+         0.1          0.2       |    0.3            0            8 
+         0.4          0.5       |    0.6            0   4.2039e-45 
+<<< Matrix Elements
+
+[A3.10] Get a View of ROI - Using ROI Structure
+Matrix Info >>>
+rows            2
+cols            2
+elements        4
+paddings        3
+step            5
+memory          10
+data pointer    0x3fc9a26c
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      1   (This is a Sub-Matrix View)
+<<< Matrix Info
+Matrix Elements >>>
+         0.1          0.2       |    0.3            0            8 
+         0.4          0.5       |    0.6            0   4.2039e-45 
+<<< Matrix Elements
+
+[A3.11] Copy ROI - Low Level Function
+Matrix Info >>>
+rows            2
+cols            2
+elements        4
+paddings        0
+step            2
+memory          4
+data pointer    0x3fce9bd0
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+         0.1          0.2       |
+         0.4          0.5       |
+<<< Matrix Elements
+
+[A3.12] Copy ROI - Using ROI Structure
+time for copy_roi using ROI structure: 34 ms
+Matrix Info >>>
+rows            2
+cols            2
+elements        4
+paddings        0
+step            2
+memory          4
+data pointer    0x3fce9be4
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+Matrix Elements >>>
+         0.1          0.2       |
+         0.4          0.5       |
 <<< Matrix Elements
 
 
-[B1.4] Self-Assignment
+[A3.13] ROI resize_roi() Function
+Initial ROI: pos_x=0, pos_y=0, width=2, height=2
+After resize_roi(1, 1, 3, 3): pos_x=1, pos_y=1, width=3, height=3
+ROI resize test: [PASS]
+
+[A3.14] ROI area_roi() Function
+ROI(0, 0, 3, 4) area: 12 (Expected: 12) [PASS]
+ROI(1, 2, 5, 6) area: 30 (Expected: 30) [PASS]
+
+[A3.14.1] ROI area_roi() - Negative Dimensions
+ROI(0, 0, -3, 4) area: 0 (Expected: 0) [PASS]
+ROI(0, 0, 3, -4) area: 0 (Expected: 0) [PASS]
+
+[A3.14.2] print_matrix() - step < col Safety Branch
+Expect warning and bounded printing without out-of-bounds access:
+Matrix Info >>>
+rows            2
+cols            4
+elements        8
+paddings        0
+step            3
+memory          8
+data pointer    0x3fce9bf8
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
+[Warning] step < cols; printing only the first 3 column(s) per row to avoid out-of-bounds access.
 Matrix Elements >>>
-           1            2            3       |
-           4            5            6       |
+          10           11           12       |
+          13           20           21       |
 <<< Matrix Elements
 
-
-[B2: Matrix Addition Tests]
-
-[B2.1] Matrix Addition (Same Dimensions)
+step < col safety print completed [PASS]
+[A3.15] Block
+time for block: 43 ms
+Matrix Info >>>
+rows            2
+cols            2
+elements        4
+paddings        0
+step            2
+memory          4
+data pointer    0x3fce9c1c
+temp pointer    0
+ext_buff        0
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-           2            3            4       |
-           5            6            7       |
+         0.1          0.2       |
+         0.4          0.5       |
 <<< Matrix Elements
 
-
-[B2.2] Sub-Matrix Addition
+[A3.16] Swap Rows
+matB before swap rows:
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-          10           12       |      7            0            8 
-          18           20       |     11            0           12 
+       99.99            1            2            3       |      0 
+           4          0.1          0.2          0.3       |      0 
+           8          0.4          0.5          0.6       |      0 
 <<< Matrix Elements
 
-
-[B2.3] Full Matrix + Sub-Matrix Addition
+matB after swap_rows(0, 2):
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-          12           14       |
-          20           22       |
+           8          0.4          0.5          0.6       |      0 
+           4          0.1          0.2          0.3       |      0 
+       99.99            1            2            3       |      0 
 <<< Matrix Elements
 
-
-[B2.4] Addition Dimension Mismatch (Expect Error)
-[Error] Matrix addition failed: Dimension mismatch (2x2 vs 3x3)
-
-[B3: Constant Addition Tests]
-
-[B3.1] Full Matrix + Constant
+[A3.17] Swap Columns
+matB before swap columns:
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-           5            6            7       |
-           8            9           10       |
+           8          0.4          0.5          0.6       |      0 
+           4          0.1          0.2          0.3       |      0 
+       99.99            1            2            3       |      0 
 <<< Matrix Elements
 
-
-[B3.2] Sub-Matrix + Constant
+matB after swap_cols(0, 2):
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-           8            9       |      7            0            8 
-          12           13       |     11            0           12 
+         0.5          0.4            8          0.6       |      0 
+         0.2          0.1            4          0.3       |      0 
+           2            1        99.99            3       |      0 
 <<< Matrix Elements
 
-
-[B3.3] Add Zero
+[A3.18] Clear
+matB before clear:
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-           1            2       |
-           3            4       |
+         0.5          0.4            8          0.6       |      0 
+         0.2          0.1            4          0.3       |      0 
+           2            1        99.99            3       |      0 
 <<< Matrix Elements
 
-
-[B3.4] Add Negative Constant
+matB after clear:
+Matrix Info >>>
+rows            3
+cols            4
+elements        12
+paddings        1
+step            5
+memory          15
+data pointer    0x3fc9a254
+temp pointer    0
+ext_buff        1   (External buffer or View)
+sub_matrix      0
+<<< Matrix Info
 Matrix Elements >>>
-          -5            5       |
-          15           25       |
-<<< Matrix Elements
-
-
-[B4: Matrix Subtraction Tests]
-
-[B4.1] Matrix Subtraction
-Matrix Elements >>>
-           4            5       |
-           6            7       |
-<<< Matrix Elements
-
-
-[B4.2] Subtraction Dimension Mismatch (Expect Error)
-[Error] Matrix subtraction failed: Dimension mismatch (2x2 vs 3x3)
-
-[B5: Constant Subtraction Tests]
-
-[B5.1] Full Matrix - Constant
-Matrix Elements >>>
-          -1            0            1       |
-           2            3            4       |
-<<< Matrix Elements
-
-
-[B5.2] Sub-Matrix - Constant
-Matrix Elements >>>
-         3.5          4.5       |      7            0            8 
-         7.5          8.5       |     11            0   4.2039e-45 
-<<< Matrix Elements
-
-
-[B6: Matrix Element-wise Division Tests]
-
-[B6.1] Element-wise Division (Same Dimensions, No Zero)
-Matrix Elements >>>
-           5            5       |
-           6            5       |
-<<< Matrix Elements
-
-
-[B6.2] Dimension Mismatch (Expect Error)
-[Error] Matrix division failed: Dimension mismatch (2x2 vs 3x3)
-
-[B6.3] Division by Matrix Containing Zero (Expect Error)
-[Error] Matrix division failed: Division by zero detected at position (0, 1)
-Matrix Elements >>>
-           5           10       |
-          15           20       |
-<<< Matrix Elements
-
-
-[B7: Matrix Division by Constant Tests]
-
-[B7.1] Divide Full Matrix by Positive Constant
-Matrix Elements >>>
-           1          1.5            2       |
-         2.5            3          3.5       |
-<<< Matrix Elements
-
-
-[B7.2] Divide Matrix by Negative Constant
-Matrix Elements >>>
-          -2           -4       |
-          -6           -8       |
-<<< Matrix Elements
-
-
-[B7.3] Division by Zero Constant (Expect Error)
-[Error] Matrix division by zero is undefined (divisor=0)
-Matrix Elements >>>
-           1            2       |
-           3            4       |
-<<< Matrix Elements
-
-
-[B8: Matrix Exponentiation Tests]
-
-[B8.1] Raise Each Element to Power of 2
-Matrix Elements >>>
-           4            9       |
-          16           25       |
-<<< Matrix Elements
-
-
-[B8.2] Raise Each Element to Power of 0
-Matrix Elements >>>
-           1            1       |
-           1            1       |
-<<< Matrix Elements
-
-
-[B8.3] Raise Each Element to Power of 1
-Matrix Elements >>>
-           9            8       |
-           7            6       |
-<<< Matrix Elements
-
-
-[B8.4] Raise Each Element to Power of -1 (Element-wise Reciprocal)
-Matrix Elements >>>
-           1          0.5       |
-        0.25          0.2       |
-<<< Matrix Elements
-
-
-[B8.5] Raise Matrix Containing Zero to Power of 3
-Matrix Elements >>>
-           0            8       |
-          -1           27       |
-<<< Matrix Elements
-
-
-[B8.6] Raise Matrix Containing Zero to Power of -1 (Expect Warning)
-[Warning] operator^: element at (0, 0) is zero or too small (0), cannot compute negative power. Result will be Inf or NaN.
-Matrix Elements >>>
-         inf          0.5       |
-          -1     0.333333       |
+           0            0            0            0       |      0 
+           0            0            0            0       |      0 
+           0            0            0            0       |      0 
 <<< Matrix Elements
 
 ============ [tiny_matrix_test end] ============
@@ -5597,7 +6479,7 @@ Matrix Elements >>>
 
 ### 第三阶段：矩阵特性（C）
 
-```c
+```cpp
 ============ [tiny_matrix_test start] ============
 
 [Test Organization: Application-Oriented Logic]
@@ -5605,8 +6487,11 @@ Matrix Elements >>>
 
 
 [C1: Matrix Transpose Tests]
+Goal: Verify transpose swaps rows/cols and preserves values.
 
 [C1.1] Transpose of 2x3 Matrix
+Test setup: input shape 2x3, values 1..6 row-major.
+Expected: output shape 3x2, with out(j,i)=in(i,j).
 Original 2x3 Matrix:
 Matrix Elements >>>
            1            2            3       |
@@ -5620,8 +6505,11 @@ Matrix Elements >>>
            3            6       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C1.2] Transpose of 3x3 Square Matrix
+Test setup: square matrix 3x3 values 1..9.
+Expected: diagonal unchanged, off-diagonal mirrored.
 Original 3x3 Matrix:
 Matrix Elements >>>
            1            2            3       |
@@ -5636,8 +6524,11 @@ Matrix Elements >>>
            3            6            9       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C1.3] Transpose of Matrix with Padding
+Test setup: external-buffer matrix 4x2 with step=3 (padding present).
+Expected: transpose reads only logical cols (ignores padding values).
 Original 4x2 Matrix (with padding):
 Matrix Elements >>>
            1            2       |      0 
@@ -5652,8 +6543,11 @@ Matrix Elements >>>
            2            4            6            8       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C1.4] Transpose of Empty Matrix
+Test setup: default matrix (implementation-defined, typically 1x1 or error state).
+Expected: function should not crash; inspect printed error/state.
 Matrix Elements >>>
            0       |
 <<< Matrix Elements
@@ -5664,6 +6558,8 @@ Matrix Elements >>>
 
 
 [C2: Matrix Minor and Cofactor Tests]
+Goal: Verify minor/cofactor matrix extraction semantics and boundary behavior.
+Reminder: in this implementation, cofactor() returns the same submatrix as minor().
 
 [C2.1] Minor of 3x3 Matrix (Remove Row 1, Col 1)
 Original 3x3 Matrix:
@@ -5757,32 +6653,33 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 
-[C2.10] Non-square Matrix (Expect Error)
-Testing minor():
-[Error] Minor requires square matrix (got 3x4)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-minor() result: Empty matrix (Expected) [PASS]
-Testing cofactor():
-[Error] Minor requires square matrix (got 3x4)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
+[C2.10] Non-square Matrix
+Testing minor() on a 3x4 matrix (expect 2x3 result):
+minor() result shape: 2x3 [PASS]
+minor() content:
+Matrix Elements >>>
+           1            3            4       |
+           9           11           12       |
+<<< Matrix Elements
+
+Testing cofactor() on a 3x4 matrix (expect empty - square required):
+[Error] cofactor: requires a square matrix (got 3x4)
 cofactor() result: Empty matrix (Expected) [PASS]
 
 [C2.11] minor() - Boundary Case - Out of Bounds Indices
 [Error] minor: target_row=-1 is out of range [0, 2]
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 minor(-1, 0): Empty matrix (Expected) [PASS]
 [Error] minor: target_col=-1 is out of range [0, 2]
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 minor(0, -1): Empty matrix (Expected) [PASS]
 [Error] minor: target_row=3 is out of range [0, 2]
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 minor(3, 0) (out of bounds): Empty matrix (Expected) [PASS]
 
 [C2.12] minor() - Boundary Case - 1x1 Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 1x1 matrix minor(0,0): Empty matrix (Expected) [PASS]
 
 [C3: Matrix Determinant Tests]
+Goal: Verify determinant correctness across sizes and methods.
+Auto strategy: n<=4 uses Laplace, n>4 uses LU.
 
 [C3.1] 1x1 Matrix Determinant
 Matrix:
@@ -5790,7 +6687,7 @@ Matrix Elements >>>
            7       |
 <<< Matrix Elements
 
-Determinant: 7  (Expected: 7)
+Determinant: 7  (Expected: 7) [PASS]
 
 [C3.2] 2x2 Matrix Determinant
 Matrix:
@@ -5799,7 +6696,7 @@ Matrix Elements >>>
            4            6       |
 <<< Matrix Elements
 
-Determinant: -14  (Expected: -14)
+Determinant: -14  (Expected: -14) [PASS]
 
 [C3.3] 3x3 Matrix Determinant
 Matrix:
@@ -5809,7 +6706,7 @@ Matrix Elements >>>
            1            0            6       |
 <<< Matrix Elements
 
-Determinant: 22  (Expected: 22)
+Determinant: 22  (Expected: 22) [PASS]
 
 [C3.4] 4x4 Matrix Determinant
 Matrix:
@@ -5822,7 +6719,7 @@ Matrix Elements >>>
 
 Note: This matrix has linearly dependent rows (each row differs by constant 4),
       so the determinant should be 0.
-Determinant: 0  (Expected: 0)
+Determinant: 0  (Expected: 0) [PASS]
 
 [C3.5] 5x5 Matrix Determinant (Tests Auto-select to LU Method)
 Matrix (5x5, tridiagonal):
@@ -5872,8 +6769,8 @@ Matrix (6x6, showing first 4x4 block):
          3          6        9.5         12 ...
          4          8         12       16.5 ...
 ...
-Determinant (auto-select, uses LU): 2.85938
-Determinant (LU):                   2.85938
+Determinant (auto-select, uses LU): 2.85937
+Determinant (LU):                   2.85937
 Determinant (Gaussian):             2.85938
 Note: For n > 4, auto-select uses LU decomposition (O(n³) instead of O(n!)).
 
@@ -5884,14 +6781,13 @@ Matrix (8x8, showing first 4x4 block):
          3          6          9         12 ...
          4          8         12         16 ...
 ...
-[Error] LU decomposition: Matrix is singular or near-singular.
+[Error] lu_decompose: matrix is singular or near-singular at column 1 (pivot = 0).
 [Warning] determinant_lu: LU decomposition failed (status=458754), matrix may be singular
 Determinant (LU):       0
 Determinant (Gaussian): 0
 Note: Both methods are O(n³) and should be much faster than Laplace expansion.
 
 [C3.10] determinant_laplace() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 Empty matrix determinant (Laplace): 1 (Expected: 1.0) [PASS]
 
 [C3.11] determinant_lu() - Boundary Case - Empty Matrix
@@ -5909,6 +6805,7 @@ Non-square matrix (2x3) determinant (LU): 0 (Expected: 0.0) [PASS]
 Non-square matrix (2x3) determinant (Gaussian): 0 (Expected: 0.0) [PASS]
 
 [C4: Matrix Adjoint Tests]
+Goal: Verify adj(A)=cofactor(A)^T behavior and error handling for non-square matrices.
 
 [C4.1] Adjoint of 1x1 Matrix
 Original Matrix:
@@ -5916,12 +6813,12 @@ Matrix Elements >>>
            5       |
 <<< Matrix Elements
 
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 Adjoint Matrix:
 Matrix Elements >>>
            1       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C4.2] Adjoint of 2x2 Matrix
 Original Matrix:
@@ -5936,6 +6833,7 @@ Matrix Elements >>>
           -3            1       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C4.3] Adjoint of 3x3 Matrix
 Original Matrix:
@@ -5966,8 +6864,10 @@ Matrix Elements >>>
            0       |
 <<< Matrix Elements
 
+Result check: [FAIL]
 
 [C5: Matrix Normalization Tests]
+Goal: Verify in-place normalization by Frobenius norm and edge-case handling.
 
 [C5.1] Normalize a Standard 2x2 Matrix
 Before normalization:
@@ -5982,8 +6882,9 @@ Matrix Elements >>>
     0.424264     0.565685       |
 <<< Matrix Elements
 
+Norm after normalize: 1 (Expected: 1.0) [PASS]
 
-[C5.2] Normalize a 2x2 Matrix with Stride=4 (Padding Test)
+[C5.2] Normalize a 2x2 Matrix with step=4 (Padding Test)
 Before normalization:
 Matrix Elements >>>
            3            4       |      0            0 
@@ -5996,6 +6897,7 @@ Matrix Elements >>>
     0.424264     0.565685       |      0            0 
 <<< Matrix Elements
 
+Norm after normalize (padding case): 1 (Expected: 1.0) [PASS]
 
 [C5.3] Normalize a Zero Matrix (Expect Warning)
 Matrix Elements >>>
@@ -6004,8 +6906,10 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 [Warning] normalize: matrix norm is zero (matrix is all zeros), normalization skipped
+Norm after normalize attempt on zero matrix: 0 (Expected: 0.0, unchanged) [PASS]
 
 [C6: Matrix Norm Calculation Tests]
+Goal: Verify Frobenius norm values including padding and empty matrix behavior.
 
 [C6.1] 2x2 Matrix Norm (Expect 5.0)
 Matrix:
@@ -6014,7 +6918,7 @@ Matrix Elements >>>
            0            0       |
 <<< Matrix Elements
 
-Calculated Norm: 5
+Calculated Norm: 5 (Expected: 5.0) [PASS]
 
 [C6.2] Zero Matrix Norm (Expect 0.0)
 Matrix:
@@ -6024,7 +6928,7 @@ Matrix Elements >>>
            0            0            0       |
 <<< Matrix Elements
 
-Calculated Norm: 0
+Calculated Norm: 0 (Expected: 0.0) [PASS]
 
 [C6.3] Matrix with Negative Values
 Matrix:
@@ -6033,18 +6937,22 @@ Matrix Elements >>>
           -3           -4       |
 <<< Matrix Elements
 
-Calculated Norm: 5.47723  (Expect sqrt(30) ≈ 5.477)
+Calculated Norm: 5.47723  (Expect sqrt(30) ≈ 5.477) [PASS]
 
-[C6.4] 2x2 Matrix with Stride=4 (Padding Test)
+[C6.4] 2x2 Matrix with step=4 (Padding Test)
 Matrix:
 Matrix Elements >>>
            1            2       |      0            0 
            3            4       |      0            0 
 <<< Matrix Elements
 
-Calculated Norm: 5.47723  (Expect sqrt(30) ≈ 5.477)
+Calculated Norm: 5.47723  (Expect sqrt(30) ≈ 5.477) [PASS]
+
+[C6.5] Empty Matrix Norm (Expect 0.0, No Error)
+Calculated Norm (0x0): 0  (Expected: 0.0) [PASS]
 
 [C7: Matrix Inversion Tests]
+Goal: Verify inverse_adjoint() on invertible/singular/non-square matrices.
 
 [C7.1] Inverse of 2x2 Matrix
 Original Matrix:
@@ -6062,6 +6970,7 @@ Matrix Elements >>>
 Expected Approx:
 [ 0.6  -0.7 ]
 [ -0.2  0.4 ]
+Result check: [PASS]
 
 [C7.2] Singular Matrix (Expect Error)
 Original Matrix:
@@ -6077,6 +6986,7 @@ Matrix Elements >>>
            0       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C7.3] Inverse of 3x3 Matrix
 Original Matrix:
@@ -6107,8 +7017,10 @@ Matrix Elements >>>
            0       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C8: Matrix Utilities Tests]
+Goal: Verify eye/ones/augment/vstack shapes and representative values.
 
 [C8.1] Generate Identity Matrix (eye)
 3x3 Identity Matrix:
@@ -6118,6 +7030,7 @@ Matrix Elements >>>
            0            0            1       |
 <<< Matrix Elements
 
+Result check (I3): [PASS]
 5x5 Identity Matrix:
 Matrix Elements >>>
            1            0            0            0            0       |
@@ -6136,6 +7049,7 @@ Matrix Elements >>>
            1            1            1            1       |
 <<< Matrix Elements
 
+Result check (ones 3x4): [PASS]
 4x4 Ones Matrix (Square):
 Matrix Elements >>>
            1            1            1            1       |
@@ -6164,6 +7078,7 @@ Matrix Elements >>>
            3            4            8            9           10       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C8.4] Augment with Row Mismatch (Expect Error)
 [Error] augment: row counts must match (A: 2, B: 3)
@@ -6172,13 +7087,14 @@ rows            1
 cols            1
 elements        1
 paddings        0
-stride          1
+step            1
 memory          1
-data pointer    0x3fce9c54
+data pointer    0x3fce9a90
 temp pointer    0
 ext_buff        0
 sub_matrix      0
 <<< Matrix Info
+Result check: [PASS]
 
 [C8.5] Vertically Stack Two Matrices [A; B]
 Matrix A (top):
@@ -6202,6 +7118,7 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 Expected: 4x3 matrix with A on top, B on bottom
+Result check: [PASS]
 
 [C8.6] Vertical Stack with Different Row Counts (Same Columns)
 Matrix A (1x3):
@@ -6224,6 +7141,7 @@ Matrix Elements >>>
           10           11           12       |
 <<< Matrix Elements
 
+Result check: [PASS]
 
 [C8.7] VStack with Column Mismatch (Expect Error)
 Matrix A (2x2):
@@ -6245,21 +7163,20 @@ rows            1
 cols            1
 elements        1
 paddings        0
-stride          1
+step            1
 memory          1
-data pointer    0x3fce9e1c
+data pointer    0x3fce9d40
 temp pointer    0
 ext_buff        0
 sub_matrix      0
 <<< Matrix Info
+Result check: [PASS]
 ============ [tiny_matrix_test end] ============
-
 ```
-
 
 ### 第四阶段：线性系统求解（D）
 
-```c
+```cpp
 ============ [tiny_matrix_test start] ============
 
 [Test Organization: Application-Oriented Logic]
@@ -6278,9 +7195,9 @@ Matrix Elements >>>
 
 After Gaussian Elimination (Should be upper triangular):
 Matrix Elements >>>
-           2            1           -1       |
-           0          0.5          0.5       |
-           0            0           -1       |
+          -3           -1            2       |
+           0      1.66667     0.666667       |
+           0            0          0.2       |
 <<< Matrix Elements
 
 
@@ -6294,9 +7211,9 @@ Matrix Elements >>>
 
 After Gaussian Elimination (Row Echelon Form):
 Matrix Elements >>>
-           1            2           -1            8       |
-           0            5           -1           13       |
-           0            0            1            0       |
+          -3           -1            2          -11       |
+           0      1.66667     0.666667      4.33333       |
+           0            0           -1            0       |
 <<< Matrix Elements
 
 
@@ -6309,7 +7226,7 @@ Matrix Elements >>>
 
 After Gaussian Elimination (Should show rows of zeros):
 Matrix Elements >>>
-           1            2       |
+           2            4       |
            0            0       |
 <<< Matrix Elements
 
@@ -6330,7 +7247,6 @@ Matrix Elements >>>
 
 
 [D1.5] gaussian_eliminate() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 [Error] gaussian_eliminate: matrix data pointer is null
 Empty matrix gaussian_eliminate: Empty matrix or error state (Expected) [PASS]
 
@@ -6389,7 +7305,6 @@ Matrix Elements >>>
 
 
 [D2.4] row_reduce_from_gaussian() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 [Error] row_reduce_from_gaussian: matrix data pointer is null
 Empty matrix row_reduce_from_gaussian: Empty matrix or error state (Expected) [PASS]
 
@@ -6433,12 +7348,9 @@ Matrix Elements >>>
            7            8            9       |
 <<< Matrix Elements
 
-[Error] inverse_gje: matrix is singular (not invertible), left half is not identity matrix at (0, 2): expected=0, actual=-1
+[Error] inverse_gje: matrix is singular (left block not identity at (0, 2): expected 0, got -1).
 Inverse matrix (singular):
-Matrix Elements >>>
-           0       |
-<<< Matrix Elements
-
+[Error] Cannot print matrix: data pointer is null.
 
 [D3.4] 3x3 Matrix Inverse
 Original matrix (mat4):
@@ -6463,12 +7375,9 @@ Matrix Elements >>>
            4            5            6       |
 <<< Matrix Elements
 
-[Error] inverse_gje: requires square matrix (got 2x3)
+[Error] inverse_gje: requires a square matrix (got 2x3).
 Inverse matrix (non-square):
-Matrix Elements >>>
-           0       |
-<<< Matrix Elements
-
+[Error] Cannot print matrix: data pointer is null.
 
 [D4: Dot Product Tests]
 
@@ -6583,12 +7492,9 @@ Matrix Elements >>>
           15       |
 <<< Matrix Elements
 
-[Error] solve: pivot at (1, 1) is zero or too small (0), matrix is singular or near-singular
+[Error] solve: zero or near-zero pivot at (2, 2), system is singular or rank-deficient.
 Solution x:
-Matrix Elements >>>
-           0       |
-<<< Matrix Elements
-
+[Error] Cannot print matrix: data pointer is null.
 
 [D5.4] Solving a System with Zero Determinant (Singular Matrix)
 Matrix A (singular, determinant = 0):
@@ -6605,12 +7511,9 @@ Matrix Elements >>>
            7       |
 <<< Matrix Elements
 
-[Error] solve: pivot at (1, 1) is zero or too small (0), matrix is singular or near-singular
+[Error] solve: zero or near-zero pivot at (2, 2), system is singular or rank-deficient.
 Solution x:
-Matrix Elements >>>
-           0       |
-<<< Matrix Elements
-
+[Error] Cannot print matrix: data pointer is null.
 
 [D5.5] Solving a System with Linearly Dependent Rows (Expect Failure or Infinite Solutions)
 Matrix A (all rows linearly dependent):
@@ -6627,12 +7530,9 @@ Matrix Elements >>>
           18       |
 <<< Matrix Elements
 
-[Error] solve: pivot at (1, 1) is zero or too small (0), matrix is singular or near-singular
+[Error] solve: zero or near-zero pivot at (2, 2), system is singular or rank-deficient.
 Solution x:
-Matrix Elements >>>
-           0       |
-<<< Matrix Elements
-
+[Error] Cannot print matrix: data pointer is null.
 
 [D5.6] Solving a Larger 4x4 System Ax = b
 Matrix A:
@@ -6661,13 +7561,11 @@ Matrix Elements >>>
 
 
 [D5.7] solve() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] solve: matrix A data pointer is null
+[Error] solve: matrix A data pointer is null.
 Empty system solve: Empty matrix or error state (Expected) [PASS]
 
 [D5.8] solve() - Error Handling - Dimension Mismatch
-[Error] solve: dimensions do not match (A: 2x2, b: 3x1, expected b: 2x1)
+[Error] solve: dimensions do not match (A: 2x2, b: 3x1, expected b: 2x1).
 Dimension mismatch solve: Empty matrix or error state (Expected) [PASS]
 
 [D6: Band Solve Tests]
@@ -6735,12 +7633,9 @@ Matrix Elements >>>
           11       |
 <<< Matrix Elements
 
-[Error] band_solve: dimensions do not match (A: 3x3, b: 2x1, expected b: 3x1)
+[Error] band_solve: dimensions do not match (A: 3x3, b: 2x1, expected b: 3x1).
 Solution x:
-Matrix Elements >>>
-           0       |
-<<< Matrix Elements
-
+[Error] Cannot print matrix: data pointer is null.
 
 [D6.4] Singular Matrix (No Unique Solution)
 Matrix A (singular, linearly dependent rows):
@@ -6757,21 +7652,16 @@ Matrix Elements >>>
           30       |
 <<< Matrix Elements
 
-[Error] band_solve: zero or near-zero pivot detected at (1, 1) = 0, matrix is singular or near-singular
+[Error] band_solve: zero or near-zero pivot at (1, 1) = 0; matrix is singular or requires pivoting.
 Solution x:
-Matrix Elements >>>
-           0       |
-<<< Matrix Elements
-
+[Error] Cannot print matrix: data pointer is null.
 
 [D6.5] band_solve() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] band_solve: matrix A data pointer is null
+[Error] band_solve: matrix A data pointer is null.
 Empty system band_solve: Empty matrix or error state (Expected) [PASS]
 
 [D6.6] band_solve() - Error Handling - Invalid Bandwidth
-[Error] band_solve: bandwidth k must be >= 1 (got -1)
+[Error] band_solve: bandwidth k must be >= 1 (got -1).
 band_solve with k=-1: Empty matrix or error state (Expected) [PASS]
 
 [D7: Roots Tests]
@@ -6832,12 +7722,9 @@ Matrix Elements >>>
            6       |
 <<< Matrix Elements
 
-[Error] roots: pivot is zero or too small at (1, 1) = 0, system may have no solution
+[Error] solve: zero or near-zero pivot at (1, 1), system is singular or rank-deficient.
 Solution x:
-Matrix Elements >>>
-           0       |
-<<< Matrix Elements
-
+[Error] Cannot print matrix: data pointer is null.
 
 [D7.4] Incompatible Dimensions (Expect Error)
 Matrix A (3x3):
@@ -6853,20 +7740,18 @@ Matrix Elements >>>
           11       |
 <<< Matrix Elements
 
-[Error] roots: dimensions do not match (A: 3x3, y: 2x1, expected y: 3x1)
+[Error] solve: dimensions do not match (A: 3x3, b: 2x1, expected b: 3x1).
 Dimension mismatch roots: Empty matrix or error state (Expected) [PASS]
 
 [D7.5] roots() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] roots: matrix A data pointer is null
+[Error] solve: matrix A data pointer is null.
 Empty system roots: Empty matrix or error state (Expected) [PASS]
 ============ [tiny_matrix_test end] ============
 ```
 
 ### 第五阶段： 高级线性代数（E1+2）
 
-```c
+```cpp
 ============ [tiny_matrix_test start] ============
 
 [Test Organization: Application-Oriented Logic]
@@ -6899,16 +7784,15 @@ Is positive definite: False (Expected: False) [PASS]
 [E1.13] max_minors_to_check Parameter Testing
 max_minors_to_check = -1 (check all): True (Expected: True) [PASS]
 max_minors_to_check = 3 (check first 3): True (Expected: True) [PASS]
-[Error] is_positive_definite: max_minors_to_check must be > 0 or -1 (got 0)
+[Error] is_positive_definite: max_minors_to_check must be > 0 or -1 (got 0).
 max_minors_to_check = 0 (invalid): False (Expected: False) [PASS]
 
 [E1.14] Parameter Validation - Negative Tolerance
-[Error] is_positive_definite: tolerance must be non-negative (got -1e-06)
+[Error] is_positive_definite: tolerance must be >= 0 (got -1e-06).
 tolerance = -1e-6 (invalid): False (Expected: False) [PASS]
 
 [E1.15] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] is_positive_definite: matrix data pointer is null
+[Error] is_positive_definite: matrix data pointer is null.
 Empty matrix (0x0): False (Expected: False, empty matrix is invalid) [PASS]
 
 [E1.16] Boundary Case - Invalid Dimensions
@@ -6980,20 +7864,17 @@ Matrix Elements >>>
 Verification error: 0 [PASS]
 
 [E1.26] solve_lu() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] lu_decompose: matrix data pointer is null
-[Error] solve_lu: invalid LU decomposition (status: 458759)
-Empty system: x rows = 1 (Expected: 0 or error state) [PASS]
+[Error] lu_decompose: matrix data pointer is null.
+[Error] solve_lu: invalid LU decomposition (status=458759).
+Empty system: x rows = 0 (Expected: 0 or error state) [PASS]
 
 [E1.27] solve_lu() - Invalid LU Decomposition
-[Error] solve_lu: invalid LU decomposition (status: 258)
-Invalid LU decomposition: x rows = 1 (Expected: 0 or error state) [PASS]
+[Error] solve_lu: invalid LU decomposition (status=258).
+Invalid LU decomposition: x rows = 0 (Expected: 0 or error state) [PASS]
 
 [E1.23] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] lu_decompose: matrix data pointer is null
-Empty matrix: Status = Error, L rows = 1 (Expected: Error status, L is 0x0 or error state) [PASS]
+[Error] lu_decompose: matrix data pointer is null.
+Empty matrix: Status = Error, L rows = 0 (Expected: Error status, L is 0x0 or error state) [PASS]
 
 [E1.24] LU Decomposition without Pivoting
 Status: OK
@@ -7001,7 +7882,7 @@ Pivoted: No (Expected) [PASS]
 Verification (A = L * U): difference = 0 [PASS]
 
 [E1.25] lu_decompose() - Error Handling - Non-Square Matrix
-[Error] lu_decompose: requires square matrix (got 2x3)
+[Error] lu_decompose: requires a square matrix (got 2x3).
 Non-square matrix (2x3): Status = Error (Expected) [PASS]
 
 [E1.3] Cholesky Decomposition
@@ -7039,27 +7920,24 @@ Matrix Elements >>>
 Verification error: 0 [PASS]
 
 [E1.35] solve_cholesky() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 [Error] cholesky_decompose: matrix data pointer is null
-[Error] solve_cholesky: invalid Cholesky decomposition (status: 458759)
-Empty system: x rows = 1 (Expected: 0 or error state) [PASS]
+[Error] solve_cholesky: invalid decomposition (status=458759).
+Empty system: x rows = 0 (Expected: 0 or error state) [PASS]
 
 [E1.36] solve_cholesky() - Invalid Cholesky Decomposition
-[Error] solve_cholesky: invalid Cholesky decomposition (status: 258)
-Invalid Cholesky decomposition: x rows = 1 (Expected: 0 or error state) [PASS]
+[Error] solve_cholesky: invalid decomposition (status=258).
+Invalid Cholesky decomposition: x rows = 0 (Expected: 0 or error state) [PASS]
 
 [E1.33] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
 [Error] cholesky_decompose: matrix data pointer is null
-Empty matrix: Status = Error, L rows = 1 (Expected: Error status, L is 0x0 or error state) [PASS]
+Empty matrix: Status = Error, L rows = 0 (Expected: Error status, L is 0x0 or error state) [PASS]
 
 [E1.34] Non-Symmetric Matrix (Should Fail)
 [Error] cholesky_decompose: requires symmetric matrix
 Non-symmetric matrix: Status = Error (Expected) [PASS]
 
 [E1.37] solve_cholesky() - Error Handling - Dimension Mismatch
-[Error] solve_cholesky: dimension mismatch - b must be 3x1 vector (got 4x1)
+[Error] solve_cholesky: b must be 3x1 (got 4x1).
 Dimension mismatch solve_cholesky: Empty matrix or error state (Expected) [PASS]
 
 [E1.4] QR Decomposition
@@ -7091,8 +7969,8 @@ Matrix Elements >>>
 
 
 [Verification] Q * R should equal A
-Total difference: 1.66893e-06 [PASS]
-Q orthogonality error: 2.83733e-07 [PASS]
+Total difference: 9.53674e-07 [PASS]
+Q orthogonality error: 2.35673e-07 [PASS]
 
 [E1.42] Least Squares Solution using QR Decomposition
 Overdetermined system: A * x ≈ b
@@ -7121,31 +7999,26 @@ Matrix Elements >>>
 Residual norm ||A*x - b||: 4.12953e-07
 
 [E1.46] solve_qr() - Boundary Case - Empty Matrix
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] qr_decompose: matrix data pointer is null
-[Error] solve_qr: invalid QR decomposition (status: 458759)
-Empty system: x rows = 1 (Expected: 0 or error state) [PASS]
+[Error] qr_decompose: matrix data pointer is null.
+[Error] solve_qr: invalid QR decomposition (status=458759).
+Empty system: x rows = 0 (Expected: 0 or error state) [PASS]
 
 [E1.47] solve_qr() - Invalid QR Decomposition
-[Error] solve_qr: invalid QR decomposition (status: 258)
-Invalid QR decomposition: x rows = 1 (Expected: 0 or error state) [PASS]
+[Error] solve_qr: invalid QR decomposition (status=258).
+Invalid QR decomposition: x rows = 0 (Expected: 0 or error state) [PASS]
 
 [E1.43] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] qr_decompose: matrix data pointer is null
-Empty matrix: Status = Error, Q rows = 1 (Expected: Error status, Q is 0x0 or error state) [PASS]
+[Error] qr_decompose: matrix data pointer is null.
+Empty matrix: Status = Error, Q rows = 0 (Expected: Error status, Q is 0x0 or error state) [PASS]
 
 [E1.44] Boundary Case - Zero Rows or Columns
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] qr_decompose: matrix data pointer is null
+[Error] qr_decompose: matrix data pointer is null.
 Matrix with 0 rows (0x3): Status = Error [PASS]
-[Error] qr_decompose: matrix data pointer is null
+[Error] qr_decompose: matrix data pointer is null.
 Matrix with 0 cols (3x0): Status = Error [PASS]
 
 [E1.45] solve_qr() - Error Handling - Dimension Mismatch
-[Error] solve_qr: dimension mismatch - b must be 3x1 vector (got 4x1)
+[Error] solve_qr: b must be 3x1 (got 4x1).
 Dimension mismatch solve_qr: Empty matrix or error state (Expected) [PASS]
 
 [E1.5] Singular Value Decomposition (SVD)
@@ -7163,14 +8036,14 @@ Matrix Elements >>>
 Status: OK
 Singular values:
 Matrix Elements >>>
-     1.06837       |
      16.8481       |
+     1.06837       |
            0       |
 <<< Matrix Elements
 
 Numerical rank: 2
 Iterations: 7
-Reconstruction error: 1.68085e-05 [PASS]
+Reconstruction error: 1.74046e-05 [PASS]
 
 [E1.52] Pseudo-inverse using SVD
 Matrix A (3x2):
@@ -7188,51 +8061,70 @@ Matrix Elements >>>
      1.08333     0.333333    -0.416666       |
 <<< Matrix Elements
 
-Verification error (A * A^+ * A ≈ A): 5.72205e-06 [PASS]
+Verification error (A * A^+ * A ≈ A): 5.48363e-06 [PASS]
 
 [E1.57] pseudo_inverse() - Parameter Validation - tolerance < 0
-[Error] pseudo_inverse: tolerance must be >= 0 (got -1e-06)
-tolerance = -1e-6: A_plus rows = 1 (Expected: 0 or error state) [PASS]
+[Error] pseudo_inverse: tolerance must be >= 0 (got -1e-06).
+tolerance = -1e-6: A_plus rows = 0 (Expected: 0 or error state) [PASS]
 
 [E1.58] pseudo_inverse() - Invalid SVD Decomposition
 [Error] pseudo_inverse: invalid SVD decomposition (status: 258)
-Invalid SVD decomposition: A_plus rows = 1 (Expected: 0 or error state) [PASS]
+Invalid SVD decomposition: A_plus rows = 0 (Expected: 0 or error state) [PASS]
 
 [E1.53] Parameter Validation - max_iter <= 0
-[Error] svd_decompose: max_iter must be > 0 (got 0)
+[Error] svd_decompose: max_iter must be > 0 (got 0).
 max_iter = 0: Status = Error (Expected) [PASS]
-[Error] svd_decompose: max_iter must be > 0 (got -1)
+[Error] svd_decompose: max_iter must be > 0 (got -1).
 max_iter = -1: Status = Error (Expected) [PASS]
 
 [E1.54] Parameter Validation - tolerance < 0
-[Error] svd_decompose: tolerance must be >= 0 (got -1e-06)
+[Error] svd_decompose: tolerance must be >= 0 (got -1e-06).
 tolerance = -1e-6: Status = Error (Expected) [PASS]
 
 [E1.55] Boundary Case - Empty Matrix (m=0 or n=0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] svd_decompose: matrix data pointer is null
+[Error] svd_decompose: matrix data pointer is null.
 Matrix with 0 rows (0x3): Status = Error [PASS]
-[Error] svd_decompose: matrix data pointer is null
+[Error] svd_decompose: matrix data pointer is null.
 Matrix with 0 cols (3x0): Status = Error [PASS]
 
 [E1.56] pseudo_inverse() - Error Handling - Invalid SVD Decomposition
 [Error] pseudo_inverse: invalid SVD decomposition (status: 258)
-Invalid SVD decomposition: A_plus rows = 1 (Expected: 0 or error state) [PASS]
+Invalid SVD decomposition: A_plus rows = 0 (Expected: 0 or error state) [PASS]
+
+[E1.59] SVD - Singular Values Descending Order
+Status: OK
+Singular values: 5 3 2 1 
+Descending order check: [PASS]
+
+[E1.510] SVD - V Orthogonality (V^T * V approx I)
+Max |V^T*V - I| = 2.38419e-07 [PASS]
+
+[E1.511] SVD - U Orthogonality (first rank columns)
+Detected rank = 3
+Max |U^T*U - I|_rank = 4.76837e-07 [PASS]
+
+[E1.512] SVD - Wide Matrix (2x3)
+Dimensions (U=2x2, S=2x1, V=3x3): [PASS]
+Reconstruction error: 4.29153e-06 [PASS]
+
+[E1.513] SVD - Rank-Deficient Detection
+Status: OK
+S = [16.8481, 1.06837, 0]  (last expected ~0)
+Detected rank = 2 (expected 2) [PASS]
 
 [E1.6] Matrix Decomposition Performance Tests
 
 [E1.61] LU Decomposition Performance
-[Performance] LU Decomposition (4x4 matrix): 148.00 us
+[Performance] LU Decomposition (4x4 matrix): 117.00 us
 
 [E1.62] Cholesky Decomposition Performance
-[Performance] Cholesky Decomposition (4x4 SPD matrix): 95.00 us
+[Performance] Cholesky Decomposition (4x4 SPD matrix): 70.00 us
 
 [E1.63] QR Decomposition Performance
-[Performance] QR Decomposition (4x4 matrix): 194.00 us
+[Performance] QR Decomposition (4x4 matrix): 163.00 us
 
 [E1.64] SVD Decomposition Performance
-[Performance] SVD Decomposition (4x4 matrix): 367.00 us
+[Performance] SVD Decomposition (4x4 matrix): 323.00 us
 
 [Matrix Decomposition Tests Complete]
 
@@ -7329,8 +8221,7 @@ Matrix Elements >>>
 [Verification] Dot product of Q columns: 0.00 (should be ~0 for orthogonal) [PASS]
 
 [E2.4] Error Handling - Invalid Input
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] gram_schmidt_orthogonalize: Input matrix is null.
+[Error] gram_schmidt_orthogonalize: input matrix is null.
 Empty matrix test: PASS (correctly rejected)
 
 [E2.5] gram_schmidt_orthogonalize() - Parameter Validation - Negative Tolerance
@@ -7338,20 +8229,18 @@ Empty matrix test: PASS (correctly rejected)
 tolerance = -1e-6: PASS (correctly rejected)
 
 [E2.6] gram_schmidt_orthogonalize() - Boundary Case - Zero Rows
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] gram_schmidt_orthogonalize: Input matrix is null.
+[Error] gram_schmidt_orthogonalize: input matrix is null.
 Zero rows (0x2): PASS (correctly rejected)
 
 [E2.7] gram_schmidt_orthogonalize() - Boundary Case - Zero Columns
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] gram_schmidt_orthogonalize: Input matrix is null.
+[Error] gram_schmidt_orthogonalize: input matrix is null.
 Zero columns (2x0): PASS (correctly rejected)
 ============ [tiny_matrix_test end] ============
 ```
 
 ### 第六阶段：系统识别应用（E3）
 
-```c
+```cpp
 ============ [tiny_matrix_test start] ============
 
 [Test Organization: Application-Oriented Logic]
@@ -7398,13 +8287,11 @@ Is symmetric (tolerance=1e-6): False (Expected: False, tolerance < error) [PASS]
 Difference accuracy: |actual_diff - expected_diff| = 1.36e-08 [PASS - difference stored correctly]
 
 [E3.15] Parameter Validation - Negative Tolerance
-[Error] is_symmetric: tolerance must be >= 0 (got -1e-06)
+[Error] is_symmetric: tolerance must be >= 0 (got -1e-06).
 tolerance = -1e-6 (invalid): False (Expected: False) [PASS]
 
 [E3.16] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] is_symmetric: matrix data pointer is null
-Empty matrix (0x0): False (Expected: False, empty matrix is invalid) [PASS]
+Empty matrix (0x0): True (Expected: True, 0x0 is vacuously symmetric) [PASS]
 
 [E3.2] power_iteration() - Dominant Eigenvalue
 
@@ -7454,22 +8341,21 @@ Matrix Elements >>>
   Error from expected (3.41): 0.00 [PASS]
 
 [E3.23] Non-Square Matrix (Expect Error)
-[Error] power_iteration: requires square matrix (got 2x3)
+[Error] power_iteration: requires square matrix (got 2x3).
 Status: Error (Expected)
 
 [E3.25] Parameter Validation - max_iter <= 0
-[Error] power_iteration: max_iter must be > 0 (got 0)
+[Error] power_iteration: max_iter must be > 0 (got 0).
 max_iter = 0: Status = Error (Expected) [PASS]
-[Error] power_iteration: max_iter must be > 0 (got -1)
+[Error] power_iteration: max_iter must be > 0 (got -1).
 max_iter = -1: Status = Error (Expected) [PASS]
 
 [E3.26] Parameter Validation - tolerance < 0
-[Error] power_iteration: tolerance must be >= 0 (got -1e-06)
+[Error] power_iteration: tolerance must be >= 0 (got -1e-06).
 tolerance = -1e-6: Status = Error (Expected) [PASS]
 
 [E3.27] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] power_iteration: matrix data pointer is null
+[Error] power_iteration: matrix data pointer is null.
 Empty matrix: Status = Error, eigenvalue = 0.00 (Expected: Error status) [PASS]
 
 [E3.24] inverse_power_iteration() - Smallest Eigenvalue (System Identification)
@@ -7490,7 +8376,7 @@ Matrix Elements >>>
 
 [Actual Results]
   Smallest eigenvalue: 1.00 (Expected: 1.0, smallest eigenvalue)
-  Iterations: 6
+  Iterations: 5
   Status: OK
   Smallest eigenvector:
 Matrix Elements >>>
@@ -7523,7 +8409,7 @@ Matrix Elements >>>
 [Actual Results]
   Smallest eigenvalue (fundamental frequency squared): 0.59
   Fundamental frequency: 0.77 rad/s (Expected: ~0.765 rad/s)
-  Iterations: 8
+  Iterations: 7
   Status: OK
   Smallest eigenvector (fundamental mode shape):
 Matrix Elements >>>
@@ -7540,7 +8426,7 @@ Matrix Elements >>>
   Frequency ratio: 2.41 (Expected: ~2.4, ratio of highest to lowest mode)
 
 [E3.210] Non-Square Matrix (Expect Error)
-[Error] inverse_power_iteration: requires square matrix (got 2x3)
+[Error] inverse_power_iteration: requires square matrix (got 2x3).
 Status: Error (Expected)
 Error handling: [PASS]
 
@@ -7560,23 +8446,22 @@ Matrix Elements >>>
   Note: Successfully handled near-singular matrix [PASS]
 
 [E3.212] Parameter Validation - max_iter <= 0
-[Error] inverse_power_iteration: max_iter must be > 0 (got 0)
+[Error] inverse_power_iteration: max_iter must be > 0 (got 0).
 max_iter = 0: Status = Error (Expected) [PASS]
-[Error] inverse_power_iteration: max_iter must be > 0 (got -1)
+[Error] inverse_power_iteration: max_iter must be > 0 (got -1).
 max_iter = -1: Status = Error (Expected) [PASS]
 
 [E3.213] Parameter Validation - tolerance < 0
-[Error] inverse_power_iteration: tolerance must be >= 0 (got -1e-06)
+[Error] inverse_power_iteration: tolerance must be >= 0 (got -1e-06).
 tolerance = -1e-6: Status = Error (Expected) [PASS]
 
 [E3.214] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] inverse_power_iteration: matrix data pointer is null
+[Error] inverse_power_iteration: matrix data pointer is null.
 Empty matrix: Status = Error, eigenvalue = 0.00 (Expected: Error status) [PASS]
 
 [E3.215] Singular Matrix (Should Fail)
-[Error] solve: pivot at (1, 1) is zero or too small (0), matrix is singular or near-singular
-[Error] Inverse power iteration: Matrix is singular or near-singular. Cannot solve linear system A * y = v.
+[Error] lu_decompose: matrix is singular or near-singular at column 1 (pivot = 0).
+[Error] inverse_power_iteration: matrix is singular or near-singular (LU status=458754).
 Singular matrix: Status = Error (Expected: Error or OK with eigenvalue ≈ 0) [PASS]
 
 [E3.3] eigendecompose_jacobi() - Symmetric Matrix Decomposition
@@ -7680,18 +8565,17 @@ Iterations: 1 (Expected: 1)
 Eigenvalue check (should be 5.0, 3.0, 1.0): [PASS]
 
 [E3.34] Parameter Validation - tolerance < 0
-[Error] eigendecompose_jacobi: tolerance must be >= 0 (got -1e-06)
+[Error] eigendecompose_jacobi: tolerance must be >= 0 (got -1e-06).
 tolerance = -1e-6: Status = Error (Expected) [PASS]
 
 [E3.35] Parameter Validation - max_iter <= 0
-[Error] eigendecompose_jacobi: max_iter must be > 0 (got 0)
+[Error] eigendecompose_jacobi: max_iter must be > 0 (got 0).
 max_iter = 0: Status = Error (Expected) [PASS]
-[Error] eigendecompose_jacobi: max_iter must be > 0 (got -1)
+[Error] eigendecompose_jacobi: max_iter must be > 0 (got -1).
 max_iter = -1: Status = Error (Expected) [PASS]
 
 [E3.36] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] eigendecompose_jacobi: matrix data pointer is null
+[Error] eigendecompose_jacobi: matrix data pointer is null.
 Empty matrix: Status = Error, eigenvalues rows = 1 (Expected: Error status, eigenvalues is 0x0 or error state) [PASS]
 
 [E3.4] eigendecompose_qr() - General Matrix Decomposition
@@ -7721,7 +8605,7 @@ Matrix Elements >>>
         0.91        -0.42       |
 <<< Matrix Elements
 
-Iterations: 6
+Iterations: 5
 Status: OK
 Eigenvalue 1: 5.37 (Expected: 5.37, Error: 0.00, Rel Error: 0.01%) [PASS]
 Eigenvalue 2: -0.37 (Expected: -0.37, Error: 0.00, Rel Error: 0.07%) [PASS]
@@ -7757,7 +8641,7 @@ Matrix Elements >>>
         0.82        -0.40         0.41       |
 <<< Matrix Elements
 
-Iterations: 6
+Iterations: 5
 Status: OK
 Eigenvalue 0: 16.12 (Expected: 16.12, Error: 0.00, Rel Error: 0.02%) [PASS]
 Eigenvalue 1: -1.12 (Expected: -1.12, Error: 0.00, Rel Error: 0.28%) [PASS]
@@ -7765,18 +8649,17 @@ Eigenvalue 2: 0.00 (Expected: 0.00, Error: 0.00, Rel Error: 0.00%) [PASS]
 Overall eigenvalue check: [PASS]
 
 [E3.43] Parameter Validation - max_iter <= 0
-[Error] eigendecompose_qr: max_iter must be > 0 (got 0)
+[Error] eigendecompose_qr: max_iter must be > 0 (got 0).
 max_iter = 0: Status = Error (Expected) [PASS]
-[Error] eigendecompose_qr: max_iter must be > 0 (got -1)
+[Error] eigendecompose_qr: max_iter must be > 0 (got -1).
 max_iter = -1: Status = Error (Expected) [PASS]
 
 [E3.44] Parameter Validation - tolerance < 0
-[Error] eigendecompose_qr: tolerance must be >= 0 (got -1e-06)
+[Error] eigendecompose_qr: tolerance must be >= 0 (got -1e-06).
 tolerance = -1e-6: Status = Error (Expected) [PASS]
 
 [E3.45] Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] eigendecompose_qr: matrix data pointer is null
+[Error] eigendecompose_qr: matrix data pointer is null.
 Empty matrix: Status = Error, eigenvalues rows = 1 (Expected: Error status, eigenvalues is 0x0 or error state) [PASS]
 
 [E3.5] eigendecompose() - Automatic Method Selection
@@ -7823,7 +8706,7 @@ Matrix Elements >>>
         0.00       |
 <<< Matrix Elements
 
-Iterations: 6
+Iterations: 5
 Status: OK
 Method used: QR (auto-selected for non-symmetric matrix)
 Eigenvalue 0: 16.12 (Expected: 16.12, Error: 0.00, Rel Error: 0.02%) [PASS]
@@ -7832,13 +8715,13 @@ Eigenvalue 2: 0.00 (Expected: 0.00, Error: 0.00, Rel Error: 0.00%) [PASS]
 Overall eigenvalue check: [PASS]
 
 [E3.53] Parameter Validation - tolerance < 0
-[Error] eigendecompose: tolerance must be >= 0 (got -1e-06)
+[Error] eigendecompose: tolerance must be >= 0 (got -1e-06).
 tolerance = -1e-6: Status = Error (Expected) [PASS]
 
 [E3.531] Parameter Validation - max_iter <= 0
-[Error] eigendecompose: max_iter must be > 0 (got 0)
+[Error] eigendecompose: max_iter must be > 0 (got 0).
 max_iter = 0: Status = Error (Expected) [PASS]
-[Error] eigendecompose: max_iter must be > 0 (got -10)
+[Error] eigendecompose: max_iter must be > 0 (got -10).
 max_iter = -10: Status = Error (Expected) [PASS]
 
 [E3.532] Custom max_iter Parameter Test
@@ -7858,12 +8741,11 @@ Matrix Elements >>>
 Custom max_iter test: [PASS]
 
 [E3.54] eigendecompose() - Boundary Case - Empty Matrix (0x0)
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] eigendecompose: matrix data pointer is null
+[Error] eigendecompose: matrix data pointer is null.
 Empty matrix: Status = Error, eigenvalues rows = 1 (Expected: Error status, eigenvalues is 0x0 or error state) [PASS]
 
 [E3.55] eigendecompose() - Error Handling - Non-Square Matrix
-[Error] eigendecompose_qr: requires square matrix (got 2x3)
+[Error] eigendecompose_qr: requires square matrix (got 2x3).
 Non-square matrix (2x3): Status = Error (Expected) [PASS]
 
 [E3.6] SHM Application - Structural Dynamics Analysis
@@ -7938,7 +8820,7 @@ Matrix Elements >>>
 Error from expected: 0.00 [PASS]
 
 [E3.72] Zero Matrix
-[Error] power_iteration: computed vector norm too small
+[Error] power_iteration: matrix-vector product collapsed to zero.
 Status: Error (Expected)
 
 [E3.73] Identity Matrix
@@ -7976,25 +8858,24 @@ All eigenvalues = 1.0: [PASS]
 [E3.8] Performance Test for SHM Applications
 
 [E3.81] Power Iteration Performance (Real-time SHM - Dominant Eigenvalue)
-[Performance] Power Iteration (3x3 matrix): 123.00 us
+[Performance] Power Iteration (3x3 matrix): 91.00 us
 
 [E3.82] Inverse Power Iteration Performance (System Identification - Smallest Eigenvalue)
-[Performance] Inverse Power Iteration (3x3 matrix): 554.00 us
+[Performance] Inverse Power Iteration (3x3 matrix): 455.00 us
 
 [E3.83] Jacobi Method Performance (Complete Eigendecomposition - Symmetric Matrices)
-[Performance] Jacobi Decomposition (3x3 symmetric matrix): 187.00 us
+[Performance] Jacobi Decomposition (3x3 symmetric matrix): 150.00 us
 
 [E3.84] QR Method Performance (Complete Eigendecomposition - General Matrices)
-[Performance] QR Decomposition (3x3 general matrix): 806.00 us
+[Performance] QR Decomposition (3x3 general matrix): 492.00 us
 
 [Eigenvalue Decomposition Tests Complete]
 ============ [tiny_matrix_test end] ============
 ```
 
-
 ### 第七阶段：辅助函数（F）
 
-```c
+```cpp
 ============ [tiny_matrix_test start] ============
 
 [Test Organization: Application-Oriented Logic]
@@ -8196,15 +9077,23 @@ Matrix Elements >>>
            3            4       |
 <<< Matrix Elements
 
-operator == Error: 0 0, m1.data=1, m2.data=5, diff=4
 matE == matF after modification: False
+
+[F2.10] In-place Matrix Multiplication Shape Change (operator*=)
+matG *= matH -> shape: 2x4 (expected 2x4)
+38 44 50 56
+83 98 113 128
+
+
+[F2.11] Element-wise Matrix Division Zero Check (operator/)
+[Error] operator/: division by zero at (0, 1).
+divA / divB with zero element: Empty (expected)
 ============ [tiny_matrix_test end] ============
 ```
 
-
 ### 第八阶段：质量保证（G）
 
-```c
+```cpp
 ============ [tiny_matrix_test start] ============
 
 [Test Organization: Application-Oriented Logic]
@@ -8279,8 +9168,8 @@ Matrix Elements >>>
 
 
 [G1.6] Division by Zero
-[Error] Division by zero in operator/.
-mat3 / 0.0f: Error
+[Error] operator/: division by zero (num=0).
+mat3 / 0.0f: Empty (correct)
 
 [G1.7] Matrix Division with Zero Elements
 [Error] Matrix division failed: Division by zero detected at position (0, 1)
@@ -8292,35 +9181,33 @@ Matrix Elements >>>
 
 
 [G1.8] Empty Matrix Operations
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[>>> Error ! <<<] Memory allocation failed in alloc_mem()
-[Error] operator+=: this matrix data pointer is null
+[Error] operator+: null matrix data pointer.
 Empty matrix addition: Empty matrix or error state (Expected) [PASS]
 
 [G2: Quality Assurance - Performance Benchmarks Tests]
 
 [G2.1] Matrix Addition Performance
-[Performance] 50x50 Matrix Addition (100 iterations): 18155.00 us total, 181.55 us avg
+[Performance] 50x50 Matrix Addition (100 iterations): 18139.00 us total, 181.39 us avg
 
 [G2.2] Matrix Multiplication Performance
-[Performance] 30x30 Matrix Multiplication (100 iterations): 66761.00 us total, 667.61 us avg
+[Performance] 30x30 Matrix Multiplication (100 iterations): 66757.00 us total, 667.57 us avg
 
 [G2.3] Matrix Transpose Performance
-[Performance] 50x30 Matrix Transpose (100 iterations): 22002.00 us total, 220.02 us avg
+[Performance] 50x30 Matrix Transpose (100 iterations): 21993.00 us total, 219.93 us avg
 
 [G2.4] Determinant Calculation Performance Comparison
 
 [G2.4.1] Small Matrix (4x4) - Laplace Expansion
-[Performance] 4x4 Determinant (Laplace, 10 iterations): 3124.00 us total, 312.40 us avg
+[Performance] 4x4 Determinant (Laplace, 10 iterations): 3242.00 us total, 324.20 us avg
 
 [G2.4.2] Large Matrix (8x8) - LU Decomposition
-[Performance] 8x8 Determinant (LU, 10 iterations): 2028.00 us total, 202.80 us avg
+[Performance] 8x8 Determinant (LU, 10 iterations): 1666.00 us total, 166.60 us avg
 
 [G2.4.3] Large Matrix (8x8) - Gaussian Elimination
-[Performance] 8x8 Determinant (Gaussian, 10 iterations): 459.00 us total, 45.90 us avg
+[Performance] 8x8 Determinant (Gaussian, 10 iterations): 463.00 us total, 46.30 us avg
 
 [G2.4.4] Large Matrix (8x8) - Auto-select Method
-[Performance] 8x8 Determinant (auto-select, 10 iterations): 2013.00 us total, 201.30 us avg
+[Performance] 8x8 Determinant (auto-select, 10 iterations): 1625.00 us total, 162.50 us avg
 
 [Note] Performance Summary:
   - Laplace expansion (O(n!)): Suitable only for small matrices (n <= 4)
@@ -8329,24 +9216,24 @@ Empty matrix addition: Empty matrix or error state (Expected) [PASS]
   - Auto-select: Automatically chooses the best method based on matrix size
 
 [G2.5] Matrix Copy with Padding Performance
-[Performance] 8x8 Copy ROI (with padding) (100 iterations): 2587.00 us total, 25.87 us avg
+[Performance] 8x8 Copy ROI (with padding) (100 iterations): 2675.00 us total, 26.75 us avg
 
 [G2.6] Element Access Performance
 [Performance] Computing element access (warmup)...
-[Performance] 50x50 Element Access (all elements) (100 iterations): 9685.00 us total, 96.85 us avg
+[Performance] 50x50 Element Access (all elements) (100 iterations): 9709.00 us total, 97.09 us avg
 
-[G3: Quality Assurance - Memory Layout Tests (Padding and Stride)]
+[G3: Quality Assurance - Memory Layout Tests (Padding and Step)]
 
 [G3.1] Contiguous Memory (no padding)
-Matrix 3x4 (stride=4, pad=0):
+Matrix 3x4 (step=4, pad=0):
 Matrix Info >>>
 rows            3
 cols            4
 elements        12
 paddings        0
-stride          4
+step            4
 memory          12
-data pointer    0x3fce9af0
+data pointer    0x3fce9af4
 temp pointer    0
 ext_buff        0
 sub_matrix      0
@@ -8358,16 +9245,16 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 
-[G3.2] Padded Memory (stride > col)
-Matrix 3x4 (stride=5, pad=1):
+[G3.2] Padded Memory (step > col)
+Matrix 3x4 (step=5, pad=1):
 Matrix Info >>>
 rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fc9a3f4
+data pointer    0x3fc9a404
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      0
@@ -8386,16 +9273,16 @@ rows            3
 cols            4
 elements        12
 paddings        1
-stride          5
+step            5
 memory          15
-data pointer    0x3fce9c64
+data pointer    0x3fce9b68
 temp pointer    0
 ext_buff        0
 sub_matrix      0
 <<< Matrix Info
 Matrix Elements >>>
-       11.00        22.00        33.00        44.00       |  20.00 
-       55.00        66.00        77.00        88.00       |  25.00 
+       11.00        22.00        33.00        44.00       |  33.00 
+       55.00        66.00        77.00        88.00       |  38.00 
        99.00       110.00       121.00       132.00       |   1.61 
 <<< Matrix Elements
 
@@ -8407,9 +9294,9 @@ rows            2
 cols            2
 elements        4
 paddings        3
-stride          5
+step            5
 memory          10
-data pointer    0x3fc9a40c
+data pointer    0x3fc9a41c
 temp pointer    0
 ext_buff        1   (External buffer or View)
 sub_matrix      1   (This is a Sub-Matrix View)
@@ -8420,16 +9307,16 @@ Matrix Elements >>>
 <<< Matrix Elements
 
 
-[G3.5] Copy Operations Preserve Stride
-Copied matrix (should have stride=4, no padding):
+[G3.5] Copy Operations Preserve Step
+Copied matrix (should have step=4, no padding):
 Matrix Info >>>
 rows            3
 cols            4
 elements        12
 paddings        0
-stride          4
+step            4
 memory          12
-data pointer    0x3fce9d98
+data pointer    0x3fce9ba8
 temp pointer    0
 ext_buff        0
 sub_matrix      0

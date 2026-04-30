@@ -11,9 +11,9 @@
  * Terminology conventions:
  * - pad / padding: number of padded elements at row end (not part of logical matrix values).
  * - step: total elements per physical row (logical + padding).
- * - stride: spacing for strided sampling in one row.
- *   In this matrix class, row indexing uses `step`; column sampling stride is fixed to 1.
- *   `stride` is kept as a backward-compatible alias to `step`.
+ * - stride: spacing for strided sampling in one row (general concept in low-level kernels).
+ *   In this matrix class, row indexing uses `step`; column sampling spacing is fixed to 1.
+ *   The field name `stride` exists only as a deprecated backward-compatible alias of `step`.
  * @version 1.0
  * @date 2025-04-17
  * @note This file is built on top of the mat.h file from the ESP-DSP library.
@@ -52,7 +52,7 @@ namespace tiny
         union
         {
             int step;    //< total elements per row (logical + padding)
-            int stride;  //< backward-compatible alias for `step`
+            int stride;  //< deprecated backward-compatible alias for `step` (not sampling stride)
         };
         int element;     //< number of elements = rows * cols
         int memory;      //< size of the data buffer = rows * step
@@ -219,18 +219,18 @@ namespace tiny
         // ============================================================================
         // Linear Algebra - Matrix Operations
         // ============================================================================
-        Mat minor(int target_row, int target_col);       // Minor matrix (submatrix after removing row and col)
-        Mat cofactor(int target_row, int target_col);    // Cofactor matrix
+        Mat minor(int target_row, int target_col) const;       // Submatrix after removing one row + one column (works on any m x n matrix)
+        Mat cofactor(int target_row, int target_col) const;    // Cofactor submatrix; requires the matrix to be square
         Mat gaussian_eliminate() const;    // Gaussian elimination
-        Mat row_reduce_from_gaussian();   // Row reduction from Gaussian form
-        Mat inverse_gje();                 // Inverse using Gaussian-Jordan elimination
+        Mat row_reduce_from_gaussian() const;   // REF -> RREF via back-substitution
+        Mat inverse_gje() const;           // Inverse using Gauss-Jordan elimination on [A | I]
 
         // ============================================================================
         // Linear Algebra - Linear System Solving
         // ============================================================================
         Mat solve(const Mat &A, const Mat &b) const;  // Solve Ax = b using Gaussian elimination
-        Mat band_solve(Mat A, Mat b, int k);          // Solve banded system
-        Mat roots(Mat A, Mat y);                      // Alternative solve method
+        Mat band_solve(Mat A, Mat b, int k) const;    // Solve banded system
+        Mat roots(Mat A, Mat y) const;                // Alternative solve method
 
         // ============================================================================
         // Matrix Decomposition
@@ -466,6 +466,7 @@ namespace tiny
 
 // Standard Libraries
 #include <cstring>
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <cmath>
@@ -474,19 +475,19 @@ namespace tiny
 #include <vector>
 #include <limits>
 
-/* LIBRARIE CONTENTS */
+/* LIBRARY CONTENTS */
 namespace tiny
 {
     // ============================================================================
     // Rectangular ROI Structure
     // ============================================================================
     /**
-     * @brief Construct a new Mat:: R O I:: R O I object
-     * 
-     * @param pos_x 
-     * @param pos_y 
-     * @param width 
-     * @param height 
+     * @brief Construct a new Mat::ROI object.
+     *
+     * @param pos_x
+     * @param pos_y
+     * @param width
+     * @param height
      */
     Mat::ROI::ROI(int pos_x, int pos_y, int width, int height)
     {
@@ -519,6 +520,10 @@ namespace tiny
      */
     int Mat::ROI::area_roi(void) const
     {
+        if (this->width < 0 || this->height < 0)
+        {
+            return 0;
+        }
         return this->width * this->height;
     }
 
@@ -602,16 +607,18 @@ namespace tiny
             return;
         }
         
+        const int print_cols = (this->step < this->col) ? this->step : this->col;
         if (this->step < this->col)
         {
-            std::cout << "[Warning] step < cols, potential data corruption\n";
+            std::cout << "[Warning] step < cols; printing only the first " << print_cols
+                      << " column(s) per row to avoid out-of-bounds access.\n";
         }
 
         std::cout << "Matrix Elements >>>\n";
         for (int i = 0; i < this->row; ++i)
         {
-            // print the non-padding elements
-            for (int j = 0; j < this->col; ++j)
+            // print the non-padding elements (bounded by step)
+            for (int j = 0; j < print_cols; ++j)
             {
                 std::cout << std::setw(12) << this->data[i * this->step + j] << " ";
             }
@@ -714,7 +721,7 @@ namespace tiny
     {
         // memory will be recalculated by alloc_mem() based on row * step
         alloc_mem();
-        if (this->data == nullptr)
+        if (this->data == nullptr && this->memory > 0)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
             // Memory allocation failed, object is in invalid state (data = nullptr)
@@ -760,9 +767,18 @@ namespace tiny
             return;
         }
         
+        // Empty matrix is a valid state; keep data == nullptr without allocation.
+        if (rows == 0 || cols == 0)
+        {
+            this->element = 0;
+            this->memory = 0;
+            this->data = nullptr;
+            return;
+        }
+
         // memory will be recalculated by alloc_mem() based on row * step
         alloc_mem();
-        if (this->data == nullptr)
+        if (this->data == nullptr && this->memory > 0)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
             // Memory allocation failed, object is in invalid state (data = nullptr)
@@ -828,9 +844,18 @@ namespace tiny
             return;
         }
         
+        // Empty matrix is a valid state; keep data == nullptr without allocation.
+        if (rows == 0 || cols == 0)
+        {
+            this->element = 0;
+            this->memory = 0;
+            this->data = nullptr;
+            return;
+        }
+
         // memory will be recalculated by alloc_mem() based on row * step
         alloc_mem();
-        if (this->data == nullptr)
+        if (this->data == nullptr && this->memory > 0)
         {
             std::cerr << "[>>> Error ! <<<] Memory allocation failed in alloc_mem()\n";
             // Memory allocation failed, object is in invalid state (data = nullptr)
@@ -2025,6 +2050,16 @@ namespace tiny
             return *this;
         }
 
+        // 1.5. In-place matrix multiplication may change output width (this->col -> m.col).
+        // For views/external buffers, resizing is unsafe because ownership/capacity is unknown.
+        if ((this->sub_matrix || this->ext_buff) && (this->col != m.col))
+        {
+            std::cerr << "[Error] operator*=: cannot reshape sub-matrix/external-buffer matrix ("
+                      << this->row << "x" << this->col << " -> "
+                      << this->row << "x" << m.col << ")\n";
+            return *this;
+        }
+
         // 2. Prepare temp matrix (in case overwriting the original data)
         // Create a copy of this matrix to avoid overwriting during computation
         Mat temp = this->copy_roi(0, 0, this->row, this->col);
@@ -2034,6 +2069,49 @@ namespace tiny
         {
             std::cerr << "[Error] operator*=: failed to create temporary matrix copy\n";
             return *this;
+        }
+
+        // 2.5. Ensure destination buffer/metadata can hold the multiplication result.
+        // Result shape: this->row x m.col
+        const int result_col = m.col;
+        if (this->col != result_col)
+        {
+            // We only reach here when this matrix owns its buffer (checked above).
+            if (!this->ext_buff && this->data != nullptr)
+            {
+                delete[] this->data;
+                this->data = nullptr;
+            }
+
+            this->col = result_col;
+            this->step = result_col;  // keep destination contiguous after reshape
+            this->pad = 0;
+
+            if (this->row > 0 && this->col > INT_MAX / this->row)
+            {
+                std::cerr << "[Error] operator*=: integer overflow in element calculation\n";
+                this->data = nullptr;
+                this->element = 0;
+                this->memory = 0;
+                return *this;
+            }
+            this->element = this->row * this->col;
+
+            if (this->row > 0 && this->step > INT_MAX / this->row)
+            {
+                std::cerr << "[Error] operator*=: integer overflow in memory calculation\n";
+                this->data = nullptr;
+                this->memory = 0;
+                return *this;
+            }
+            this->memory = this->row * this->step;
+
+            alloc_mem();
+            if (this->data == nullptr)
+            {
+                std::cerr << "[Error] operator*=: memory allocation failed for result matrix\n";
+                return *this;
+            }
         }
 
         // 3. Check whether padding is present in either matrix
@@ -2901,15 +2979,8 @@ namespace tiny
      */
     void Mat::normalize()
     {
-        // Check for null pointer
-        if (this->data == nullptr)
-        {
-            std::cerr << "[Error] normalize: matrix data pointer is null\n";
-            return;
-        }
-        
         // Validate matrix dimensions
-        if (this->row <= 0 || this->col <= 0)
+        if (this->row < 0 || this->col < 0)
         {
             std::cerr << "[Error] normalize: invalid matrix dimensions: rows=" 
                       << this->row << ", cols=" << this->col << "\n";
@@ -2920,6 +2991,13 @@ namespace tiny
         if (this->row == 0 || this->col == 0)
         {
             // Empty matrix, nothing to normalize
+            return;
+        }
+
+        // For non-empty matrices, data pointer must be valid
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] normalize: matrix data pointer is null\n";
             return;
         }
         
@@ -2968,15 +3046,8 @@ namespace tiny
      */
     float Mat::norm() const
     {
-        // Check for null pointer
-        if (this->data == nullptr)
-        {
-            std::cerr << "[Error] norm: matrix data pointer is null\n";
-            return 0.0f;
-        }
-        
         // Validate matrix dimensions
-        if (this->row <= 0 || this->col <= 0)
+        if (this->row < 0 || this->col < 0)
         {
             std::cerr << "[Error] norm: invalid matrix dimensions: rows=" 
                       << this->row << ", cols=" << this->col << "\n";
@@ -2986,6 +3057,13 @@ namespace tiny
         // Handle empty matrix
         if (this->row == 0 || this->col == 0)
         {
+            return 0.0f;
+        }
+
+        // For non-empty matrices, data pointer must be valid
+        if (this->data == nullptr)
+        {
+            std::cerr << "[Error] norm: matrix data pointer is null\n";
             return 0.0f;
         }
         
@@ -3320,19 +3398,6 @@ namespace tiny
      */
     Mat Mat::augment(const Mat &A, const Mat &B)
     {
-        // Check for null pointers
-        if (A.data == nullptr)
-        {
-            std::cerr << "[Error] augment: matrix A data pointer is null\n";
-            return Mat();
-        }
-        
-        if (B.data == nullptr)
-        {
-            std::cerr << "[Error] augment: matrix B data pointer is null\n";
-            return Mat();
-        }
-        
         // Validate matrix dimensions
         if (A.row < 0 || A.col < 0)
         {
@@ -3361,6 +3426,19 @@ namespace tiny
         {
             std::cerr << "[Error] augment: combined column count too large, integer overflow "
                       << "(A.col=" << A.col << ", B.col=" << B.col << ")\n";
+            return Mat();
+        }
+
+        // For non-empty matrices, data pointers must be valid.
+        // Empty matrices (rows==0 or cols==0) are allowed to have nullptr data.
+        if (A.row > 0 && A.col > 0 && A.data == nullptr)
+        {
+            std::cerr << "[Error] augment: matrix A data pointer is null\n";
+            return Mat();
+        }
+        if (B.row > 0 && B.col > 0 && B.data == nullptr)
+        {
+            std::cerr << "[Error] augment: matrix B data pointer is null\n";
             return Mat();
         }
         
@@ -3416,19 +3494,6 @@ namespace tiny
      */
     Mat Mat::vstack(const Mat &A, const Mat &B)
     {
-        // Check for null pointers
-        if (A.data == nullptr)
-        {
-            std::cerr << "[Error] vstack: matrix A data pointer is null\n";
-            return Mat();
-        }
-        
-        if (B.data == nullptr)
-        {
-            std::cerr << "[Error] vstack: matrix B data pointer is null\n";
-            return Mat();
-        }
-        
         // Validate matrix dimensions
         if (A.row < 0 || A.col < 0)
         {
@@ -3457,6 +3522,19 @@ namespace tiny
         {
             std::cerr << "[Error] vstack: combined row count too large, integer overflow "
                       << "(A.row=" << A.row << ", B.row=" << B.row << ")\n";
+            return Mat();
+        }
+
+        // For non-empty matrices, data pointers must be valid.
+        // Empty matrices (rows==0 or cols==0) are allowed to have nullptr data.
+        if (A.row > 0 && A.col > 0 && A.data == nullptr)
+        {
+            std::cerr << "[Error] vstack: matrix A data pointer is null\n";
+            return Mat();
+        }
+        if (B.row > 0 && B.col > 0 && B.data == nullptr)
+        {
+            std::cerr << "[Error] vstack: matrix B data pointer is null\n";
             return Mat();
         }
         
@@ -3501,193 +3579,206 @@ namespace tiny
 
     /**
      * @name Mat::gram_schmidt_orthogonalize()
-     * @brief Orthogonalize a set of vectors using the Gram-Schmidt process
-     * @note This is a general-purpose orthogonalization function that can be reused
-     *       for QR decomposition and other applications requiring orthogonal bases
-     * 
-     * @param vectors Input matrix where each column is a vector to be orthogonalized
-     * @param orthogonal_vectors Output matrix for orthogonalized vectors (each column is orthogonal)
-     * @param coefficients Output matrix for projection coefficients (upper triangular, like R in QR)
-     * @param tolerance Minimum norm threshold for linear independence check
-     * @return true if successful, false if input is invalid
+     * @brief QR-style orthogonalization of a column-vector set via Modified
+     *        Gram-Schmidt (MGS) with conditional twice-reorthogonalization.
+     *
+     * Given an input matrix A whose columns are the vectors a_0..a_{n-1}, this
+     * function produces:
+     *   - Q (orthogonal_vectors, m x n) : columns q_0..q_{n-1} are orthonormal
+     *                                      (Q^T * Q = I to working precision).
+     *   - R (coefficients,       n x n) : upper triangular such that A = Q * R,
+     *                                      where R(k,j) is the projection of
+     *                                      a_j onto q_k.
+     *
+     * Algorithmic notes
+     * -----------------
+     *  - We use Modified Gram-Schmidt rather than Classical GS: each projection
+     *    is subtracted immediately, which is much more numerically stable.
+     *  - A second MGS sweep (Kahan/Parlett "twice is enough") is performed
+     *    *only* when pass-1 cancelled away more than ~30 % of the original
+     *    norm. This recovers full orthogonality on ill-conditioned inputs while
+     *    saving roughly half the FLOPs on well-conditioned inputs.
+     *  - When a column is linearly dependent on the previous q's, we set
+     *    R(j,j) = 0 and synthesize a substitute q_j by orthogonalizing the
+     *    first standard basis vector e_b that survives the projection. This
+     *    keeps Q a complete orthonormal set without disturbing A = Q*R
+     *    (because the dependent column is fully described by R(0..j-1, j)).
+     *
+     * @param vectors             Input matrix; columns are the vectors a_j.
+     * @param orthogonal_vectors  [out] Q (m x n), orthonormal columns.
+     * @param coefficients        [out] R (n x n), upper triangular.
+     * @param tolerance           Rank threshold; columns whose post-orthogonal
+     *                            norm falls below max(tolerance, 1e-5f) are
+     *                            treated as linearly dependent. Must be >= 0.
+     *                            The 1e-5f floor is enforced to keep
+     *                            single-precision noise from being mistaken
+     *                            for a real direction.
+     * @return true on success; false on invalid input.
      */
-    bool Mat::gram_schmidt_orthogonalize(const Mat &vectors, Mat &orthogonal_vectors, 
+    bool Mat::gram_schmidt_orthogonalize(const Mat &vectors, Mat &orthogonal_vectors,
                                          Mat &coefficients, float tolerance)
     {
-        // Validation: check for null pointer
+        // ----------------------------------------------------------------
+        // 1) Input validation
+        // ----------------------------------------------------------------
         if (vectors.data == nullptr)
         {
-            std::cerr << "[Error] gram_schmidt_orthogonalize: Input matrix is null.\n";
+            std::cerr << "[Error] gram_schmidt_orthogonalize: input matrix is null.\n";
             return false;
         }
 
-        int m = vectors.row;  // Dimension of vectors
-        int n = vectors.col;  // Number of vectors
+        const int m = vectors.row;  // dimension of each column vector
+        const int n = vectors.col;  // number of column vectors
 
-        // Validate dimensions
         if (m <= 0 || n <= 0)
         {
-            std::cerr << "[Error] gram_schmidt_orthogonalize: Invalid dimensions (m=" 
+            std::cerr << "[Error] gram_schmidt_orthogonalize: invalid dimensions (m="
                       << m << ", n=" << n << ")\n";
             return false;
         }
-        
-        // Validate tolerance
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] gram_schmidt_orthogonalize: tolerance must be non-negative (got " 
+            std::cerr << "[Error] gram_schmidt_orthogonalize: tolerance must be non-negative (got "
                       << tolerance << ")\n";
             return false;
         }
 
-        // Initialize output matrices
+        // ----------------------------------------------------------------
+        // 2) Allocate outputs
+        //    Q : m x n  -- orthonormal columns
+        //    R : n x n  -- upper-triangular coefficients (A = Q * R)
+        // ----------------------------------------------------------------
         orthogonal_vectors = Mat(m, n);
-        coefficients = Mat(n, n);  // Upper triangular matrix for coefficients
-        
-        // Check if output matrices were created successfully
-        if (orthogonal_vectors.data == nullptr)
+        coefficients       = Mat(n, n);
+        if (orthogonal_vectors.data == nullptr || coefficients.data == nullptr)
         {
-            std::cerr << "[Error] gram_schmidt_orthogonalize: failed to create orthogonal_vectors matrix\n";
+            std::cerr << "[Error] gram_schmidt_orthogonalize: output allocation failed.\n";
             return false;
         }
-        
-        if (coefficients.data == nullptr)
-        {
-            std::cerr << "[Error] gram_schmidt_orthogonalize: failed to create coefficients matrix\n";
-            return false;
-        }
-        
-        coefficients.clear();  // Initialize to zero
+        coefficients.clear();  // ensure strictly-lower & off-band entries are 0
 
-        // Modified Gram-Schmidt process (more numerically stable than classical GS)
-        // Also includes re-orthogonalization for better numerical stability
+        // ----------------------------------------------------------------
+        // 3) Effective thresholds (kept in single source of truth)
+        // ----------------------------------------------------------------
+        // Single-precision rank floor: below this we cannot trust the value
+        // of ||q_j|| against rounding noise, so we always clamp here.
+        constexpr float kRankFloor    = 1e-5f;
+        // Kahan's "twice is enough" trigger: 1/sqrt(2). If pass-1 left the
+        // working column shorter than this fraction of its original length,
+        // significant cancellation occurred and a second MGS pass is needed.
+        constexpr float kReorthRatio  = 0.7071068f;
+
+        const float rank_tol = (tolerance > kRankFloor) ? tolerance : kRankFloor;
+
+        // ----------------------------------------------------------------
+        // 4) Local column-wise primitives on Q
+        //    The matrix is row-major with stride 'step', so columns are not
+        //    contiguous; we rely on the inline operator() in the header.
+        //    Lambdas below are zero-overhead after inlining.
+        // ----------------------------------------------------------------
+        Mat &Q = orthogonal_vectors;
+        Mat &R = coefficients;
+
+        // <Q(:,k), Q(:,j)>
+        auto col_dot = [&](int k, int j) -> float {
+            float s = 0.0f;
+            for (int i = 0; i < m; ++i) s += Q(i, k) * Q(i, j);
+            return s;
+        };
+        // ||Q(:,j)||_2
+        auto col_norm = [&](int j) -> float {
+            float s = 0.0f;
+            for (int i = 0; i < m; ++i) { const float v = Q(i, j); s += v * v; }
+            return sqrtf(s);
+        };
+        // Q(:,j) <- Q(:,j) - c * Q(:,k)
+        auto col_axpy = [&](int j, int k, float c) {
+            for (int i = 0; i < m; ++i) Q(i, j) -= c * Q(i, k);
+        };
+        // One MGS sweep: orthogonalize Q(:,j) against Q(:,0..j-1).
+        //   write_R == true  -> dot products are recorded in R(k,j)
+        //   accumulate       -> add to R(k,j) (used by pass-2) instead of overwrite
+        auto mgs_sweep = [&](int j, bool write_R, bool accumulate) {
+            for (int k = 0; k < j; ++k)
+            {
+                const float dot = col_dot(k, j);
+                if (write_R)
+                {
+                    if (accumulate) R(k, j) += dot;
+                    else            R(k, j)  = dot;
+                }
+                col_axpy(j, k, dot);
+            }
+        };
+
+        // ----------------------------------------------------------------
+        // 5) Main orthogonalization loop
+        // ----------------------------------------------------------------
         for (int j = 0; j < n; ++j)
         {
-            // Copy j-th column of input vectors to working vector
-            for (int i = 0; i < m; ++i)
+            // 5.1 Initialize working column: Q(:,j) <- A(:,j)
+            for (int i = 0; i < m; ++i) Q(i, j) = vectors(i, j);
+
+            // 5.2 First MGS pass (always); records R(k,j) for k < j
+            const float norm_before = col_norm(j);   // = ||A(:,j)||
+            mgs_sweep(j, /*write_R=*/true, /*accumulate=*/false);
+            float norm_after = col_norm(j);
+
+            // 5.3 Conditional second MGS pass (Kahan)
+            //     Triggered only when significant cancellation occurred.
+            if (norm_after < kReorthRatio * norm_before)
             {
-                orthogonal_vectors(i, j) = vectors(i, j);
+                mgs_sweep(j, /*write_R=*/true, /*accumulate=*/true);
+                norm_after = col_norm(j);
             }
 
-            // Modified Gram-Schmidt: orthogonalize against previous columns
-            // Use a more stable approach: subtract projection immediately
-            for (int k = 0; k < j; ++k)
+            // 5.4 Regular case: column is independent -> normalize and store R(j,j)
+            if (norm_after >= rank_tol)
             {
-                // Compute dot product: coefficient(k,j) = Q(:,k)^T * Q(:,j)
-                float dot = 0.0f;
-                for (int i = 0; i < m; ++i)
-                {
-                    dot += orthogonal_vectors(i, k) * orthogonal_vectors(i, j);
-                }
-                coefficients(k, j) = dot;  // Store projection coefficient
+                R(j, j) = norm_after;
+                const float inv = 1.0f / norm_after;
+                for (int i = 0; i < m; ++i) Q(i, j) *= inv;
+                continue;
+            }
 
-                // Subtract projection immediately: Q(:,j) = Q(:,j) - dot * Q(:,k)
-                for (int i = 0; i < m; ++i)
+            // 5.5 Linearly-dependent case: synthesize a substitute q_j
+            //
+            // Mathematically a_j ∈ span{q_0..q_{j-1}}, so R(j,j) = 0 and the
+            // already-written R(0..j-1, j) reconstruct a_j via Q*R. We still
+            // need a unit q_j orthogonal to all previous columns so that Q
+            // remains a complete orthonormal set (consumers such as SVD or
+            // null-space queries rely on this).
+            //
+            // Strategy: try standard basis vectors e_0, e_1, ..., e_{m-1};
+            // keep the first one whose projected residual is large enough.
+            // Re-orthogonalization is applied unconditionally here because an
+            // e_b that lies almost inside span{q_0..q_{j-1}} loses most of
+            // its norm in pass-1 and is numerically fragile.
+            R(j, j) = 0.0f;
+            bool found = false;
+
+            for (int b = 0; b < m && !found; ++b)
+            {
+                for (int i = 0; i < m; ++i) Q(i, j) = (i == b) ? 1.0f : 0.0f;
+
+                mgs_sweep(j, /*write_R=*/false, /*accumulate=*/false);  // pass 1
+                mgs_sweep(j, /*write_R=*/false, /*accumulate=*/false);  // pass 2
+
+                const float new_norm = col_norm(j);
+                if (new_norm > kRankFloor)
                 {
-                    orthogonal_vectors(i, j) -= dot * orthogonal_vectors(i, k);
+                    const float inv = 1.0f / new_norm;
+                    for (int i = 0; i < m; ++i) Q(i, j) *= inv;
+                    found = true;
                 }
             }
 
-            // Re-orthogonalization: improve numerical stability by doing one more pass
-            // This helps reduce accumulated rounding errors (especially important for
-            // near-linearly-dependent vectors)
-            for (int k = 0; k < j; ++k)
+            // 5.6 Defensive fallback: only reachable when n > m, i.e. the
+            //     caller asked for more orthonormal columns than the ambient
+            //     dimension can supply. Leave Q(:,j) as a zero vector.
+            if (!found)
             {
-                float dot = 0.0f;
-                for (int i = 0; i < m; ++i)
-                {
-                    dot += orthogonal_vectors(i, k) * orthogonal_vectors(i, j);
-                }
-                // Update coefficient with correction (small correction for numerical stability)
-                coefficients(k, j) += dot;
-                // Subtract residual projection to improve orthogonality
-                for (int i = 0; i < m; ++i)
-                {
-                    orthogonal_vectors(i, j) -= dot * orthogonal_vectors(i, k);
-                }
-            }
-
-            // Normalize: compute norm of orthogonalized vector
-            float norm = 0.0f;
-            for (int i = 0; i < m; ++i)
-            {
-                norm += orthogonal_vectors(i, j) * orthogonal_vectors(i, j);
-            }
-            norm = sqrtf(norm);
-
-            // Use stricter tolerance for near-linear-dependent vectors
-            // If norm is very small, generate an orthogonal vector to complete the basis
-            if (norm < tolerance || norm < 1e-5f)  // Stricter check for numerical stability
-            {
-                // Vector is linearly dependent (or near-zero)
-                // Instead of setting to zero, generate an orthogonal vector to maintain Q's orthogonality
-                // Strategy: Start with a standard basis vector and orthogonalize it
-                coefficients(j, j) = 0.0f;  // Original vector has zero norm (linearly dependent)
-                
-                // Try to find an orthogonal vector by starting with standard basis vectors
-                // and orthogonalizing them against previous columns
-                bool found_orthogonal = false;
-                for (int basis_idx = 0; basis_idx < m && !found_orthogonal; ++basis_idx)
-                {
-                    // Start with standard basis vector e_basis_idx
-                    for (int i = 0; i < m; ++i)
-                    {
-                        orthogonal_vectors(i, j) = (i == basis_idx) ? 1.0f : 0.0f;
-                    }
-                    
-                    // Orthogonalize against previous columns
-                    for (int k = 0; k < j; ++k)
-                    {
-                        float dot = 0.0f;
-                        for (int i = 0; i < m; ++i)
-                        {
-                            dot += orthogonal_vectors(i, k) * orthogonal_vectors(i, j);
-                        }
-                        for (int i = 0; i < m; ++i)
-                        {
-                            orthogonal_vectors(i, j) -= dot * orthogonal_vectors(i, k);
-                        }
-                    }
-                    
-                    // Check if we got a non-zero vector
-                    float new_norm = 0.0f;
-                    for (int i = 0; i < m; ++i)
-                    {
-                        new_norm += orthogonal_vectors(i, j) * orthogonal_vectors(i, j);
-                    }
-                    new_norm = sqrtf(new_norm);
-                    
-                    if (new_norm > 1e-5f)
-                    {
-                        // Found a valid orthogonal vector, normalize it
-                        // Note: coefficients(j, j) remains 0 (original vector was linearly dependent)
-                        // but Q(:, j) is now a normalized orthogonal vector
-                        for (int i = 0; i < m; ++i)
-                        {
-                            orthogonal_vectors(i, j) /= new_norm;
-                        }
-                        found_orthogonal = true;
-                    }
-                }
-                
-                // If still no orthogonal vector found, set to zero (shouldn't happen for full-rank cases)
-                if (!found_orthogonal)
-                {
-                    coefficients(j, j) = 0.0f;
-                    for (int i = 0; i < m; ++i)
-                    {
-                        orthogonal_vectors(i, j) = 0.0f;
-                    }
-                }
-            }
-            else
-            {
-                coefficients(j, j) = norm;
-                // Normalize the orthogonalized vector
-                for (int i = 0; i < m; ++i)
-                {
-                    orthogonal_vectors(i, j) /= norm;
-                }
+                for (int i = 0; i < m; ++i) Q(i, j) = 0.0f;
             }
         }
 
@@ -3698,362 +3789,441 @@ namespace tiny
     // Linear Algebra - Matrix Operations
     // ============================================================================
     /**
-     * @name Mat::minor(int target_row, int target_col)
-     * @brief Calculate the minor matrix by removing specified row and column.
-     * 
-     * @note This function returns a MATRIX (the minor matrix), NOT a scalar value.
-     *       The minor matrix is (n-1)×(n-1) for an n×n input matrix.
-     * 
-     * @note Difference from cofactor():
-     *       - minor() and cofactor() return the SAME matrix (submatrix)
-     *       - minor() is the general term for the submatrix
-     *       - cofactor() is semantically used when computing cofactor values (with sign)
-     *       - Both functions can be used interchangeably for getting the submatrix
-     * 
-     * @note To compute minor value: minor_value = det(minor_matrix)
-     * @note To compute cofactor value: cofactor_value = (-1)^(i+j) * det(minor_matrix)
+     * @name Mat::minor(int target_row, int target_col) const
+     * @brief Submatrix obtained by deleting one row and one column.
      *
-     * @param target_row Row index to remove (0-based)
-     * @param target_col Column index to remove (0-based)
-     * @return Mat The (n-1)×(n-1) minor matrix, or empty Mat() on error
+     * For an m x n input, the result is (m-1) x (n-1). This is purely a
+     * geometric "delete a row, delete a column" operation and is therefore
+     * defined on ANY rectangular matrix; it does NOT require squareness.
+     * (Squareness is only needed when the caller subsequently takes a
+     * determinant, e.g. for the minor value or cofactor value -- which is
+     * why cofactor() is the function that enforces it.)
+     *
+     * Edge case: if either dimension would collapse to 0 after the deletion
+     * (i.e. m == 1 or n == 1), the result is the canonical empty Mat(0, 0).
+     *
+     * Naming reference:
+     *   - minor   matrix  M_ij = this function's return value.
+     *   - minor   value   m_ij = det(M_ij)             [requires square]
+     *   - cofactor value  C_ij = (-1)^(i+j) * det(M_ij) [requires square]
+     *
+     * @param target_row Row index to remove (0-based, in [0, this->row)).
+     * @param target_col Column index to remove (0-based, in [0, this->col)).
+     * @return Mat The (m-1)x(n-1) submatrix; Mat(0, 0) on invalid input or
+     *             when an output dimension would be zero.
      */
-    Mat Mat::minor(int target_row, int target_col)
+    Mat Mat::minor(int target_row, int target_col) const
     {
-        // Check for null pointer
+        // ----------------------------------------------------------------
+        // 1) Input validation
+        // ----------------------------------------------------------------
         if (this->data == nullptr)
         {
             std::cerr << "[Error] minor: matrix data pointer is null\n";
             return Mat(0, 0);
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] minor: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
-            return Mat(0, 0);
-        }
-        
-        // Check if matrix is square
-        if (this->row != this->col)
-        {
-            std::cerr << "[Error] Minor requires square matrix (got " 
-                      << this->row << "x" << this->col << ")\n";
+            std::cerr << "[Error] minor: invalid matrix dimensions (rows="
+                      << this->row << ", cols=" << this->col << ")\n";
             return Mat(0, 0);
         }
 
-        int n = this->row;
-        
-        // Validate indices
-        if (target_row < 0 || target_row >= n)
+        const int rows = this->row;
+        const int cols = this->col;
+
+        if (target_row < 0 || target_row >= rows)
         {
-            std::cerr << "[Error] minor: target_row=" << target_row 
-                      << " is out of range [0, " << (n-1) << "]\n";
+            std::cerr << "[Error] minor: target_row=" << target_row
+                      << " is out of range [0, " << (rows - 1) << "]\n";
             return Mat(0, 0);
         }
-        
-        if (target_col < 0 || target_col >= n)
+        if (target_col < 0 || target_col >= cols)
         {
-            std::cerr << "[Error] minor: target_col=" << target_col 
-                      << " is out of range [0, " << (n-1) << "]\n";
+            std::cerr << "[Error] minor: target_col=" << target_col
+                      << " is out of range [0, " << (cols - 1) << "]\n";
             return Mat(0, 0);
         }
-        
-        // For 1×1 matrix, removing one row and one column results in 0×0 matrix
-        // This is a valid but empty result
-        if (n == 1)
+
+        // Degenerate cases: deleting the only row or the only column leaves
+        // a matrix with a zero dimension. Collapse all such results to the
+        // canonical Mat(0, 0) for predictable downstream handling.
+        if (rows == 1 || cols == 1)
         {
             return Mat(0, 0);
         }
-        
-        Mat result(n - 1, n - 1);
-        
-        // Check if result matrix was created successfully
+
+        // ----------------------------------------------------------------
+        // 2) Allocate result : (rows-1) x (cols-1)
+        // ----------------------------------------------------------------
+        Mat result(rows - 1, cols - 1);
         if (result.data == nullptr)
         {
             std::cerr << "[Error] minor: failed to create result matrix\n";
             return Mat(0, 0);
         }
 
-        // Copy elements, skipping the specified row and column
-        for (int i = 0, res_i = 0; i < n; ++i)
+        // ----------------------------------------------------------------
+        // 3) Bulk copy with row-skip and column-skip
+        //
+        //    Each surviving row is copied as at most TWO contiguous chunks:
+        //
+        //      src row i :  [ 0 .. tc-1 | tc | tc+1 .. cols-1 ]
+        //                    └─ left ─┘  skip  └──  right  ──┘
+        //      dst row   :  [ 0 .. tc-1     | tc .. cols-2    ]
+        //
+        //    This eliminates the inner per-element branch (j == target_col)
+        //    and lets std::memcpy use the platform's optimized block copy
+        //    (vectorized / aligned). Asymptotic cost is still O(rows*cols)
+        //    but the per-iteration constant drops several-fold for large
+        //    matrices. (Especially valuable inside O(n!) Laplace recursion.)
+        // ----------------------------------------------------------------
+        const int src_step    = this->step;
+        const int dst_step    = result.step;
+        const int left_count  = target_col;                  // cols [0, tc)
+        const int right_count = (cols - 1) - target_col;     // cols (tc, cols)
+
+        int res_i = 0;
+        for (int i = 0; i < rows; ++i)
         {
             if (i == target_row)
-                continue;
-
-            for (int j = 0, res_j = 0; j < n; ++j)
             {
-                if (j == target_col)
-                    continue;
-
-                result.data[res_i * result.step + res_j] = this->data[i * this->step + j];
-                res_j++;
+                continue;
             }
-            res_i++;
+
+            const float *src_row = this->data  + i     * src_step;
+            float       *dst_row = result.data + res_i * dst_step;
+
+            // Left chunk: columns [0, target_col)
+            if (left_count > 0)
+            {
+                std::memcpy(dst_row,
+                            src_row,
+                            sizeof(float) * static_cast<size_t>(left_count));
+            }
+            // Right chunk: columns (target_col, cols), shifted left by 1 in dst
+            if (right_count > 0)
+            {
+                std::memcpy(dst_row + left_count,
+                            src_row + target_col + 1,
+                            sizeof(float) * static_cast<size_t>(right_count));
+            }
+
+            ++res_i;
         }
 
         return result;
     }
 
     /**
-     * @name Mat::cofactor(int target_row, int target_col)
-     * @brief Calculate the cofactor matrix (same as minor matrix).
-     * 
-     * @note IMPORTANT DISTINCTION:
-     *       - This function returns a MATRIX (the cofactor matrix), NOT a scalar value.
-     *       - The cofactor matrix is mathematically identical to the minor matrix.
-     *       - To get the COFACTOR VALUE (scalar), you must:
-     *         cofactor_value = (-1)^(i+j) * det(cofactor_matrix)
-     * 
-     * @note Mathematical definitions:
-     *       - Minor matrix M_ij = submatrix after removing row i and column j
-     *       - Cofactor matrix C_ij = M_ij (same as minor matrix)
-     *       - Cofactor VALUE = (-1)^(i+j) * det(M_ij)
-     * 
-     * @note Difference from minor():
-     *       - minor() and cofactor() return the SAME matrix (submatrix)
-     *       - The difference is semantic: cofactor() is used when computing
-     *         cofactor values (with sign), while minor() is more general.
-     *       - Both functions can be used interchangeably for getting the submatrix.
-     * 
-     * @note Usage example:
-     *       Mat cofactor_mat = A.cofactor(i, j);  // Returns matrix
-     *       float cofactor_val = ((i+j) % 2 == 0 ? 1.0f : -1.0f) * cofactor_mat.determinant();  // Value
+     * @name Mat::cofactor(int target_row, int target_col) const
+     * @brief Cofactor submatrix (same shape/contents as the minor matrix).
      *
-     * @param target_row Row index to remove (0-based)
-     * @param target_col Column index to remove (0-based)
-     * @return Mat The (n-1)×(n-1) cofactor matrix (same as minor matrix), or empty Mat() on error
+     * The (i,j) cofactor matrix C_ij equals the minor matrix M_ij; the only
+     * difference is semantic: cofactor() is the entry point used when the
+     * caller is going to apply the sign (-1)^(i+j) and take a determinant
+     * to obtain the cofactor VALUE. Because the cofactor value requires
+     * det(M_ij), the input must be SQUARE -- this function therefore
+     * enforces squareness, while minor() allows any m x n shape.
+     *
+     * @note Cofactor VALUE computation:
+     *       float val = ((i + j) % 2 == 0 ? 1.0f : -1.0f) *
+     *                   A.cofactor(i, j).determinant();
+     *
+     * @param target_row Row index to remove (0-based, in [0, n)).
+     * @param target_col Column index to remove (0-based, in [0, n)).
+     * @return Mat The (n-1) x (n-1) cofactor submatrix; Mat(0, 0) on error
+     *             (non-square, out-of-range index, or 1x1 input).
      */
-    Mat Mat::cofactor(int target_row, int target_col)
+    Mat Mat::cofactor(int target_row, int target_col) const
     {
-        // Cofactor matrix is the same as minor matrix
-        // The sign is applied when computing cofactor values, not to matrix elements
-        // All validation is handled by minor()
+        // Cofactor is only well-defined on square matrices, since downstream
+        // it is consumed via det(M_ij). Validate squareness here, then
+        // delegate the actual submatrix extraction to minor().
+        if (this->row != this->col)
+        {
+            std::cerr << "[Error] cofactor: requires a square matrix (got "
+                      << this->row << "x" << this->col << ")\n";
+            return Mat(0, 0);
+        }
         return this->minor(target_row, target_col);
     }
 
     /**
      * @name Mat::gaussian_eliminate
-     * @brief Perform Gaussian Elimination to convert matrix to Row Echelon Form (REF).
-     * @note Gaussian elimination transforms a matrix to upper triangular form (REF) using
-     *       elementary row operations: row swapping, row scaling, and row addition.
-     * @note Algorithm:
-     *       1. For each row r, find a pivot (non-zero element) in column lead
-     *       2. Swap rows if necessary to bring pivot to current row
-     *       3. Eliminate elements below pivot by subtracting multiples of pivot row
-     *       4. Move to next column and repeat
-     * @note Uses partial pivoting (finds first non-zero element) for numerical stability.
-     * @note Near-zero values are set to zero for numerical precision.
+     * @brief Gaussian elimination with partial pivoting -> Row Echelon Form.
      *
-     * @return Mat The upper triangular matrix (REF form), or empty Mat() on error
+     * Reduces the matrix to upper-triangular Row Echelon Form (REF) via
+     * elementary row operations (row swaps + row additions).
+     *
+     * Numerical strategy
+     * ------------------
+     *  - **Partial pivoting**: at each step, the row with the LARGEST
+     *    |element| in the current column (within rows [r, rows)) is chosen
+     *    as the pivot row and swapped into row r. This bounds the
+     *    multiplier |factor| <= 1 and keeps roundoff under control. This
+     *    is the standard textbook recipe used by LAPACK's *getrf, and is
+     *    materially more stable than picking the first non-zero entry.
+     *  - **Exact zero in the eliminated column**: after subtracting the
+     *    pivot row, the entry directly under the pivot is FORCED to 0.0f
+     *    (it is mathematically zero; this avoids visible roundoff in REF
+     *    structure without polluting the rest of the row).
+     *  - Other entries are left as they actually compute -- any small
+     *    "denormal noise" floor decision is left to the caller.
+     *
+     * Algorithmic complexity: O(rows * cols * min(rows, cols))
+     *
+     * @return Mat REF copy of the input. Mat(0, 0) on invalid input;
+     *             a copy of the (empty) input when row == 0 or col == 0.
      */
     Mat Mat::gaussian_eliminate() const
     {
-        // Check for null pointer
+        // ----------------------------------------------------------------
+        // 1) Input validation
+        // ----------------------------------------------------------------
         if (this->data == nullptr)
         {
             std::cerr << "[Error] gaussian_eliminate: matrix data pointer is null\n";
-            return Mat();
+            return Mat(0, 0);
         }
-        
-        // Validate matrix dimensions
-        if (this->row <= 0 || this->col <= 0)
+        if (this->row < 0 || this->col < 0)
         {
-            std::cerr << "[Error] gaussian_eliminate: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
-            return Mat();
+            std::cerr << "[Error] gaussian_eliminate: invalid matrix dimensions (rows="
+                      << this->row << ", cols=" << this->col << ")\n";
+            return Mat(0, 0);
         }
-        
-        // Handle empty matrix
+        // Valid empty matrix (one or both dims == 0): nothing to do.
         if (this->row == 0 || this->col == 0)
         {
-            return Mat(*this);  // Return copy of empty matrix
+            return Mat(*this);
         }
-        
-        Mat result(*this); // Create a copy of the original matrix
-        
-        // Check if copy was successful
+
+        // ----------------------------------------------------------------
+        // 2) Working copy
+        // ----------------------------------------------------------------
+        Mat result(*this);
         if (result.data == nullptr)
         {
             std::cerr << "[Error] gaussian_eliminate: failed to create working copy\n";
-            return Mat();
+            return Mat(0, 0);
         }
-        
-        int rows = result.row;
-        int cols = result.col;
 
-        int lead = 0; // Leading column tracker
+        const int rows = result.row;
+        const int cols = result.col;
+        const int rstep = result.step;
 
-        for (int r = 0; r < rows; ++r)
+        // Pivot acceptance threshold. TINY_MATH_MIN_POSITIVE_INPUT_F32 is
+        // the project-wide "non-zero" floor. With partial pivoting we
+        // declare the column "pivot-less" only if even its LARGEST entry
+        // sits below this threshold, so this check is much less aggressive
+        // than the old "first non-zero" pattern.
+        const float pivot_tol = TINY_MATH_MIN_POSITIVE_INPUT_F32;
+
+        // ----------------------------------------------------------------
+        // 3) Main elimination loop
+        //    Independently advance row index 'r' and column index 'lead'.
+        //    When the current column has no usable pivot, advance 'lead'
+        //    only and try again with the same 'r' (these rows then take a
+        //    "free" position, contributing zeros to the rank/echelon).
+        // ----------------------------------------------------------------
+        int r    = 0;
+        int lead = 0;
+
+        while (r < rows && lead < cols)
         {
-            if (lead >= cols)
-                break;
-
-            int i = r;
-
-            // Find pivot row (partial pivoting)
-            // Look for first non-zero (or near-zero) element in column lead
-            while (fabsf(result(i, lead)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            // 3.1 Find pivot row: argmax_{i in [r, rows)} |A(i, lead)|
+            int   pivot_row = r;
+            float pivot_abs = fabsf(result.data[r * rstep + lead]);
+            for (int i = r + 1; i < rows; ++i)
             {
-                i++;
-                if (i == rows)
+                const float v = fabsf(result.data[i * rstep + lead]);
+                if (v > pivot_abs)
                 {
-                    i = r;
-                    lead++;
-                    if (lead == cols)
-                        return result; // Return the result matrix (upper triangular)
+                    pivot_abs = v;
+                    pivot_row = i;
                 }
             }
 
-            // Swap rows if pivot is not in current row
-            if (i != r)
+            // 3.2 No usable pivot in this column -> skip to next column,
+            //     keep r unchanged so this row tries again later.
+            if (pivot_abs < pivot_tol)
             {
-                result.swap_rows(i, r);
-            }
-
-            // Check if pivot is still valid after swap
-            if (fabsf(result(r, lead)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                // Pivot is still too small, move to next column
-                lead++;
+                ++lead;
                 continue;
             }
 
-            // Eliminate rows below
+            // 3.3 Bring pivot row to position r
+            if (pivot_row != r)
+            {
+                result.swap_rows(pivot_row, r);
+            }
+
+            // 3.4 Eliminate all rows below the pivot
+            //     Row pointers hoisted out of the inner loop to avoid the
+            //     repeated (i*step + j) address calculation; this also
+            //     lets the compiler vectorize the AXPY across columns.
+            float       *row_r  = result.data + r * rstep;
+            const float  pivot  = row_r[lead];
+
             for (int j = r + 1; j < rows; ++j)
             {
-                if (fabsf(result(j, lead)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                    continue;
+                float *row_j = result.data + j * rstep;
 
-                float factor = result(j, lead) / result(r, lead);
-                for (int k = lead; k < cols; ++k)
+                // Skip rows whose entry in the pivot column is already ~0
+                if (fabsf(row_j[lead]) < pivot_tol)
                 {
-                    result(j, k) -= factor * result(r, k);
+                    row_j[lead] = 0.0f;   // tidy any tiny residue
+                    continue;
+                }
 
-                    // Numerical precision handling (set near-zero values to zero)
-                    if (fabsf(result(j, k)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                        result(j, k) = 0.0f;
+                const float factor = row_j[lead] / pivot;
+                // The eliminated column is mathematically zero after the
+                // subtraction below; assign it directly to avoid visible
+                // roundoff and shave one FMA per row.
+                row_j[lead] = 0.0f;
+
+                for (int k = lead + 1; k < cols; ++k)
+                {
+                    row_j[k] -= factor * row_r[k];
                 }
             }
 
-            lead++;
+            // 3.5 Advance both indices: this pivot is consumed.
+            ++r;
+            ++lead;
         }
 
-        return result; // Return the upper triangular matrix
+        return result;
     }
 
     /**
-     * @name Mat::row_reduce_from_gaussian()
-     * @brief Convert a matrix (assumed in row echelon form) to Reduced Row Echelon Form (RREF).
-     * @note This function assumes the input matrix is already in Row Echelon Form (REF).
-     *       It performs back-substitution to convert REF to RREF.
-     * @note RREF properties:
-     *       - Leading entry (pivot) in each row is 1
-     *       - Pivot is the only non-zero entry in its column
-     *       - Rows with all zeros are at the bottom
-     * @note Algorithm:
-     *       1. Start from bottom row and work upwards
-     *       2. For each row with a pivot:
-     *          a. Normalize pivot to 1 (divide row by pivot value)
-     *          b. Eliminate entries above pivot (make them zero)
-     *       3. Continue until all rows are processed
+     * @name Mat::row_reduce_from_gaussian() const
+     * @brief Convert a Row Echelon Form (REF) matrix to Reduced Row Echelon
+     *        Form (RREF) by back-substitution.
      *
-     * @return Mat The matrix in RREF form, or empty Mat() on error
+     * Contract: input is assumed to already be in REF (zeros below each
+     * pivot, pivots strictly stair-step to the right). Calling this on
+     * non-REF inputs is undefined behaviour by contract, though for
+     * "almost REF" inputs it still degrades gracefully because each row's
+     * leading non-zero is taken as that row's pivot.
+     *
+     * Algorithm
+     * ---------
+     *   For each row from the bottom up:
+     *     a) Locate the pivot = first |entry| >= pivot_tol in that row.
+     *        (Since the input is REF, this IS the pivot column.)
+     *     b) Scale the row so the pivot becomes exactly 1.0.
+     *     c) Subtract appropriate multiples of the row from every row
+     *        above to zero out their entry in the pivot column.
+     *
+     * Numerical strategy
+     * ------------------
+     *  - The pivot column entry is set to its mathematically exact value
+     *    (1.0 after normalize, 0.0 after eliminate-above) DIRECTLY,
+     *    avoiding visible roundoff while keeping the rest of each row
+     *    untouched (no per-element noise floor).
+     *  - Inner loops are written against raw row pointers to skip the
+     *    operator() index math and to give the compiler a clean AXPY/
+     *    scaled-assign shape suitable for auto-vectorization.
+     *
+     * @return Mat RREF copy of the input. Mat(0, 0) on invalid input;
+     *             a copy of the (empty) input when row == 0 or col == 0.
      */
-    Mat Mat::row_reduce_from_gaussian()
+    Mat Mat::row_reduce_from_gaussian() const
     {
-        // Check for null pointer
+        // ----------------------------------------------------------------
+        // 1) Input validation
+        // ----------------------------------------------------------------
         if (this->data == nullptr)
         {
             std::cerr << "[Error] row_reduce_from_gaussian: matrix data pointer is null\n";
-            return Mat();
+            return Mat(0, 0);
         }
-        
-        // Validate matrix dimensions
-        if (this->row <= 0 || this->col <= 0)
+        if (this->row < 0 || this->col < 0)
         {
-            std::cerr << "[Error] row_reduce_from_gaussian: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
-            return Mat();
+            std::cerr << "[Error] row_reduce_from_gaussian: invalid matrix dimensions (rows="
+                      << this->row << ", cols=" << this->col << ")\n";
+            return Mat(0, 0);
         }
-        
-        // Handle empty matrix
+        // Valid empty matrix: nothing to reduce.
         if (this->row == 0 || this->col == 0)
         {
-            return Mat(*this);  // Return copy of empty matrix
+            return Mat(*this);
         }
-        
-        Mat R(*this); // Make a copy to preserve original matrix
-        
-        // Check if copy was successful
+
+        // ----------------------------------------------------------------
+        // 2) Working copy
+        // ----------------------------------------------------------------
+        Mat R(*this);
         if (R.data == nullptr)
         {
             std::cerr << "[Error] row_reduce_from_gaussian: failed to create working copy\n";
-            return Mat();
+            return Mat(0, 0);
         }
-        
-        int rows = R.row;
-        int cols = R.col;
 
-        int pivot_row = rows - 1;
+        const int rows  = R.row;
+        const int cols  = R.col;
+        const int rstep = R.step;
 
-        while (pivot_row >= 0)
+        const float pivot_tol = TINY_MATH_MIN_POSITIVE_INPUT_F32;
+
+        // ----------------------------------------------------------------
+        // 3) Back-substitution loop: bottom row -> top row
+        // ----------------------------------------------------------------
+        for (int p = rows - 1; p >= 0; --p)
         {
-            // Locate pivot in current row (first non-zero element)
-            int current_pivot_col = -1;
+            float *row_p = R.data + p * rstep;
+
+            // 3.1 Locate pivot in row p (first |entry| >= pivot_tol).
+            int   pivot_col = -1;
+            float pivot_val = 0.0f;
             for (int k = 0; k < cols; ++k)
             {
-                if (fabsf(R(pivot_row, k)) >= TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                if (fabsf(row_p[k]) >= pivot_tol)
                 {
-                    current_pivot_col = k;
+                    pivot_col = k;
+                    pivot_val = row_p[k];
                     break;
                 }
             }
-
-            if (current_pivot_col != -1)
+            if (pivot_col < 0)
             {
-                // Normalize pivot row (make pivot = 1)
-                float pivot_val = R(pivot_row, current_pivot_col);
-                
-                // Check if pivot value is valid (not zero or too small)
-                if (fabsf(pivot_val) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                {
-                    // Pivot is too small, skip this row
-                    pivot_row--;
-                    continue;
-                }
-                
-                for (int s = current_pivot_col; s < cols; ++s)
-                {
-                    R(pivot_row, s) /= pivot_val;
-                    // Numerical precision handling
-                    if (fabsf(R(pivot_row, s)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                    {
-                        R(pivot_row, s) = 0.0f;
-                    }
-                }
-
-                // Eliminate above pivot (make entries above pivot zero)
-                for (int t = pivot_row - 1; t >= 0; --t)
-                {
-                    float factor = R(t, current_pivot_col);
-                    // Skip if factor is already zero (optimization)
-                    if (fabsf(factor) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                        continue;
-                    
-                    for (int s = current_pivot_col; s < cols; ++s)
-                    {
-                        R(t, s) -= factor * R(pivot_row, s);
-                        // Numerical precision handling
-                        if (fabsf(R(t, s)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                        {
-                            R(t, s) = 0.0f;
-                        }
-                    }
-                }
+                // All-zero row -> nothing to do.
+                continue;
             }
 
-            pivot_row--;
+            // 3.2 Normalize the pivot row so that row_p[pivot_col] == 1.0.
+            //     The pivot column is set to exact 1.0 directly; only
+            //     columns to its right need the actual division.
+            const float inv_pivot = 1.0f / pivot_val;
+            row_p[pivot_col] = 1.0f;
+            for (int s = pivot_col + 1; s < cols; ++s)
+            {
+                row_p[s] *= inv_pivot;
+            }
+
+            // 3.3 Eliminate above the pivot:
+            //     row_t[s] -= factor * row_p[s]   for each row t < p,
+            //     where factor = row_t[pivot_col] (the entry to clear).
+            for (int t = p - 1; t >= 0; --t)
+            {
+                float       *row_t = R.data + t * rstep;
+                const float  factor = row_t[pivot_col];
+
+                if (fabsf(factor) < pivot_tol)
+                {
+                    row_t[pivot_col] = 0.0f;   // tidy any tiny residue
+                    continue;
+                }
+
+                // Eliminated column is mathematically zero; assign
+                // directly and start the inner loop one column later.
+                row_t[pivot_col] = 0.0f;
+                for (int s = pivot_col + 1; s < cols; ++s)
+                {
+                    row_t[s] -= factor * row_p[s];
+                }
+            }
         }
 
         return R;
@@ -4061,132 +4231,133 @@ namespace tiny
 
     /**
      * @name Mat::inverse_gje()
-     * @brief Compute the inverse of a square matrix using Gauss-Jordan elimination.
-     * @note Algorithm:
-     *       1. Create augmented matrix [A | I] where I is identity matrix
-     *       2. Apply Gauss-Jordan elimination to get [I | A^(-1)]
-     *       3. Extract the right half as the inverse matrix
-     * @note Time complexity: O(n³) - efficient for large matrices.
-     *       More efficient than adjoint method for n >= 4.
-     * @note If matrix is singular (not invertible), returns empty matrix.
+     * @brief Compute the inverse of a square matrix via Gauss-Jordan elimination.
      *
-     * @return Mat The inverse matrix if invertible, or empty Mat() on error
+     * @details
+     *   Algorithm (classical Gauss-Jordan on the augmented matrix):
+     *     1. Build the augmented matrix M = [A | I] of size n x 2n.
+     *     2. Reduce M to row-echelon form (REF) via gaussian_eliminate(), which
+     *        applies partial pivoting (largest |pivot| in column).
+     *     3. Reduce REF to reduced row-echelon form (RREF) via
+     *        row_reduce_from_gaussian(), which back-substitutes to clear entries
+     *        above each pivot and normalizes pivots to 1.
+     *     4. If A is invertible, M reduces to [I | A^{-1}]; the right block is
+     *        the inverse. Otherwise the left block is not identity and we abort.
+     *
+     *   Singularity test: after RREF, gaussian_eliminate + row_reduce_from_gaussian
+     *   force pivot rows / columns to exact 1.0 / 0.0 (no roundoff). For an
+     *   invertible A, every left-block column is a pivot column, so the left
+     *   block equals I exactly. For a singular A, at least one column is a
+     *   non-pivot column whose entries are structurally non-zero, far above
+     *   TINY_MATH_MIN_POSITIVE_INPUT_F32. A small "any non-zero" threshold is
+     *   therefore both necessary and sufficient.
+     *
+     * @note Complexity: O(n^3) time, O(n^2) extra memory (one n x 2n scratch
+     *       matrix). Preferred over the adjoint method for n >= 4.
+     * @note On any error (null data, non-square, singular, allocation failure)
+     *       returns an empty matrix Mat(0, 0).
+     *
+     * @return Mat n x n inverse if A is invertible; empty Mat(0, 0) otherwise.
      */
-    Mat Mat::inverse_gje()
+    Mat Mat::inverse_gje() const
     {
-        // Check for null pointer
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] inverse_gje: matrix data pointer is null\n";
-            return Mat();
+            std::cerr << "[Error] inverse_gje: matrix data pointer is null.\n";
+            return Mat(0, 0);
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] inverse_gje: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
-            return Mat();
+            std::cerr << "[Error] inverse_gje: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
+            return Mat(0, 0);
         }
-        
-        // Check if matrix is square
         if (this->row != this->col)
         {
-            std::cerr << "[Error] inverse_gje: requires square matrix (got " 
-                      << this->row << "x" << this->col << ")\n";
-            return Mat();
+            std::cerr << "[Error] inverse_gje: requires a square matrix (got "
+                      << this->row << "x" << this->col << ").\n";
+            return Mat(0, 0);
         }
 
-        int n = this->row;
+        const int n = this->row;
 
-        // Step 1: Create augmented matrix [A | I]
-        Mat I = Mat::eye(n);            // Identity matrix
-        
-        // Check if identity matrix was created successfully
+        // ---------------------------------------------------------------------
+        // 2. Build the augmented matrix M = [A | I]
+        // ---------------------------------------------------------------------
+        Mat I = Mat::eye(n);
         if (I.data == nullptr)
         {
-            std::cerr << "[Error] inverse_gje: failed to create identity matrix\n";
-            return Mat();
+            std::cerr << "[Error] inverse_gje: failed to allocate identity matrix.\n";
+            return Mat(0, 0);
         }
-        
-        Mat augmented = Mat::augment(*this, I); // Augment matrix A with I
-        
-        // Check if augmented matrix was created successfully
+
+        Mat augmented = Mat::augment(*this, I);
         if (augmented.data == nullptr)
         {
-            std::cerr << "[Error] inverse_gje: failed to create augmented matrix\n";
-            return Mat();
+            std::cerr << "[Error] inverse_gje: failed to build augmented matrix.\n";
+            return Mat(0, 0);
         }
-        
-        // Check augmented matrix dimensions
-        if (augmented.col != 2 * n)
-        {
-            std::cerr << "[Error] inverse_gje: augmented matrix has incorrect dimensions: " 
-                      << augmented.row << "x" << augmented.col << " (expected " << n << "x" << (2*n) << ")\n";
-            return Mat();
-        }
+        // augment() guarantees augmented.col == n + n on success; no extra check needed.
 
-        // Step 2: Apply Gauss-Jordan elimination to get [I | A_inv]
+        // ---------------------------------------------------------------------
+        // 3. Reduce [A | I] to RREF via REF -> RREF
+        // ---------------------------------------------------------------------
         Mat rref = augmented.gaussian_eliminate();
-        
-        // Check if gaussian_eliminate was successful
         if (rref.data == nullptr)
         {
-            std::cerr << "[Error] inverse_gje: gaussian_eliminate failed\n";
-            return Mat();
-        }
-        
-        rref = rref.row_reduce_from_gaussian();
-        
-        // Check if row_reduce_from_gaussian was successful
-        if (rref.data == nullptr)
-        {
-            std::cerr << "[Error] inverse_gje: row_reduce_from_gaussian failed\n";
-            return Mat();
+            std::cerr << "[Error] inverse_gje: gaussian_eliminate failed.\n";
+            return Mat(0, 0);
         }
 
-        // Check if the left half is the identity matrix
+        rref = rref.row_reduce_from_gaussian();
+        if (rref.data == nullptr)
+        {
+            std::cerr << "[Error] inverse_gje: row_reduce_from_gaussian failed.\n";
+            return Mat(0, 0);
+        }
+
+        // ---------------------------------------------------------------------
+        // 4. Singularity test: left block must equal identity
+        //
+        //    Because GE/RREF set pivot columns to exact 1.0 / 0.0, a fully
+        //    pivoted (i.e. invertible) matrix yields an exact identity on the
+        //    left. Any deviation > MIN_POSITIVE_INPUT signals a missing pivot.
+        // ---------------------------------------------------------------------
         for (int i = 0; i < n; ++i)
         {
+            const float* row_i = rref.data + i * rref.step;
             for (int j = 0; j < n; ++j)
             {
-                float expected = (i == j) ? 1.0f : 0.0f;
-                float actual = rref(i, j);
-                if (fabsf(actual - expected) > TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                const float expected = (i == j) ? 1.0f : 0.0f;
+                if (fabsf(row_i[j] - expected) > TINY_MATH_MIN_POSITIVE_INPUT_F32)
                 {
-                    std::cerr << "[Error] inverse_gje: matrix is singular (not invertible), "
-                              << "left half is not identity matrix at (" << i << ", " << j 
-                              << "): expected=" << expected << ", actual=" << actual << "\n";
-                    return Mat();
+                    std::cerr << "[Error] inverse_gje: matrix is singular "
+                              << "(left block not identity at (" << i << ", " << j
+                              << "): expected " << expected << ", got " << row_i[j] << ").\n";
+                    return Mat(0, 0);
                 }
             }
         }
 
-        // Step 3: Extract the right half as the inverse matrix
+        // ---------------------------------------------------------------------
+        // 5. Extract the right block as A^{-1} (one memcpy per row)
+        // ---------------------------------------------------------------------
         Mat result(n, n);
-        
-        // Check if result matrix was created successfully
         if (result.data == nullptr)
         {
-            std::cerr << "[Error] inverse_gje: failed to create result matrix\n";
-            return Mat();
+            std::cerr << "[Error] inverse_gje: failed to allocate result matrix.\n";
+            return Mat(0, 0);
         }
-        
-        // Extract the right half (columns n to 2n-1)
+
+        const size_t row_bytes = sizeof(float) * static_cast<size_t>(n);
         for (int i = 0; i < n; ++i)
         {
-            for (int j = 0; j < n; ++j)
-            {
-                int col_idx = j + n;  // Right half starts at column n
-                // Boundary check (should not be needed, but safe)
-                if (col_idx >= rref.col)
-                {
-                    std::cerr << "[Error] inverse_gje: column index out of bounds: " 
-                              << col_idx << " >= " << rref.col << "\n";
-                    return Mat();
-                }
-                result(i, j) = rref(i, col_idx); // Extract the right part
-            }
+            std::memcpy(result.data + i * result.step,
+                        rref.data + i * rref.step + n,
+                        row_bytes);
         }
 
         return result;
@@ -4194,155 +4365,110 @@ namespace tiny
 
     /**
      * @name Mat::solve
-     * @brief Solve the linear system Ax = b using Gaussian elimination with back-substitution.
-     * @note Solves the system of linear equations: A × x = b
-     *       where A is an n×n coefficient matrix and b is an n×1 vector.
-     * @note Algorithm:
-     *       1. Create augmented matrix [A | b]
-     *       2. Apply Gaussian elimination to convert to upper triangular form
-     *       3. Use back-substitution to solve for x
-     * @note Time complexity: O(n³) - efficient for solving linear systems.
-     * @note If matrix A is singular (not invertible), returns empty matrix.
+     * @brief Solve the linear system Ax = b using Gaussian elimination.
+     *
+     * @details
+     *   The method builds the augmented matrix [A | b], reduces it to REF with
+     *   gaussian_eliminate() (partial pivoting), then performs back-substitution.
+     *   This keeps solve() numerically aligned with the shared elimination path
+     *   used by inverse_gje().
+     *
+     * @note Time complexity: O(n^3). On invalid input, singular systems, or
+     *       allocation failure, returns Mat(0, 0).
      *
      * @param A Coefficient matrix (N×N, must be square)
      * @param b Result vector (N×1)
-     * @return Mat Solution vector (N×1) containing x such that Ax = b, or empty Mat() on error
+     * @return Mat Solution vector (N×1) containing x such that Ax = b, or Mat(0, 0) on error.
      */
     Mat Mat::solve(const Mat &A, const Mat &b) const
     {
-        // Check for null pointers
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (A.data == nullptr)
         {
-            std::cerr << "[Error] solve: matrix A data pointer is null\n";
-            return Mat();
+            std::cerr << "[Error] solve: matrix A data pointer is null.\n";
+            return Mat(0, 0);
         }
-        
         if (b.data == nullptr)
         {
-            std::cerr << "[Error] solve: vector b data pointer is null\n";
-            return Mat();
+            std::cerr << "[Error] solve: vector b data pointer is null.\n";
+            return Mat(0, 0);
         }
-        
-        // Validate matrix dimensions
         if (A.row <= 0 || A.col <= 0)
         {
-            std::cerr << "[Error] solve: invalid matrix A dimensions: rows=" 
-                      << A.row << ", cols=" << A.col << "\n";
-            return Mat();
+            std::cerr << "[Error] solve: invalid matrix A dimensions: "
+                      << A.row << "x" << A.col << ".\n";
+            return Mat(0, 0);
         }
-        
         if (b.row <= 0 || b.col <= 0)
         {
-            std::cerr << "[Error] solve: invalid vector b dimensions: rows=" 
-                      << b.row << ", cols=" << b.col << "\n";
-            return Mat();
+            std::cerr << "[Error] solve: invalid vector b dimensions: "
+                      << b.row << "x" << b.col << ".\n";
+            return Mat(0, 0);
         }
-        
-        // Check if the matrix A is square
         if (A.row != A.col)
         {
-            std::cerr << "[Error] solve: matrix A must be square (got " 
-                      << A.row << "x" << A.col << ")\n";
-            return Mat();
+            std::cerr << "[Error] solve: matrix A must be square (got "
+                      << A.row << "x" << A.col << ").\n";
+            return Mat(0, 0);
         }
-
-        // Check if A and b dimensions are compatible for solving
         if (A.row != b.row || b.col != 1)
         {
-            std::cerr << "[Error] solve: dimensions do not match (A: " 
-                      << A.row << "x" << A.col << ", b: " << b.row << "x" << b.col 
-                      << ", expected b: " << A.row << "x1)\n";
-            return Mat();
+            std::cerr << "[Error] solve: dimensions do not match (A: "
+                      << A.row << "x" << A.col << ", b: " << b.row << "x" << b.col
+                      << ", expected b: " << A.row << "x1).\n";
+            return Mat(0, 0);
         }
-        
-        int n = A.row;
-        
-        // Check for integer overflow in augmented matrix column count
-        if (A.col > INT_MAX - 1)
+
+        const int n = A.row;
+
+        // ---------------------------------------------------------------------
+        // 2. Build [A | b] and reduce it to REF
+        // ---------------------------------------------------------------------
+        Mat augmented = Mat::augment(A, b);
+        if (augmented.data == nullptr)
         {
-            std::cerr << "[Error] solve: matrix size too large, integer overflow\n";
-            return Mat();
+            std::cerr << "[Error] solve: failed to build augmented matrix.\n";
+            return Mat(0, 0);
         }
 
-        // Create augmented matrix [A | b]
-        Mat augmentedMatrix(n, A.col + 1);
-        
-        // Check if augmented matrix was created successfully
-        if (augmentedMatrix.data == nullptr)
+        Mat ref = augmented.gaussian_eliminate();
+        if (ref.data == nullptr)
         {
-            std::cerr << "[Error] solve: failed to create augmented matrix\n";
-            return Mat();
-        }
-        
-        for (int i = 0; i < n; ++i)
-        {
-            for (int j = 0; j < A.col; ++j)
-            {
-                augmentedMatrix(i, j) = A(i, j); // Copy matrix A into augmented matrix
-            }
-            augmentedMatrix(i, A.col) = b(i, 0); // Copy vector b into augmented matrix
+            std::cerr << "[Error] solve: gaussian_eliminate failed.\n";
+            return Mat(0, 0);
         }
 
-        // Perform Gaussian elimination
-        for (int i = 0; i < n; ++i)
-        {
-            // Find pivot and make sure it's non-zero (or not too small)
-            // Note: This is a simplified version without partial pivoting
-            // For better numerical stability, consider using partial pivoting
-            if (fabsf(augmentedMatrix(i, i)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] solve: pivot at (" << i << ", " << i 
-                          << ") is zero or too small (" << augmentedMatrix(i, i) 
-                          << "), matrix is singular or near-singular\n";
-                return Mat();
-            }
-
-            // Normalize the pivot row
-            float pivot = augmentedMatrix(i, i);
-            for (int j = i; j < augmentedMatrix.col; ++j)
-            {
-                augmentedMatrix(i, j) /= pivot; // Normalize the pivot row
-            }
-
-            // Eliminate the entries below the pivot
-            for (int j = i + 1; j < n; ++j)
-            {
-                float factor = augmentedMatrix(j, i);
-                // Skip if factor is already zero (optimization)
-                if (fabsf(factor) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                    continue;
-                    
-                for (int k = i; k < augmentedMatrix.col; ++k)
-                {
-                    augmentedMatrix(j, k) -= factor * augmentedMatrix(i, k);
-                    
-                    // Numerical precision handling
-                    if (fabsf(augmentedMatrix(j, k)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                    {
-                        augmentedMatrix(j, k) = 0.0f;
-                    }
-                }
-            }
-        }
-
-        // Back-substitution to find the solution
+        // ---------------------------------------------------------------------
+        // 3. Back-substitution on the upper triangular REF
+        // ---------------------------------------------------------------------
         Mat solution(n, 1);
-        
-        // Check if solution matrix was created successfully
         if (solution.data == nullptr)
         {
-            std::cerr << "[Error] solve: failed to create solution vector\n";
-            return Mat();
+            std::cerr << "[Error] solve: failed to allocate solution vector.\n";
+            return Mat(0, 0);
         }
-        
+
+        const int ref_step = ref.step;
+        const int rhs_col = n;
         for (int i = n - 1; i >= 0; --i)
         {
-            float sum = augmentedMatrix(i, A.col); // Right-hand side value
+            const float* row_i = ref.data + i * ref_step;
+            const float pivot = row_i[i];
+            if (fabsf(pivot) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                std::cerr << "[Error] solve: zero or near-zero pivot at (" << i << ", " << i
+                          << "), system is singular or rank-deficient.\n";
+                return Mat(0, 0);
+            }
+
+            float sum = row_i[rhs_col];
             for (int j = i + 1; j < n; ++j)
             {
-                sum -= augmentedMatrix(i, j) * solution(j, 0);
+                sum -= row_i[j] * solution.data[j * solution.step];
             }
-            solution(i, 0) = sum;
+            solution.data[i * solution.step] = sum / pivot;
         }
 
         return solution;
@@ -4350,337 +4476,176 @@ namespace tiny
 
     /**
      * @name Mat::band_solve
-     * @brief Solve the system of equations Ax = b using optimized Gaussian elimination for banded matrices.
-     * @note Banded matrices have non-zero elements only in a narrow band around the diagonal.
-     *       This function optimizes Gaussian elimination by only processing elements within the band.
-     * @note Algorithm:
-     *       1. Forward elimination: only eliminate elements within the band
-     *       2. Back-substitution: solve for x
-     * @note Time complexity: O(n × k²) where n is matrix size and k is bandwidth.
-     *       More efficient than general solve() for banded matrices (k << n).
-     * @note Bandwidth k: total width of non-zero band (including diagonal).
-     *       For tridiagonal matrix, k = 3.
+     * @brief Solve Ax = b using band-limited Gaussian elimination.
+     *
+     * @details
+     *   This routine assumes A is a square banded matrix whose non-zero entries
+     *   lie within k total diagonals centered on the main diagonal. It avoids
+     *   touching known-zero regions during elimination and back-substitution.
+     *
+     *   No pivoting is applied: row swaps generally widen the band and can
+     *   destroy the purpose of a banded solver. If a diagonal pivot is tiny,
+     *   the method fails fast; use solve() for the more robust partial-pivoting
+     *   path.
+     *
+     * @note Time complexity: O(n * half_band^2) for symmetric narrow bands.
+     * @note k is the total band width including the diagonal. For a tridiagonal
+     *       matrix, k = 3 and half_band = 1.
      *
      * @param A Coefficient matrix (N×N) - banded matrix (passed by value, will be modified)
      * @param b Result vector (N×1) (passed by value, will be modified)
      * @param k Bandwidth of the matrix (must be >= 1 and odd, typically 3, 5, 7, ...)
-     * @return Mat Solution vector (N×1) containing x such that Ax = b, or empty Mat() on error
+     * @return Mat Solution vector (N×1) containing x such that Ax = b, or Mat(0, 0) on error.
      */
-    Mat Mat::band_solve(Mat A, Mat b, int k)
+    Mat Mat::band_solve(Mat A, Mat b, int k) const
     {
-        // Check for null pointers
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (A.data == nullptr)
         {
-            std::cerr << "[Error] band_solve: matrix A data pointer is null\n";
-            return Mat();
+            std::cerr << "[Error] band_solve: matrix A data pointer is null.\n";
+            return Mat(0, 0);
         }
-        
         if (b.data == nullptr)
         {
-            std::cerr << "[Error] band_solve: vector b data pointer is null\n";
-            return Mat();
+            std::cerr << "[Error] band_solve: vector b data pointer is null.\n";
+            return Mat(0, 0);
         }
-        
-        // Validate matrix dimensions
         if (A.row <= 0 || A.col <= 0)
         {
-            std::cerr << "[Error] band_solve: invalid matrix A dimensions: rows=" 
-                      << A.row << ", cols=" << A.col << "\n";
-            return Mat();
+            std::cerr << "[Error] band_solve: invalid matrix A dimensions: "
+                      << A.row << "x" << A.col << ".\n";
+            return Mat(0, 0);
         }
-        
         if (b.row <= 0 || b.col <= 0)
         {
-            std::cerr << "[Error] band_solve: invalid vector b dimensions: rows=" 
-                      << b.row << ", cols=" << b.col << "\n";
-            return Mat();
+            std::cerr << "[Error] band_solve: invalid vector b dimensions: "
+                      << b.row << "x" << b.col << ".\n";
+            return Mat(0, 0);
         }
-        
-        // Dimension compatibility check
-        if (A.row != A.col) // Check if A is a square matrix
+        if (A.row != A.col)
         {
-            std::cerr << "[Error] band_solve: matrix A must be square (got " 
-                      << A.row << "x" << A.col << ")\n";
-            return Mat();
+            std::cerr << "[Error] band_solve: matrix A must be square (got "
+                      << A.row << "x" << A.col << ").\n";
+            return Mat(0, 0);
         }
-
-        if (A.row != b.row || b.col != 1) // Check if dimensions of A and b are compatible
+        if (A.row != b.row || b.col != 1)
         {
-            std::cerr << "[Error] band_solve: dimensions do not match (A: " 
-                      << A.row << "x" << A.col << ", b: " << b.row << "x" << b.col 
-                      << ", expected b: " << A.row << "x1)\n";
-            return Mat();
+            std::cerr << "[Error] band_solve: dimensions do not match (A: "
+                      << A.row << "x" << A.col << ", b: " << b.row << "x" << b.col
+                      << ", expected b: " << A.row << "x1).\n";
+            return Mat(0, 0);
         }
-        
-        // Validate bandwidth parameter
         if (k < 1)
         {
-            std::cerr << "[Error] band_solve: bandwidth k must be >= 1 (got " << k << ")\n";
-            return Mat();
+            std::cerr << "[Error] band_solve: bandwidth k must be >= 1 (got " << k << ").\n";
+            return Mat(0, 0);
         }
-        
+
+        const int n = A.row;
         if (k > A.row)
         {
-            std::cerr << "[Warning] band_solve: bandwidth k=" << k 
-                      << " is larger than matrix size " << A.row 
-                      << ", using general solve may be more efficient\n";
+            std::cerr << "[Warning] band_solve: bandwidth k=" << k
+                      << " is larger than matrix size " << n
+                      << "; using general solve may be more efficient.\n";
         }
 
-        int n = A.row;
-        int bandsBelow = (k - 1) / 2; // Number of bands below the main diagonal
+        const int half_band = (k - 1) / 2;
+        const float pivot_tol = TINY_MATH_MIN_POSITIVE_INPUT_F32;
 
-        // Perform forward elimination to reduce the matrix
+        // ---------------------------------------------------------------------
+        // 2. Forward elimination within the band
+        // ---------------------------------------------------------------------
         for (int i = 0; i < n; ++i)
         {
-            // Check if pivot is valid (not zero or too small)
-            if (fabsf(A(i, i)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            float* row_i = A.data + i * A.step;
+            const float pivot = row_i[i];
+            if (fabsf(pivot) < pivot_tol)
             {
-                std::cerr << "[Error] band_solve: zero or near-zero pivot detected at (" 
-                          << i << ", " << i << ") = " << A(i, i) 
-                          << ", matrix is singular or near-singular\n";
-                return Mat();
+                std::cerr << "[Error] band_solve: zero or near-zero pivot at ("
+                          << i << ", " << i << ") = " << pivot
+                          << "; matrix is singular or requires pivoting.\n";
+                return Mat(0, 0);
             }
 
-            float a_ii = 1.0f / A(i, i); // Inverse of the pivot element
+            const float inv_pivot = 1.0f / pivot;
+            const int last_row = std::min(n, i + half_band + 1);
+            const int last_col = std::min(n, i + half_band + 1);
 
-            // Eliminate elements below the pivot in the current column
-            // Only process elements within the band (j <= i + bandsBelow)
-            for (int j = i + 1; j < n && j <= i + bandsBelow; ++j)
+            for (int j = i + 1; j < last_row; ++j)
             {
-                if (fabsf(A(j, i)) >= TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                float* row_j = A.data + j * A.step;
+                if (fabsf(row_j[i]) < pivot_tol)
                 {
-                    float factor = A(j, i) * a_ii;
-                    for (int col_idx = i; col_idx < A.col; ++col_idx)
-                    {
-                        A(j, col_idx) -= A(i, col_idx) * factor; // Eliminate the element
-                        
-                        // Numerical precision handling
-                        if (fabsf(A(j, col_idx)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                        {
-                            A(j, col_idx) = 0.0f;
-                        }
-                    }
-                    b(j, 0) -= b(i, 0) * factor; // Update the result vector
-                    
-                    // Numerical precision handling
-                    if (fabsf(b(j, 0)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                    {
-                        b(j, 0) = 0.0f;
-                    }
-                    
-                    A(j, i) = 0.0f; // Set the element to zero as it has been eliminated
+                    row_j[i] = 0.0f;
+                    continue;
                 }
+
+                const float factor = row_j[i] * inv_pivot;
+                row_j[i] = 0.0f; // eliminated exactly by construction
+
+                for (int col_idx = i + 1; col_idx < last_col; ++col_idx)
+                {
+                    row_j[col_idx] -= row_i[col_idx] * factor;
+                }
+                b.data[j * b.step] -= b.data[i * b.step] * factor;
             }
         }
 
-        // Back substitution to solve for x
+        // ---------------------------------------------------------------------
+        // 3. Back-substitution within the upper band
+        // ---------------------------------------------------------------------
         Mat x(n, 1);
-        
-        // Check if solution matrix was created successfully
         if (x.data == nullptr)
         {
-            std::cerr << "[Error] band_solve: failed to create solution vector\n";
-            return Mat();
+            std::cerr << "[Error] band_solve: failed to allocate solution vector.\n";
+            return Mat(0, 0);
         }
-        
-        // Solve the last variable
-        int last_idx = n - 1;
-        if (fabsf(A(last_idx, last_idx)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-        {
-            std::cerr << "[Error] band_solve: zero pivot at (" << last_idx << ", " 
-                      << last_idx << ") during back-substitution\n";
-            return Mat();
-        }
-        x(last_idx, 0) = b(last_idx, 0) / A(last_idx, last_idx);
 
-        // Solve remaining variables
-        for (int i = n - 2; i >= 0; --i)
+        for (int i = n - 1; i >= 0; --i)
         {
+            const float* row_i = A.data + i * A.step;
+            const float pivot = row_i[i];
+            if (fabsf(pivot) < pivot_tol)
+            {
+                std::cerr << "[Error] band_solve: zero pivot at (" << i << ", " << i
+                          << ") during back-substitution.\n";
+                return Mat(0, 0);
+            }
+
             float sum = 0.0f;
-            // Only sum elements within the band
-            int max_j = std::min(i + bandsBelow + 1, n);
+            const int max_j = std::min(n, i + half_band + 1);
             for (int j = i + 1; j < max_j; ++j)
             {
-                sum += A(i, j) * x(j, 0); // Sum of the known terms
+                sum += row_i[j] * x.data[j * x.step];
             }
-            
-            if (fabsf(A(i, i)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] band_solve: zero pivot at (" << i << ", " << i 
-                          << ") during back-substitution\n";
-                return Mat();
-            }
-            
-            x(i, 0) = (b(i, 0) - sum) / A(i, i); // Solve for the current variable
+
+            x.data[i * x.step] = (b.data[i * b.step] - sum) / pivot;
         }
 
-        return x; // Return the solution vector
+        return x;
     }
 
     /**
      * @name Mat::roots(Mat A, Mat y)
-     * @brief Solve the linear system A * x = y using Gaussian elimination.
-     * @note This is an alternative implementation of solve() function.
-     *       It uses a slightly different Gaussian elimination approach:
-     *       - Normalizes pivot row first (makes pivot = 1)
-     *       - Then eliminates below pivot
-     * @note Algorithm:
-     *       1. Create augmented matrix [A | y]
-     *       2. For each row: normalize pivot to 1, then eliminate below
-     *       3. Back-substitution to solve for x
-     * @note Time complexity: O(n³) - same as solve().
-     * @note If matrix A is singular (not invertible), returns empty matrix.
+     * @brief Solve the linear system A * x = y.
      *
-     * @param A Coefficient matrix (N×N, must be square, passed by value, will be modified)
-     * @param y Result vector (N×1, passed by value, will be modified)
-     * @return Mat Solution vector (N×1) containing x such that Ax = y, or empty Mat() on error
+     * @details
+     *   roots() is kept as a compatibility wrapper around solve(). Older code
+     *   had a second, independent elimination implementation here; delegating
+     *   to solve() avoids duplicated numerical logic and gives roots() the same
+     *   partial-pivoting behavior.
+     *
+     * @note Time complexity: O(n^3), same as solve().
+     *
+     * @param A Coefficient matrix (N×N, must be square)
+     * @param y Result vector (N×1)
+     * @return Mat Solution vector (N×1) containing x such that Ax = y, or Mat(0, 0) on error.
      */
-    Mat Mat::roots(Mat A, Mat y)
+    Mat Mat::roots(Mat A, Mat y) const
     {
-        // Check for null pointers
-        if (A.data == nullptr)
-        {
-            std::cerr << "[Error] roots: matrix A data pointer is null\n";
-            return Mat();
-        }
-        
-        if (y.data == nullptr)
-        {
-            std::cerr << "[Error] roots: vector y data pointer is null\n";
-            return Mat();
-        }
-        
-        // Validate matrix dimensions
-        if (A.row <= 0 || A.col <= 0)
-        {
-            std::cerr << "[Error] roots: invalid matrix A dimensions: rows=" 
-                      << A.row << ", cols=" << A.col << "\n";
-            return Mat();
-        }
-        
-        if (y.row <= 0 || y.col <= 0)
-        {
-            std::cerr << "[Error] roots: invalid vector y dimensions: rows=" 
-                      << y.row << ", cols=" << y.col << "\n";
-            return Mat();
-        }
-        
-        // Check if A is square
-        if (A.row != A.col)
-        {
-            std::cerr << "[Error] roots: matrix A must be square (got " 
-                      << A.row << "x" << A.col << ")\n";
-            return Mat();
-        }
-        
-        // Check if A and y dimensions are compatible
-        if (A.row != y.row || y.col != 1)
-        {
-            std::cerr << "[Error] roots: dimensions do not match (A: " 
-                      << A.row << "x" << A.col << ", y: " << y.row << "x" << y.col 
-                      << ", expected y: " << A.row << "x1)\n";
-            return Mat();
-        }
-        
-        int n = A.row; // Number of rows and columns in A (A is square)
-
-        // Create augmented matrix [A | y]
-        Mat augmentedMatrix = Mat::augment(A, y);
-        
-        // Check if augmented matrix was created successfully
-        if (augmentedMatrix.data == nullptr)
-        {
-            std::cerr << "[Error] roots: failed to create augmented matrix\n";
-            return Mat();
-        }
-        
-        // Verify augmented matrix dimensions
-        if (augmentedMatrix.col != n + 1)
-        {
-            std::cerr << "[Error] roots: augmented matrix has incorrect dimensions: " 
-                      << augmentedMatrix.row << "x" << augmentedMatrix.col 
-                      << " (expected " << n << "x" << (n+1) << ")\n";
-            return Mat();
-        }
-
-        // Perform Gaussian elimination
-        for (int j = 0; j < n; j++)
-        {
-            // Normalize the pivot row (make pivot element equal to 1)
-            float pivot = augmentedMatrix(j, j);
-            
-            // Check if pivot is valid (not zero or too small)
-            if (fabsf(pivot) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] roots: pivot is zero or too small at (" << j << ", " << j 
-                          << ") = " << pivot << ", system may have no solution\n";
-                return Mat();
-            }
-
-            // Normalize the pivot row
-            for (int k = 0; k < augmentedMatrix.col; k++)
-            {
-                augmentedMatrix(j, k) /= pivot;
-                
-                // Numerical precision handling
-                if (fabsf(augmentedMatrix(j, k)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                {
-                    augmentedMatrix(j, k) = 0.0f;
-                }
-            }
-
-            // Eliminate the column below the pivot (set other elements in the column to zero)
-            for (int i = j + 1; i < n; i++)
-            {
-                float factor = augmentedMatrix(i, j);
-                
-                // Skip if factor is already zero (optimization)
-                if (fabsf(factor) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                    continue;
-                
-                for (int k = 0; k < augmentedMatrix.col; k++)
-                {
-                    augmentedMatrix(i, k) -= factor * augmentedMatrix(j, k);
-                    
-                    // Numerical precision handling
-                    if (fabsf(augmentedMatrix(i, k)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                    {
-                        augmentedMatrix(i, k) = 0.0f;
-                    }
-                }
-            }
-        }
-
-        // Perform back-substitution
-        Mat result(n, 1);
-        
-        // Check if result matrix was created successfully
-        if (result.data == nullptr)
-        {
-            std::cerr << "[Error] roots: failed to create result vector\n";
-            return Mat();
-        }
-        
-        for (int i = n - 1; i >= 0; i--)
-        {
-            // Right-hand side of the augmented matrix (last column)
-            int rhs_col = n;  // Last column index
-            if (rhs_col >= augmentedMatrix.col)
-            {
-                std::cerr << "[Error] roots: column index out of bounds: " 
-                          << rhs_col << " >= " << augmentedMatrix.col << "\n";
-                return Mat();
-            }
-            
-            float sum = augmentedMatrix(i, rhs_col);
-            for (int j = i + 1; j < n; j++)
-            {
-                sum -= augmentedMatrix(i, j) * result(j, 0); // Subtract the known terms
-            }
-            result(i, 0) = sum; // Solve for the current variable
-        }
-
-        return result;
+        return solve(A, y);
     }
 
     // ============================================================================
@@ -4691,9 +4656,8 @@ namespace tiny
      * @brief Default constructor for LUDecomposition structure
      */
     Mat::LUDecomposition::LUDecomposition()
+        : L(0, 0), U(0, 0), P(0, 0), pivoted(false), status(TINY_OK)
     {
-        pivoted = false;
-        status = TINY_OK;
     }
 
     /**
@@ -4701,8 +4665,8 @@ namespace tiny
      * @brief Default constructor for CholeskyDecomposition structure
      */
     Mat::CholeskyDecomposition::CholeskyDecomposition()
+        : L(0, 0), status(TINY_OK)
     {
-        status = TINY_OK;
     }
 
     /**
@@ -4710,8 +4674,8 @@ namespace tiny
      * @brief Default constructor for QRDecomposition structure
      */
     Mat::QRDecomposition::QRDecomposition()
+        : Q(0, 0), R(0, 0), status(TINY_OK)
     {
-        status = TINY_OK;
     }
 
     /**
@@ -4719,141 +4683,150 @@ namespace tiny
      * @brief Default constructor for SVDDecomposition structure
      */
     Mat::SVDDecomposition::SVDDecomposition()
+        : U(0, 0), S(0, 0), V(0, 0), rank(0), iterations(0), status(TINY_OK)
     {
-        rank = 0;
-        iterations = 0;
-        status = TINY_OK;
     }
 
     /**
      * @name Mat::is_positive_definite()
-     * @brief Check if matrix is positive definite (for Cholesky decomposition).
-     * @note A matrix A is positive definite if:
-     *       1. A is symmetric: A^T = A
-     *       2. All eigenvalues are positive: λ_i > 0
-     *       3. For all non-zero vectors x: x^T A x > 0
-     * @note Uses Sylvester's criterion: all leading principal minors must be positive.
-     *       Checks leading principal minors according to max_minors_to_check parameter.
-     * @note Positive definite matrices have:
-     *       - All diagonal elements > 0
-     *       - All leading principal minors > 0
-     *       - Can be decomposed as A = L L^T (Cholesky decomposition)
-     * 
-     * @param tolerance Tolerance for numerical checks (must be >= 0)
-     * @param max_minors_to_check Maximum number of leading principal minors to check.
-     *                            - If -1: check all minors (complete Sylvester's criterion)
-     *                            - If > 0: check first max_minors_to_check minors
-     *                            - Default: -1 (check all)
-     * @return true if matrix is positive definite, false otherwise
+     * @brief Check whether a symmetric matrix is positive definite.
+     *
+     * @details
+     *   A symmetric matrix A is positive definite iff its Cholesky decomposition
+     *   A = L * L^T exists with strictly positive diagonal entries on L. This is
+     *   equivalent to Sylvester's criterion (every leading principal minor is
+     *   positive) but **much cheaper to evaluate**: a partial Cholesky factor
+     *   built up to depth k passes if and only if the first k leading principal
+     *   minors are positive.
+     *
+     *   Algorithm (partial Cholesky):
+     *       for i = 0 .. depth-1:
+     *           sum = sum_{k<i} L(i,k)^2
+     *           diag = A(i,i) - sum                  // == det of (i+1)x(i+1) leading minor
+     *                                                 //    divided by det of i x i leading minor
+     *           if diag <= tolerance: not PD, return false
+     *           L(i,i) = sqrt(diag)
+     *           for j = i+1 .. depth-1:
+     *               L(j,i) = (A(j,i) - sum_{k<i} L(j,k)*L(i,k)) / L(i,i)
+     *
+     *   Complexity: O(depth^3 / 3), versus the previous O(n^4) Sylvester+Laplace
+     *   path. Storage: depth^2 floats (one scratch lower-triangular L).
+     *
+     * @param tolerance Lower bound for each Cholesky pivot diag (must be >= 0).
+     *                  A pivot <= tolerance is treated as a failure (i.e. A is
+     *                  not strictly PD at that level).
+     * @param max_minors_to_check Depth of the leading principal block to test.
+     *                            - If < 0: test the whole matrix (depth = n).
+     *                            - If == 0: invalid; returns false with an error.
+     *                            - If > 0: clamped to [1, n]; only the first
+     *                              `max_minors_to_check` leading principal minors
+     *                              are tested (early-exit semantics).
+     *
+     * @return true if every tested leading principal minor is positive.
      */
     bool Mat::is_positive_definite(float tolerance, int max_minors_to_check) const
     {
-        // Check for null pointer
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] is_positive_definite: matrix data pointer is null\n";
+            std::cerr << "[Error] is_positive_definite: matrix data pointer is null.\n";
             return false;
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] is_positive_definite: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] is_positive_definite: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             return false;
         }
-        
-        // Validate tolerance
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] is_positive_definite: tolerance must be non-negative (got " 
-                      << tolerance << ")\n";
+            std::cerr << "[Error] is_positive_definite: tolerance must be >= 0 (got "
+                      << tolerance << ").\n";
             return false;
         }
-        
-        // Must be square
         if (this->row != this->col)
         {
             return false;
         }
-
-        // Must be symmetric
         if (!this->is_symmetric(tolerance))
         {
             return false;
         }
 
-        int n = this->row;
-        
-        // Handle empty matrix
+        const int n = this->row;
         if (n == 0)
         {
-            return true;  // Empty matrix is trivially positive definite
+            return true; // empty matrix trivially PD
         }
 
-        // Determine how many minors to check
-        int num_minors_to_check;
+        // ---------------------------------------------------------------------
+        // 2. Resolve check depth
+        // ---------------------------------------------------------------------
+        int depth;
         if (max_minors_to_check < 0)
         {
-            // Check all minors (complete Sylvester's criterion)
-            num_minors_to_check = n;
+            depth = n;
         }
         else if (max_minors_to_check == 0)
         {
-            std::cerr << "[Error] is_positive_definite: max_minors_to_check must be > 0 or -1 (got 0)\n";
+            std::cerr << "[Error] is_positive_definite: max_minors_to_check must be > 0 or -1 (got 0).\n";
             return false;
         }
         else
         {
-            // Check first max_minors_to_check minors (or all if n is smaller)
-            num_minors_to_check = (max_minors_to_check > n) ? n : max_minors_to_check;
+            depth = (max_minors_to_check > n) ? n : max_minors_to_check;
         }
 
-        // Check Sylvester's criterion: all leading principal minors must be positive
-        for (int k = 1; k <= num_minors_to_check; ++k)
+        // ---------------------------------------------------------------------
+        // 3. Partial Cholesky to depth
+        //    L is a (depth x depth) lower-triangular working buffer. We store
+        //    only the lower triangle, which is the same memory layout the
+        //    Cholesky-factor convention uses.
+        // ---------------------------------------------------------------------
+        Mat L(depth, depth);
+        if (L.data == nullptr)
         {
-            Mat submatrix(k, k);
-            
-            // Check if submatrix was created successfully
-            if (submatrix.data == nullptr)
+            std::cerr << "[Error] is_positive_definite: failed to allocate scratch L.\n";
+            return false;
+        }
+
+        const int Lstep = L.step;
+        const int Astep = this->step;
+
+        for (int i = 0; i < depth; ++i)
+        {
+            float* row_Li = L.data + i * Lstep;
+            const float* row_Ai = this->data + i * Astep;
+
+            // Diagonal: L(i,i) = sqrt(A(i,i) - sum_{k<i} L(i,k)^2)
+            float diag_sum = 0.0f;
+            for (int k = 0; k < i; ++k)
             {
-                std::cerr << "[Error] is_positive_definite: failed to create submatrix of size " 
-                          << k << "x" << k << "\n";
-                return false;
+                diag_sum += row_Li[k] * row_Li[k];
             }
-            
-            // Copy leading principal minor
-            for (int i = 0; i < k; ++i)
+            const float diag = row_Ai[i] - diag_sum;
+            if (diag <= tolerance || std::isnan(diag) || std::isinf(diag))
             {
-                for (int j = 0; j < k; ++j)
+                return false; // i-th leading principal minor not PD
+            }
+            const float pivot = sqrtf(diag);
+            row_Li[i] = pivot;
+            const float inv_pivot = 1.0f / pivot;
+
+            // Below-diagonal column i: L(j,i) = (A(j,i) - <Lj,Li>) / L(i,i)
+            for (int j = i + 1; j < depth; ++j)
+            {
+                float* row_Lj = L.data + j * Lstep;
+                const float* row_Aj = this->data + j * Astep;
+
+                float off_sum = 0.0f;
+                for (int k = 0; k < i; ++k)
                 {
-                    submatrix(i, j) = (*this)(i, j);
+                    off_sum += row_Lj[k] * row_Li[k];
                 }
-            }
-            
-            float det = submatrix.determinant();
-            
-            // Check if determinant is valid
-            if (std::isnan(det) || std::isinf(det))
-            {
-                std::cerr << "[Error] is_positive_definite: determinant is invalid (NaN or Inf) "
-                          << "for leading principal minor of size " << k << "x" << k << "\n";
-                return false;
-            }
-            
-            // Sylvester's criterion: determinant must be > tolerance
-            if (det <= tolerance)
-            {
-                return false;
-            }
-        }
-
-        // Additional check: all diagonal elements should be positive
-        for (int i = 0; i < n; ++i)
-        {
-            if ((*this)(i, i) <= tolerance)
-            {
-                return false;
+                row_Lj[i] = (row_Aj[i] - off_sum) * inv_pivot;
             }
         }
 
@@ -4883,105 +4856,93 @@ namespace tiny
     {
         LUDecomposition result;
 
-        // Check for null pointer
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] lu_decompose: matrix data pointer is null\n";
+            std::cerr << "[Error] lu_decompose: matrix data pointer is null.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] lu_decompose: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] lu_decompose: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-
-        // Validation: must be square matrix
         if (this->row != this->col)
         {
-            std::cerr << "[Error] lu_decompose: requires square matrix (got " 
-                      << this->row << "x" << this->col << ")\n";
+            std::cerr << "[Error] lu_decompose: requires a square matrix (got "
+                      << this->row << "x" << this->col << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        int n = this->row;
-        
-        // Handle empty matrix
+        const int n = this->row;
+        result.pivoted = use_pivoting;
+
         if (n == 0)
         {
-            // Empty matrix: L, U, P are all empty
             result.L = Mat(0, 0);
             result.U = Mat(0, 0);
-            if (use_pivoting)
-            {
-                result.P = Mat(0, 0);
-            }
-            result.pivoted = use_pivoting;
+            if (use_pivoting) result.P = Mat(0, 0);
             result.status = TINY_OK;
             return result;
         }
-        
-        Mat A = Mat(*this);  // Working copy
-        
-        // Check if working copy was created successfully
+
+        // ---------------------------------------------------------------------
+        // 2. Allocate working / output buffers
+        //    A : working copy that ends as packed L|U after the loop
+        //    L : initialized to I, fills lower-triangular multipliers
+        //    U : initialized to 0, fills upper-triangular at the end
+        //    P : (optional) permutation matrix, init to I
+        // ---------------------------------------------------------------------
+        Mat A(*this);
         if (A.data == nullptr)
         {
-            std::cerr << "[Error] lu_decompose: failed to create working copy\n";
+            std::cerr << "[Error] lu_decompose: failed to allocate working copy.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        result.L = Mat::eye(n);  // Initialize L as identity
-        
-        // Check if L matrix was created successfully
-        if (result.L.data == nullptr)
+        result.L = Mat::eye(n);
+        result.U = Mat(n, n);
+        if (result.L.data == nullptr || result.U.data == nullptr)
         {
-            std::cerr << "[Error] lu_decompose: failed to create L matrix\n";
+            std::cerr << "[Error] lu_decompose: failed to allocate L or U.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        result.U = Mat(n, n);   // Initialize U
-        
-        // Check if U matrix was created successfully
-        if (result.U.data == nullptr)
-        {
-            std::cerr << "[Error] lu_decompose: failed to create U matrix\n";
-            result.status = TINY_ERR_MATH_NULL_POINTER;
-            return result;
-        }
-        
-        result.pivoted = use_pivoting;
-
         if (use_pivoting)
         {
-            result.P = Mat::eye(n);  // Initialize P as identity
-            
-            // Check if P matrix was created successfully
+            result.P = Mat::eye(n);
             if (result.P.data == nullptr)
             {
-                std::cerr << "[Error] lu_decompose: failed to create P matrix\n";
+                std::cerr << "[Error] lu_decompose: failed to allocate P.\n";
                 result.status = TINY_ERR_MATH_NULL_POINTER;
                 return result;
             }
         }
 
-        // LU decomposition with partial pivoting
+        const int Astep = A.step;
+        const int Lstep = result.L.step;
+        float* const Ldata = result.L.data;
+        float* const Adata = A.data;
+
+        // ---------------------------------------------------------------------
+        // 3. LU with optional partial pivoting (Doolittle: unit-diagonal L)
+        // ---------------------------------------------------------------------
         for (int k = 0; k < n; ++k)
         {
             if (use_pivoting)
             {
-                // Find pivot (largest element in column k, below diagonal)
-                int max_row = k;
-                float max_val = fabsf(A(k, k));
+                // 3.1 Find row with the largest |A(i, k)| for i in [k, n)
+                int   max_row = k;
+                float max_val = fabsf(Adata[k * Astep + k]);
                 for (int i = k + 1; i < n; ++i)
                 {
-                    float abs_val = fabsf(A(i, k));
+                    const float abs_val = fabsf(Adata[i * Astep + k]);
                     if (abs_val > max_val)
                     {
                         max_val = abs_val;
@@ -4989,45 +4950,52 @@ namespace tiny
                     }
                 }
 
-                // Swap rows if necessary
+                // 3.2 Swap rows in A, in P, and in the already-written part of L
                 if (max_row != k)
                 {
                     A.swap_rows(k, max_row);
                     result.P.swap_rows(k, max_row);
-                    // Also swap previously computed L rows (but only the multipliers)
+                    float* row_Lk = Ldata + k       * Lstep;
+                    float* row_Lm = Ldata + max_row * Lstep;
                     for (int j = 0; j < k; ++j)
                     {
-                        float temp = result.L(k, j);
-                        result.L(k, j) = result.L(max_row, j);
-                        result.L(max_row, j) = temp;
+                        const float t = row_Lk[j];
+                        row_Lk[j] = row_Lm[j];
+                        row_Lm[j] = t;
                     }
                 }
             }
 
-            // Check for singular matrix
-            if (fabsf(A(k, k)) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            float* row_Ak = Adata + k * Astep;
+
+            // 3.3 Singularity guard
+            const float pivot = row_Ak[k];
+            if (fabsf(pivot) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
             {
-                std::cerr << "[Error] LU decomposition: Matrix is singular or near-singular.\n";
+                std::cerr << "[Error] lu_decompose: matrix is singular or near-singular at column "
+                          << k << " (pivot = " << pivot << ").\n";
                 result.status = TINY_ERR_MATH_INVALID_PARAM;
                 return result;
             }
+            const float inv_pivot = 1.0f / pivot;
 
-            // Compute U (upper triangular part)
+            // 3.4 Copy U row k from A
+            float* row_Uk = result.U.data + k * result.U.step;
             for (int j = k; j < n; ++j)
             {
-                result.U(k, j) = A(k, j);
+                row_Uk[j] = row_Ak[j];
             }
 
-            // Compute L (lower triangular multipliers)
+            // 3.5 Eliminate below the pivot, store multipliers in L(i, k)
             for (int i = k + 1; i < n; ++i)
             {
-                float multiplier = A(i, k) / A(k, k);
-                result.L(i, k) = multiplier;
-                
-                // Update A for next iteration
+                float* row_Ai = Adata + i * Astep;
+                const float multiplier = row_Ai[k] * inv_pivot;
+                Ldata[i * Lstep + k] = multiplier;
+                if (multiplier == 0.0f) continue; // already eliminated
                 for (int j = k + 1; j < n; ++j)
                 {
-                    A(i, j) -= multiplier * A(k, j);
+                    row_Ai[j] -= multiplier * row_Ak[j];
                 }
             }
         }
@@ -5108,85 +5076,68 @@ namespace tiny
         }
 
         result.L = Mat(n, n);
-        
-        // Check if L matrix was created successfully
         if (result.L.data == nullptr)
         {
-            std::cerr << "[Error] cholesky_decompose: failed to create L matrix\n";
+            std::cerr << "[Error] cholesky_decompose: failed to allocate L matrix.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
 
-        // Cholesky decomposition: A = L * L^T
-        for (int i = 0; i < n; ++i)
+        // ---------------------------------------------------------------------
+        // Cholesky factorization (column-by-column, packed lower triangular).
+        //
+        //   For column j running 0 .. n-1:
+        //       diag = A(j,j) - <L(j, 0:j), L(j, 0:j)>
+        //       if diag <= eps  -> A is not positive definite
+        //       L(j,j)  = sqrt(diag)
+        //       inv_d  = 1 / L(j,j)
+        //       for i in j+1 .. n-1:
+        //           L(i,j) = (A(i,j) - <L(i, 0:j), L(j, 0:j)>) * inv_d
+        //
+        // Strict lower triangle is the only part written; the upper triangle
+        // stays zero from Mat(n, n).  Hot inner loops use raw row pointers.
+        // ---------------------------------------------------------------------
+        const int Lstep = result.L.step;
+        const int Astep = this->step;
+        float* const Ldata = result.L.data;
+        const float* const Adata = this->data;
+
+        for (int j = 0; j < n; ++j)
         {
-            for (int j = 0; j <= i; ++j)
+            float* row_Lj = Ldata + j * Lstep;
+            const float* row_Aj = Adata + j * Astep;
+
+            // Diagonal pivot
+            float diag_sum = 0.0f;
+            for (int k = 0; k < j; ++k)
             {
-                float sum = 0.0f;
-                
-                if (j == i)
+                diag_sum += row_Lj[k] * row_Lj[k];
+            }
+            const float diag = row_Aj[j] - diag_sum;
+            if (diag <= TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                std::cerr << "[Error] cholesky_decompose: matrix is not positive definite "
+                          << "(diagonal residual " << diag << " at position ["
+                          << j << "][" << j << "]).\n";
+                result.status = TINY_ERR_MATH_INVALID_PARAM;
+                return result;
+            }
+            const float pivot = sqrtf(diag);
+            row_Lj[j] = pivot;
+            const float inv_pivot = 1.0f / pivot;
+
+            // Below-diagonal entries in column j
+            for (int i = j + 1; i < n; ++i)
+            {
+                float* row_Li = Ldata + i * Lstep;
+                const float* row_Ai = Adata + i * Astep;
+
+                float off_sum = 0.0f;
+                for (int k = 0; k < j; ++k)
                 {
-                    // Diagonal elements: L[i][i] = sqrt(A[i][i] - sum(L[i][k]^2))
-                    for (int k = 0; k < j; ++k)
-                    {
-                        sum += result.L(j, k) * result.L(j, k);
-                    }
-                    float diag_val = (*this)(j, j) - sum;
-                    
-                    // Check if matrix is positive definite
-                    // For positive definite matrices, diag_val must be > tolerance
-                    if (diag_val <= TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                    {
-                        std::cerr << "[Error] cholesky_decompose: matrix is not positive definite "
-                                  << "(diagonal value " << diag_val << " at position [" 
-                                  << j << "][" << j << "] is not positive)\n";
-                        result.status = TINY_ERR_MATH_INVALID_PARAM;
-                        return result;
-                    }
-                    
-                    float sqrt_result = sqrtf(diag_val);
-                    
-                    // Check if sqrt result is valid
-                    if (std::isnan(sqrt_result) || std::isinf(sqrt_result))
-                    {
-                        std::cerr << "[Error] cholesky_decompose: sqrt result is invalid (NaN or Inf) "
-                                  << "at position [" << j << "][" << j << "]\n";
-                        result.status = TINY_ERR_MATH_INVALID_PARAM;
-                        return result;
-                    }
-                    
-                    result.L(j, j) = sqrt_result;
+                    off_sum += row_Li[k] * row_Lj[k];
                 }
-                else
-                {
-                    // Off-diagonal elements: L[i][j] = (A[i][j] - sum(L[i][k]*L[j][k])) / L[j][j]
-                    for (int k = 0; k < j; ++k)
-                    {
-                        sum += result.L(i, k) * result.L(j, k);
-                    }
-                    
-                    // Check if divisor is valid (should be > 0 from previous diagonal calculation)
-                    float divisor = result.L(j, j);
-                    if (fabsf(divisor) < TINY_MATH_MIN_POSITIVE_INPUT_F32 || 
-                        std::isnan(divisor) || std::isinf(divisor))
-                    {
-                        std::cerr << "[Error] cholesky_decompose: invalid divisor at position [" 
-                                  << j << "][" << j << "] (value: " << divisor << ")\n";
-                        result.status = TINY_ERR_MATH_INVALID_PARAM;
-                        return result;
-                    }
-                    
-                    result.L(i, j) = ((*this)(i, j) - sum) / divisor;
-                    
-                    // Check if result is valid
-                    if (std::isnan(result.L(i, j)) || std::isinf(result.L(i, j)))
-                    {
-                        std::cerr << "[Error] cholesky_decompose: computed value is invalid (NaN or Inf) "
-                                  << "at position [" << i << "][" << j << "]\n";
-                        result.status = TINY_ERR_MATH_INVALID_PARAM;
-                        return result;
-                    }
-                }
+                row_Li[j] = (row_Ai[j] - off_sum) * inv_pivot;
             }
         }
 
@@ -5224,103 +5175,91 @@ namespace tiny
     {
         QRDecomposition result;
 
-        // Check for null pointer
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] qr_decompose: matrix data pointer is null\n";
+            std::cerr << "[Error] qr_decompose: matrix data pointer is null.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] qr_decompose: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] qr_decompose: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        int m = this->row;
-        int n = this->col;
-        int min_dim = (m < n) ? m : n;
-        
-        // Handle empty matrix
+        const int m = this->row;
+        const int n = this->col;
+        const int min_dim = (m < n) ? m : n;
+
         if (m == 0 || n == 0)
         {
-            // Empty matrix: Q and R are also empty
             result.Q = Mat(0, 0);
             result.R = Mat(0, 0);
             result.status = TINY_OK;
             return result;
         }
 
-        // QR decomposition using Gram-Schmidt process
-        // Use the reusable gram_schmidt_orthogonalize function
+        // ---------------------------------------------------------------------
+        // 2. Run Modified Gram-Schmidt (reuses the optimized helper)
+        //    R_coeff is already a fully populated n x n upper-triangular block:
+        //      - For k <= j: R_coeff(k, j) is the projection r_kj computed by MGS
+        //      - For k >  j: zero (kept by gram_schmidt_orthogonalize)
+        //    Therefore there is no need to recompute Q^T * A here.
+        // ---------------------------------------------------------------------
         Mat Q_ortho, R_coeff;
         if (!Mat::gram_schmidt_orthogonalize(*this, Q_ortho, R_coeff, TINY_MATH_MIN_POSITIVE_INPUT_F32))
         {
-            std::cerr << "[Error] qr_decompose: gram_schmidt_orthogonalize failed\n";
+            std::cerr << "[Error] qr_decompose: gram_schmidt_orthogonalize failed.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Verify that Q_ortho and R_coeff were created successfully
         if (Q_ortho.data == nullptr || R_coeff.data == nullptr)
         {
-            std::cerr << "[Error] qr_decompose: failed to create Q or R coefficient matrices\n";
+            std::cerr << "[Error] qr_decompose: gram_schmidt_orthogonalize returned null buffers.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Verify dimensions of Q_ortho and R_coeff
-        if (Q_ortho.row != m || Q_ortho.col != n || 
+        if (Q_ortho.row != m || Q_ortho.col != n ||
             R_coeff.row != n || R_coeff.col != n)
         {
-            std::cerr << "[Error] qr_decompose: invalid dimensions from gram_schmidt_orthogonalize\n";
+            std::cerr << "[Error] qr_decompose: unexpected dimensions from gram_schmidt_orthogonalize.\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        // Extract Q and R from the orthogonalization results
+        // ---------------------------------------------------------------------
+        // 3. Materialize Q and R in the QR convention
+        //    R is sized (m x n) so the bottom (m - min_dim) rows are zero.
+        //    The top min_dim rows are exactly R_coeff's upper-triangular block,
+        //    plus, for wide matrices (m < n), the extra columns j >= m which
+        //    MGS already filled (r_kj = q_k^T * a_j for k < m).
+        // ---------------------------------------------------------------------
         result.Q = Q_ortho;
         result.R = Mat(m, n);
-        
-        // Check if R matrix was created successfully
         if (result.R.data == nullptr)
         {
-            std::cerr << "[Error] qr_decompose: failed to create R matrix\n";
+            std::cerr << "[Error] qr_decompose: failed to allocate R matrix.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
 
-        // Copy coefficients to R (upper triangular part)
-        for (int j = 0; j < min_dim; ++j)
+        const int Rstep = result.R.step;
+        const int Cstep = R_coeff.step;
+        for (int j = 0; j < n; ++j)
         {
-            for (int k = 0; k <= j; ++k)
+            const int k_end = (j + 1 < min_dim) ? (j + 1) : min_dim;
+            float* col_R = result.R.data + j;
+            const float* col_C = R_coeff.data + j;
+            for (int k = 0; k < k_end; ++k)
             {
-                result.R(k, j) = R_coeff(k, j);
+                col_R[k * Rstep] = col_C[k * Cstep];
             }
-
-            // Compute remaining R elements: R(j,k) = Q(:,j)^T * A(:,k) for k > j
-            for (int k = j + 1; k < n; ++k)
-            {
-                float dot = 0.0f;
-                for (int i = 0; i < m; ++i)
-                {
-                    dot += result.Q(i, j) * (*this)(i, k);
-                }
-                result.R(j, k) = dot;
-            }
-        }
-        
-        // Fill remaining rows of R with zeros (if m > n)
-        for (int i = min_dim; i < m; ++i)
-        {
-            for (int j = 0; j < n; ++j)
-            {
-                result.R(i, j) = 0.0f;
-            }
+            // remaining rows in this column stay zero (Mat ctor zero-inits)
         }
 
         result.status = TINY_OK;
@@ -5329,257 +5268,260 @@ namespace tiny
 
     /**
      * @name Mat::svd_decompose()
-     * @brief Compute Singular Value Decomposition: A = U * S * V^T.
-     * @note SVD decomposes a matrix A (m×n) into:
-     *       A = U * S * V^T
-     *       where:
-     *       - U: m×min(m,n) matrix with orthonormal columns (left singular vectors)
-     *       - S: min(m,n)×1 vector of singular values (diagonal matrix stored as vector)
-     *       - V: n×n matrix with orthonormal columns (right singular vectors)
-     * @note Algorithm: Uses eigendecomposition of A^T * A to compute V and singular values.
-     *       Then computes U from A * V = U * S.
-     *       This is a simplified approach; full SVD uses bidiagonalization + QR iteration.
-     * @note Mathematical properties:
-     *       - Singular values are non-negative and sorted in descending order
-     *       - U and V are orthogonal: U^T * U = I, V^T * V = I
-     *       - Rank of A = number of non-zero singular values
-     * @note Applications:
-     *       - Rank estimation and matrix rank computation
-     *       - Pseudo-inverse: A^+ = V * S^+ * U^T
-     *       - Dimension reduction (PCA, data compression)
-     *       - Least squares problems
-     *       - Image processing and signal processing
-     * @note Time complexity: O(m*n² + n³) - dominated by eigendecomposition
-     * @note Note: This is a simplified implementation. For production use, consider
-     *       more robust algorithms like bidiagonalization + divide-and-conquer.
-     * 
-     * @param max_iter Maximum number of iterations for eigendecomposition (must be > 0)
-     * @param tolerance Convergence tolerance for eigendecomposition (must be >= 0)
-     * @return SVDDecomposition containing U, S, V matrices, rank, iterations, and status
+     * @brief Compute the (thin/economy) Singular Value Decomposition: A = U * S * V^T.
+     *
+     * Output dimensions:
+     *   - U: m x min(m,n)  — orthonormal columns (left singular vectors)
+     *   - S: min(m,n) x 1  — singular values, sorted in *descending* order
+     *   - V: n x n         — orthogonal matrix; first `rank` columns are the
+     *                        right singular vectors corresponding to the non-zero
+     *                        singular values (sorted), remaining columns form an
+     *                        orthonormal basis of the null space of A.
+     *
+     * Algorithm (normal-equations / Jacobi):
+     *   1. Form M = A^T A  (n x n, symmetric positive-semidefinite)
+     *   2. eig(M) = V diag(lambda) V^T  via Jacobi
+     *   3. sigma_i = sqrt(lambda_i)     (lambda_i is clamped at 0 to absorb tiny
+     *                                    negative roundoff)
+     *   4. Sort (sigma_i, V(:, i)) by sigma_i descending
+     *   5. U(:, i) = A * V(:, i) / sigma_i, for i with sigma_i > tolerance
+     *      (Note: orthogonality of U columns relies on Jacobi's accuracy on
+     *       symmetric matrices; small floating-point drift may exist when
+     *       several sigma_i are nearly equal. If strict U^T U == I is needed,
+     *       apply gram_schmidt_orthogonalize() on the result externally.)
+     *
+     * Numerical caveat:
+     *   Forming A^T A squares the condition number of A, so singular values
+     *   smaller than ~sqrt(eps)*sigma_max are unreliable. For accuracy near the
+     *   rank cliff, prefer a bidiagonalization-based SVD (not implemented here).
+     *
+     * Tolerance semantics:
+     *   `tolerance` is used both as the Jacobi off-diagonal convergence threshold
+     *   and as the *singular-value* zero threshold (sigma <= tolerance is treated
+     *   as zero). It is therefore in the *same scale as the entries of A*. This
+     *   matches the convention used by `pseudo_inverse(svd, tolerance)`.
+     *
+     * Properties guaranteed:
+     *   - sigma_i >= 0, sorted descending
+     *   - rank   = number of sigma_i strictly greater than tolerance
+     *   - U columns 0..rank-1 are orthonormal; columns rank..min_dim-1 are zero
+     *   - V is fully populated (n columns) and is orthogonal up to floating-point
+     *     drift inherited from Jacobi.
+     *
+     * Time complexity: O(m*n^2 + n^3) — dominated by Jacobi on the n x n matrix.
+     *
+     * @param max_iter   Maximum Jacobi iterations (must be > 0).
+     * @param tolerance  Convergence threshold (Jacobi) and singular-value zero
+     *                   threshold (must be >= 0).
+     * @return SVDDecomposition with U, S, V, rank, iterations, status.
      */
     Mat::SVDDecomposition Mat::svd_decompose(int max_iter, float tolerance) const
     {
         SVDDecomposition result;
 
-        // Check for null pointer
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] svd_decompose: matrix data pointer is null\n";
+            std::cerr << "[Error] svd_decompose: matrix data pointer is null.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] svd_decompose: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] svd_decompose: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
-        // Validate parameters
         if (max_iter <= 0)
         {
-            std::cerr << "[Error] svd_decompose: max_iter must be > 0 (got " << max_iter << ")\n";
+            std::cerr << "[Error] svd_decompose: max_iter must be > 0 (got " << max_iter << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] svd_decompose: tolerance must be >= 0 (got " << tolerance << ")\n";
+            std::cerr << "[Error] svd_decompose: tolerance must be >= 0 (got " << tolerance << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        int m = this->row;
-        int n = this->col;
-        int min_dim = (m < n) ? m : n;
-        
-        // Handle empty matrix
-        if (m == 0 || n == 0)
-        {
-            // Empty matrix: U, S, V are also empty
-            result.U = Mat(0, 0);
-            result.S = Mat(0, 0);
-            result.V = Mat(0, 0);
-            result.rank = 0;
-            result.iterations = 0;
-            result.status = TINY_OK;
-            return result;
-        }
+        const int m = this->row;
+        const int n = this->col;
+        const int min_dim = (m < n) ? m : n;
+        // Note: m == 0 || n == 0 cases are already rejected by the dimension
+        // check above (this->row <= 0 || this->col <= 0).
 
-        // For simplicity, we use a simplified SVD algorithm
-        // Full SVD implementation is complex, so we use an iterative approach
-        // based on eigendecomposition of A^T * A and A * A^T
-
-        // Compute A^T * A (n x n matrix)
+        // ---------------------------------------------------------------------
+        // 2. Form M = A^T * A (n x n, symmetric PSD).
+        //    Compute the upper triangle, then mirror, so that M is *exactly*
+        //    symmetric (Jacobi assumes symmetry).
+        // ---------------------------------------------------------------------
         Mat AtA(n, n);
-        
-        // Check if AtA matrix was created successfully
         if (AtA.data == nullptr)
         {
-            std::cerr << "[Error] svd_decompose: failed to create AtA matrix\n";
+            std::cerr << "[Error] svd_decompose: failed to allocate A^T*A.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
+
+        const int Astep = this->step;
+        const float* const Adata = this->data;
+        const int AtAstep = AtA.step;
+
         for (int i = 0; i < n; ++i)
         {
-            for (int j = 0; j < n; ++j)
+            float* row_AtA_i = AtA.data + i * AtAstep;
+            for (int j = i; j < n; ++j)
             {
-                AtA(i, j) = 0.0f;
+                float s = 0.0f;
                 for (int k = 0; k < m; ++k)
                 {
-                    AtA(i, j) += (*this)(k, i) * (*this)(k, j);
+                    const float* row_Ak = Adata + k * Astep;
+                    s += row_Ak[i] * row_Ak[j];
+                }
+                row_AtA_i[j] = s;
+                if (j != i)
+                {
+                    AtA.data[j * AtAstep + i] = s;
                 }
             }
         }
 
-        // Eigendecomposition of A^T * A to get V and singular values squared
-        Mat::EigenDecomposition eig_AtA = AtA.eigendecompose_jacobi(tolerance, max_iter);
-        
-        if (eig_AtA.status != TINY_OK)
+        // ---------------------------------------------------------------------
+        // 3. Eigendecomposition of A^T A.
+        //    eigenvectors are columns of `eig.eigenvectors`; eigenvalues are
+        //    delivered in *unsorted* (natural diagonal) order.
+        // ---------------------------------------------------------------------
+        Mat::EigenDecomposition eig = AtA.eigendecompose_jacobi(tolerance, max_iter);
+        if (eig.status != TINY_OK)
         {
-            std::cerr << "[Error] svd_decompose: eigendecomposition failed with status " 
-                      << eig_AtA.status << "\n";
-            result.status = eig_AtA.status;
+            std::cerr << "[Error] svd_decompose: eigendecomposition failed with status "
+                      << eig.status << ".\n";
+            result.status = eig.status;
             return result;
         }
-        
-        // Verify eigendecomposition results
-        if (eig_AtA.eigenvalues.data == nullptr || eig_AtA.eigenvectors.data == nullptr)
+        if (eig.eigenvalues.data == nullptr || eig.eigenvectors.data == nullptr)
         {
-            std::cerr << "[Error] svd_decompose: eigendecomposition returned null pointers\n";
+            std::cerr << "[Error] svd_decompose: eigendecomposition returned null buffers.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Verify dimensions
-        if (eig_AtA.eigenvalues.row != n || eig_AtA.eigenvalues.col != 1 ||
-            eig_AtA.eigenvectors.row != n || eig_AtA.eigenvectors.col != n)
+        if (eig.eigenvalues.row != n || eig.eigenvalues.col != 1 ||
+            eig.eigenvectors.row != n || eig.eigenvectors.col != n)
         {
-            std::cerr << "[Error] svd_decompose: invalid dimensions from eigendecomposition\n";
+            std::cerr << "[Error] svd_decompose: unexpected dimensions from eigendecomposition.\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        // Extract singular values (square root of eigenvalues of A^T * A)
+        // ---------------------------------------------------------------------
+        // 4. Build a permutation that sorts eigenvalues in descending order.
+        //    Negative roundoff on PSD spectra is clamped to 0 here so that the
+        //    sqrt is always well defined.
+        // ---------------------------------------------------------------------
+        const int evalStep = eig.eigenvalues.step;
+        const int EVstep   = eig.eigenvectors.step;
+
+        std::vector<float> lambda(n);
+        std::vector<int>   perm(n);
+        for (int i = 0; i < n; ++i)
+        {
+            float lam = eig.eigenvalues.data[i * evalStep];
+            if (std::isnan(lam) || lam < 0.0f) lam = 0.0f;   // clamp PSD roundoff
+            lambda[i] = lam;
+            perm[i] = i;
+        }
+        // Insertion sort by lambda descending — n is typically small.
+        for (int i = 1; i < n; ++i)
+        {
+            const int   key_idx = perm[i];
+            const float key_lam = lambda[i];
+            int j = i - 1;
+            while (j >= 0 && lambda[j] < key_lam)
+            {
+                lambda[j + 1] = lambda[j];
+                perm[j + 1]   = perm[j];
+                --j;
+            }
+            lambda[j + 1] = key_lam;
+            perm[j + 1]   = key_idx;
+        }
+
+        // ---------------------------------------------------------------------
+        // 5. Allocate outputs and populate V (full n x n) and S (min_dim x 1).
+        //    V's columns are *all* eigenvectors of A^T A in sorted order, so V
+        //    is an orthogonal matrix (the trailing columns span the null space
+        //    of A and have sigma_i = 0).
+        //    rank counts only sigma_i > tolerance.
+        // ---------------------------------------------------------------------
         result.S = Mat(min_dim, 1);
         result.V = Mat(n, n);
-        
-        // Check if result matrices were created successfully
-        if (result.S.data == nullptr || result.V.data == nullptr)
-        {
-            std::cerr << "[Error] svd_decompose: failed to create S or V matrices\n";
-            result.status = TINY_ERR_MATH_NULL_POINTER;
-            return result;
-        }
-        
-        // Extract singular values from eigenvalues
-        // Note: Eigenvalues should be sorted in descending order by eigendecompose_jacobi
-        // but we verify and extract only positive eigenvalues
-        int sv_count = 0;
-        for (int i = 0; i < n && sv_count < min_dim; ++i)
-        {
-            float eigenval = eig_AtA.eigenvalues(i, 0);
-            
-            // Check if eigenvalue is valid
-            if (std::isnan(eigenval) || std::isinf(eigenval))
-            {
-                std::cerr << "[Warning] svd_decompose: invalid eigenvalue at index " << i 
-                          << " (NaN or Inf), skipping\n";
-                continue;
-            }
-            
-            // Only consider positive eigenvalues (singular values are non-negative)
-            if (eigenval > tolerance)
-            {
-                float sqrt_result = sqrtf(eigenval);
-                
-                // Check if sqrt result is valid
-                if (std::isnan(sqrt_result) || std::isinf(sqrt_result))
-                {
-                    std::cerr << "[Warning] svd_decompose: invalid sqrt result for eigenvalue " 
-                              << eigenval << " at index " << i << ", skipping\n";
-                    continue;
-                }
-                
-                result.S(sv_count, 0) = sqrt_result;
-                
-                // Copy corresponding eigenvector to V
-                for (int j = 0; j < n; ++j)
-                {
-                    result.V(j, sv_count) = eig_AtA.eigenvectors(j, i);
-                }
-                sv_count++;
-            }
-        }
-
-        result.rank = sv_count;
-
-        // Compute U from A * V = U * S
         result.U = Mat(m, min_dim);
-        
-        // Check if U matrix was created successfully
-        if (result.U.data == nullptr)
+        if (result.S.data == nullptr || result.V.data == nullptr || result.U.data == nullptr)
         {
-            std::cerr << "[Error] svd_decompose: failed to create U matrix\n";
+            std::cerr << "[Error] svd_decompose: failed to allocate U/S/V.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        for (int i = 0; i < sv_count; ++i)
+
+        const int Vstep = result.V.step;
+        const int Sstep = result.S.step;
+        const int Ustep = result.U.step;
+
+        // Populate every column of V (n columns total) using the sort permutation.
+        for (int col = 0; col < n; ++col)
         {
-            float sigma = result.S(i, 0);
-            
-            // Check if sigma is valid
-            if (std::isnan(sigma) || std::isinf(sigma) || sigma <= tolerance)
+            const int src = perm[col];
+            for (int row_idx = 0; row_idx < n; ++row_idx)
             {
-                // Fill U column with zeros if sigma is invalid or too small
-                for (int j = 0; j < m; ++j)
-                {
-                    result.U(j, i) = 0.0f;
-                }
-                continue;
+                result.V.data[row_idx * Vstep + col] =
+                    eig.eigenvectors.data[row_idx * EVstep + src];
             }
-            
-            // U(:,i) = (A * V(:,i)) / sigma
+        }
+
+        // Fill S; count rank as sigma_i > tolerance (NOT >= — treat == tolerance
+        // as numerically zero, matching pseudo_inverse).
+        int rank = 0;
+        for (int i = 0; i < min_dim; ++i)
+        {
+            const float sigma = sqrtf(lambda[i]); // lambda already clamped >= 0
+            result.S.data[i * Sstep] = sigma;
+            if (sigma > tolerance) ++rank;
+        }
+        result.rank = rank;
+
+        // ---------------------------------------------------------------------
+        // 6. Recover U from A * V = U * S, column by column:
+        //        U(:, i) = (A * V(:, i)) / sigma_i,   for sigma_i > tolerance
+        //    Columns rank..min_dim-1 are left at 0 (zero-initialized).
+        //
+        //    In exact arithmetic ||A * V_i|| == sigma_i, so U(:, i) is unit
+        //    norm. Across i, U columns are orthogonal because V columns are
+        //    (Jacobi guarantees orthonormal eigenvectors of A^T A). Floating-
+        //    point drift may slightly violate U^T U == I; downstream consumers
+        //    that need strict orthogonality should re-orthogonalize on the
+        //    result.
+        // ---------------------------------------------------------------------
+        for (int i = 0; i < rank; ++i)
+        {
+            const float sigma = result.S.data[i * Sstep];
+            const float inv_sigma = 1.0f / sigma;
             for (int j = 0; j < m; ++j)
             {
-                float sum = 0.0f;
+                const float* row_Aj = Adata + j * Astep;
+                float s = 0.0f;
                 for (int k = 0; k < n; ++k)
                 {
-                    sum += (*this)(j, k) * result.V(k, i);
+                    s += row_Aj[k] * result.V.data[k * Vstep + i];
                 }
-                
-                float u_val = sum / sigma;
-                
-                // Check if result is valid
-                if (std::isnan(u_val) || std::isinf(u_val))
-                {
-                    std::cerr << "[Warning] svd_decompose: invalid U value at [" 
-                              << j << "][" << i << "], setting to 0\n";
-                    result.U(j, i) = 0.0f;
-                }
-                else
-                {
-                    result.U(j, i) = u_val;
-                }
-            }
-        }
-        
-        // Fill remaining columns of U with zeros (if sv_count < min_dim)
-        for (int i = sv_count; i < min_dim; ++i)
-        {
-            for (int j = 0; j < m; ++j)
-            {
-                result.U(j, i) = 0.0f;
+                result.U.data[j * Ustep + i] = s * inv_sigma;
             }
         }
 
-        result.iterations = eig_AtA.iterations;
+        result.iterations = eig.iterations;
         result.status = TINY_OK;
         return result;
     }
@@ -5607,181 +5549,138 @@ namespace tiny
      */
     Mat Mat::solve_lu(const LUDecomposition &lu, const Mat &b)
     {
-        // Check LU decomposition status
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (lu.status != TINY_OK)
         {
-            std::cerr << "[Error] solve_lu: invalid LU decomposition (status: " 
-                      << lu.status << ")\n";
-            return Mat();
+            std::cerr << "[Error] solve_lu: invalid LU decomposition (status="
+                      << lu.status << ").\n";
+            return Mat(0, 0);
         }
-        
-        // Check for null pointers
         if (lu.L.data == nullptr || lu.U.data == nullptr)
         {
-            std::cerr << "[Error] solve_lu: LU decomposition matrices have null pointers\n";
-            return Mat();
+            std::cerr << "[Error] solve_lu: LU has null L or U buffer.\n";
+            return Mat(0, 0);
         }
-        
         if (b.data == nullptr)
         {
-            std::cerr << "[Error] solve_lu: right-hand side vector has null pointer\n";
-            return Mat();
+            std::cerr << "[Error] solve_lu: right-hand side b is null.\n";
+            return Mat(0, 0);
         }
-        
-        // Validate LU decomposition dimensions
-        if (lu.L.row <= 0 || lu.L.col <= 0 || lu.U.row <= 0 || lu.U.col <= 0)
-        {
-            std::cerr << "[Error] solve_lu: invalid LU decomposition dimensions\n";
-            return Mat();
-        }
-        
-        // Check if L and U are square and have same size
         if (lu.L.row != lu.L.col || lu.U.row != lu.U.col || lu.L.row != lu.U.row)
         {
-            std::cerr << "[Error] solve_lu: L and U must be square matrices of same size\n";
-            return Mat();
-        }
-        
-        int n = lu.L.row;
-        
-        // Handle empty matrix
-        if (n == 0)
-        {
-            return Mat(0, 1);  // Return empty solution vector
-        }
-        
-        // Validate right-hand side vector dimensions
-        if (b.row != n || b.col != 1)
-        {
-            std::cerr << "[Error] solve_lu: dimension mismatch - b must be " 
-                      << n << "x1 vector (got " << b.row << "x" << b.col << ")\n";
-            return Mat();
-        }
-        
-        // Check permutation matrix if pivoting was used
-        if (lu.pivoted)
-        {
-            if (lu.P.data == nullptr)
-            {
-                std::cerr << "[Error] solve_lu: pivoting enabled but P matrix is null\n";
-                return Mat();
-            }
-            
-            if (lu.P.row != n || lu.P.col != n)
-            {
-                std::cerr << "[Error] solve_lu: P matrix dimensions mismatch (got " 
-                          << lu.P.row << "x" << lu.P.col << ", expected " << n << "x" << n << ")\n";
-                return Mat();
-            }
+            std::cerr << "[Error] solve_lu: L and U must be square and same-sized "
+                      << "(got L=" << lu.L.row << "x" << lu.L.col
+                      << ", U=" << lu.U.row << "x" << lu.U.col << ").\n";
+            return Mat(0, 0);
         }
 
-        // Apply permutation if pivoting was used
-        Mat b_perm = b;
+        const int n = lu.L.row;
+
+        // Legitimate empty system: 0 equations -> trivial 0x1 solution.
+        if (n == 0)
+        {
+            return Mat(0, 1);
+        }
+
+        if (b.row != n || b.col != 1)
+        {
+            std::cerr << "[Error] solve_lu: b must be " << n << "x1 (got "
+                      << b.row << "x" << b.col << ").\n";
+            return Mat(0, 0);
+        }
+        if (lu.pivoted && (lu.P.data == nullptr || lu.P.row != n || lu.P.col != n))
+        {
+            std::cerr << "[Error] solve_lu: pivoting enabled but P is invalid "
+                      << "(got " << lu.P.row << "x" << lu.P.col << ").\n";
+            return Mat(0, 0);
+        }
+
+        // ---------------------------------------------------------------------
+        // 2. Build b_perm = P * b (or just a copy of b if no pivoting)
+        //    P has exactly one 1.0 per row; we scan each row to find it.
+        //    This is O(n^2) but only runs once and avoids mutating b.
+        // ---------------------------------------------------------------------
+        Mat b_perm(n, 1);
+        if (b_perm.data == nullptr)
+        {
+            std::cerr << "[Error] solve_lu: failed to allocate permuted RHS.\n";
+            return Mat(0, 0);
+        }
+        const int b_step = b.step;
+        const int bp_step = b_perm.step;
         if (lu.pivoted)
         {
-            // b_perm = P * b
-            b_perm = Mat(n, 1);
-            
-            // Check if b_perm was created successfully
-            if (b_perm.data == nullptr)
-            {
-                std::cerr << "[Error] solve_lu: failed to create permuted vector\n";
-                return Mat();
-            }
-            
+            const int P_step = lu.P.step;
             for (int i = 0; i < n; ++i)
             {
-                bool found = false;
+                const float* row_P = lu.P.data + i * P_step;
+                int src = -1;
                 for (int j = 0; j < n; ++j)
                 {
-                    // P is permutation matrix: each row/column has exactly one 1.0
-                    // Use tolerance for floating-point comparison
-                    if (fabsf(lu.P(i, j) - 1.0f) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                    if (fabsf(row_P[j] - 1.0f) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
                     {
-                        b_perm(i, 0) = b(j, 0);
-                        found = true;
+                        src = j;
                         break;
                     }
                 }
-                if (!found)
-                {
-                    std::cerr << "[Warning] solve_lu: no 1.0 found in row " << i 
-                              << " of permutation matrix, using 0.0\n";
-                    b_perm(i, 0) = 0.0f;
-                }
+                b_perm.data[i * bp_step] =
+                    (src >= 0) ? b.data[src * b_step] : 0.0f;
+            }
+        }
+        else
+        {
+            for (int i = 0; i < n; ++i)
+            {
+                b_perm.data[i * bp_step] = b.data[i * b_step];
             }
         }
 
-        // Solve L * y = b_perm (forward substitution)
-        // L is lower triangular with unit diagonal
-        Mat y(n, 1);
-        
-        // Check if y was created successfully
-        if (y.data == nullptr)
-        {
-            std::cerr << "[Error] solve_lu: failed to create intermediate vector y\n";
-            return Mat();
-        }
-        
+        // ---------------------------------------------------------------------
+        // 3. Forward substitution: L * y = b_perm
+        //    L is unit-diagonal (Doolittle), so no divisions are needed.
+        //    y is stored in-place by reusing b_perm: y(i) = b_perm(i) - sum_{j<i} L(i,j) y(j)
+        // ---------------------------------------------------------------------
+        const int L_step = lu.L.step;
         for (int i = 0; i < n; ++i)
         {
-            float sum = b_perm(i, 0);
+            const float* row_L = lu.L.data + i * L_step;
+            float s = b_perm.data[i * bp_step];
             for (int j = 0; j < i; ++j)
             {
-                sum -= lu.L(i, j) * y(j, 0);
+                s -= row_L[j] * b_perm.data[j * bp_step];
             }
-            y(i, 0) = sum;  // L has unit diagonal, so no division needed
-            
-            // Check if result is valid
-            if (std::isnan(y(i, 0)) || std::isinf(y(i, 0)))
-            {
-                std::cerr << "[Error] solve_lu: invalid intermediate value at index " << i << "\n";
-                return Mat();
-            }
+            b_perm.data[i * bp_step] = s; // == y(i)
         }
 
-        // Solve U * x = y (backward substitution)
-        // U is upper triangular
+        // ---------------------------------------------------------------------
+        // 4. Backward substitution: U * x = y
+        // ---------------------------------------------------------------------
         Mat x(n, 1);
-        
-        // Check if x was created successfully
         if (x.data == nullptr)
         {
-            std::cerr << "[Error] solve_lu: failed to create solution vector x\n";
-            return Mat();
+            std::cerr << "[Error] solve_lu: failed to allocate solution vector.\n";
+            return Mat(0, 0);
         }
-        
+        const int U_step = lu.U.step;
+        const int x_step = x.step;
         for (int i = n - 1; i >= 0; --i)
         {
-            float sum = y(i, 0);
+            const float* row_U = lu.U.data + i * U_step;
+            const float pivot = row_U[i];
+            if (fabsf(pivot) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                std::cerr << "[Error] solve_lu: singular U at index " << i
+                          << " (pivot=" << pivot << ").\n";
+                return Mat(0, 0);
+            }
+            float s = b_perm.data[i * bp_step]; // y(i)
             for (int j = i + 1; j < n; ++j)
             {
-                sum -= lu.U(i, j) * x(j, 0);
+                s -= row_U[j] * x.data[j * x_step];
             }
-            
-            // Check if diagonal element is valid
-            float u_ii = lu.U(i, i);
-            if (std::isnan(u_ii) || std::isinf(u_ii))
-            {
-                std::cerr << "[Error] solve_lu: invalid diagonal element U[" << i << "][" << i << "]\n";
-                return Mat();
-            }
-            
-            if (fabsf(u_ii) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] solve_lu: singular matrix (U[" << i << "][" << i 
-                          << "] = " << u_ii << " is too small)\n";
-                return Mat();
-            }
-            
-            x(i, 0) = sum / u_ii;
-            
-            // Check if result is valid
-            if (std::isnan(x(i, 0)) || std::isinf(x(i, 0)))
-            {
-                std::cerr << "[Error] solve_lu: invalid solution value at index " << i << "\n";
-                return Mat();
-            }
+            x.data[i * x_step] = s / pivot;
         }
 
         return x;
@@ -5811,145 +5710,97 @@ namespace tiny
      */
     Mat Mat::solve_cholesky(const CholeskyDecomposition &chol, const Mat &b)
     {
-        // Check Cholesky decomposition status
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (chol.status != TINY_OK)
         {
-            std::cerr << "[Error] solve_cholesky: invalid Cholesky decomposition (status: " 
-                      << chol.status << ")\n";
-            return Mat();
+            std::cerr << "[Error] solve_cholesky: invalid decomposition (status="
+                      << chol.status << ").\n";
+            return Mat(0, 0);
         }
-        
-        // Check for null pointers
         if (chol.L.data == nullptr)
         {
-            std::cerr << "[Error] solve_cholesky: Cholesky L matrix has null pointer\n";
-            return Mat();
+            std::cerr << "[Error] solve_cholesky: L is null.\n";
+            return Mat(0, 0);
         }
-        
         if (b.data == nullptr)
         {
-            std::cerr << "[Error] solve_cholesky: right-hand side vector has null pointer\n";
-            return Mat();
+            std::cerr << "[Error] solve_cholesky: right-hand side b is null.\n";
+            return Mat(0, 0);
         }
-        
-        // Validate Cholesky decomposition dimensions
-        if (chol.L.row <= 0 || chol.L.col <= 0)
-        {
-            std::cerr << "[Error] solve_cholesky: invalid Cholesky decomposition dimensions\n";
-            return Mat();
-        }
-        
-        // Check if L is square
         if (chol.L.row != chol.L.col)
         {
-            std::cerr << "[Error] solve_cholesky: L must be a square matrix (got " 
-                      << chol.L.row << "x" << chol.L.col << ")\n";
-            return Mat();
+            std::cerr << "[Error] solve_cholesky: L must be square (got "
+                      << chol.L.row << "x" << chol.L.col << ").\n";
+            return Mat(0, 0);
         }
-        
-        int n = chol.L.row;
-        
-        // Handle empty matrix
+
+        const int n = chol.L.row;
+
         if (n == 0)
         {
-            return Mat(0, 1);  // Return empty solution vector
+            return Mat(0, 1);
         }
-        
-        // Validate right-hand side vector dimensions
         if (b.row != n || b.col != 1)
         {
-            std::cerr << "[Error] solve_cholesky: dimension mismatch - b must be " 
-                      << n << "x1 vector (got " << b.row << "x" << b.col << ")\n";
-            return Mat();
+            std::cerr << "[Error] solve_cholesky: b must be " << n << "x1 (got "
+                      << b.row << "x" << b.col << ").\n";
+            return Mat(0, 0);
         }
 
-        // Solve L * y = b (forward substitution)
-        // L is lower triangular with positive diagonal elements
-        Mat y(n, 1);
-        
-        // Check if y was created successfully
-        if (y.data == nullptr)
-        {
-            std::cerr << "[Error] solve_cholesky: failed to create intermediate vector y\n";
-            return Mat();
-        }
-        
-        for (int i = 0; i < n; ++i)
-        {
-            float sum = b(i, 0);
-            for (int j = 0; j < i; ++j)
-            {
-                sum -= chol.L(i, j) * y(j, 0);
-            }
-            
-            // Check if diagonal element is valid
-            float l_ii = chol.L(i, i);
-            if (std::isnan(l_ii) || std::isinf(l_ii))
-            {
-                std::cerr << "[Error] solve_cholesky: invalid diagonal element L[" << i << "][" << i << "]\n";
-                return Mat();
-            }
-            
-            if (fabsf(l_ii) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] solve_cholesky: singular matrix (L[" << i << "][" << i 
-                          << "] = " << l_ii << " is too small)\n";
-                return Mat();
-            }
-            
-            y(i, 0) = sum / l_ii;
-            
-            // Check if result is valid
-            if (std::isnan(y(i, 0)) || std::isinf(y(i, 0)))
-            {
-                std::cerr << "[Error] solve_cholesky: invalid intermediate value at index " << i << "\n";
-                return Mat();
-            }
-        }
-
-        // Solve L^T * x = y (backward substitution)
-        // L^T is upper triangular (transpose of L)
+        // ---------------------------------------------------------------------
+        // 2. Forward substitution: L * y = b
+        //    L lower-triangular with positive diagonal (guaranteed by
+        //    cholesky_decompose). We allocate one (n x 1) buffer and reuse it
+        //    in-place: it starts as b, becomes y, then becomes x.
+        // ---------------------------------------------------------------------
         Mat x(n, 1);
-        
-        // Check if x was created successfully
         if (x.data == nullptr)
         {
-            std::cerr << "[Error] solve_cholesky: failed to create solution vector x\n";
-            return Mat();
+            std::cerr << "[Error] solve_cholesky: failed to allocate solution.\n";
+            return Mat(0, 0);
         }
-        
+        const int b_step = b.step;
+        const int x_step = x.step;
+        for (int i = 0; i < n; ++i)
+        {
+            x.data[i * x_step] = b.data[i * b_step];
+        }
+
+        const int L_step = chol.L.step;
+        for (int i = 0; i < n; ++i)
+        {
+            const float* row_L = chol.L.data + i * L_step;
+            const float pivot = row_L[i];
+            if (fabsf(pivot) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                std::cerr << "[Error] solve_cholesky: zero/near-zero L diagonal at "
+                          << i << " (= " << pivot << ").\n";
+                return Mat(0, 0);
+            }
+            float s = x.data[i * x_step];
+            for (int j = 0; j < i; ++j)
+            {
+                s -= row_L[j] * x.data[j * x_step];
+            }
+            x.data[i * x_step] = s / pivot; // == y(i)
+        }
+
+        // ---------------------------------------------------------------------
+        // 3. Backward substitution: L^T * x = y
+        //    L^T(i, j) = L(j, i), so we walk *column* i of L below the diagonal,
+        //    which is non-contiguous. We use the row+stride access pattern.
+        // ---------------------------------------------------------------------
         for (int i = n - 1; i >= 0; --i)
         {
-            float sum = y(i, 0);
+            const float pivot = chol.L.data[i * L_step + i];
+            float s = x.data[i * x_step]; // == y(i)
             for (int j = i + 1; j < n; ++j)
             {
-                // L^T(j,i) = L(i,j), so we access L(j,i) for L^T(j,i)
-                sum -= chol.L(j, i) * x(j, 0);
+                s -= chol.L.data[j * L_step + i] * x.data[j * x_step];
             }
-            
-            // Check if diagonal element is valid (same as forward substitution)
-            float l_ii = chol.L(i, i);
-            if (std::isnan(l_ii) || std::isinf(l_ii))
-            {
-                std::cerr << "[Error] solve_cholesky: invalid diagonal element L[" << i << "][" << i << "]\n";
-                return Mat();
-            }
-            
-            if (fabsf(l_ii) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] solve_cholesky: singular matrix (L[" << i << "][" << i 
-                          << "] = " << l_ii << " is too small)\n";
-                return Mat();
-            }
-            
-            x(i, 0) = sum / l_ii;
-            
-            // Check if result is valid
-            if (std::isnan(x(i, 0)) || std::isinf(x(i, 0)))
-            {
-                std::cerr << "[Error] solve_cholesky: invalid solution value at index " << i << "\n";
-                return Mat();
-            }
+            x.data[i * x_step] = s / pivot;
         }
 
         return x;
@@ -5982,157 +5833,120 @@ namespace tiny
      */
     Mat Mat::solve_qr(const QRDecomposition &qr, const Mat &b)
     {
-        // Check QR decomposition status
+        // ---------------------------------------------------------------------
+        // 1. Validate input
+        // ---------------------------------------------------------------------
         if (qr.status != TINY_OK)
         {
-            std::cerr << "[Error] solve_qr: invalid QR decomposition (status: " 
-                      << qr.status << ")\n";
-            return Mat();
+            std::cerr << "[Error] solve_qr: invalid QR decomposition (status="
+                      << qr.status << ").\n";
+            return Mat(0, 0);
         }
-        
-        // Check for null pointers
         if (qr.Q.data == nullptr || qr.R.data == nullptr)
         {
-            std::cerr << "[Error] solve_qr: QR decomposition matrices have null pointers\n";
-            return Mat();
+            std::cerr << "[Error] solve_qr: Q or R is null.\n";
+            return Mat(0, 0);
         }
-        
         if (b.data == nullptr)
         {
-            std::cerr << "[Error] solve_qr: right-hand side vector has null pointer\n";
-            return Mat();
+            std::cerr << "[Error] solve_qr: right-hand side b is null.\n";
+            return Mat(0, 0);
         }
-        
-        // Validate QR decomposition dimensions
         if (qr.Q.row <= 0 || qr.Q.col <= 0 || qr.R.row <= 0 || qr.R.col <= 0)
         {
-            std::cerr << "[Error] solve_qr: invalid QR decomposition dimensions\n";
-            return Mat();
+            std::cerr << "[Error] solve_qr: invalid Q/R dimensions.\n";
+            return Mat(0, 0);
         }
-        
-        int m = qr.Q.row;
-        int n = qr.R.col;
-        int min_dim = (m < n) ? m : n;
-        
-        // Verify Q and R dimensions are consistent
-        // Q should be m×min(m,n) or m×n, R should be m×n or min(m,n)×n
+
+        const int m = qr.Q.row;
+        const int n = qr.R.col;
+        const int min_dim = (m < n) ? m : n;
+
+        // Q is expected to be m x n and R is m x n (qr_decompose convention).
+        // We only require enough capacity to address Q(:, 0..min_dim-1) and
+        // R(0..min_dim-1, :), so check that conservatively.
         if (qr.Q.col < min_dim || qr.R.row < min_dim)
         {
-            std::cerr << "[Error] solve_qr: inconsistent QR decomposition dimensions\n";
-            return Mat();
+            std::cerr << "[Error] solve_qr: Q/R shape inconsistent (Q="
+                      << qr.Q.row << "x" << qr.Q.col
+                      << ", R=" << qr.R.row << "x" << qr.R.col << ").\n";
+            return Mat(0, 0);
         }
-        
-        // Handle empty matrix
+
+        // Legitimate empty system: 0 equations or 0 unknowns.
         if (m == 0 || n == 0)
         {
-            return Mat(n, 1);  // Return empty solution vector with correct dimension
+            return Mat(n, 1);
         }
-        
-        // Validate right-hand side vector dimensions
+
         if (b.row != m || b.col != 1)
         {
-            std::cerr << "[Error] solve_qr: dimension mismatch - b must be " 
-                      << m << "x1 vector (got " << b.row << "x" << b.col << ")\n";
-            return Mat();
+            std::cerr << "[Error] solve_qr: b must be " << m << "x1 (got "
+                      << b.row << "x" << b.col << ").\n";
+            return Mat(0, 0);
         }
 
-        // Compute Q^T * b
-        // Note: Q^T has dimensions min(m,n)×m, so Q^T * b has dimension min(m,n)×1
-        // But we need n×1 for backward substitution, so we compute first min(m,n) components
-        Mat Qt_b(n, 1);
-        
-        // Check if Qt_b was created successfully
-        if (Qt_b.data == nullptr)
+        // ---------------------------------------------------------------------
+        // 2. Compute c = Q^T * b
+        //    Q is m x n; only the first min_dim columns are guaranteed to be
+        //    a valid orthonormal basis for col(A). The remaining components
+        //    are 0 (left at the value set by the zero-initialized constructor).
+        //
+        //    Inner-product accumulation walks Q column-wise, which is the
+        //    cache-unfriendly direction for row-major storage. We still hoist
+        //    the row pointers to avoid re-multiplying the stride per element.
+        // ---------------------------------------------------------------------
+        Mat c(n, 1); // x will reuse this buffer after backward substitution
+        if (c.data == nullptr)
         {
-            std::cerr << "[Error] solve_qr: failed to create Qt_b vector\n";
-            return Mat();
+            std::cerr << "[Error] solve_qr: failed to allocate working vector.\n";
+            return Mat(0, 0);
         }
-        
-        // Initialize Qt_b to zero
-        for (int i = 0; i < n; ++i)
-        {
-            Qt_b(i, 0) = 0.0f;
-        }
-        
-        // Compute Q^T * b (only first min(m,n) components, rest are zero)
+        const int Q_step = qr.Q.step;
+        const int b_step = b.step;
+        const int c_step = c.step;
         for (int i = 0; i < min_dim; ++i)
         {
-            float sum = 0.0f;
+            float s = 0.0f;
             for (int j = 0; j < m; ++j)
             {
-                // Q^T(i,j) = Q(j,i)
-                sum += qr.Q(j, i) * b(j, 0);
+                s += qr.Q.data[j * Q_step + i] * b.data[j * b_step];
             }
-            Qt_b(i, 0) = sum;
-            
-            // Check if result is valid
-            if (std::isnan(Qt_b(i, 0)) || std::isinf(Qt_b(i, 0)))
-            {
-                std::cerr << "[Error] solve_qr: invalid Qt_b value at index " << i << "\n";
-                return Mat();
-            }
+            c.data[i * c_step] = s;
         }
+        // c[min_dim .. n-1] left at 0 by Mat(n,1) zero-init.
 
-        // Solve R * x = Q^T * b (backward substitution)
-        // R is upper triangular (or upper trapezoidal if m < n)
+        // ---------------------------------------------------------------------
+        // 3. Backward substitution: R x = c
+        //    R is upper-triangular (m >= n) or upper-trapezoidal (m < n).
+        //    We only solve the first min_dim rows; for rank-deficient or
+        //    under-determined cases (R(i,i) ~ 0), set x(i)=0 (minimum-norm-ish).
+        //    Final x[min_dim..n-1] are 0 (zero-init), giving the basic least
+        //    squares solution that lives in the span of the leading min_dim cols.
+        // ---------------------------------------------------------------------
         Mat x(n, 1);
-        
-        // Check if x was created successfully
         if (x.data == nullptr)
         {
-            std::cerr << "[Error] solve_qr: failed to create solution vector x\n";
-            return Mat();
+            std::cerr << "[Error] solve_qr: failed to allocate solution vector.\n";
+            return Mat(0, 0);
         }
-        
-        // Initialize x to zero
-        for (int i = 0; i < n; ++i)
-        {
-            x(i, 0) = 0.0f;
-        }
-        
-        // Backward substitution (only for first min(m,n) rows of R)
+        const int R_step = qr.R.step;
+        const int x_step = x.step;
         for (int i = min_dim - 1; i >= 0; --i)
         {
-            // Check if diagonal element is valid
-            float r_ii = qr.R(i, i);
-            if (std::isnan(r_ii) || std::isinf(r_ii))
+            const float* row_R = qr.R.data + i * R_step;
+            const float pivot = row_R[i];
+            if (fabsf(pivot) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
             {
-                std::cerr << "[Error] solve_qr: invalid diagonal element R[" << i << "][" << i << "]\n";
-                return Mat();
-            }
-            
-            if (fabsf(r_ii) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                // Skip zero diagonal (underdetermined system or rank-deficient)
-                // Set x[i] = 0 (minimum norm solution)
-                x(i, 0) = 0.0f;
+                // Rank deficient: take 0 as the i-th unknown (already zero).
                 continue;
             }
-            
-            float sum = Qt_b(i, 0);
-            
-            // Sum over upper triangular part (only up to n columns)
-            int max_j = (qr.R.col < n) ? qr.R.col : n;
-            for (int j = i + 1; j < max_j; ++j)
+            float s = c.data[i * c_step];
+            for (int j = i + 1; j < n; ++j)
             {
-                sum -= qr.R(i, j) * x(j, 0);
+                s -= row_R[j] * x.data[j * x_step];
             }
-            
-            x(i, 0) = sum / r_ii;
-            
-            // Check if result is valid
-            if (std::isnan(x(i, 0)) || std::isinf(x(i, 0)))
-            {
-                std::cerr << "[Error] solve_qr: invalid solution value at index " << i << "\n";
-                return Mat();
-            }
-        }
-
-        // Set remaining components to zero if n > m (underdetermined system)
-        // This is already done by initialization, but we keep it explicit
-        for (int i = min_dim; i < n; ++i)
-        {
-            x(i, 0) = 0.0f;
+            x.data[i * x_step] = s / pivot;
         }
 
         return x;
@@ -6166,176 +5980,101 @@ namespace tiny
      */
     Mat Mat::pseudo_inverse(const SVDDecomposition &svd, float tolerance)
     {
-        // Check SVD decomposition status
         if (svd.status != TINY_OK)
         {
-            std::cerr << "[Error] pseudo_inverse: invalid SVD decomposition (status: " 
+            std::cerr << "[Error] pseudo_inverse: invalid SVD decomposition (status: "
                       << svd.status << ")\n";
-            return Mat();
+            return Mat(0, 0);
         }
-        
-        // Check for null pointers
         if (svd.U.data == nullptr || svd.V.data == nullptr || svd.S.data == nullptr)
         {
-            std::cerr << "[Error] pseudo_inverse: SVD decomposition matrices have null pointers\n";
-            return Mat();
+            std::cerr << "[Error] pseudo_inverse: SVD decomposition matrices have null pointers.\n";
+            return Mat(0, 0);
         }
-        
-        // Validate parameters
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] pseudo_inverse: tolerance must be >= 0 (got " << tolerance << ")\n";
-            return Mat();
+            std::cerr << "[Error] pseudo_inverse: tolerance must be >= 0 (got "
+                      << tolerance << ").\n";
+            return Mat(0, 0);
         }
-        
-        // Validate SVD decomposition dimensions
-        if (svd.U.row <= 0 || svd.U.col <= 0 || 
+        if (svd.U.row <= 0 || svd.U.col <= 0 ||
             svd.V.row <= 0 || svd.V.col <= 0 ||
-            svd.S.row <= 0 || svd.S.col <= 0)
+            svd.S.row <= 0 || svd.S.col != 1)
         {
-            std::cerr << "[Error] pseudo_inverse: invalid SVD decomposition dimensions\n";
-            return Mat();
-        }
-        
-        int m = svd.U.row;  // Original matrix A has m rows
-        int n = svd.V.row;  // Original matrix A has n columns
-        int min_dim = (m < n) ? m : n;
-        int rank = svd.rank;
-        
-        // Validate rank
-        if (rank < 0 || rank > min_dim)
-        {
-            std::cerr << "[Error] pseudo_inverse: invalid rank " << rank 
-                      << " (expected 0 to " << min_dim << ")\n";
-            return Mat();
-        }
-        
-        // Verify SVD dimensions
-        // U should be m×min(m,n), V should be n×n, S should be min(m,n)×1
-        if (svd.U.col < min_dim || svd.V.col < n || svd.S.row < min_dim || svd.S.col != 1)
-        {
-            std::cerr << "[Error] pseudo_inverse: inconsistent SVD dimensions\n";
-            return Mat();
-        }
-        
-        // Additional validation: ensure rank doesn't exceed available columns
-        if (rank > svd.U.col || rank > svd.S.row)
-        {
-            std::cerr << "[Error] pseudo_inverse: rank " << rank 
-                      << " exceeds available columns (U.col=" << svd.U.col 
-                      << ", S.row=" << svd.S.row << ")\n";
-            return Mat();
-        }
-        
-        // Handle empty matrix
-        if (m == 0 || n == 0)
-        {
-            return Mat(n, m);  // Return empty pseudo-inverse with correct dimensions
+            std::cerr << "[Error] pseudo_inverse: invalid SVD decomposition dimensions.\n";
+            return Mat(0, 0);
         }
 
-        // Compute S^+ (pseudo-inverse of S)
-        // S^+ is a min(m,n)×min(m,n) diagonal matrix
-        // For efficiency, we'll compute V * S^+ directly without storing S^+ explicitly
-        // S^+[i][i] = 1/σ_i if σ_i > tolerance, else 0
-        
-        // Compute A^+ = V * S^+ * U^T
-        // Dimensions: V is n×n, S^+ is min(m,n)×min(m,n), U^T is min(m,n)×m
-        // Result: A^+ is n×m
-        
-        Mat A_plus(n, m);
-        
-        // Check if A_plus was created successfully
-        if (A_plus.data == nullptr)
+        const int m = svd.U.row;       // A has m rows
+        const int n = svd.V.row;       // A has n columns
+        const int min_dim = svd.S.row; // S is min(m,n) x 1
+
+        // Validate SVD shape consistency with svd_decompose() contract.
+        if (min_dim != ((m < n) ? m : n) || svd.U.col < min_dim || svd.V.col < min_dim)
         {
-            std::cerr << "[Error] pseudo_inverse: failed to create result matrix\n";
-            return Mat();
+            std::cerr << "[Error] pseudo_inverse: inconsistent SVD dimensions.\n";
+            return Mat(0, 0);
         }
-        
-        // Initialize A_plus to zero
-        for (int i = 0; i < n; ++i)
+        if (svd.rank < 0 || svd.rank > min_dim)
         {
-            for (int j = 0; j < m; ++j)
+            std::cerr << "[Error] pseudo_inverse: invalid rank " << svd.rank
+                      << " (expected 0 to " << min_dim << ").\n";
+            return Mat(0, 0);
+        }
+
+        // Precompute active reciprocal singular values based on this call's tolerance.
+        std::vector<int> active_idx;
+        std::vector<float> active_inv_sigma;
+        active_idx.reserve(min_dim);
+        active_inv_sigma.reserve(min_dim);
+        for (int k = 0; k < min_dim; ++k)
+        {
+            const float sigma = svd.S(k, 0);
+            if (!std::isfinite(sigma))
             {
-                A_plus(i, j) = 0.0f;
+                std::cerr << "[Error] pseudo_inverse: non-finite singular value at index "
+                          << k << ".\n";
+                return Mat(0, 0);
+            }
+            if (sigma > tolerance)
+            {
+                active_idx.push_back(k);
+                active_inv_sigma.push_back(1.0f / sigma);
             }
         }
-        
-        // Compute A^+ = V * S^+ * U^T
-        // For each element A^+[i][j]:
-        //   A^+[i][j] = sum(V[i][k] * (1/σ_k) * U[j][k], k=0..rank-1)
-        //   where σ_k > tolerance
+
+        Mat A_plus(n, m);
+        if (A_plus.data == nullptr)
+        {
+            std::cerr << "[Error] pseudo_inverse: failed to allocate result matrix.\n";
+            return Mat(0, 0);
+        }
+
+        const int AplusStep = A_plus.step;
+        const int Ustep = svd.U.step;
+        const int Vstep = svd.V.step;
+
+        // Explicitly zero-initialize in case Mat constructor does not.
         for (int i = 0; i < n; ++i)
         {
-            for (int j = 0; j < m; ++j)
+            float *row_out = A_plus.data + i * AplusStep;
+            for (int j = 0; j < m; ++j) row_out[j] = 0.0f;
+        }
+
+        // A^+ = sum_k V(:,k) * (1/sigma_k) * U(:,k)^T, over sigma_k > tolerance.
+        // Loop order (k -> i -> j) improves reuse of V(i,k)/sigma_k.
+        for (size_t t = 0; t < active_idx.size(); ++t)
+        {
+            const int k = active_idx[t];
+            const float inv_sigma = active_inv_sigma[t];
+            for (int i = 0; i < n; ++i)
             {
-                float sum = 0.0f;
-                for (int k = 0; k < rank; ++k)
+                float *row_out = A_plus.data + i * AplusStep;
+                const float vik_scaled = svd.V.data[i * Vstep + k] * inv_sigma;
+                const float *u_col_base = svd.U.data + k; // U(j,k) = u_col_base[j*Ustep]
+                for (int j = 0; j < m; ++j)
                 {
-                    // Check if k is within valid range
-                    if (k >= svd.S.row)
-                    {
-                        break;
-                    }
-                    
-                    float sigma = svd.S(k, 0);
-                    
-                    // Check if sigma is valid
-                    if (std::isnan(sigma) || std::isinf(sigma))
-                    {
-                        std::cerr << "[Warning] pseudo_inverse: invalid singular value at index " 
-                                  << k << ", skipping\n";
-                        continue;
-                    }
-                    
-                    // Only use singular values above tolerance
-                    if (sigma > tolerance)
-                    {
-                        float inv_sigma = 1.0f / sigma;
-                        
-                        // Check if inverse is valid
-                        if (std::isnan(inv_sigma) || std::isinf(inv_sigma))
-                        {
-                            std::cerr << "[Warning] pseudo_inverse: invalid inverse of singular value " 
-                                      << sigma << " at index " << k << ", skipping\n";
-                            continue;
-                        }
-                        
-                        // A^+[i][j] += V[i][k] * (1/σ_k) * U[j][k]
-                        // Note: U^T[k][j] = U[j][k]
-                        // k is guaranteed to be < rank <= min_dim <= svd.U.col and k < n = svd.V.col
-                        // But we add bounds check for safety
-                        if (k < svd.V.col && k < svd.U.col && i < svd.V.row && j < svd.U.row)
-                        {
-                            float term = svd.V(i, k) * inv_sigma * svd.U(j, k);
-                            
-                            // Check if term is valid
-                            if (std::isnan(term) || std::isinf(term))
-                            {
-                                std::cerr << "[Warning] pseudo_inverse: invalid term at [" 
-                                          << i << "][" << j << "], k=" << k << ", skipping\n";
-                                continue;
-                            }
-                            
-                            sum += term;
-                        }
-                        else
-                        {
-                            std::cerr << "[Warning] pseudo_inverse: index out of bounds at [" 
-                                      << i << "][" << j << "], k=" << k 
-                                      << " (V: " << svd.V.row << "x" << svd.V.col 
-                                      << ", U: " << svd.U.row << "x" << svd.U.col << "), skipping\n";
-                        }
-                    }
-                }
-                
-                A_plus(i, j) = sum;
-                
-                // Check if result is valid
-                if (std::isnan(A_plus(i, j)) || std::isinf(A_plus(i, j)))
-                {
-                    std::cerr << "[Warning] pseudo_inverse: invalid result at [" 
-                              << i << "][" << j << "], setting to 0\n";
-                    A_plus(i, j) = 0.0f;
+                    row_out[j] += vik_scaled * u_col_base[j * Ustep];
                 }
             }
         }
@@ -6364,79 +6103,70 @@ namespace tiny
 
     /**
      * @name Mat::is_symmetric()
-     * @brief Check if the matrix is symmetric within a given tolerance.
-     * @note A matrix A is symmetric if A^T = A, i.e., A[i][j] = A[j][i] for all i, j.
-     * @note Essential for SHM applications where structural matrices are typically symmetric.
-     * @note Time complexity: O(n²) - checks upper triangular part only
-     * 
-     * @param tolerance Maximum allowed difference between A(i,j) and A(j,i) (must be >= 0).
-     *                  Used to handle floating-point numerical errors.
-     * @return true if matrix is symmetric, false otherwise
+     * @brief Check whether A^T = A within a tolerance.
+     *
+     * @note Semantics:
+     *       - Non-square            -> false (silent; not a bug, just not symmetric)
+     *       - 0x0                   -> true  (vacuously symmetric)
+     *       - Negative dimensions   -> false (logged: invalid input)
+     *       - Null data on a sized
+     *         matrix                -> false (logged: invalid input)
+     *       - NaN element           -> false (NaN never compares <= tolerance,
+     *                                  so it falls through naturally)
+     * @note Hot loop hoists the row pointer; the (j, i) probe is column-strided
+     *       (unavoidable without an explicit transpose).
+     * @note Time complexity: O(n^2) (upper triangle only).
+     *
+     * @param tolerance Max allowed |A(i,j) - A(j,i)|; must be >= 0.
+     * @return true if symmetric within tolerance.
      */
     bool Mat::is_symmetric(float tolerance) const
     {
-        // Check for null pointer
-        if (this->data == nullptr)
+        if (this->data == nullptr && (this->row > 0 && this->col > 0))
         {
-            std::cerr << "[Error] is_symmetric: matrix data pointer is null\n";
+            std::cerr << "[Error] is_symmetric: matrix data pointer is null.\n";
             return false;
         }
-        
-        // Validate matrix dimensions
-        if (this->row <= 0 || this->col <= 0)
+        if (this->row < 0 || this->col < 0)
         {
-            std::cerr << "[Error] is_symmetric: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] is_symmetric: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             return false;
         }
-        
-        // Validate tolerance
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] is_symmetric: tolerance must be >= 0 (got " << tolerance << ")\n";
+            std::cerr << "[Error] is_symmetric: tolerance must be >= 0 (got "
+                      << tolerance << ").\n";
             return false;
         }
-        
-        // Only square matrices can be symmetric
         if (this->row != this->col)
         {
             return false;
         }
-        
-        int n = this->row;
-        
-        // Handle empty matrix (0x0 is trivially symmetric)
+
+        const int n = this->row;
         if (n == 0)
         {
-            return true;
+            return true; // 0x0 is trivially symmetric
         }
 
-        // Check symmetry: A(i,j) should equal A(j,i) within tolerance
-        // Only check upper triangular part (i < j) to avoid redundant checks
+        // Hot loop: hoist row pointer for row i; column-direction access for
+        // (j, i) is strided but unavoidable without a transpose.
+        // Using `!(diff <= tolerance)` causes NaN to fall through to false.
+        const int   stride = this->step;
+        const float* const base = this->data;
         for (int i = 0; i < n; ++i)
         {
+            const float* row_i = base + i * stride;
             for (int j = i + 1; j < n; ++j)
             {
-                float a_ij = (*this)(i, j);
-                float a_ji = (*this)(j, i);
-                
-                // Check if values are valid
-                if (std::isnan(a_ij) || std::isnan(a_ji) || 
-                    std::isinf(a_ij) || std::isinf(a_ji))
-                {
-                    std::cerr << "[Warning] is_symmetric: invalid matrix elements at [" 
-                              << i << "][" << j << "] or [" << j << "][" << i << "]\n";
-                    return false;
-                }
-                
-                float diff = fabsf(a_ij - a_ji);
-                if (diff > tolerance)
+                const float diff = fabsf(row_i[j] - base[j * stride + i]);
+                if (!(diff <= tolerance))
                 {
                     return false;
                 }
             }
         }
-
         return true;
     }
 
@@ -6457,243 +6187,174 @@ namespace tiny
     {
         EigenPair result;
 
-        // Check for null pointer
+        // -----------------------------------------------------------------
+        // 1. Validate input
+        // -----------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] power_iteration: matrix data pointer is null\n";
+            std::cerr << "[Error] power_iteration: matrix data pointer is null.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] power_iteration: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] power_iteration: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-
-        // Validation: must be square matrix
         if (this->row != this->col)
         {
-            std::cerr << "[Error] power_iteration: requires square matrix (got " 
-                      << this->row << "x" << this->col << ")\n";
+            std::cerr << "[Error] power_iteration: requires square matrix (got "
+                      << this->row << "x" << this->col << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
-        // Validate parameters
         if (max_iter <= 0)
         {
-            std::cerr << "[Error] power_iteration: max_iter must be > 0 (got " << max_iter << ")\n";
+            std::cerr << "[Error] power_iteration: max_iter must be > 0 (got "
+                      << max_iter << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] power_iteration: tolerance must be >= 0 (got " << tolerance << ")\n";
+            std::cerr << "[Error] power_iteration: tolerance must be >= 0 (got "
+                      << tolerance << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        int n = this->row;
-        
-        // Handle empty matrix
+        const int n = this->row;
         if (n == 0)
         {
-            result.eigenvalue = 0.0f;
+            result.eigenvalue  = 0.0f;
             result.eigenvector = Mat(0, 1);
-            result.iterations = 0;
-            result.status = TINY_OK;
+            result.iterations  = 0;
+            result.status      = TINY_OK;
             return result;
         }
 
-        // Initialize eigenvector with better strategy to avoid convergence to smaller eigenvalues
-        // Strategy: Use sum of columns (or rows) to get a vector with components in all directions
+        // -----------------------------------------------------------------
+        // 2. Allocate working buffers (eigenvector + scratch).
+        // -----------------------------------------------------------------
         result.eigenvector = Mat(n, 1);
-        
-        // Check if eigenvector was created successfully
-        if (result.eigenvector.data == nullptr)
+        Mat temp_vec(n, 1);
+        if (result.eigenvector.data == nullptr || temp_vec.data == nullptr)
         {
-            std::cerr << "[Error] power_iteration: failed to create eigenvector\n";
+            std::cerr << "[Error] power_iteration: failed to allocate buffers.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        float norm_sq = 0.0f;
-        
-        // Method 1: Use sum of absolute values of columns (more robust)
-        for (int i = 0; i < n; ++i)
+
+        // -----------------------------------------------------------------
+        // 3. Initialize the seed vector.
+        //    We bias by the column-1-norms so directions with more "mass"
+        //    in A start with a larger projection along that axis. The +1.0f
+        //    floor guarantees a positive result, so the well-known fallback
+        //    branch is unreachable; a uniform [1..1] start is fine for any
+        //    realistic matrix.
+        // -----------------------------------------------------------------
+        const int Astep = this->step;
+        const int Vstep = result.eigenvector.step;
+        const int Tstep = temp_vec.step;
+        const float* const Adata = this->data;
+        float* const Vdata = result.eigenvector.data;
+        float* const Tdata = temp_vec.data;
+
         {
-            float col_sum = 0.0f;
-            for (int j = 0; j < n; ++j)
-            {
-                col_sum += fabsf((*this)(j, i));
-            }
-            result.eigenvector(i, 0) = col_sum + 1.0f; // Add 1 to avoid zero
-            norm_sq += result.eigenvector(i, 0) * result.eigenvector(i, 0);
-        }
-        
-        // If all components are too similar, use a different initialization
-        if (norm_sq < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-        {
-            // Fallback: use values based on index with some variation
-            norm_sq = 0.0f;
+            float norm_sq = 0.0f;
             for (int i = 0; i < n; ++i)
             {
-                result.eigenvector(i, 0) = 1.0f + 0.1f * static_cast<float>(i);
-                norm_sq += result.eigenvector(i, 0) * result.eigenvector(i, 0);
+                float col_sum = 0.0f;
+                for (int j = 0; j < n; ++j)
+                    col_sum += fabsf(Adata[j * Astep + i]);
+                const float v = col_sum + 1.0f;
+                Vdata[i * Vstep] = v;
+                norm_sq += v * v;
             }
-        }
-        
-        // Normalize initial eigenvector
-        float sqrt_norm = sqrtf(norm_sq);
-        if (std::isnan(sqrt_norm) || std::isinf(sqrt_norm) || sqrt_norm < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-        {
-            std::cerr << "[Error] power_iteration: invalid initial eigenvector norm\n";
-            result.status = TINY_ERR_MATH_INVALID_PARAM;
-            return result;
-        }
-        
-        float inv_norm = 1.0f / sqrt_norm;
-        for (int i = 0; i < n; ++i)
-        {
-            result.eigenvector(i, 0) *= inv_norm;
+            const float sqrt_norm = sqrtf(norm_sq);
+            if (!(sqrt_norm > TINY_MATH_MIN_POSITIVE_INPUT_F32))
+            {
+                std::cerr << "[Error] power_iteration: invalid initial eigenvector norm.\n";
+                result.status = TINY_ERR_MATH_INVALID_PARAM;
+                return result;
+            }
+            const float inv_norm = 1.0f / sqrt_norm;
+            for (int i = 0; i < n; ++i)
+                Vdata[i * Vstep] *= inv_norm;
         }
 
-        // Power iteration loop
-        Mat temp_vec(n, 1);
-        
-        // Check if temp_vec was created successfully
-        if (temp_vec.data == nullptr)
-        {
-            std::cerr << "[Error] power_iteration: failed to create temporary vector\n";
-            result.status = TINY_ERR_MATH_NULL_POINTER;
-            return result;
-        }
-        
+        // -----------------------------------------------------------------
+        // 4. Power iteration loop.
+        //    Invariant: at the top of each iteration, ||v||_2 == 1, so the
+        //    Rayleigh quotient denominator (v^T v) is exactly 1 and we skip
+        //    computing it. This saves n FLOPs per iteration.
+        //    Order each iteration:
+        //       temp = A * v
+        //       lambda = v^T * temp        (denominator = 1)
+        //       v <- temp / ||temp||       (re-establish unit-norm invariant)
+        // -----------------------------------------------------------------
         float prev_eigenvalue = 0.0f;
-
         for (int iter = 0; iter < max_iter; ++iter)
         {
-            // Compute A * v
+            // 4.1 temp = A * v
             for (int i = 0; i < n; ++i)
             {
-                temp_vec(i, 0) = 0.0f;
+                const float* row_Ai = Adata + i * Astep;
+                float sum = 0.0f;
                 for (int j = 0; j < n; ++j)
-                {
-                    temp_vec(i, 0) += (*this)(i, j) * result.eigenvector(j, 0);
-                }
-                
-                // Check if result is valid
-                if (std::isnan(temp_vec(i, 0)) || std::isinf(temp_vec(i, 0)))
-                {
-                    std::cerr << "[Error] power_iteration: invalid matrix-vector product at index " << i << "\n";
-                    result.status = TINY_ERR_MATH_INVALID_PARAM;
-                    return result;
-                }
+                    sum += row_Ai[j] * Vdata[j * Vstep];
+                Tdata[i * Tstep] = sum;
             }
 
-            // Compute Rayleigh quotient: lambda = v^T * A * v / (v^T * v)
-            float numerator = 0.0f;
-            float denominator = 0.0f;
-            for (int i = 0; i < n; ++i)
-            {
-                numerator += result.eigenvector(i, 0) * temp_vec(i, 0);
-                denominator += result.eigenvector(i, 0) * result.eigenvector(i, 0);
-            }
-
-            if (fabsf(denominator) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] power_iteration: eigenvector norm too small\n";
-                result.status = TINY_ERR_MATH_INVALID_PARAM;
-                return result;
-            }
-
-            result.eigenvalue = numerator / denominator;
-            
-            // Check if eigenvalue is valid
-            if (std::isnan(result.eigenvalue) || std::isinf(result.eigenvalue))
-            {
-                std::cerr << "[Error] power_iteration: invalid eigenvalue computed\n";
-                result.status = TINY_ERR_MATH_INVALID_PARAM;
-                return result;
-            }
-
-            // Normalize the new vector
+            // 4.2 lambda = v^T * temp  (||v|| == 1 at this point)
+            float lambda = 0.0f;
             float new_norm_sq = 0.0f;
             for (int i = 0; i < n; ++i)
             {
-                new_norm_sq += temp_vec(i, 0) * temp_vec(i, 0);
+                const float vi = Vdata[i * Vstep];
+                const float ti = Tdata[i * Tstep];
+                lambda      += vi * ti;
+                new_norm_sq += ti * ti;
             }
 
-            if (new_norm_sq < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            if (!(new_norm_sq > TINY_MATH_MIN_POSITIVE_INPUT_F32))
             {
-                std::cerr << "[Error] power_iteration: computed vector norm too small\n";
+                std::cerr << "[Error] power_iteration: matrix-vector product collapsed to zero.\n";
                 result.status = TINY_ERR_MATH_INVALID_PARAM;
                 return result;
             }
+            result.eigenvalue = lambda;
 
-            float new_sqrt_norm = sqrtf(new_norm_sq);
-            if (std::isnan(new_sqrt_norm) || std::isinf(new_sqrt_norm))
-            {
-                std::cerr << "[Error] power_iteration: invalid sqrt of vector norm\n";
-                result.status = TINY_ERR_MATH_INVALID_PARAM;
-                return result;
-            }
-            
-            float new_inv_norm = 1.0f / new_sqrt_norm;
+            // 4.3 v = temp / ||temp||
+            const float inv_norm = 1.0f / sqrtf(new_norm_sq);
             for (int i = 0; i < n; ++i)
+                Vdata[i * Vstep] = Tdata[i * Tstep] * inv_norm;
+
+            // 4.4 Convergence check.
+            //     Use absolute change for tiny eigenvalues, relative otherwise.
+            if (iter > 0)
             {
-                result.eigenvector(i, 0) = temp_vec(i, 0) * new_inv_norm;
-                
-                // Check if eigenvector component is valid
-                if (std::isnan(result.eigenvector(i, 0)) || std::isinf(result.eigenvector(i, 0)))
+                const float change = fabsf(result.eigenvalue - prev_eigenvalue);
+                const float abs_l  = fabsf(result.eigenvalue);
+                const float thresh = (abs_l < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+                                     ? tolerance
+                                     : tolerance * abs_l;
+                if (change < thresh)
                 {
-                    std::cerr << "[Error] power_iteration: invalid eigenvector component at index " << i << "\n";
-                    result.status = TINY_ERR_MATH_INVALID_PARAM;
+                    result.iterations = iter + 1;
+                    result.status     = TINY_OK;
                     return result;
                 }
             }
-
-            // Check convergence
-            if (iter > 0)
-            {
-                float eigenvalue_change = fabsf(result.eigenvalue - prev_eigenvalue);
-                float abs_eigenvalue = fabsf(result.eigenvalue);
-                
-                // Avoid division by zero
-                if (abs_eigenvalue < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                {
-                    // If eigenvalue is near zero, check absolute change
-                    if (eigenvalue_change < tolerance)
-                    {
-                        result.iterations = iter + 1;
-                        result.status = TINY_OK;
-                        return result;
-                    }
-                }
-                else
-                {
-                    // Relative change check
-                    if (eigenvalue_change < tolerance * abs_eigenvalue)
-                    {
-                        result.iterations = iter + 1;
-                        result.status = TINY_OK;
-                        return result;
-                    }
-                }
-            }
-
             prev_eigenvalue = result.eigenvalue;
         }
 
-        // Max iterations reached
         result.iterations = max_iter;
-        result.status = TINY_ERR_NOT_FINISHED;
-        std::cerr << "[Warning] power_iteration: did not converge within " << max_iter << " iterations\n";
+        result.status     = TINY_ERR_NOT_FINISHED;
+        std::cerr << "[Warning] power_iteration: did not converge within "
+                  << max_iter << " iterations.\n";
         return result;
     }
 
@@ -6717,677 +6378,660 @@ namespace tiny
     {
         EigenPair result;
 
-        // Check for null pointer
+        // -----------------------------------------------------------------
+        // 1. Validate input
+        // -----------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] inverse_power_iteration: matrix data pointer is null\n";
+            std::cerr << "[Error] inverse_power_iteration: matrix data pointer is null.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] inverse_power_iteration: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] inverse_power_iteration: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-
-        // Validation: must be square matrix
         if (this->row != this->col)
         {
-            std::cerr << "[Error] inverse_power_iteration: requires square matrix (got " 
-                      << this->row << "x" << this->col << ")\n";
+            std::cerr << "[Error] inverse_power_iteration: requires square matrix (got "
+                      << this->row << "x" << this->col << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
-        // Validate parameters
         if (max_iter <= 0)
         {
-            std::cerr << "[Error] inverse_power_iteration: max_iter must be > 0 (got " << max_iter << ")\n";
+            std::cerr << "[Error] inverse_power_iteration: max_iter must be > 0 (got "
+                      << max_iter << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] inverse_power_iteration: tolerance must be >= 0 (got " << tolerance << ")\n";
+            std::cerr << "[Error] inverse_power_iteration: tolerance must be >= 0 (got "
+                      << tolerance << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        int n = this->row;
-        
-        // Handle empty matrix
+        const int n = this->row;
         if (n == 0)
         {
-            result.eigenvalue = 0.0f;
+            result.eigenvalue  = 0.0f;
             result.eigenvector = Mat(0, 1);
-            result.iterations = 0;
-            result.status = TINY_OK;
+            result.iterations  = 0;
+            result.status      = TINY_OK;
             return result;
         }
 
-        // Check if matrix is singular by computing determinant (quick check)
-        // For efficiency, we'll check during the first solve operation instead
-
-        // Initialize eigenvector for inverse power iteration
-        // Strategy: Use a vector that is orthogonal to the dominant eigenvector direction
-        // For inverse power iteration, we want to converge to the smallest eigenvalue
-        // Use a simple initialization: [1, 1, ..., 1]^T normalized, which typically
-        // has components in all eigenvector directions
-        result.eigenvector = Mat(n, 1);
-        
-        // Check if eigenvector was created successfully
-        if (result.eigenvector.data == nullptr)
+        // -----------------------------------------------------------------
+        // 2. Factorise A once (PA = LU). Each iteration then solves the
+        //    linear system in O(n^2) instead of O(n^3) -- this is the whole
+        //    point of inverse power iteration in practice.
+        // -----------------------------------------------------------------
+        LUDecomposition lu = this->lu_decompose(/*use_pivoting=*/true);
+        if (lu.status != TINY_OK)
         {
-            std::cerr << "[Error] inverse_power_iteration: failed to create eigenvector\n";
-            result.status = TINY_ERR_MATH_NULL_POINTER;
-            return result;
-        }
-        
-        float norm_sq = 0.0f;
-        
-        // Initialize with alternating signs to avoid alignment with dominant eigenvector
-        // This helps ensure we converge to the smallest eigenvalue
-        for (int i = 0; i < n; ++i)
-        {
-            // Use alternating pattern: 1, -1, 1, -1, ... with small variations
-            result.eigenvector(i, 0) = (i % 2 == 0) ? 1.0f : -1.0f;
-            result.eigenvector(i, 0) += 0.1f * static_cast<float>(i) / static_cast<float>(n);
-            norm_sq += result.eigenvector(i, 0) * result.eigenvector(i, 0);
-        }
-        
-        // Normalize
-        if (norm_sq < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-        {
-            // Fallback: use uniform vector
-            norm_sq = 0.0f;
-            for (int i = 0; i < n; ++i)
-            {
-                result.eigenvector(i, 0) = 1.0f;
-                norm_sq += 1.0f;
-            }
-        }
-        
-        float sqrt_norm = sqrtf(norm_sq);
-        if (std::isnan(sqrt_norm) || std::isinf(sqrt_norm) || sqrt_norm < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-        {
-            std::cerr << "[Error] inverse_power_iteration: invalid initial eigenvector norm\n";
+            std::cerr << "[Error] inverse_power_iteration: matrix is singular or near-singular "
+                      << "(LU status=" << lu.status << ").\n";
             result.status = TINY_ERR_MATH_INVALID_PARAM;
             return result;
         }
-        
-        float inv_norm = 1.0f / sqrt_norm;
-        for (int i = 0; i < n; ++i)
-        {
-            result.eigenvector(i, 0) *= inv_norm;
-        }
 
-        // Inverse power iteration loop
-        Mat temp_vec(n, 1);
-        
-        // Check if temp_vec was created successfully
-        if (temp_vec.data == nullptr)
+        // -----------------------------------------------------------------
+        // 3. Allocate eigenvector buffer and seed it with an alternating
+        //    +/-1 pattern to break alignment with the dominant eigenvector
+        //    direction; small perturbation keeps it generic.
+        // -----------------------------------------------------------------
+        result.eigenvector = Mat(n, 1);
+        if (result.eigenvector.data == nullptr)
         {
-            std::cerr << "[Error] inverse_power_iteration: failed to create temporary vector\n";
+            std::cerr << "[Error] inverse_power_iteration: failed to allocate eigenvector.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        float prev_eigenvalue = 0.0f;
 
+        const int Vstep = result.eigenvector.step;
+        float* const Vdata = result.eigenvector.data;
+        {
+            float norm_sq = 0.0f;
+            for (int i = 0; i < n; ++i)
+            {
+                const float v = ((i & 1) == 0 ? 1.0f : -1.0f)
+                                + 0.1f * static_cast<float>(i) / static_cast<float>(n);
+                Vdata[i * Vstep] = v;
+                norm_sq += v * v;
+            }
+            const float sqrt_norm = sqrtf(norm_sq);
+            if (!(sqrt_norm > TINY_MATH_MIN_POSITIVE_INPUT_F32))
+            {
+                std::cerr << "[Error] inverse_power_iteration: invalid initial eigenvector norm.\n";
+                result.status = TINY_ERR_MATH_INVALID_PARAM;
+                return result;
+            }
+            const float inv_norm = 1.0f / sqrt_norm;
+            for (int i = 0; i < n; ++i)
+                Vdata[i * Vstep] *= inv_norm;
+        }
+
+        // -----------------------------------------------------------------
+        // 4. Iterate.
+        //
+        //    Per iteration we want the smallest-magnitude eigenvalue of A,
+        //    which is the largest-magnitude eigenvalue of A^{-1}. The
+        //    classical recurrence is:
+        //        y      = A^{-1} v        (here: solve_lu(lu, v))
+        //        mu     = v^T y           (Rayleigh quotient on A^{-1};
+        //                                  v^T v == 1 by invariant)
+        //        v_next = y / ||y||       (re-normalise)
+        //        lambda = 1 / mu          (eigenvalue of A)
+        //
+        //    This avoids the explicit second matvec A * v that the previous
+        //    implementation used, saving ~n^2 FLOPs per iteration.
+        // -----------------------------------------------------------------
+        float prev_eigenvalue = 0.0f;
         for (int iter = 0; iter < max_iter; ++iter)
         {
-            // Solve A * y = v (equivalent to computing A^(-1) * v)
-            // This is the key difference from power iteration
-            temp_vec = solve(*this, result.eigenvector);
-
-            // Check if solve failed (matrix is singular or near-singular)
-            // solve() returns Mat() (default 1x1 matrix with data=nullptr) or Mat(0,0) on error
-            // Check for: null data pointer, wrong dimensions, or empty matrix
-            if (temp_vec.data == nullptr || temp_vec.row != n || temp_vec.col != 1)
+            // 4.1 y = A^{-1} v  via reusable LU.
+            Mat y = Mat::solve_lu(lu, result.eigenvector);
+            if (y.data == nullptr || y.row != n || y.col != 1)
             {
-                std::cerr << "[Error] Inverse power iteration: Matrix is singular or near-singular. "
-                          << "Cannot solve linear system A * y = v.\n";
+                std::cerr << "[Error] inverse_power_iteration: solve_lu failed at iter "
+                          << iter << ".\n";
                 result.status = TINY_ERR_MATH_INVALID_PARAM;
                 return result;
             }
 
-            // Check if solution vector is valid (not all zeros or NaN)
-            bool valid_solution = false;
+            // 4.2 Rayleigh quotient on A^{-1} and ||y||^2 in one sweep.
+            const int Ystep = y.step;
+            const float* const Ydata = y.data;
+
+            float mu = 0.0f;          // v^T y
+            float norm_sq = 0.0f;     // y^T y
             for (int i = 0; i < n; ++i)
             {
-                if (std::isnan(temp_vec(i, 0)) || std::isinf(temp_vec(i, 0)))
-                {
-                    std::cerr << "[Error] Inverse power iteration: Solution contains NaN or Inf.\n";
-                    result.status = TINY_ERR_MATH_INVALID_PARAM;
-                    return result;
-                }
-                if (fabsf(temp_vec(i, 0)) > TINY_MATH_MIN_POSITIVE_INPUT_F32)
-                {
-                    valid_solution = true;
-                }
+                const float vi = Vdata[i * Vstep];
+                const float yi = Ydata[i * Ystep];
+                mu      += vi * yi;
+                norm_sq += yi * yi;
             }
 
-            if (!valid_solution)
+            if (!(norm_sq > TINY_MATH_MIN_POSITIVE_INPUT_F32))
             {
-                std::cerr << "[Error] Inverse power iteration: Solution vector is zero or too small.\n";
+                std::cerr << "[Error] inverse_power_iteration: solve produced a zero vector.\n";
                 result.status = TINY_ERR_MATH_INVALID_PARAM;
                 return result;
             }
+            if (fabsf(mu) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
+            {
+                // mu = v^T A^{-1} v ~ 0 => smallest |eigenvalue| of A is huge
+                // (or v happens to be orthogonal to the smallest mode). In
+                // either case, 1/mu would overflow; abort gracefully.
+                std::cerr << "[Error] inverse_power_iteration: Rayleigh quotient on A^{-1} "
+                          << "underflowed (eigenvalue would diverge).\n";
+                result.status = TINY_ERR_MATH_INVALID_PARAM;
+                return result;
+            }
+            result.eigenvalue = 1.0f / mu;
 
-            // Compute Rayleigh quotient for A directly: lambda = (v^T * A * v) / (v^T * v)
-            // This gives us the eigenvalue of A corresponding to eigenvector v
-            // Note: In inverse power iteration, we iterate on A^(-1), but we want the eigenvalue of A
-            // Since y = A^(-1) * v, we have A * y = v, so we can compute v^T * A * v = v^T * A * y
-            // But more directly, we compute A * v to get the eigenvalue
-            
-            // Compute A * v
-            Mat Av(n, 1);
+            // 4.3 v <- y / ||y||
+            const float inv_norm = 1.0f / sqrtf(norm_sq);
             for (int i = 0; i < n; ++i)
-            {
-                Av(i, 0) = 0.0f;
-                for (int j = 0; j < n; ++j)
-                {
-                    Av(i, 0) += (*this)(i, j) * result.eigenvector(j, 0);
-                }
-            }
-            
-            // Compute Rayleigh quotient: lambda = (v^T * A * v) / (v^T * v)
-            float numerator = 0.0f;
-            float denominator = 0.0f;
-            for (int i = 0; i < n; ++i)
-            {
-                numerator += result.eigenvector(i, 0) * Av(i, 0);
-                denominator += result.eigenvector(i, 0) * result.eigenvector(i, 0);
-            }
+                Vdata[i * Vstep] = Ydata[i * Ystep] * inv_norm;
 
-            if (fabsf(denominator) < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] Inverse power iteration: eigenvector norm too small.\n";
-                result.status = TINY_ERR_MATH_INVALID_PARAM;
-                return result;
-            }
-
-            // Compute eigenvalue of A using Rayleigh quotient
-            result.eigenvalue = numerator / denominator;
-            
-            // Check if eigenvalue is valid
-            if (std::isnan(result.eigenvalue) || std::isinf(result.eigenvalue))
-            {
-                std::cerr << "[Error] inverse_power_iteration: invalid eigenvalue computed\n";
-                result.status = TINY_ERR_MATH_INVALID_PARAM;
-                return result;
-            }
-
-            // Normalize the new vector
-            float new_norm_sq = 0.0f;
-            for (int i = 0; i < n; ++i)
-            {
-                new_norm_sq += temp_vec(i, 0) * temp_vec(i, 0);
-            }
-
-            if (new_norm_sq < TINY_MATH_MIN_POSITIVE_INPUT_F32)
-            {
-                std::cerr << "[Error] inverse_power_iteration: computed vector norm too small\n";
-                result.status = TINY_ERR_MATH_INVALID_PARAM;
-                return result;
-            }
-
-            float new_sqrt_norm = sqrtf(new_norm_sq);
-            if (std::isnan(new_sqrt_norm) || std::isinf(new_sqrt_norm))
-            {
-                std::cerr << "[Error] inverse_power_iteration: invalid sqrt of vector norm\n";
-                result.status = TINY_ERR_MATH_INVALID_PARAM;
-                return result;
-            }
-            
-            float new_inv_norm = 1.0f / new_sqrt_norm;
-            for (int i = 0; i < n; ++i)
-            {
-                result.eigenvector(i, 0) = temp_vec(i, 0) * new_inv_norm;
-                
-                // Check if eigenvector component is valid
-                if (std::isnan(result.eigenvector(i, 0)) || std::isinf(result.eigenvector(i, 0)))
-                {
-                    std::cerr << "[Error] inverse_power_iteration: invalid eigenvector component at index " << i << "\n";
-                    result.status = TINY_ERR_MATH_INVALID_PARAM;
-                    return result;
-                }
-            }
-
-            // Check convergence
+            // 4.4 Convergence: relative change with a unit floor for tiny
+            //     eigenvalues. Matches the previous semantics.
             if (iter > 0)
             {
-                float eigenvalue_change = fabsf(result.eigenvalue - prev_eigenvalue);
-                // Use relative tolerance for convergence check
-                float abs_eigenvalue = fabsf(result.eigenvalue);
-                float rel_tolerance = tolerance * fmaxf(abs_eigenvalue, 1.0f);
-                
-                if (eigenvalue_change < rel_tolerance)
+                const float change   = fabsf(result.eigenvalue - prev_eigenvalue);
+                const float rel_tol  = tolerance * fmaxf(fabsf(result.eigenvalue), 1.0f);
+                if (change < rel_tol)
                 {
                     result.iterations = iter + 1;
-                    result.status = TINY_OK;
+                    result.status     = TINY_OK;
                     return result;
                 }
             }
-
             prev_eigenvalue = result.eigenvalue;
         }
 
-        // Max iterations reached
         result.iterations = max_iter;
-        result.status = TINY_ERR_NOT_FINISHED;
-        std::cerr << "[Warning] inverse_power_iteration: did not converge within " << max_iter << " iterations\n";
+        result.status     = TINY_ERR_NOT_FINISHED;
+        std::cerr << "[Warning] inverse_power_iteration: did not converge within "
+                  << max_iter << " iterations.\n";
         return result;
     }
 
     /**
      * @name Mat::eigendecompose_jacobi()
-     * @brief Compute complete eigenvalue decomposition using Jacobi method for symmetric matrices.
-     * @note Jacobi method iteratively applies Givens rotations to diagonalize a symmetric matrix.
-     *       Algorithm: Repeatedly find largest off-diagonal element and eliminate it with a rotation.
-     * @note Robust and accurate method ideal for structural dynamics matrices in SHM.
-     * @note Time complexity: O(n³ * iterations) - typically converges in O(n²) iterations
-     * @note Best for: Symmetric matrices (required), small to medium sized matrices (n < 100)
-     * 
-     * @param tolerance Convergence tolerance (must be >= 0). Convergence when max off-diagonal < tolerance
-     * @param max_iter Maximum number of iterations (must be > 0)
-     * @return EigenDecomposition containing all eigenvalues, eigenvectors, and status
+     * @brief Eigendecomposition of a symmetric matrix via classical Jacobi rotations.
+     *
+     * Algorithm:
+     *   1. Symmetrize input: A := (A + A^T) / 2  (defends against tiny FP asymmetry)
+     *   2. Iterate:
+     *        - Find largest off-diagonal |A(p,q)|.
+     *        - Build a Givens rotation that zeros A(p,q) (and A(q,p) by symmetry).
+     *        - Apply the rotation to A from both sides; accumulate it into V.
+     *      Stop when max |A(p,q)| < tolerance, or after `max_iter` sweeps.
+     *
+     * @note Best for small/medium symmetric matrices (n < ~100). For SHM
+     *       structural matrices this is ideal.
+     * @note Convergence is tested with an absolute threshold; callers that
+     *       need scale-invariance should pre-scale `tolerance` accordingly.
+     * @note Time complexity: O(n^3 * iterations); convergence is quadratic
+     *       near the solution, so iteration count is typically O(n^2).
+     *
+     * @param tolerance  Off-diagonal magnitude below which we stop (>= 0).
+     * @param max_iter   Maximum sweeps (must be > 0).
+     * @return EigenDecomposition with eigenvalues (n x 1), eigenvectors
+     *         (n x n, columns are unit eigenvectors), iteration count, status.
      */
     Mat::EigenDecomposition Mat::eigendecompose_jacobi(float tolerance, int max_iter) const
     {
         EigenDecomposition result;
 
-        // Check for null pointer
+        // -----------------------------------------------------------------
+        // 1. Validate input
+        // -----------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] eigendecompose_jacobi: matrix data pointer is null\n";
+            std::cerr << "[Error] eigendecompose_jacobi: matrix data pointer is null.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] eigendecompose_jacobi: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] eigendecompose_jacobi: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-
-        // Validation: must be square matrix
         if (this->row != this->col)
         {
-            std::cerr << "[Error] eigendecompose_jacobi: requires square matrix (got " 
-                      << this->row << "x" << this->col << ")\n";
+            std::cerr << "[Error] eigendecompose_jacobi: requires square matrix (got "
+                      << this->row << "x" << this->col << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
-        // Validate parameters
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] eigendecompose_jacobi: tolerance must be >= 0 (got " << tolerance << ")\n";
+            std::cerr << "[Error] eigendecompose_jacobi: tolerance must be >= 0 (got "
+                      << tolerance << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
         if (max_iter <= 0)
         {
-            std::cerr << "[Error] eigendecompose_jacobi: max_iter must be > 0 (got " << max_iter << ")\n";
+            std::cerr << "[Error] eigendecompose_jacobi: max_iter must be > 0 (got "
+                      << max_iter << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        // Check if matrix is symmetric
-        if (!this->is_symmetric(tolerance * 10.0f))
-        {
-            std::cerr << "[Warning] eigendecompose_jacobi: matrix is not symmetric. "
-                      << "Jacobi method may not converge correctly.\n";
-        }
+        const int n = this->row;
 
-        int n = this->row;
-        
-        // Handle empty matrix
+        // -----------------------------------------------------------------
+        // 2. Allocate outputs once
+        // -----------------------------------------------------------------
+        result.eigenvalues  = Mat(n, 1);
+        result.eigenvectors = Mat::eye(n);
+        if (n > 0 && (result.eigenvalues.data == nullptr ||
+                      result.eigenvectors.data == nullptr))
+        {
+            std::cerr << "[Error] eigendecompose_jacobi: failed to allocate outputs.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
         if (n == 0)
         {
-            result.eigenvalues = Mat(0, 1);
-            result.eigenvectors = Mat(0, 0);
             result.iterations = 0;
             result.status = TINY_OK;
             return result;
         }
 
-        // Initialize: working copy of matrix, eigenvectors as identity
-        Mat A = Mat(*this); // Working copy (will become diagonal)
-        
-        // Check if working copy was created successfully
+        // -----------------------------------------------------------------
+        // 3. Working copy with explicit symmetrization: A := (T + T^T) / 2.
+        //    Doing this here lets callers pass slightly non-symmetric inputs
+        //    safely, and removes the need for a separate is_symmetric() probe
+        //    whose tolerance is hard to set scale-invariantly.
+        // -----------------------------------------------------------------
+        Mat A(n, n);
         if (A.data == nullptr)
         {
-            std::cerr << "[Error] eigendecompose_jacobi: failed to create working copy\n";
+            std::cerr << "[Error] eigendecompose_jacobi: failed to allocate working copy.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        result.eigenvectors = Mat::eye(n);
-        
-        // Check if eigenvectors matrix was created successfully
-        if (result.eigenvectors.data == nullptr)
         {
-            std::cerr << "[Error] eigendecompose_jacobi: failed to create eigenvectors matrix\n";
-            result.status = TINY_ERR_MATH_NULL_POINTER;
-            return result;
-        }
-
-        // Jacobi iteration
-        for (int iter = 0; iter < max_iter; ++iter)
-        {
-            // Find largest off-diagonal element
-            float max_off_diag = 0.0f;
-            int p = 0, q = 0;
-
+            const int Astep_init = A.step;
+            const int Tstep      = this->step;
+            float* const Adata_init = A.data;
+            const float* const Tdata = this->data;
             for (int i = 0; i < n; ++i)
             {
+                float* row_Ai = Adata_init + i * Astep_init;
+                const float* row_Ti = Tdata + i * Tstep;
+                row_Ai[i] = row_Ti[i];
                 for (int j = i + 1; j < n; ++j)
                 {
-                    float abs_val = fabsf(A(i, j));
-                    if (abs_val > max_off_diag)
+                    const float v = 0.5f * (row_Ti[j] + Tdata[j * Tstep + i]);
+                    row_Ai[j] = v;
+                    Adata_init[j * Astep_init + i] = v;
+                }
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 4. Jacobi sweeps (classical: pick the largest off-diagonal entry).
+        //    Hot loops use hoisted row pointers to skip operator() overhead.
+        // -----------------------------------------------------------------
+        const int Astep = A.step;
+        const int Vstep = result.eigenvectors.step;
+        float* const Adata = A.data;
+        float* const Vdata = result.eigenvectors.data;
+
+        bool converged  = false;
+        int  iter_count = max_iter;
+
+        for (int iter = 0; iter < max_iter; ++iter)
+        {
+            // 4.1 Locate the largest |A(p,q)| with p < q.
+            float max_off = 0.0f;
+            int   p = 0, q = 1;
+            for (int i = 0; i < n - 1; ++i)
+            {
+                const float* row_Ai = Adata + i * Astep;
+                for (int j = i + 1; j < n; ++j)
+                {
+                    const float a = fabsf(row_Ai[j]);
+                    if (a > max_off)
                     {
-                        max_off_diag = abs_val;
+                        max_off = a;
                         p = i;
                         q = j;
                     }
                 }
             }
 
-            // Check convergence
-            if (max_off_diag < tolerance)
+            // 4.2 Convergence check.
+            if (max_off < tolerance)
             {
-                // Extract eigenvalues from diagonal
-                result.eigenvalues = Mat(n, 1);
-                
-                // Check if eigenvalues matrix was created successfully
-                if (result.eigenvalues.data == nullptr)
-                {
-                    std::cerr << "[Error] eigendecompose_jacobi: failed to create eigenvalues matrix\n";
-                    result.status = TINY_ERR_MATH_NULL_POINTER;
-                    return result;
-                }
-                
-                for (int i = 0; i < n; ++i)
-                {
-                    result.eigenvalues(i, 0) = A(i, i);
-                }
-                result.iterations = iter + 1;
-                result.status = TINY_OK;
-                return result;
+                converged  = true;
+                iter_count = iter + 1;
+                break;
             }
 
-            // Compute rotation angle
-            float app = A(p, p);
-            float aqq = A(q, q);
-            float apq = A(p, q);
+            // 4.3 Compute rotation (c, s) that zeros A(p,q).
+            //     The branch on tau picks the smaller root of the quadratic
+            //     and so keeps |t| <= 1, avoiding cancellation.
+            float* const row_Ap = Adata + p * Astep;
+            float* const row_Aq = Adata + q * Astep;
+            const float app = row_Ap[p];
+            const float aqq = row_Aq[q];
+            const float apq = row_Ap[q];
 
-            float tau = (aqq - app) / (2.0f * apq);
-            float t;
-            if (tau >= 0.0f)
-            {
-                t = 1.0f / (tau + sqrtf(1.0f + tau * tau));
-            }
-            else
-            {
-                t = -1.0f / (-tau + sqrtf(1.0f + tau * tau));
-            }
+            const float tau = (aqq - app) / (2.0f * apq);
+            const float t = (tau >= 0.0f)
+                            ?  1.0f / ( tau + sqrtf(1.0f + tau * tau))
+                            : -1.0f / (-tau + sqrtf(1.0f + tau * tau));
+            const float c = 1.0f / sqrtf(1.0f + t * t);
+            const float s = t * c;
 
-            float c = 1.0f / sqrtf(1.0f + t * t); // cosine
-            float s = t * c;                       // sine
-
-            // Apply Jacobi rotation to A
-            // Update rows p and q
+            // 4.4 Apply rotation to rows/cols (j, p) and (j, q), j != p, q.
             for (int j = 0; j < n; ++j)
             {
-                if (j != p && j != q)
-                {
-                    float apj = A(p, j);
-                    float aqj = A(q, j);
-                    A(p, j) = c * apj - s * aqj;
-                    A(q, j) = s * apj + c * aqj;
-                    A(j, p) = A(p, j); // Maintain symmetry
-                    A(j, q) = A(q, j);
-                }
+                if (j == p || j == q) continue;
+                float* const row_Aj = Adata + j * Astep;
+                const float apj = row_Ap[j];
+                const float aqj = row_Aq[j];
+                const float new_apj = c * apj - s * aqj;
+                const float new_aqj = s * apj + c * aqj;
+                row_Ap[j] = new_apj;
+                row_Aq[j] = new_aqj;
+                row_Aj[p] = new_apj; // maintain symmetry
+                row_Aj[q] = new_aqj;
             }
 
-            // Update diagonal elements
-            float app_new = c * c * app - 2.0f * c * s * apq + s * s * aqq;
-            float aqq_new = s * s * app + 2.0f * c * s * apq + c * c * aqq;
-            A(p, p) = app_new;
-            A(q, q) = aqq_new;
-            A(p, q) = 0.0f;
-            A(q, p) = 0.0f;
+            // 4.5 Update the (p,p), (q,q), (p,q), (q,p) block.
+            row_Ap[p] = c * c * app - 2.0f * c * s * apq + s * s * aqq;
+            row_Aq[q] = s * s * app + 2.0f * c * s * apq + c * c * aqq;
+            row_Ap[q] = 0.0f;
+            row_Aq[p] = 0.0f;
 
-            // Update eigenvectors
+            // 4.6 Accumulate the rotation into V: V := V * G.
             for (int i = 0; i < n; ++i)
             {
-                float vip = result.eigenvectors(i, p);
-                float viq = result.eigenvectors(i, q);
-                result.eigenvectors(i, p) = c * vip - s * viq;
-                result.eigenvectors(i, q) = s * vip + c * viq;
+                float* const row_Vi = Vdata + i * Vstep;
+                const float vip = row_Vi[p];
+                const float viq = row_Vi[q];
+                row_Vi[p] = c * vip - s * viq;
+                row_Vi[q] = s * vip + c * viq;
             }
         }
 
-        // Extract eigenvalues from diagonal
-        result.eigenvalues = Mat(n, 1);
-        
-        // Check if eigenvalues matrix was created successfully
-        if (result.eigenvalues.data == nullptr)
-        {
-            std::cerr << "[Error] eigendecompose_jacobi: failed to create eigenvalues matrix\n";
-            result.status = TINY_ERR_MATH_NULL_POINTER;
-            return result;
-        }
-        
+        // -----------------------------------------------------------------
+        // 5. Read eigenvalues off the diagonal (single allocation, single pass).
+        // -----------------------------------------------------------------
+        const int evStep = result.eigenvalues.step;
         for (int i = 0; i < n; ++i)
         {
-            result.eigenvalues(i, 0) = A(i, i);
+            result.eigenvalues.data[i * evStep] = Adata[i * Astep + i];
         }
 
-        result.iterations = max_iter;
-        result.status = TINY_ERR_NOT_FINISHED;
-        std::cerr << "[Warning] eigendecompose_jacobi: did not converge within " << max_iter << " iterations\n";
+        result.iterations = iter_count;
+        if (converged)
+        {
+            result.status = TINY_OK;
+        }
+        else
+        {
+            result.status = TINY_ERR_NOT_FINISHED;
+            std::cerr << "[Warning] eigendecompose_jacobi: did not converge within "
+                      << max_iter << " iterations.\n";
+        }
         return result;
     }
 
     /**
      * @name Mat::eigendecompose_qr()
-     * @brief Compute complete eigenvalue decomposition using QR algorithm for general matrices.
-     * @note QR algorithm iteratively applies QR decomposition: A_k = Q_k * R_k, A_{k+1} = R_k * Q_k.
-     *       Converges to Schur form (upper triangular) for real eigenvalues.
-     * @note Supports non-symmetric matrices, but may have complex eigenvalues (only real part returned).
-     * @note Time complexity: O(n³ * iterations) - typically requires O(n) iterations
-     * @note Best for: General matrices, when all eigenvalues are real
-     * 
-     * @param max_iter Maximum number of QR iterations (must be > 0)
-     * @param tolerance Convergence tolerance (must be >= 0). Convergence when subdiagonal < tolerance
-     * @return EigenDecomposition containing eigenvalues, eigenvectors, and status
+     * @brief Unshifted QR algorithm for general (non-symmetric) real matrices.
+     *
+     * Algorithm (per iteration):
+     *   1. A_k = Q_k * R_k         (via Modified Gram-Schmidt; R is full upper)
+     *   2. A_{k+1} = R_k * Q_k     (similar transform; preserves spectrum)
+     *   3. V_{k+1} = V_k * Q_k     (accumulates eigenvectors)
+     *
+     * Convergence:
+     *   Stop when every sub-diagonal entry is below `tolerance` scaled by the
+     *   neighbouring diagonal magnitudes (with a 1.0 floor for tiny matrices).
+     *
+     * Caveats:
+     *   - No shifts and no Hessenberg reduction. Convergence is linear in the
+     *     general case; for fast convergence on real-world matrices add a
+     *     Wilkinson shift in a future revision.
+     *   - Pairs of complex eigenvalues will leave 2x2 blocks on the diagonal
+     *     and will *not* converge. Only the real part of the diagonal is
+     *     reported, with `status = TINY_ERR_NOT_FINISHED`.
+     *
+     * Performance:
+     *   - Two-buffer ping-pong avoids the per-iteration n*n allocations of
+     *     A_new / V_new that the previous implementation did.
+     *   - The R*Q product exploits R's upper-triangular structure
+     *     (k starts at i), halving its FLOPs on average.
+     *
+     * @param max_iter  Max QR sweeps (must be > 0).
+     * @param tolerance Sub-diagonal convergence threshold (must be >= 0).
+     * @return EigenDecomposition with diagonal eigenvalues, accumulated V,
+     *         iteration count, and status.
      */
     Mat::EigenDecomposition Mat::eigendecompose_qr(int max_iter, float tolerance) const
     {
         EigenDecomposition result;
 
-        // Check for null pointer
+        // -----------------------------------------------------------------
+        // 1. Validate input
+        // -----------------------------------------------------------------
         if (this->data == nullptr)
         {
-            std::cerr << "[Error] eigendecompose_qr: matrix data pointer is null\n";
+            std::cerr << "[Error] eigendecompose_qr: matrix data pointer is null.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Validate matrix dimensions
         if (this->row <= 0 || this->col <= 0)
         {
-            std::cerr << "[Error] eigendecompose_qr: invalid matrix dimensions: rows=" 
-                      << this->row << ", cols=" << this->col << "\n";
+            std::cerr << "[Error] eigendecompose_qr: invalid matrix dimensions: "
+                      << this->row << "x" << this->col << ".\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-
-        // Validation: must be square matrix
         if (this->row != this->col)
         {
-            std::cerr << "[Error] eigendecompose_qr: requires square matrix (got " 
-                      << this->row << "x" << this->col << ")\n";
+            std::cerr << "[Error] eigendecompose_qr: requires square matrix (got "
+                      << this->row << "x" << this->col << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
-        // Validate parameters
         if (max_iter <= 0)
         {
-            std::cerr << "[Error] eigendecompose_qr: max_iter must be > 0 (got " << max_iter << ")\n";
+            std::cerr << "[Error] eigendecompose_qr: max_iter must be > 0 (got "
+                      << max_iter << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
         if (tolerance < 0.0f)
         {
-            std::cerr << "[Error] eigendecompose_qr: tolerance must be >= 0 (got " << tolerance << ")\n";
+            std::cerr << "[Error] eigendecompose_qr: tolerance must be >= 0 (got "
+                      << tolerance << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
 
-        int n = this->row;
-        
-        // Handle empty matrix
+        const int n = this->row;
+
+        // -----------------------------------------------------------------
+        // 2. Allocate eigenvalues output (filled at the end). Empty matrix
+        //    short-circuits with valid-empty results.
+        // -----------------------------------------------------------------
+        result.eigenvalues = Mat(n, 1);
+        if (n > 0 && result.eigenvalues.data == nullptr)
+        {
+            std::cerr << "[Error] eigendecompose_qr: failed to allocate eigenvalues.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
         if (n == 0)
         {
-            result.eigenvalues = Mat(0, 1);
             result.eigenvectors = Mat(0, 0);
-            result.iterations = 0;
-            result.status = TINY_OK;
+            result.iterations   = 0;
+            result.status       = TINY_OK;
             return result;
         }
 
-        // Initialize: start with original matrix, eigenvectors as identity
-        Mat A = Mat(*this); // Working copy (will become upper triangular)
-        result.eigenvectors = Mat::eye(n);
+        // -----------------------------------------------------------------
+        // 3. Two-buffer ping-pong for A and V, so each iteration only swaps
+        //    pointers instead of allocating fresh n*n matrices.
+        // -----------------------------------------------------------------
+        Mat A_a(*this);          // working copy, drifts toward upper triangular
+        Mat A_b(n, n);
+        Mat V_a = Mat::eye(n);   // accumulated eigenvectors
+        Mat V_b(n, n);
+        if (A_a.data == nullptr || A_b.data == nullptr ||
+            V_a.data == nullptr || V_b.data == nullptr)
+        {
+            std::cerr << "[Error] eigendecompose_qr: failed to allocate working buffers.\n";
+            result.status = TINY_ERR_MATH_NULL_POINTER;
+            return result;
+        }
+        Mat *A_cur = &A_a, *A_nxt = &A_b;
+        Mat *V_cur = &V_a, *V_nxt = &V_b;
 
-        // QR iteration with improved convergence checking
+        // gram_schmidt_orthogonalize() reallocates these on every call, so
+        // declare them once and let the inner function manage memory.
+        Mat Q, R;
+
+        bool converged  = false;
+        int  iter_count = max_iter;
+
         for (int iter = 0; iter < max_iter; ++iter)
         {
-            // Check convergence: check if matrix is upper triangular
-            // Use a more lenient tolerance for sub-diagonal elements
-            bool converged = true;
-            float max_off_diag = 0.0f;
-            for (int i = 1; i < n; ++i)
+            // 3.1 Convergence: every sub-diagonal entry below the (relative)
+            //     tolerance. Bail as soon as one entry fails the test.
             {
-                for (int j = 0; j < i; ++j)
+                bool not_converged = false;
+                const int Astep = A_cur->step;
+                const float* const Adata = A_cur->data;
+                for (int i = 1; i < n && !not_converged; ++i)
                 {
-                    float abs_val = fabsf(A(i, j));
-                    if (abs_val > max_off_diag)
-                        max_off_diag = abs_val;
-                    // Use relative tolerance: compare with diagonal elements
-                    float diag_scale = fmaxf(fabsf(A(i, i)), fabsf(A(j, j)));
-                    float rel_tolerance = tolerance * fmaxf(1.0f, diag_scale);
-                    if (abs_val > rel_tolerance)
+                    const float* row_Ai = Adata + i * Astep;
+                    for (int j = 0; j < i; ++j)
                     {
-                        converged = false;
+                        const float abs_val  = fabsf(row_Ai[j]);
+                        const float diag_scl = fmaxf(fabsf(Adata[i * Astep + i]),
+                                                     fabsf(Adata[j * Astep + j]));
+                        const float rel_tol  = tolerance * fmaxf(1.0f, diag_scl);
+                        if (abs_val > rel_tol)
+                        {
+                            not_converged = true;
+                            break;
+                        }
                     }
                 }
-            }
-
-            if (converged)
-            {
-                // Extract eigenvalues from diagonal
-                result.eigenvalues = Mat(n, 1);
-                for (int i = 0; i < n; ++i)
+                if (!not_converged)
                 {
-                    result.eigenvalues(i, 0) = A(i, i);
+                    converged  = true;
+                    iter_count = iter;
+                    break;
                 }
-                result.iterations = iter + 1;
-                result.status = TINY_OK;
-                return result;
             }
-            
-            // Optional: Use shift to accelerate convergence (Wilkinson shift for last 2x2 block)
-            // For simplicity, we skip shift for now but can add it later if needed
 
-            // QR decomposition using Gram-Schmidt process
-            // Use the reusable gram_schmidt_orthogonalize function
-            Mat Q_ortho, R_coeff;
-            if (!Mat::gram_schmidt_orthogonalize(A, Q_ortho, R_coeff, TINY_MATH_MIN_POSITIVE_INPUT_F32))
+            // 3.2 A = Q * R via Modified Gram-Schmidt.
+            //     R is delivered as a *full* upper-triangular matrix, so we
+            //     can use it directly with no patch-up step.
+            if (!Mat::gram_schmidt_orthogonalize(*A_cur, Q, R,
+                                                 TINY_MATH_MIN_POSITIVE_INPUT_F32))
             {
+                std::cerr << "[Error] eigendecompose_qr: Gram-Schmidt failed.\n";
                 result.status = TINY_ERR_MATH_NULL_POINTER;
                 return result;
             }
 
-            Mat Q = Q_ortho;
-            Mat R(n, n);
-
-            // Copy coefficients to R (upper triangular part)
-            for (int j = 0; j < n; ++j)
+            // 3.3 A_nxt = R * Q  (R is upper-triangular, so k starts at i)
             {
-                for (int k = 0; k <= j; ++k)
+                const int Rstep  = R.step;
+                const int Qstep  = Q.step;
+                const int Anstep = A_nxt->step;
+                const float* const Rdata = R.data;
+                const float* const Qdata = Q.data;
+                float* const       Andata = A_nxt->data;
+                for (int i = 0; i < n; ++i)
                 {
-                    R(k, j) = R_coeff(k, j);
-                }
-
-                // Compute remaining R elements: R(j,k) = Q(:,j)^T * A(:,k) for k > j
-                for (int k = j + 1; k < n; ++k)
-                {
-                    float dot = 0.0f;
-                    for (int i = 0; i < n; ++i)
+                    const float* row_Ri = Rdata + i * Rstep;
+                    float* row_Ani = Andata + i * Anstep;
+                    for (int j = 0; j < n; ++j)
                     {
-                        dot += Q(i, j) * A(i, k);
-                    }
-                    R(j, k) = dot;
-                }
-            }
-
-            // Update A = R * Q
-            Mat A_new(n, n);
-            for (int i = 0; i < n; ++i)
-            {
-                for (int j = 0; j < n; ++j)
-                {
-                    A_new(i, j) = 0.0f;
-                    for (int k = 0; k < n; ++k)
-                    {
-                        A_new(i, j) += R(i, k) * Q(k, j);
+                        float sum = 0.0f;
+                        for (int k = i; k < n; ++k) // R(i,k) = 0 for k < i
+                            sum += row_Ri[k] * Qdata[k * Qstep + j];
+                        row_Ani[j] = sum;
                     }
                 }
             }
-            A = A_new;
 
-            // Update eigenvectors: V = V * Q
-            Mat V_new(n, n);
-            for (int i = 0; i < n; ++i)
+            // 3.4 V_nxt = V_cur * Q
             {
-                for (int j = 0; j < n; ++j)
+                const int Vcstep = V_cur->step;
+                const int Vnstep = V_nxt->step;
+                const int Qstep  = Q.step;
+                const float* const Vcdata = V_cur->data;
+                const float* const Qdata  = Q.data;
+                float* const       Vndata = V_nxt->data;
+                for (int i = 0; i < n; ++i)
                 {
-                    V_new(i, j) = 0.0f;
-                    for (int k = 0; k < n; ++k)
+                    const float* row_Vi  = Vcdata + i * Vcstep;
+                    float*       row_Vni = Vndata + i * Vnstep;
+                    for (int j = 0; j < n; ++j)
                     {
-                        V_new(i, j) += result.eigenvectors(i, k) * Q(k, j);
+                        float sum = 0.0f;
+                        for (int k = 0; k < n; ++k)
+                            sum += row_Vi[k] * Qdata[k * Qstep + j];
+                        row_Vni[j] = sum;
                     }
                 }
             }
-            result.eigenvectors = V_new;
+
+            // 3.5 Swap the ping-pong pointers (zero copy).
+            {
+                Mat *tmp = A_cur; A_cur = A_nxt; A_nxt = tmp;
+                tmp = V_cur; V_cur = V_nxt; V_nxt = tmp;
+            }
+            iter_count = iter + 1;
         }
 
-        // Extract eigenvalues from diagonal
-        result.eigenvalues = Mat(n, 1);
-        for (int i = 0; i < n; ++i)
+        // -----------------------------------------------------------------
+        // 4. Read eigenvalues off the (converged or last) diagonal and copy
+        //    out the accumulated eigenvectors.
+        // -----------------------------------------------------------------
         {
-            result.eigenvalues(i, 0) = A(i, i);
+            const int Astep        = A_cur->step;
+            const float* const Adata = A_cur->data;
+            const int evStep       = result.eigenvalues.step;
+            for (int i = 0; i < n; ++i)
+                result.eigenvalues.data[i * evStep] = Adata[i * Astep + i];
         }
-
-        result.iterations = max_iter;
-        result.status = TINY_ERR_NOT_FINISHED;
-        std::cerr << "[Warning] QR algorithm did not converge within " << max_iter << " iterations.\n";
+        result.eigenvectors = *V_cur;
+        result.iterations   = iter_count;
+        if (converged)
+        {
+            result.status = TINY_OK;
+        }
+        else
+        {
+            result.status = TINY_ERR_NOT_FINISHED;
+            std::cerr << "[Warning] eigendecompose_qr: did not converge within "
+                      << max_iter << " iterations.\n";
+        }
         return result;
     }
 
@@ -7407,44 +7051,42 @@ namespace tiny
      */
     Mat::EigenDecomposition Mat::eigendecompose(float tolerance, int max_iter) const
     {
-        // Check for null pointer
         if (this->data == nullptr)
         {
             EigenDecomposition result;
-            std::cerr << "[Error] eigendecompose: matrix data pointer is null\n";
+            std::cerr << "[Error] eigendecompose: matrix data pointer is null.\n";
             result.status = TINY_ERR_MATH_NULL_POINTER;
             return result;
         }
-        
-        // Validate tolerance
         if (tolerance < 0.0f)
         {
             EigenDecomposition result;
-            std::cerr << "[Error] eigendecompose: tolerance must be >= 0 (got " << tolerance << ")\n";
+            std::cerr << "[Error] eigendecompose: tolerance must be >= 0 (got "
+                      << tolerance << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
-        // Validate max_iter
         if (max_iter <= 0)
         {
             EigenDecomposition result;
-            std::cerr << "[Error] eigendecompose: max_iter must be > 0 (got " << max_iter << ")\n";
+            std::cerr << "[Error] eigendecompose: max_iter must be > 0 (got "
+                      << max_iter << ").\n";
             result.status = TINY_ERR_INVALID_ARG;
             return result;
         }
-        
-        // Check if matrix is symmetric
-        if (this->is_symmetric(tolerance * 10.0f))
+
+        // Symmetry-test margin: treat the matrix as symmetric when off-diag
+        // mismatches stay within `kSymmetryToleranceFactor * tolerance`. This
+        // is intentionally loose so matrices built from differences of
+        // symmetric ops (which carry small FP asymmetry) still pick the
+        // faster, more-stable Jacobi path.
+        constexpr float kSymmetryToleranceFactor = 10.0f;
+        const float sym_tol = kSymmetryToleranceFactor * tolerance;
+        if (this->is_symmetric(sym_tol))
         {
-            // Use Jacobi method for symmetric matrices (more efficient and stable)
             return this->eigendecompose_jacobi(tolerance, max_iter);
         }
-        else
-        {
-            // Use QR algorithm for general matrices
-            return this->eigendecompose_qr(max_iter, tolerance);
-        }
+        return this->eigendecompose_qr(max_iter, tolerance);
     }
 
     // ============================================================================
@@ -7464,12 +7106,19 @@ namespace tiny
      */
     std::ostream &operator<<(std::ostream &os, const Mat &m)
     {
+        // A 0x0 / 0xN / Nx0 matrix is a legal empty value (see Mat(int,int));
+        // print nothing for it. A truly bad pointer (sized but null) is the
+        // only real error case.
+        if (m.row == 0 || m.col == 0)
+        {
+            return os;
+        }
         if (m.data == nullptr)
         {
             os << "[Error] Cannot print matrix: data pointer is null.\n";
             return os;
         }
-        
+
         for (int i = 0; i < m.row; ++i)
         {
             os << m(i, 0);
@@ -7518,6 +7167,17 @@ namespace tiny
      */
     std::istream &operator>>(std::istream &is, Mat &m)
     {
+        if (m.row == 0 || m.col == 0)
+        {
+            return is; // nothing to read into an empty matrix
+        }
+        if (m.data == nullptr)
+        {
+            std::cerr << "[Error] operator>>: target matrix has null data buffer.\n";
+            is.setstate(std::ios::failbit);
+            return is;
+        }
+
         for (int i = 0; i < m.row; ++i)
         {
             for (int j = 0; j < m.col; ++j)
@@ -7543,11 +7203,17 @@ namespace tiny
      */
     Mat operator+(const Mat &m1, const Mat &m2)
     {
+        if (m1.data == nullptr || m2.data == nullptr)
+        {
+            std::cerr << "[Error] operator+: null matrix data pointer.\n";
+            return Mat(0, 0);
+        }
         if ((m1.row != m2.row) || (m1.col != m2.col))
         {
-            std::cerr << "operator + Error: matrices do not have equal dimensions" << std::endl;
-            Mat err_ret;
-            return err_ret;
+            std::cerr << "[Error] operator+: matrices do not have equal dimensions ("
+                      << m1.row << "x" << m1.col << " vs "
+                      << m2.row << "x" << m2.col << ").\n";
+            return Mat(0, 0);
         }
 
         if (m1.sub_matrix || m2.sub_matrix)
@@ -7608,11 +7274,17 @@ namespace tiny
      */
     Mat operator-(const Mat &m1, const Mat &m2)
     {
+        if (m1.data == nullptr || m2.data == nullptr)
+        {
+            std::cerr << "[Error] operator-: null matrix data pointer.\n";
+            return Mat(0, 0);
+        }
         if ((m1.row != m2.row) || (m1.col != m2.col))
         {
-            std::cerr << "operator - Error: matrices do not have equal dimensions" << std::endl;
-            Mat err_ret;
-            return err_ret;
+            std::cerr << "[Error] operator-: matrices do not have equal dimensions ("
+                      << m1.row << "x" << m1.col << " vs "
+                      << m2.row << "x" << m2.col << ").\n";
+            return Mat(0, 0);
         }
 
         if (m1.sub_matrix || m2.sub_matrix)
@@ -7675,11 +7347,17 @@ namespace tiny
      */
     Mat operator*(const Mat &m1, const Mat &m2)
     {
+        if (m1.data == nullptr || m2.data == nullptr)
+        {
+            std::cerr << "[Error] operator*: null matrix data pointer.\n";
+            return Mat(0, 0);
+        }
         if (m1.col != m2.row)
         {
-            std::cerr << "operator * Error: matrices do not have correct dimensions" << std::endl;
-            Mat err_ret;
-            return err_ret;
+            std::cerr << "[Error] operator*: incompatible inner dimensions ("
+                      << m1.row << "x" << m1.col << " * "
+                      << m2.row << "x" << m2.col << ").\n";
+            return Mat(0, 0);
         }
         Mat temp(m1.row, m2.col);
 
@@ -7759,14 +7437,17 @@ namespace tiny
      */
     Mat operator/(const Mat &m, float num)
     {
-        // Check division by zero
-        if (num == 0.0f)
+        if (m.data == nullptr)
         {
-            std::cerr << "[Error] Division by zero in operator/.\n";
-            Mat err_ret;
-            return err_ret;
+            std::cerr << "[Error] operator/: null matrix data pointer.\n";
+            return Mat(0, 0);
         }
-        
+        if (!(fabsf(num) > TINY_MATH_MIN_POSITIVE_INPUT_F32))
+        {
+            std::cerr << "[Error] operator/: division by zero (num=" << num << ").\n";
+            return Mat(0, 0);
+        }
+
         if (m.sub_matrix)
         {
             Mat temp(m.row, m.col);
@@ -7797,19 +7478,54 @@ namespace tiny
      */
     Mat operator/(const Mat &A, const Mat &B)
     {
+        if (A.data == nullptr || B.data == nullptr)
+        {
+            std::cerr << "[Error] operator/: null matrix data pointer.\n";
+            return Mat(0, 0);
+        }
+        if (A.row <= 0 || A.col <= 0 || B.row <= 0 || B.col <= 0)
+        {
+            std::cerr << "[Error] operator/: invalid matrix dimensions.\n";
+            return Mat(0, 0);
+        }
         if ((A.row != B.row) || (A.col != B.col))
         {
-            std::cerr << "operator / Error: matrices do not have equal dimensions" << std::endl;
-            Mat err_ret;
-            return err_ret;
+            std::cerr << "[Error] operator/: matrices do not have equal dimensions ("
+                      << A.row << "x" << A.col << " vs "
+                      << B.row << "x" << B.col << ").\n";
+            return Mat(0, 0);
         }
 
         Mat temp(A.row, A.col);
-        for (int row = 0; row < A.row; row++)
+        if (temp.data == nullptr)
         {
-            for (int col = 0; col < A.col; col++)
+            std::cerr << "[Error] operator/: failed to allocate result.\n";
+            return Mat(0, 0);
+        }
+
+        const int Astep = A.step;
+        const int Bstep = B.step;
+        const int Tstep = temp.step;
+        const float* const Adata = A.data;
+        const float* const Bdata = B.data;
+        float* const       Tdata = temp.data;
+        const int rows = A.row;
+        const int cols = A.col;
+
+        for (int r = 0; r < rows; ++r)
+        {
+            const float* row_A = Adata + r * Astep;
+            const float* row_B = Bdata + r * Bstep;
+            float*       row_T = Tdata + r * Tstep;
+            for (int c = 0; c < cols; ++c)
             {
-                temp(row, col) = A(row, col) / B(row, col);
+                if (!(fabsf(row_B[c]) > TINY_MATH_MIN_POSITIVE_INPUT_F32))
+                {
+                    std::cerr << "[Error] operator/: division by zero at ("
+                              << r << ", " << c << ").\n";
+                    return Mat(0, 0);
+                }
+                row_T[c] = row_A[c] / row_B[c];
             }
         }
         return temp;
@@ -7828,25 +7544,47 @@ namespace tiny
      */
     bool operator==(const Mat &m1, const Mat &m2)
     {
+        // Shape mismatch -> not equal.
         if ((m1.col != m2.col) || (m1.row != m2.row))
         {
             return false;
         }
-
-        const float epsilon = 1e-5f;
-        for (int row = 0; row < m1.row; row++)
+        // Two empty matrices of the same shape are equal.
+        if (m1.row == 0 || m1.col == 0)
         {
-            for (int col = 0; col < m1.col; col++)
+            return true;
+        }
+        // Pointer hazards: a sized matrix with a null buffer cannot be
+        // compared meaningfully. Treat as not-equal rather than UB.
+        if (m1.data == nullptr || m2.data == nullptr)
+        {
+            return false;
+        }
+
+        // Use `!(diff <= epsilon)` so that NaN on either side falls through
+        // to "not equal" (NaN compares unordered against everything).
+        // This is the IEEE-correct semantics that `diff > epsilon` misses.
+        constexpr float epsilon = 1e-5f;
+        const int s1 = m1.step;
+        const int s2 = m2.step;
+        const float* const d1 = m1.data;
+        const float* const d2 = m2.data;
+        const int rows = m1.row;
+        const int cols = m1.col;
+
+        for (int r = 0; r < rows; ++r)
+        {
+            const float* row1 = d1 + r * s1;
+            const float* row2 = d2 + r * s2;
+            for (int c = 0; c < cols; ++c)
             {
-                float diff = fabs(m1(row, col) - m2(row, col));
-                if (diff > epsilon)
+                const float diff = fabsf(row1[c] - row2[c]);
+                if (!(diff <= epsilon))
                 {
-                    std::cout << "operator == Error: " << row << " " << col << ", m1.data=" << m1(row, col) << ", m2.data=" << m2(row, col) << ", diff=" << diff << std::endl;
                     return false;
                 }
             }
         }
-
         return true;
     }
 }

@@ -133,6 +133,7 @@ extern "C"
 }
 #endif
 
+
 ```
 
 ## tiny_fft.c
@@ -154,16 +155,15 @@ extern "C"
 #include <string.h>
 #include <stdlib.h>
 
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-#include "esp_heap_caps.h"
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
 #endif
 
 /* STATIC VARIABLES */
 static int g_fft_initialized = 0;
 static int g_fft_size = 0;
 
-/* STATIC FUNCTIONS FOR NON-ESP32 PLATFORM */
-#if MCU_PLATFORM_SELECTED != MCU_PLATFORM_ESP32
+/* STATIC FUNCTIONS */
 /**
  * @brief Bit-reverse an integer (for FFT)
  */
@@ -275,7 +275,6 @@ static void fft_radix2_f32(float *data, int n, int inverse)
         }
     }
 }
-#endif
 
 /**
  * @brief Check if a number is power of 2
@@ -444,29 +443,10 @@ tiny_error_t tiny_fft_f32(const float *input, int input_len, float *output_fft, 
     }
     free(windowed_input);
 
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Perform FFT using ESP32 optimized library
-    // ESP32 FFT requires: FFT -> bit reverse
-    // Note: dsps_cplx2reC_fc32 is for two real signals, not needed for single real signal
-    esp_err_t ret = dsps_fft2r_fc32(output_fft, input_len);
-    if (ret != ESP_OK)
-    {
-        return TINY_ERR_DSP_INVALID_PARAM;
-    }
-    
-    // Bit reverse
-    ret = dsps_bit_rev_fc32(output_fft, input_len);
-    if (ret != ESP_OK)
-    {
-        return TINY_ERR_DSP_INVALID_PARAM;
-    }
-    
-    return TINY_OK;
-#else
-    // Perform FFT using Radix-2 algorithm (non-ESP32 platforms)
+    // Use the same radix-2 path as IFFT to keep forward/inverse format consistent.
+    // This avoids representation mismatch between different backends.
     fft_radix2_f32(output_fft, input_len, 0);  // 0 = forward FFT
     return TINY_OK;
-#endif
 }
 
 /**
@@ -491,67 +471,15 @@ tiny_error_t tiny_fft_ifft_f32(const float *input_fft, int fft_len, float *outpu
     }
 
     // Copy input to temporary buffer
-    // ESP32 DSP library requires 16-byte aligned memory
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    float *temp_fft = (float *)heap_caps_aligned_alloc(16, fft_len * 2 * sizeof(float), MALLOC_CAP_DEFAULT);
-    if (temp_fft == NULL)
-    {
-        return TINY_ERR_DSP_MEMORY_ALLOC;
-    }
-#else
     float *temp_fft = (float *)malloc(fft_len * 2 * sizeof(float));
     if (temp_fft == NULL)
     {
         return TINY_ERR_DSP_MEMORY_ALLOC;
     }
-#endif
     memcpy(temp_fft, input_fft, fft_len * 2 * sizeof(float));
 
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // Perform IFFT using ESP32 optimized library
-    // Note: Input FFT result is already in reC format (from FFT function)
-    // For IFFT, we need to reverse the process:
-    // 1. The input is already in reC format, so we can work with it directly
-    // 2. IFFT = conj(FFT(conj(X))) / N
-    
-    // First, conjugate the input (since it's already processed by FFT)
-    for (int i = 0; i < fft_len; i++)
-    {
-        temp_fft[i * 2 + 1] = -temp_fft[i * 2 + 1]; // Conjugate
-    }
-
-    // Perform FFT (which gives us IFFT after conjugation)
-    esp_err_t ret = dsps_fft2r_fc32(temp_fft, fft_len);
-    if (ret != ESP_OK)
-    {
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-        heap_caps_free(temp_fft);
-#else
-        free(temp_fft);
-#endif
-        return TINY_ERR_DSP_INVALID_PARAM;
-    }
-    
-    // Bit reverse
-    ret = dsps_bit_rev_fc32(temp_fft, fft_len);
-    if (ret != ESP_OK)
-    {
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-        heap_caps_free(temp_fft);
-#else
-        free(temp_fft);
-#endif
-        return TINY_ERR_DSP_INVALID_PARAM;
-    }
-
-    // Conjugate again and scale
-    float scale = 1.0f / fft_len;
-    for (int i = 0; i < fft_len; i++)
-    {
-        output[i] = temp_fft[i * 2] * scale; // Take real part and scale
-    }
-#else
-    // Perform IFFT using Radix-2 algorithm (non-ESP32 platforms)
+    // Use the same deterministic radix-2 inverse path on all platforms.
+    // This avoids format mismatch between forward ESP-DSP output and inverse input.
     fft_radix2_f32(temp_fft, fft_len, 1);  // 1 = inverse FFT
     
     // Extract real part (IFFT of real signal should have zero imaginary part)
@@ -559,13 +487,7 @@ tiny_error_t tiny_fft_ifft_f32(const float *input_fft, int fft_len, float *outpu
     {
         output[i] = temp_fft[i * 2];  // Take real part
     }
-#endif
-
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    heap_caps_free(temp_fft);
-#else
     free(temp_fft);
-#endif
     return TINY_OK;
 }
 
@@ -578,6 +500,10 @@ tiny_error_t tiny_fft_magnitude_f32(const float *fft_result, int fft_len, float 
     if (NULL == fft_result || NULL == magnitude)
     {
         return TINY_ERR_DSP_NULL_POINTER;
+    }
+    if (fft_len <= 0)
+    {
+        return TINY_ERR_DSP_INVALID_PARAM;
     }
 
     for (int i = 0; i < fft_len; i++)
@@ -599,6 +525,10 @@ tiny_error_t tiny_fft_power_spectrum_f32(const float *fft_result, int fft_len, f
     if (NULL == fft_result || NULL == power)
     {
         return TINY_ERR_DSP_NULL_POINTER;
+    }
+    if (fft_len <= 0)
+    {
+        return TINY_ERR_DSP_INVALID_PARAM;
     }
 
     // Calculate power spectrum with normalization
@@ -876,5 +806,6 @@ tiny_error_t tiny_fft_find_top_frequencies(const float *power_spectrum, int fft_
     free(indices);
     return TINY_OK;
 }
+
 
 ```

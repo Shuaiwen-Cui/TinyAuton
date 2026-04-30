@@ -226,6 +226,7 @@ extern "C"
 }
 #endif
 
+
 ```
 
 ## tiny_fir.c
@@ -401,7 +402,21 @@ tiny_error_t tiny_fir_design_bandpass(float low_freq, float high_freq,
     float center_freq = (low_freq + high_freq) / 2.0f;
     float bandwidth = high_freq - low_freq;
 
-    // Generate band-pass filter (low-pass shifted to center frequency)
+    /* Band-pass = modulated low-pass prototype with cutoff = bandwidth/2.
+     *
+     * LP prototype impulse response (cutoff = BW/2, where BW = high_freq - low_freq):
+     *   h_LP[0]   = 2 * (BW/2)     = BW
+     *   h_LP[n≠0] = sin(π·BW·n) / (π·n)          [limit as n→0 also gives BW]
+     *
+     * Modulation to center frequency fc = (low_freq + high_freq) / 2:
+     *   h_BP[n] = 2 · h_LP[n] · cos(2π·fc·n)
+     *
+     * n=0  : h_BP[0] = 2 · BW
+     * n≠0  : h_BP[n] = 2 · sin(π·BW·n) / (π·n) · cos(2π·fc·n)
+     *
+     * NOTE: The factor `bandwidth` must NOT appear in the n≠0 branch; only
+     * the sinc-like term sin(π·BW·n)/(π·n) provides the BW scaling.
+     */
     for (int i = 0; i < num_taps; i++)
     {
         int n = i - center;
@@ -411,8 +426,8 @@ tiny_error_t tiny_fir_design_bandpass(float low_freq, float high_freq,
         }
         else
         {
-            coefficients[i] = 2.0f * bandwidth * cosf(2.0f * M_PI * center_freq * n) *
-                              sinf(M_PI * bandwidth * n) / (M_PI * n);
+            coefficients[i] = 2.0f * cosf(2.0f * M_PI * center_freq * (float)n) *
+                               sinf(M_PI * bandwidth * (float)n) / (M_PI * (float)n);
         }
     }
 

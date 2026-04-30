@@ -68,6 +68,7 @@ extern "C"
     /**
      * @name tiny_dwt_decompose_f32
      * @brief Perform single-level discrete wavelet decomposition
+     * @note Uses periodization-style boundary handling. input_len must be even.
      */
     tiny_error_t tiny_dwt_decompose_f32(const float *input, int input_len,
                                         tiny_wavelet_type_t wavelet,
@@ -85,10 +86,12 @@ extern "C"
     /**
      * @name tiny_dwt_multilevel_decompose_f32
      * @brief Perform multi-level DWT decomposition
+     * @note Each decomposition level must have an even input length.
      */
     tiny_error_t tiny_dwt_multilevel_decompose_f32(const float *input, int input_len,
                                                    tiny_wavelet_type_t wavelet, int levels,
-                                                   float **cA_out, float **cD_out, int *len_out);
+                                                   float **cA_out, float **cD_out, int *len_out,
+                                                   int **cD_lens_out, int *cD_total_len);
 
     /**
      * @name tiny_dwt_coeffs_process
@@ -101,8 +104,8 @@ extern "C"
      * @brief Perform multi-level DWT reconstruction
      */
     tiny_error_t tiny_dwt_multilevel_reconstruct_f32(const float *cA_init, const float *cD_all,
-                                                     int final_len, tiny_wavelet_type_t wavelet, int levels,
-                                                     float *output);
+                                                     int final_len, tiny_wavelet_type_t wavelet,
+                                                     const int *cD_lens, int levels, float *output);
 
 #ifdef __cplusplus
 }
@@ -361,77 +364,35 @@ tiny_error_t tiny_dwt_decompose_f32(const float *input, int input_len,
 {
     if (!input || !cA || !cD || !cA_len || !cD_len)
         return TINY_ERR_DSP_NULL_POINTER;
+    if (input_len <= 0 || wavelet < TINY_WAVELET_DB1 || wavelet >= TINY_WAVELET_COUNT)
+        return TINY_ERR_DSP_INVALID_PARAM;
+    if ((input_len % 2) != 0)
+        return TINY_ERR_DSP_INVALID_LENGTH;
 
     int filter_len = TINY_WAVELET_GET_LEN(wavelet);
     const float *lo_d = TINY_WAVELET_GET_LO_D(wavelet);
     const float *hi_d = TINY_WAVELET_GET_HI_D(wavelet);
 
-    // TINY_CONV_CENTER mode internally performs FULL convolution first
-    // Need buffer size: input_len + filter_len - 1 for FULL convolution
-    int conv_full_len = input_len + filter_len - 1;
-    float *temp_conv_full = (float *)calloc(conv_full_len, sizeof(float));
-    if (!temp_conv_full)
-        return TINY_ERR_DSP_MEMORY_ALLOC;
+    int coeff_len = input_len / 2;
+    for (int i = 0; i < coeff_len; i++)
+    {
+        float approx = 0.0f;
+        float detail = 0.0f;
 
-    // Temporary buffer for CENTER mode output (input_len samples)
-    float *temp_conv = (float *)calloc(input_len, sizeof(float));
-    if (!temp_conv)
-    {
-        free(temp_conv_full);
-        return TINY_ERR_DSP_MEMORY_ALLOC;
-    }
+        for (int j = 0; j < filter_len; j++)
+        {
+            int idx = (2 * i + j) % input_len;
+            int filter_idx = filter_len - 1 - j;
+            approx += lo_d[filter_idx] * input[idx];
+            detail += hi_d[filter_idx] * input[idx];
+        }
 
-    // Low-pass filter convolution
-    tiny_error_t err = tiny_conv_ex_f32(input, input_len, lo_d, filter_len, temp_conv_full,
-                                        TINY_PADDING_SYMMETRIC, TINY_CONV_FULL);
-    if (err != TINY_OK)
-    {
-        free(temp_conv_full);
-        free(temp_conv);
-        return err;
-    }
-    
-    // Extract center portion (equivalent to TINY_CONV_CENTER mode)
-    int center_start = (filter_len - 1) / 2;
-    for (int i = 0; i < input_len; i++)
-    {
-        temp_conv[i] = temp_conv_full[center_start + i];
-    }
-    
-    err = tiny_downsample_skip_f32(temp_conv, input_len, cA, cA_len, 1, 2);
-    if (err != TINY_OK)
-    {
-        free(temp_conv_full);
-        free(temp_conv);
-        return err;
+        cA[i] = approx;
+        cD[i] = detail;
     }
 
-    // High-pass filter convolution
-    err = tiny_conv_ex_f32(input, input_len, hi_d, filter_len, temp_conv_full,
-                           TINY_PADDING_SYMMETRIC, TINY_CONV_FULL);
-    if (err != TINY_OK)
-    {
-        free(temp_conv_full);
-        free(temp_conv);
-        return err;
-    }
-    
-    // Extract center portion
-    for (int i = 0; i < input_len; i++)
-    {
-        temp_conv[i] = temp_conv_full[center_start + i];
-    }
-    
-    err = tiny_downsample_skip_f32(temp_conv, input_len, cD, cD_len, 1, 2);
-    if (err != TINY_OK)
-    {
-        free(temp_conv_full);
-        free(temp_conv);
-        return err;
-    }
-
-    free(temp_conv_full);
-    free(temp_conv);
+    *cA_len = coeff_len;
+    *cD_len = coeff_len;
     return TINY_OK;
 }
 
@@ -445,93 +406,30 @@ tiny_error_t tiny_dwt_reconstruct_f32(const float *cA, const float *cD, int coef
 {
     if (!cA || !cD || !output || !output_len)
         return TINY_ERR_DSP_NULL_POINTER;
+    if (coeff_len <= 0 || wavelet < TINY_WAVELET_DB1 || wavelet >= TINY_WAVELET_COUNT)
+        return TINY_ERR_DSP_INVALID_PARAM;
 
     int filter_len = TINY_WAVELET_GET_LEN(wavelet);
     const float *lo_r = TINY_WAVELET_GET_LO_R(wavelet);
     const float *hi_r = TINY_WAVELET_GET_HI_R(wavelet);
 
     int up_len = coeff_len * 2;
-    int conv_len = up_len + filter_len - 1;
-    // Correct offset: for FULL convolution, center extraction starts at (filter_len - 1) / 2
-    // This aligns with TINY_CONV_CENTER mode logic
-    int offset = (filter_len - 1) / 2;
-
-    // Allocate memory for upsampled signals (only need up_len, not conv_len)
-    float *upA = (float *)calloc(up_len, sizeof(float));
-    float *upD = (float *)calloc(up_len, sizeof(float));
-    if (!upA || !upD)
-    {
-        free(upA);
-        free(upD);
-        return TINY_ERR_DSP_MEMORY_ALLOC;
-    }
-
-    tiny_error_t err = tiny_upsample_zero_f32(cA, coeff_len, upA, up_len);
-    if (err != TINY_OK)
-    {
-        free(upA);
-        free(upD);
-        return err;
-    }
-    err = tiny_upsample_zero_f32(cD, coeff_len, upD, up_len);
-    if (err != TINY_OK)
-    {
-        free(upA);
-        free(upD);
-        return err;
-    }
-
-    // Allocate memory for convolution results (FULL mode output length)
-    float *recA = (float *)calloc(conv_len, sizeof(float));
-    float *recD = (float *)calloc(conv_len, sizeof(float));
-    if (!recA || !recD)
-    {
-        free(upA);
-        free(upD);
-        free(recA);
-        free(recD);
-        return TINY_ERR_DSP_MEMORY_ALLOC;
-    }
-
-    err = tiny_conv_ex_f32(upA, up_len, lo_r, filter_len, recA,
-                           TINY_PADDING_SYMMETRIC, TINY_CONV_FULL);
-    if (err != TINY_OK)
-        goto cleanup;
-
-    err = tiny_conv_ex_f32(upD, up_len, hi_r, filter_len, recD,
-                           TINY_PADDING_SYMMETRIC, TINY_CONV_FULL);
-    if (err != TINY_OK)
-        goto cleanup;
-
-    // Extract center portion from FULL convolution result
-    // With offset = (filter_len - 1) / 2, we can safely extract up_len samples
-    // because: offset + up_len - 1 = (filter_len - 1) / 2 + up_len - 1
-    //         = (filter_len - 1) / 2 + up_len - 1
-    //         < (filter_len - 1) + up_len - 1
-    //         = filter_len + up_len - 2
-    //         < up_len + filter_len - 1 = conv_len
     for (int i = 0; i < up_len; i++)
     {
-        int idx = i + offset;
-        if (idx < conv_len)
+        output[i] = 0.0f;
+    }
+
+    for (int i = 0; i < coeff_len; i++)
+    {
+        for (int j = 0; j < filter_len; j++)
         {
-            output[i] = recA[idx] + recD[idx];
-        }
-        else
-        {
-            // This shouldn't happen with correct offset, but handle gracefully
-            output[i] = 0.0f;
+            int idx = (2 * i + j) % up_len;
+            output[idx] += lo_r[j] * cA[i] + hi_r[j] * cD[i];
         }
     }
 
     *output_len = up_len;
-
-cleanup:
-    free(upA);
-    free(upD);
-    free(recA);
-    free(recD);
-    return err;
+    return TINY_OK;
 }
 
 /**
@@ -540,18 +438,29 @@ cleanup:
  */
 tiny_error_t tiny_dwt_multilevel_decompose_f32(const float *input, int input_len,
                                                tiny_wavelet_type_t wavelet, int levels,
-                                               float **cA_out, float **cD_out, int *len_out)
+                                               float **cA_out, float **cD_out, int *len_out,
+                                               int **cD_lens_out, int *cD_total_len)
 {
-    if (!input || !cA_out || !cD_out || !len_out || levels <= 0)
+    if (!input || !cA_out || !cD_out || !len_out || !cD_lens_out || !cD_total_len)
         return TINY_ERR_DSP_NULL_POINTER;
+    if (levels <= 0 || input_len <= 0 || wavelet < TINY_WAVELET_DB1 || wavelet >= TINY_WAVELET_COUNT)
+        return TINY_ERR_DSP_INVALID_PARAM;
 
     float *current = (float *)malloc(sizeof(float) * input_len);
     if (!current)
         return TINY_ERR_DSP_MEMORY_ALLOC;
     memcpy(current, input, sizeof(float) * input_len);
 
-    float *cD_all = (float *)malloc(sizeof(float) * input_len);
+    int cD_capacity = input_len;
+    float *cD_all = (float *)malloc(sizeof(float) * cD_capacity);
     int *cD_lens = (int *)malloc(sizeof(int) * levels);
+    if (!cD_all || !cD_lens)
+    {
+        free(current);
+        free(cD_all);
+        free(cD_lens);
+        return TINY_ERR_DSP_MEMORY_ALLOC;
+    }
     int cD_pos = 0;
 
     int current_len = input_len;
@@ -581,6 +490,27 @@ tiny_error_t tiny_dwt_multilevel_decompose_f32(const float *input, int input_len
             return err;
         }
 
+        if (cD_pos + cD_len > cD_capacity)
+        {
+            int new_capacity = cD_capacity;
+            while (new_capacity < cD_pos + cD_len)
+            {
+                new_capacity *= 2;
+            }
+            float *new_cD_all = (float *)realloc(cD_all, sizeof(float) * new_capacity);
+            if (!new_cD_all)
+            {
+                free(current);
+                free(cD_all);
+                free(cD_lens);
+                free(cA_temp);
+                free(cD_temp);
+                return TINY_ERR_DSP_MEMORY_ALLOC;
+            }
+            cD_all = new_cD_all;
+            cD_capacity = new_capacity;
+        }
+
         memcpy(cD_all + cD_pos, cD_temp, sizeof(float) * cD_len);
         cD_lens[l] = cD_len;
         cD_pos += cD_len;
@@ -594,8 +524,8 @@ tiny_error_t tiny_dwt_multilevel_decompose_f32(const float *input, int input_len
     *cA_out = current;
     *cD_out = cD_all;
     *len_out = current_len;
-
-    free(cD_lens); // optional if not passed out
+    *cD_lens_out = cD_lens;
+    *cD_total_len = cD_pos;
     return TINY_OK;
 }
 
@@ -618,11 +548,13 @@ void tiny_dwt_coeffs_process(float *cA, float *cD, int cA_len, int cD_len, int l
  * @brief Perform multi-level DWT reconstruction
  */
 tiny_error_t tiny_dwt_multilevel_reconstruct_f32(const float *cA_init, const float *cD_all,
-                                                 int final_len, tiny_wavelet_type_t wavelet, int levels,
-                                                 float *output)
+                                                 int final_len, tiny_wavelet_type_t wavelet,
+                                                 const int *cD_lens, int levels, float *output)
 {
-    if (!cA_init || !cD_all || !output)
+    if (!cA_init || !cD_all || !cD_lens || !output)
         return TINY_ERR_DSP_NULL_POINTER;
+    if (final_len <= 0 || levels <= 0 || wavelet < TINY_WAVELET_DB1 || wavelet >= TINY_WAVELET_COUNT)
+        return TINY_ERR_DSP_INVALID_PARAM;
 
     float *current = (float *)malloc(sizeof(float) * final_len);
     if (!current)
@@ -630,11 +562,29 @@ tiny_error_t tiny_dwt_multilevel_reconstruct_f32(const float *cA_init, const flo
     memcpy(current, cA_init, sizeof(float) * final_len);
 
     int cA_len = final_len;
-    int cD_pos = 0;
 
+    int total_cD_len = 0;
     for (int l = 0; l < levels; l++)
     {
-        int cD_len = cA_len;
+        if (cD_lens[l] <= 0)
+        {
+            free(current);
+            return TINY_ERR_DSP_INVALID_PARAM;
+        }
+        total_cD_len += cD_lens[l];
+    }
+    int cD_pos = total_cD_len;
+
+    for (int l = levels - 1; l >= 0; l--)
+    {
+        int cD_len = cD_lens[l];
+        if (cA_len != cD_len)
+        {
+            free(current);
+            return TINY_ERR_DSP_INVALID_LENGTH;
+        }
+        cD_pos -= cD_len;
+
         float *cD = (float *)malloc(sizeof(float) * cD_len);
         if (!cD)
         {
@@ -643,7 +593,6 @@ tiny_error_t tiny_dwt_multilevel_reconstruct_f32(const float *cA_init, const flo
         }
 
         memcpy(cD, cD_all + cD_pos, sizeof(float) * cD_len);
-        cD_pos += cD_len;
 
         int out_len = 0;
         float *recon = (float *)malloc(sizeof(float) * cD_len * 2);
@@ -672,5 +621,4 @@ tiny_error_t tiny_dwt_multilevel_reconstruct_f32(const float *cA_init, const flo
 
     return TINY_OK;
 }
-
 ```

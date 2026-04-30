@@ -34,15 +34,19 @@ extern "C"
 
 /**
  * @name: tiny_conv_f32
- * @brief Convolution function
- * 
+ * @brief Convolution function (full mode, zero padding implicit)
+ *
  * @param Signal The input signal array
- * @param siglen The length of the input signal array
+ * @param siglen The length of the input signal array (> 0)
  * @param Kernel The input kernel array
- * @param kernlen The length of the input kernel array
- * @param convout The output array for the convolution result
- * 
- * @return tiny_error_t 
+ * @param kernlen The length of the input kernel array (> 0)
+ * @param convout The output array for the convolution result.
+ *                Caller MUST provide at least (siglen + kernlen - 1) elements.
+ *
+ * @note On ESP32 the underlying ESP-DSP routine additionally requires
+ *       siglen >= kernlen; the generic fallback handles both orderings.
+ *
+ * @return tiny_error_t
  */
 tiny_error_t tiny_conv_f32(const float *Signal, const int siglen, const float *Kernel, const int kernlen, float *convout);
 
@@ -66,10 +70,19 @@ typedef enum
  * @brief Extended convolution function with padding and mode options
  *
  * @param Signal The input signal array
- * @param siglen The length of the input signal array
+ * @param siglen The length of the input signal array (> 0)
  * @param Kernel The input kernel array
- * @param kernlen The length of the input kernel array
- * @param convout The output array for the convolution result
+ * @param kernlen The length of the input kernel array (> 0)
+ * @param convout The output buffer for the convolution result.
+ *                Regardless of conv_mode, the caller MUST provide
+ *                at least (siglen + kernlen - 1) elements: the routine
+ *                first writes the full convolution into convout and then
+ *                shifts the requested slice to the front in place.
+ *                After return, the meaningful length is:
+ *                  - TINY_CONV_FULL   : siglen + kernlen - 1
+ *                  - TINY_CONV_HEAD   : kernlen
+ *                  - TINY_CONV_CENTER : siglen
+ *                  - TINY_CONV_TAIL   : kernlen
  * @param padding_mode Padding mode (zero, symmetric, periodic)
  * @param conv_mode Convolution mode (full, head, center, tail)
  *
@@ -121,18 +134,19 @@ tiny_error_t tiny_conv_f32(const float *Signal, const int siglen, const float *K
     {
         return TINY_ERR_DSP_INVALID_PARAM;
     }
+
+#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
+    /* The ESP-DSP backend requires siglen >= kernlen. The generic fallback
+     * below handles both orderings via its three-stage form. */
     if (siglen < kernlen)
     {
         return TINY_ERR_DSP_INVALID_PARAM;
     }
-
-#if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    // ESP32 DSP library
     dsps_conv_f32(Signal, siglen, Kernel, kernlen, convout);
 #else
-    float *sig = (float *)Signal;
-    float *kern = (float *)Kernel;
-    int lsig = siglen;
+    const float *sig  = Signal;
+    const float *kern = Kernel;
+    int lsig  = siglen;
     int lkern = kernlen;
 
     // stage I
@@ -210,13 +224,11 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
     {
         return TINY_ERR_DSP_INVALID_PARAM;
     }
-    if (siglen < kernlen)
-    {
-        return TINY_ERR_DSP_INVALID_PARAM;
-    }
 
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
-    if (padding_mode == TINY_PADDING_ZERO && conv_mode == TINY_CONV_FULL)
+    /* Fast path through ESP-DSP only when its precondition is met. */
+    if (padding_mode == TINY_PADDING_ZERO && conv_mode == TINY_CONV_FULL &&
+        siglen >= kernlen)
     {
         dsps_conv_f32(Signal, siglen, Kernel, kernlen, convout);
         return TINY_OK;
@@ -304,10 +316,11 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
             return TINY_ERR_DSP_INVALID_MODE;
         }
 
-        // Copy the selected part to the beginning
-        for (int i = 0; i < out_len; i++)
+        /* The selected slice may overlap with the head of convout, so use
+         * memmove rather than a forward copy / memcpy. */
+        if (start_idx > 0 && out_len > 0)
         {
-            convout[i] = convout[start_idx + i];
+            memmove(convout, convout + start_idx, sizeof(float) * (size_t)out_len);
         }
     }
 

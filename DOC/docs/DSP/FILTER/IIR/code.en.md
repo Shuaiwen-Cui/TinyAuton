@@ -583,29 +583,39 @@ tiny_error_t tiny_iir_filter_f32(const float *input, int input_len,
         memcpy(state, initial_state, state_size * sizeof(float));
     }
 
-    // Filter each sample
+    /* Direct Form II implementation.
+     *
+     * At each step n:
+     *   w[n] = x[n] - a[1]·w[n-1] - a[2]·w[n-2] - ...     (compute intermediate)
+     *   y[n] = b[0]·w[n] + b[1]·w[n-1] + b[2]·w[n-2] + ...  (compute output)
+     *
+     * state[k] = w[n-1-k]  (k=0 is most recent past value)
+     *
+     * Bug that was here: state stored x[n-1], x[n-2]... (past INPUTS) instead of
+     * past w values, which made the feedback path dead (behaved like pure FIR).
+     */
     for (int n = 0; n < input_len; n++)
     {
-        // Feedforward part (b coefficients)
-        float y = b_coeffs[0] * input[n];
+        /* Step 1: compute w[n] using past w values stored in state. */
+        float w = input[n];
+        for (int i = 1; i < num_a && i <= state_size; i++)
+        {
+            w -= a_coeffs[i] * state[i - 1];
+        }
+
+        /* Step 2: compute y[n] using w[n] and past w values. */
+        float y = b_coeffs[0] * w;
         for (int i = 1; i < num_b && i <= state_size; i++)
         {
             y += b_coeffs[i] * state[i - 1];
         }
 
-        // Feedback part (a coefficients) and update state
-        for (int i = state_size; i > 0; i--)
+        /* Step 3: shift state right and insert w[n] at front. */
+        for (int i = state_size - 1; i > 0; i--)
         {
-            if (i < num_a)
-            {
-                y -= a_coeffs[i] * state[i - 1];
-            }
-            if (i > 1)
-            {
-                state[i - 1] = state[i - 2];
-            }
+            state[i] = state[i - 1];
         }
-        state[0] = input[n];
+        state[0] = w;
 
         output[n] = y;
     }
@@ -686,27 +696,32 @@ float tiny_iir_process_sample(tiny_iir_filter_t *filter, float input)
     if (filter == NULL || !filter->initialized)
         return 0.0f;
 
-    // Direct Form II Transposed
-    // Feedforward part
-    float output = filter->b_coeffs[0] * input;
+    /* Direct Form II — mirrors the batch implementation in tiny_iir_filter_f32.
+     *
+     * Bug that was here: state was loaded with `input` (past inputs), killing
+     * the feedback path.  Must store the DF2 intermediate w instead.
+     */
+
+    /* Step 1: w[n] = x[n] - a[1]·w[n-1] - a[2]·w[n-2] - ... */
+    float w = input;
+    for (int i = 1; i < filter->num_a && i <= filter->state_size; i++)
+    {
+        w -= filter->a_coeffs[i] * filter->state[i - 1];
+    }
+
+    /* Step 2: y[n] = b[0]·w[n] + b[1]·w[n-1] + b[2]·w[n-2] + ... */
+    float output = filter->b_coeffs[0] * w;
     for (int i = 1; i < filter->num_b && i <= filter->state_size; i++)
     {
         output += filter->b_coeffs[i] * filter->state[i - 1];
     }
 
-    // Feedback part and update state
-    float temp = input;
-    for (int i = 1; i < filter->num_a && i <= filter->state_size; i++)
-    {
-        output -= filter->a_coeffs[i] * filter->state[i - 1];
-    }
-
-    // Shift state
+    /* Step 3: shift state and store w[n]. */
     for (int i = filter->state_size - 1; i > 0; i--)
     {
         filter->state[i] = filter->state[i - 1];
     }
-    filter->state[0] = temp;
+    filter->state[0] = w;
 
     return output;
 }

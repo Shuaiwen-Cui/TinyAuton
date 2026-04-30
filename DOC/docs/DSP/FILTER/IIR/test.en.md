@@ -30,7 +30,6 @@ void tiny_iir_test(void);
 #endif
 
 
-
 ```
 
 ## tiny_iir_test.c
@@ -90,7 +89,7 @@ static void test_iir_design(void)
 
     if (!b_coeffs || !a_coeffs)
     {
-        printf("  ✗ Memory allocation failed\n");
+        printf("  [FAIL] Memory allocation failed\n");
         free(b_coeffs);
         free(a_coeffs);
         return;
@@ -104,10 +103,10 @@ static void test_iir_design(void)
                                                 b_coeffs, a_coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Low-pass design failed: %d\n", err);
+        printf("  [FAIL] Low-pass design failed: %d\n", err);
         goto cleanup;
     }
-    printf("  ✓ Low-pass filter designed successfully\n");
+    printf("  [PASS] Low-pass filter designed successfully\n");
     printf("  B coefficients: ");
     for (int i = 0; i < num_coeffs; i++)
     {
@@ -130,10 +129,10 @@ static void test_iir_design(void)
                                     b_coeffs, a_coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ High-pass design failed: %d\n", err);
+        printf("  [FAIL] High-pass design failed: %d\n", err);
         goto cleanup;
     }
-    printf("  ✓ High-pass filter designed successfully\n");
+    printf("  [PASS] High-pass filter designed successfully\n");
     printf("  B coefficients: ");
     for (int i = 0; i < num_coeffs; i++)
     {
@@ -154,15 +153,15 @@ static void test_iir_design(void)
                                     b_coeffs, a_coeffs);
     if (err == TINY_ERR_NOT_SUPPORTED)
     {
-        printf("  ⚠ Band-pass design not yet implemented (expected)\n");
+        printf("  [SKIP] Band-pass design not yet implemented (expected)\n");
     }
     else if (err == TINY_OK)
     {
-        printf("  ✓ Band-pass filter designed successfully\n");
+        printf("  [PASS] Band-pass filter designed successfully\n");
     }
     else
     {
-        printf("  ✗ Band-pass design failed: %d\n", err);
+        printf("  [FAIL] Band-pass design failed: %d\n", err);
     }
     printf("\n");
 
@@ -193,7 +192,7 @@ static void test_iir_batch_filtering(void)
 
     if (!input || !output || !b_coeffs || !a_coeffs)
     {
-        printf("  ✗ Memory allocation failed\n");
+        printf("  [FAIL] Memory allocation failed\n");
         free(input);
         free(output);
         free(b_coeffs);
@@ -216,7 +215,7 @@ static void test_iir_batch_filtering(void)
                                                 b_coeffs, a_coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter design failed: %d\n", err);
+        printf("  [FAIL] Filter design failed: %d\n", err);
         goto cleanup;
     }
 
@@ -225,11 +224,11 @@ static void test_iir_batch_filtering(void)
                               a_coeffs, num_coeffs, output, NULL);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filtering failed: %d\n", err);
+        printf("  [FAIL] Filtering failed: %d\n", err);
         goto cleanup;
     }
 
-    printf("  ✓ Filtering completed successfully\n\n");
+    printf("  [PASS] Filtering completed successfully\n\n");
 
     // Visualize signals
     printf("Signal Visualization:\n");
@@ -281,7 +280,7 @@ static void test_iir_realtime_filtering(void)
 
     if (!b_coeffs || !a_coeffs)
     {
-        printf("  ✗ Memory allocation failed\n");
+        printf("  [FAIL] Memory allocation failed\n");
         return;
     }
 
@@ -290,7 +289,7 @@ static void test_iir_realtime_filtering(void)
                                                 b_coeffs, a_coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter design failed: %d\n", err);
+        printf("  [FAIL] Filter design failed: %d\n", err);
         free(b_coeffs);
         free(a_coeffs);
         return;
@@ -301,7 +300,7 @@ static void test_iir_realtime_filtering(void)
     err = tiny_iir_init(&filter, b_coeffs, num_coeffs, a_coeffs, num_coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter initialization failed: %d\n", err);
+        printf("  [FAIL] Filter initialization failed: %d\n", err);
         free(b_coeffs);
         free(a_coeffs);
         return;
@@ -319,7 +318,7 @@ static void test_iir_realtime_filtering(void)
 
     if (!output)
     {
-        printf("  ✗ Memory allocation failed\n");
+        printf("  [FAIL] Memory allocation failed\n");
         tiny_iir_deinit(&filter);
         free(b_coeffs);
         free(a_coeffs);
@@ -346,11 +345,11 @@ static void test_iir_realtime_filtering(void)
     err = tiny_iir_reset(&filter);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter reset failed: %d\n", err);
+        printf("  [FAIL] Filter reset failed: %d\n", err);
     }
     else
     {
-        printf("  ✓ Filter reset successful\n");
+        printf("  [PASS] Filter reset successful\n");
     }
 
     // Cleanup
@@ -378,7 +377,7 @@ static void test_iir_biquad(void)
                                                 b_coeffs, a_coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter design failed: %d\n", err);
+        printf("  [FAIL] Filter design failed: %d\n", err);
         return;
     }
 
@@ -388,7 +387,7 @@ static void test_iir_biquad(void)
                                 a_coeffs[1], a_coeffs[2]);
     if (err != TINY_OK)
     {
-        printf("  ✗ Biquad initialization failed: %d\n", err);
+        printf("  [FAIL] Biquad initialization failed: %d\n", err);
         return;
     }
 
@@ -420,11 +419,11 @@ static void test_iir_biquad(void)
     err = tiny_iir_biquad_reset(&biquad);
     if (err != TINY_OK)
     {
-        printf("  ✗ Biquad reset failed: %d\n", err);
+        printf("  [FAIL] Biquad reset failed: %d\n", err);
     }
     else
     {
-        printf("  ✓ Biquad reset successful\n");
+        printf("  [PASS] Biquad reset successful\n");
     }
 
     printf("\n========================================\n\n");
@@ -435,9 +434,9 @@ static void test_iir_biquad(void)
  */
 void tiny_iir_test(void)
 {
-    printf("╔══════════════════════════════════════════════════════════╗\n");
-    printf("║          TinyIIR Filter Test Suite                       ║\n");
-    printf("╚══════════════════════════════════════════════════════════╝\n\n");
+    printf("==========================================\n");
+    printf("       TinyIIR Filter Test Suite\n");
+    printf("==========================================\n\n");
 
     // Run all tests
     test_iir_design();
@@ -445,9 +444,9 @@ void tiny_iir_test(void)
     test_iir_realtime_filtering();
     test_iir_biquad();
 
-    printf("╔══════════════════════════════════════════════════════════╗\n");
-    printf("║          All IIR Tests Completed                          ║\n");
-    printf("╚══════════════════════════════════════════════════════════╝\n");
+    printf("==========================================\n");
+    printf("       All IIR Tests Completed\n");
+    printf("==========================================\n");
 }
 
 
@@ -457,28 +456,28 @@ void tiny_iir_test(void)
 ## OUTPUTS
 
 ```c
-╔══════════════════════════════════════════════════════════╗
-║          TinyIIR Filter Test Suite                       ║
-╚══════════════════════════════════════════════════════════╝
+==========================================
+       TinyIIR Filter Test Suite
+==========================================
 
 ========== IIR Filter Design Test ==========
 
 Test 1: Low-Pass Butterworth Filter Design
   Parameters: cutoff=0.1 (normalized), order=2
-  ✓ Low-pass filter designed successfully
+  [PASS] Low-pass filter designed successfully
   B coefficients: 0.067455 0.134911 0.067455 
   A coefficients: 1.000000 -1.142980 0.412802 
   Note: a[0] should be 1.0 (normalized)
 
 Test 2: High-Pass Butterworth Filter Design
   Parameters: cutoff=0.2 (normalized), order=2
-  ✓ High-pass filter designed successfully
+  [PASS] High-pass filter designed successfully
   B coefficients: 0.391336 -0.782672 0.391336 
   A coefficients: 1.000000 -0.369527 0.195816 
 
 Test 3: Band-Pass Filter Design
   Parameters: low=0.1, high=0.3 (normalized), order=2
-  ⚠ Band-pass design not yet implemented (expected)
+  [SKIP] Band-pass design not yet implemented (expected)
 
 ========================================
 
@@ -489,23 +488,23 @@ Test: Low-Pass IIR Filtering (Butterworth)
   Filter: Low-pass Butterworth, cutoff=100.0 Hz (normalized=0.100)
   Order: 2
 
-  ✓ Filtering completed successfully
+  [PASS] Filtering completed successfully
 
 Signal Visualization:
 
 Original Signal
 Value
   3.02 |                                                                
-  2.65 |      *                                                *        
-  2.28 |     **                       **                      * *   *   
-  1.92 | *   * **  *              *  *  *  *              *   *  * **   
-  1.55 |* ***   * **             * ***   ** *            * ****  * **   
-  1.18 |*   *    *  *           *    *    *  *           *        ** *  
-  0.82 |*            *  *    *  *            *  *    *   *            * 
-  0.45 |             * **   * ***             ** *  * ****            * 
-  0.08 |              *  ***    *              *  * *                  *
- -0.28 |                  **                       **                   
- -0.65 |                   *                        *                   
+  2.65 |     **                                               **        
+  2.28 |     **                      ***                      ***  **   
+  1.92 |**  ***** **             **  * ** **             **   * ** **   
+  1.55 |*****   ****            ******  *****            ******  * **   
+  1.18 |*  **   ** **           *   **   ** **           *       *****  
+  0.82 |*           ** **   **  *            * **   **   *           ** 
+  0.45 |             ****  ******            *****  ******            * 
+  0.08 |             ** ****   **             ** ** *                 **
+ -0.28 |                  **                      ***                   
+ -0.65 |                  **                       **                   
  -1.02 |                                                                
        ----------------------------------------------------------------
        0       8       16      24      32      40      48      56       (Sample Index)
@@ -514,27 +513,27 @@ Range: [-1.018, 3.018], Length: 256
 
 Filtered Signal (Low-Pass IIR)
 Value
-  3.06 |                                                                
-  2.69 |      *                        *                       *        
-  2.32 |     **                       **                      * *       
-  1.94 | *   * **  *              *  *  ** **                 *  *  *   
-  1.57 |* ***   * **             * ***   ** *             *****   ** *  
-  1.20 |*   *    *  *            *   *    *  *           *    *    * *  
-  0.82 |*            *  *    *  *             * *        *            * 
-  0.45 |*            * **   * ***             ** *   *****             *
-  0.07 |*             *  ** *   *             **  * *    *              
- -0.30 |                  **                   *   **                   
- -0.67 |                   *                        *                   
- -1.05 |                                                                
+  2.93 |                                                                
+  2.58 |     **                       **                       **       
+  2.23 |     ***                      ***                      **       
+  1.89 | **  * ** **             **   * ** **             **  ***** **  
+  1.54 |******  *****            ******  ****             *****   ****  
+  1.19 |*        ** *            *  **   ** **            *  **   ** ** 
+  0.84 |*           ** **   **   *           ** **   **  **           **
+  0.49 |*            *****  ******            * **   *****              
+  0.14 |*             ** ** *  **             ***** **  **              
+ -0.21 |                  ***                     ***                   
+ -0.56 |                  **                       **                   
+ -0.91 |                                                                
        ----------------------------------------------------------------
        0       8       16      24      32      40      48      56       (Sample Index)
-Range: [-1.046, 3.064], Length: 256
+Range: [-0.907, 2.933], Length: 256
 
 
 Statistics:
   Input:  mean=1.1294, power=1.9174
-  Output: mean=1.1294, power=1.9329
-  Power reduction: -0.81%
+  Output: mean=1.1262, power=1.8846
+  Power reduction: 1.71%
 
 ========================================
 
@@ -545,10 +544,10 @@ Test: Real-Time IIR Filtering
   Processing samples one by one...
 
   Input samples: 1.0 2.0 3.0 4.0 5.0 4.0 3.0 2.0 1.0 0.0 0.0 1.0 2.0 3.0 4.0 3.0 2.0 1.0 0.0 0.0 
-  Output samples: 0.067 1.413 2.413 3.413 4.413 5.278 3.587 2.587 1.587 0.587 -0.345 0.067 1.413 2.413 3.413 4.278 2.587 1.587 0.587 -0.345 
+  Output samples: 0.067 0.347 0.908 1.704 2.652 3.542 4.033 3.957 3.398 2.520 1.545 0.793 0.539 0.828 1.533 2.355 2.868 2.846 2.339 1.566 
 
   Testing filter reset...
-  ✓ Filter reset successful
+  [PASS] Filter reset successful
 
 ========================================
 
@@ -560,12 +559,11 @@ Test: Biquad (Second-Order) IIR Filter
   Input samples: 1.0 2.0 3.0 4.0 5.0 4.0 3.0 2.0 1.0 0.0 
   Output samples: 0.067 0.347 0.908 1.704 2.652 3.542 4.033 3.957 3.398 2.520 
 
-  ✓ Biquad reset successful
+  [PASS] Biquad reset successful
 
 ========================================
 
-╔══════════════════════════════════════════════════════════╗
-║          All IIR Tests Completed                          ║
-╚══════════════════════════════════════════════════════════╝
-
+==========================================
+       All IIR Tests Completed
+==========================================
 ```

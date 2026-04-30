@@ -100,7 +100,12 @@ tiny_error_t tiny_corr_f32(const float *Signal, const int siglen, const float *P
         return TINY_ERR_DSP_NULL_POINTER;
     }
 
-    if (siglen < patlen) // signal length shoudl be greater than pattern length
+    if (siglen <= 0 || patlen <= 0)
+    {
+        return TINY_ERR_DSP_INVALID_PARAM;
+    }
+
+    if (siglen < patlen) /* pattern must fit within the signal */
     {
         return TINY_ERR_DSP_MISMATCH;
     }
@@ -143,20 +148,27 @@ tiny_error_t tiny_ccorr_f32(const float *Signal, const int siglen, const float *
         return TINY_ERR_DSP_NULL_POINTER;
     }
 
+    if (siglen <= 0 || kernlen <= 0)
+    {
+        return TINY_ERR_DSP_INVALID_PARAM;
+    }
+
 #if MCU_PLATFORM_SELECTED == MCU_PLATFORM_ESP32
     dsps_ccorr_f32(Signal, siglen, Kernel, kernlen, corrvout);
 #else
-    float *sig = (float *)Signal;
-    float *kern = (float *)Kernel;
-    int lsig = siglen;
+    const float *sig  = Signal;
+    const float *kern = Kernel;
+    int lsig  = siglen;
     int lkern = kernlen;
 
-    // swap signal and kernel if needed
+    /* Cross-correlation is symmetric in its operand lengths, so make
+     * the longer one the "signal" to keep the indexing in the three
+     * stages below valid for either calling convention. */
     if (siglen < kernlen)
     {
-        sig = (float *)Kernel;
-        kern = (float *)Signal;
-        lsig = kernlen;
+        sig  = Kernel;
+        kern = Signal;
+        lsig  = kernlen;
         lkern = siglen;
     }
     // stage I

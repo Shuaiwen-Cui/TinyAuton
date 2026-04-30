@@ -51,6 +51,7 @@ void tiny_dwt_test_all(void);
 }
 #endif
 
+
 ```
 
 ## tiny_dwt_test.c
@@ -128,8 +129,8 @@ void tiny_dwt_test(void)
 {
     printf("========== TinyDWT Single-Level Test ==========\n\n");
 
-    // Test signal: longer sinusoidal pattern to reduce boundary effects
-    // Generate 64 samples: 2 cycles of sine wave
+    // Test signal: periodic multi-tone waveform for richer coefficients.
+    // 64 samples keeps even-length downsampling across levels.
     // Use dynamic allocation to avoid stack overflow
     #define TEST_SIGNAL_LEN 64
     float *input = (float *)malloc(TEST_SIGNAL_LEN * sizeof(float));
@@ -141,12 +142,14 @@ void tiny_dwt_test(void)
     
     for (int i = 0; i < TEST_SIGNAL_LEN; i++)
     {
-        input[i] = 2.0f * sinf(2.0f * M_PI * i / (TEST_SIGNAL_LEN / 2.0f));
+        input[i] = 1.3f * sinf(2.0f * M_PI * i / 16.0f) +
+                   0.8f * cosf(2.0f * M_PI * i / 8.0f) +
+                   0.2f * sinf(2.0f * M_PI * i / 4.0f);
     }
     int input_len = TEST_SIGNAL_LEN;
 
     printf("Test 1: Single-Level DWT Decomposition and Reconstruction\n");
-    printf("  Input: Sinusoidal signal (length=%d, 2 cycles)\n", input_len);
+    printf("  Input: Multi-tone periodic signal (length=%d)\n", input_len);
     printf("  Wavelet: DB4\n");
     printf("  Note: Using longer signal to better assess boundary effects\n\n");
 
@@ -276,8 +279,12 @@ void tiny_dwt_test(void)
         printf("  Right boundary (indices %d-%d):\n", end - boundary_width, end - 1);
         printf("    Max error: %.6f, RMSE: %.6f\n", right_max_err, sqrtf(right_mse));
         
-        // Compare center vs boundaries
-        if (center_rmse < 1e-3f && (sqrtf(left_mse) > 1e-2f || sqrtf(right_mse) > 1e-2f))
+        // Compare center vs boundaries. Periodization can reconstruct all regions exactly.
+        if (max_err < 1e-5f && center_rmse < 1e-6f)
+        {
+            printf("  ✓ Perfect reconstruction across boundary and center regions\n");
+        }
+        else if (center_rmse < 1e-3f && (sqrtf(left_mse) > 1e-2f || sqrtf(right_mse) > 1e-2f))
         {
             printf("  ✓ Center region is highly accurate, boundary effects confirmed\n");
         }
@@ -307,6 +314,10 @@ void tiny_dwt_test(void)
         printf("  ✓ Energy is well preserved\n");
     else
         printf("  ⚠ Energy preservation ratio: %.2f%%\n", energy_preservation * 100.0f);
+    {
+        int pass_single = (max_err < 1e-5f) && (rmse < 1e-6f) && (fabsf(energy_preservation - 1.0f) < 1e-4f);
+        printf("  Result: %s\n", pass_single ? "PASS" : "FAIL");
+    }
     printf("\n");
 
     // Cleanup
@@ -326,8 +337,7 @@ void tiny_dwt_test_multilevel(void)
 {
     printf("========== TinyDWT Multi-Level Test ==========\n\n");
 
-    // Extended test signal: longer sinusoidal pattern
-    // Generate 128 samples: 4 cycles of sine wave
+    // Extended periodic signal with mixed harmonics for multi-level evaluation.
     // Use dynamic allocation to avoid stack overflow
     #define MULTI_TEST_SIGNAL_LEN 128
     float *input = (float *)malloc(MULTI_TEST_SIGNAL_LEN * sizeof(float));
@@ -339,65 +349,75 @@ void tiny_dwt_test_multilevel(void)
     
     for (int i = 0; i < MULTI_TEST_SIGNAL_LEN; i++)
     {
-        input[i] = 2.0f * sinf(2.0f * M_PI * i / (MULTI_TEST_SIGNAL_LEN / 4.0f));
+        input[i] = 1.1f * sinf(2.0f * M_PI * i / 32.0f) +
+                   0.7f * cosf(2.0f * M_PI * i / 16.0f) +
+                   0.3f * sinf(2.0f * M_PI * i / 8.0f);
     }
     int input_len = MULTI_TEST_SIGNAL_LEN;
     int levels = 3;
 
     printf("Test 2: Multi-Level DWT Decomposition and Reconstruction\n");
-    printf("  Input: Sinusoidal signal (length=%d, 4 cycles)\n", input_len);
+    printf("  Input: Multi-tone periodic signal (length=%d)\n", input_len);
     printf("  Wavelet: DB4\n");
     printf("  Decomposition levels: %d\n", levels);
     printf("  Note: Using longer signal to better assess boundary effects in multi-level decomposition\n\n");
 
     float *cA = NULL;
     float *cD = NULL;
+    int *cD_lens = NULL;
     int cA_len = 0;
+    int cD_total_len = 0;
 
     // Multi-level decomposition
     printf("1. Multi-Level DWT Decomposition:\n");
     printf("  Input: Original signal (length=%d)\n", input_len);
-    tiny_error_t err = tiny_dwt_multilevel_decompose_f32(input, input_len, TINY_WAVELET_DB4, levels, &cA, &cD, &cA_len);
+    tiny_error_t err = tiny_dwt_multilevel_decompose_f32(input, input_len, TINY_WAVELET_DB4, levels,
+                                                         &cA, &cD, &cA_len, &cD_lens, &cD_total_len);
     if (err != TINY_OK)
     {
         printf("  ✗ Multi-level DWT decomposition failed: %d\n", err);
+        free(input);
         return;
     }
     printf("  ✓ Decomposition completed\n");
     printf("  Output: Final approximation (cA, length=%d)\n", cA_len);
-    printf("  Output: All detail coefficients (cD, total length=%d)\n", input_len - cA_len);
+    printf("  Output: All detail coefficients (cD, total length=%d)\n", cD_total_len);
     
     // Calculate energy
     float input_energy = calculate_energy(input, input_len);
     float cA_energy = calculate_energy(cA, cA_len);
-    float cD_energy = calculate_energy(cD, input_len - cA_len);
+    float cD_energy = calculate_energy(cD, cD_total_len);
     float total_coeff_energy = cA_energy + cD_energy;
     printf("  Energy: Input=%.3f, cA=%.3f, cD=%.3f, Total=%.3f\n\n",
            input_energy, cA_energy, cD_energy, total_coeff_energy);
 
     // Coefficient processing (placeholder)
     printf("2. Coefficient Processing:\n");
-    tiny_dwt_coeffs_process(cA, cD, cA_len, input_len - cA_len, levels);
+    tiny_dwt_coeffs_process(cA, cD, cA_len, cD_total_len, levels);
     printf("  ✓ Coefficient processing completed (placeholder function)\n\n");
 
     // Multi-level reconstruction
     printf("3. Multi-Level DWT Reconstruction:\n");
-    printf("  Input: cA (length=%d) + cD (total length=%d)\n", cA_len, input_len - cA_len);
+    printf("  Input: cA (length=%d) + cD (total length=%d)\n", cA_len, cD_total_len);
     float *output = (float *)malloc(sizeof(float) * input_len);
     if (!output)
     {
         printf("  ✗ Memory allocation failed for output\n");
+        free(input);
         free(cA);
         free(cD);
+        free(cD_lens);
         return;
     }
 
-    err = tiny_dwt_multilevel_reconstruct_f32(cA, cD, cA_len, TINY_WAVELET_DB4, levels, output);
+    err = tiny_dwt_multilevel_reconstruct_f32(cA, cD, cA_len, TINY_WAVELET_DB4, cD_lens, levels, output);
     if (err != TINY_OK)
     {
         printf("  ✗ Multi-level DWT reconstruction failed: %d\n", err);
+        free(input);
         free(cA);
         free(cD);
+        free(cD_lens);
         free(output);
         return;
     }
@@ -473,8 +493,12 @@ void tiny_dwt_test_multilevel(void)
         printf("  Right boundary (indices %d-%d):\n", input_len - boundary_width, input_len - 1);
         printf("    Max error: %.6f, RMSE: %.6f\n", right_max_err, sqrtf(right_mse));
         
-        // Compare center vs boundaries
-        if (center_rmse < 0.01f && (sqrtf(left_mse) > 0.1f || sqrtf(right_mse) > 0.1f))
+        // Compare center vs boundaries. Periodization can reconstruct all regions exactly.
+        if (max_err < 1e-5f && center_rmse < 1e-6f)
+        {
+            printf("  ✓ Perfect reconstruction across boundary and center regions\n");
+        }
+        else if (center_rmse < 0.01f && (sqrtf(left_mse) > 0.1f || sqrtf(right_mse) > 0.1f))
         {
             printf("  ✓ Center region is accurate, boundary effects confirmed (expected in multi-level)\n");
         }
@@ -504,11 +528,16 @@ void tiny_dwt_test_multilevel(void)
         printf("  ✓ Energy is well preserved\n");
     else
         printf("  ⚠ Energy preservation ratio: %.2f%%\n", energy_preservation * 100.0f);
+    {
+        int pass_multi = (max_err < 1e-5f) && (rmse < 1e-6f) && (fabsf(energy_preservation - 1.0f) < 1e-4f);
+        printf("  Result: %s\n", pass_multi ? "PASS" : "FAIL");
+    }
     printf("\n");
 
     free(input);
     free(cA);
     free(cD);
+    free(cD_lens);
     free(output);
     printf("========================================\n");
 }
@@ -521,9 +550,15 @@ void tiny_dwt_test_wavelets(void)
 {
     printf("========== TinyDWT Wavelet Types Test ==========\n\n");
 
-    // Simple test signal
-    float input[] = {1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0, -1.0, -2.0, -3.0, -2.0, -1.0, 0.0};
-    int input_len = sizeof(input) / sizeof(input[0]);
+    // Use a longer periodic signal so DB1-DB10 can all be exercised.
+    #define WAVELET_TEST_SIGNAL_LEN 64
+    float input[WAVELET_TEST_SIGNAL_LEN];
+    for (int i = 0; i < WAVELET_TEST_SIGNAL_LEN; i++)
+    {
+        input[i] = 2.0f * sinf(2.0f * M_PI * i / 16.0f) +
+                   0.5f * sinf(2.0f * M_PI * i / 8.0f);
+    }
+    int input_len = WAVELET_TEST_SIGNAL_LEN;
 
     const char *wavelet_names[] = {
         "DB1", "DB2", "DB3", "DB4", "DB5",
@@ -601,6 +636,7 @@ void tiny_dwt_test_wavelets(void)
     }
 
     printf("\n  Summary: %d passed, %d failed\n", passed, failed);
+    printf("  Result: %s\n", (failed == 0) ? "PASS" : "FAIL");
     printf("\n========================================\n");
 }
 
@@ -630,5 +666,4 @@ void tiny_dwt_test_all(void)
     printf("║          All DWT Tests Completed                         ║\n");
     printf("╚══════════════════════════════════════════════════════════╝\n");
 }
-
 ```

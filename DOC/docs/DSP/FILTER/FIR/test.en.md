@@ -86,7 +86,7 @@ static void test_fir_design(void)
     float *coeffs = (float *)malloc(num_taps * sizeof(float));
     if (!coeffs)
     {
-        printf("  ✗ Memory allocation failed\n");
+        printf("  [FAIL] Memory allocation failed\n");
         return;
     }
 
@@ -96,11 +96,11 @@ static void test_fir_design(void)
     tiny_error_t err = tiny_fir_design_lowpass(0.1f, num_taps, TINY_FIR_WINDOW_HAMMING, coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Low-pass design failed: %d\n", err);
+        printf("  [FAIL] Low-pass design failed: %d\n", err);
         free(coeffs);
         return;
     }
-    printf("  ✓ Low-pass filter designed successfully\n");
+    printf("  [PASS] Low-pass filter designed successfully\n");
     printf("  Coefficient range: [%.6f, %.6f]\n",
            coeffs[0], coeffs[num_taps / 2]);
     printf("\n");
@@ -111,11 +111,11 @@ static void test_fir_design(void)
     err = tiny_fir_design_highpass(0.2f, num_taps, TINY_FIR_WINDOW_HANNING, coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ High-pass design failed: %d\n", err);
+        printf("  [FAIL] High-pass design failed: %d\n", err);
         free(coeffs);
         return;
     }
-    printf("  ✓ High-pass filter designed successfully\n");
+    printf("  [PASS] High-pass filter designed successfully\n");
     printf("\n");
 
     // Test 3: Band-pass filter design
@@ -124,11 +124,11 @@ static void test_fir_design(void)
     err = tiny_fir_design_bandpass(0.1f, 0.3f, num_taps, TINY_FIR_WINDOW_BLACKMAN, coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Band-pass design failed: %d\n", err);
+        printf("  [FAIL] Band-pass design failed: %d\n", err);
         free(coeffs);
         return;
     }
-    printf("  ✓ Band-pass filter designed successfully\n");
+    printf("  [PASS] Band-pass filter designed successfully\n");
     printf("\n");
 
     // Test 4: Band-stop filter design
@@ -137,11 +137,11 @@ static void test_fir_design(void)
     err = tiny_fir_design_bandstop(0.1f, 0.3f, num_taps, TINY_FIR_WINDOW_HAMMING, coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Band-stop design failed: %d\n", err);
+        printf("  [FAIL] Band-stop design failed: %d\n", err);
         free(coeffs);
         return;
     }
-    printf("  ✓ Band-stop filter designed successfully\n");
+    printf("  [PASS] Band-stop filter designed successfully\n");
     printf("\n");
 
     free(coeffs);
@@ -167,7 +167,7 @@ static void test_fir_batch_filtering(void)
 
     if (!input || !output || !coeffs)
     {
-        printf("  ✗ Memory allocation failed\n");
+        printf("  [FAIL] Memory allocation failed\n");
         free(input);
         free(output);
         free(coeffs);
@@ -188,7 +188,7 @@ static void test_fir_batch_filtering(void)
                                                 TINY_FIR_WINDOW_HAMMING, coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter design failed: %d\n", err);
+        printf("  [FAIL] Filter design failed: %d\n", err);
         goto cleanup;
     }
 
@@ -197,11 +197,11 @@ static void test_fir_batch_filtering(void)
                                output, TINY_PADDING_SYMMETRIC);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filtering failed: %d\n", err);
+        printf("  [FAIL] Filtering failed: %d\n", err);
         goto cleanup;
     }
 
-    printf("  ✓ Filtering completed successfully\n\n");
+    printf("  [PASS] Filtering completed successfully\n\n");
 
     // Visualize signals
     printf("Signal Visualization:\n");
@@ -249,7 +249,7 @@ static void test_fir_realtime_filtering(void)
     float *coeffs = (float *)malloc(num_taps * sizeof(float));
     if (!coeffs)
     {
-        printf("  ✗ Memory allocation failed\n");
+        printf("  [FAIL] Memory allocation failed\n");
         return;
     }
 
@@ -257,7 +257,7 @@ static void test_fir_realtime_filtering(void)
                                                 TINY_FIR_WINDOW_HAMMING, coeffs);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter design failed: %d\n", err);
+        printf("  [FAIL] Filter design failed: %d\n", err);
         free(coeffs);
         return;
     }
@@ -267,7 +267,7 @@ static void test_fir_realtime_filtering(void)
     err = tiny_fir_init(&filter, coeffs, num_taps);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter initialization failed: %d\n", err);
+        printf("  [FAIL] Filter initialization failed: %d\n", err);
         free(coeffs);
         return;
     }
@@ -284,7 +284,7 @@ static void test_fir_realtime_filtering(void)
 
     if (!output)
     {
-        printf("  ✗ Memory allocation failed\n");
+        printf("  [FAIL] Memory allocation failed\n");
         tiny_fir_deinit(&filter);
         free(coeffs);
         return;
@@ -310,11 +310,11 @@ static void test_fir_realtime_filtering(void)
     err = tiny_fir_reset(&filter);
     if (err != TINY_OK)
     {
-        printf("  ✗ Filter reset failed: %d\n", err);
+        printf("  [FAIL] Filter reset failed: %d\n", err);
     }
     else
     {
-        printf("  ✓ Filter reset successful\n");
+        printf("  [PASS] Filter reset successful\n");
     }
 
     // Cleanup
@@ -330,20 +330,19 @@ static void test_fir_realtime_filtering(void)
  */
 void tiny_fir_test(void)
 {
-    printf("╔══════════════════════════════════════════════════════════╗\n");
-    printf("║          TinyFIR Filter Test Suite                      ║\n");
-    printf("╚══════════════════════════════════════════════════════════╝\n\n");
+    printf("==========================================\n");
+    printf("       TinyFIR Filter Test Suite\n");
+    printf("==========================================\n\n");
 
     // Run all tests
     test_fir_design();
     test_fir_batch_filtering();
     test_fir_realtime_filtering();
 
-    printf("╔══════════════════════════════════════════════════════════╗\n");
-    printf("║          All FIR Tests Completed                          ║\n");
-    printf("╚══════════════════════════════════════════════════════════╝\n");
+    printf("==========================================\n");
+    printf("       All FIR Tests Completed\n");
+    printf("==========================================\n");
 }
-
 
 
 ```
@@ -351,28 +350,28 @@ void tiny_fir_test(void)
 ## OUTPUTS
 
 ```c
-╔══════════════════════════════════════════════════════════╗
-║          TinyFIR Filter Test Suite                      ║
-╚══════════════════════════════════════════════════════════╝
+==========================================
+       TinyFIR Filter Test Suite
+==========================================
 
 ========== FIR Filter Design Test ==========
 
 Test 1: Low-Pass Filter Design
   Parameters: cutoff=0.1 (normalized), taps=51, window=Hamming
-  ✓ Low-pass filter designed successfully
+  [PASS] Low-pass filter designed successfully
   Coefficient range: [-0.000000, 0.200000]
 
 Test 2: High-Pass Filter Design
   Parameters: cutoff=0.2 (normalized), taps=51, window=Hanning
-  ✓ High-pass filter designed successfully
+  [PASS] High-pass filter designed successfully
 
 Test 3: Band-Pass Filter Design
   Parameters: low=0.1, high=0.3 (normalized), taps=51, window=Blackman
-  ✓ Band-pass filter designed successfully
+  [PASS] Band-pass filter designed successfully
 
 Test 4: Band-Stop Filter Design
   Parameters: low=0.1, high=0.3 (normalized), taps=51, window=Hamming
-  ✓ Band-stop filter designed successfully
+  [PASS] Band-stop filter designed successfully
 
 ========================================
 
@@ -383,23 +382,23 @@ Test: Low-Pass FIR Filtering
   Filter: Low-pass, cutoff=100.0 Hz (normalized=0.100)
   Taps: 51, Window: Hamming
 
-  ✓ Filtering completed successfully
+  [PASS] Filtering completed successfully
 
 Signal Visualization:
 
 Original Signal
 Value
   3.02 |                                                                
-  2.65 |      *                                                *        
-  2.28 |     **                       **                      * *   *   
-  1.92 | *   * **  *              *  *  *  *              *   *  * **   
-  1.55 |* ***   * **             * ***   ** *            * ****  * **   
-  1.18 |*   *    *  *           *    *    *  *           *        ** *  
-  0.82 |*            *  *    *  *            *  *    *   *            * 
-  0.45 |             * **   * ***             ** *  * ****            * 
-  0.08 |              *  ***    *              *  * *                  *
- -0.28 |                  **                       **                   
- -0.65 |                   *                        *                   
+  2.65 |     **                                               **        
+  2.28 |     **                      ***                      ***  **   
+  1.92 |**  ***** **             **  * ** **             **   * ** **   
+  1.55 |*****   ****            ******  *****            ******  * **   
+  1.18 |*  **   ** **           *   **   ** **           *       *****  
+  0.82 |*           ** **   **  *            * **   **   *           ** 
+  0.45 |             ****  ******            *****  ******            * 
+  0.08 |             ** ****   **             ** ** *                 **
+ -0.28 |                  **                      ***                   
+ -0.65 |                  **                       **                   
  -1.02 |                                                                
        ----------------------------------------------------------------
        0       8       16      24      32      40      48      56       (Sample Index)
@@ -409,16 +408,16 @@ Range: [-1.018, 3.018], Length: 256
 Filtered Signal (Low-Pass)
 Value
   2.88 |                                                                
-  2.54 |      *                        *                       *        
-  2.20 |     * *                      **                      * *       
-  1.85 |  *  *  *  *              *  *  *  **              *  *  *  *   
-  1.51 |** **   * **             * ***   ** *             * ***   ** *  
-  1.17 |    *    *  *           *         *  *           *           *  
-  0.83 |            *   *    *  *            *  *        *            * 
-  0.49 |             * **   * * *             ** *   *** *             *
-  0.15 |              *  *  *  **              *  * *   *               
- -0.19 |                  **                      * *                   
- -0.53 |                   *                       **                   
+  2.54 |     **                       **                      **        
+  2.20 |     ***                     ***                      ***       
+  1.85 | ** ** ** **             **  * ** ***             **  * ** **   
+  1.51 |*****   ****            ******  *** *            ******  *****  
+  1.17 |   **   ** **           *        ** **           *           *  
+  0.83 |            *  **   **  *            * **        *           ** 
+  0.49 |            *****   *** *            *****  ******            **
+  0.15 |             ** ** ** ***             ** ** *  **               
+ -0.19 |                 ***                      * *                   
+ -0.53 |                  **                      ***                   
  -0.87 |                                                                
        ----------------------------------------------------------------
        0       8       16      24      32      40      48      56       (Sample Index)
@@ -442,12 +441,11 @@ Test: Real-Time FIR Filtering
   Output samples: 0.000 -0.002 -0.011 -0.031 -0.063 -0.096 -0.092 0.006 0.265 0.733 1.400 2.184 2.934 3.472 3.652 3.419 2.845 2.109 1.446 1.063 
 
   Testing filter reset...
-  ✓ Filter reset successful
+  [PASS] Filter reset successful
 
 ========================================
 
-╔══════════════════════════════════════════════════════════╗
-║          All FIR Tests Completed                          ║
-╚══════════════════════════════════════════════════════════╝
-
+==========================================
+       All FIR Tests Completed
+==========================================
 ```

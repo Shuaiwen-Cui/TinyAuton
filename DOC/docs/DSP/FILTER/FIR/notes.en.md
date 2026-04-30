@@ -41,7 +41,9 @@ H(z) = \sum_{k=0}^{M-1} h[k] \cdot z^{-k}
 
 ## FILTER TYPES
 
-The library supports four basic filter types:
+### Bandpass Design — Modulation Method
+
+The bandpass filter is designed by modulating a low-pass prototype:\n\n1. Design a low-pass filter with cutoff = bandwidth / 2:\n   \\\\( h_{LP}[n] = \\\\frac{\\\\sin(\\\\pi \\\\cdot BW \\\\cdot n)}{\\\\pi \\\\cdot n} \\\\) (for \\\\( n \\\\neq 0\\\\))\n2. Modulate to the center frequency \\\\( f_c = (f_{low} + f_{high}) / 2 \\\\):\n\n\\\\[\nh_{BP}[n] = 2 \\\\cdot h_{LP}[n] \\\\cdot \\\\cos(2\\\\pi \\\\cdot f_c \\\\cdot n)\n\\\\]\n\nFor \\\\(n = 0\\\\): \\\\( h_{BP}[0] = 2 \\\\cdot BW \\\\)\n\n### Bandstop — LP + HP Combination\n\nThe bandstop filter is implemented as the sum of an individually-designed low-pass (at \\\\(f_{low}\\\)) and high-pass (at \\\\(f_{high}\\\\)), summed after windowing.\n\n## FILTER TYPES\n\nThe library supports four basic filter types:"
 
 - **Low-Pass**: Passes frequencies below cutoff, attenuates above
 - **High-Pass**: Passes frequencies above cutoff, attenuates below

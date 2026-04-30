@@ -30,7 +30,6 @@ void tiny_signal_conv_test(void);
 }
 #endif
 
-
 ```
 
 ## tiny_conv_test.c
@@ -58,17 +57,17 @@ void tiny_signal_conv_test(void);
 
 #define EPSILON 1e-5  // Tolerance for floating-point comparison
 
-// Helper function to compare two float arrays
-int compare_float_arrays(const float *a, const float *b, int len, float tol)
+/* File-local helper: compare two float arrays element-wise within tol. */
+static int compare_float_arrays(const float *a, const float *b, int len, float tol)
 {
-    for (int i = 0; i < len; i++)
+    for (int i = 0; i < len; ++i)
     {
-        if (fabs(a[i] - b[i]) > tol)
+        if (fabsf(a[i] - b[i]) > tol)
         {
-            return 0; // Not equal
+            return 0;
         }
     }
-    return 1; // Equal
+    return 1;
 }
 
 // Test function
@@ -182,7 +181,6 @@ void tiny_signal_conv_test(void)
     printf("\n===== tiny_conv_f32 and tiny_conv_ex_f32 Test End =====\n");
 }
 
-
 ```
 
 ## 测试结果
@@ -259,5 +257,4 @@ Output:
 9.90000 8.70000 4.20000 
 
 ===== tiny_conv_f32 and tiny_conv_ex_f32 Test End =====
-
 ```
