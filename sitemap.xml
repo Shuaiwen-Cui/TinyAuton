@@ -15,6 +15,321 @@
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/ai/"/>
     </url>
     <url>
+        <loc>https://localhost:8000/AI/CORE/ACTIVATION/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/ACTIVATION/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/ACTIVATION/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/CORE/ACTIVATION/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/ACTIVATION/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/ACTIVATION/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/CORE/LOSS/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/LOSS/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/LOSS/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/CORE/LOSS/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/LOSS/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/LOSS/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/CORE/OPTIMIZER/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/OPTIMIZER/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/OPTIMIZER/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/CORE/OPTIMIZER/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/OPTIMIZER/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/OPTIMIZER/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/CORE/TENSOR/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/TENSOR/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/TENSOR/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/CORE/TENSOR/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/TENSOR/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/TENSOR/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/EXAMPLES/ATTENTION/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/ATTENTION/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/ATTENTION/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/EXAMPLES/ATTENTION/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/ATTENTION/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/ATTENTION/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/EXAMPLES/CNN/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/CNN/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/CNN/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/EXAMPLES/CNN/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/CNN/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/CNN/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/EXAMPLES/MLP/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/MLP/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/MLP/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/EXAMPLES/MLP/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/MLP/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/MLP/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/HEADER-FILE/tiny_ai/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/HEADER-FILE/tiny_ai/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/HEADER-FILE/tiny_ai/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/HEADER-FILE/tiny_ai_config/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/HEADER-FILE/tiny_ai_config/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/HEADER-FILE/tiny_ai_config/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/ATTENTION/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/ATTENTION/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/ATTENTION/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/ATTENTION/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/ATTENTION/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/ATTENTION/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/BASE/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/BASE/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/BASE/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/BASE/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/BASE/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/BASE/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/CONV/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/CONV/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/CONV/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/CONV/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/CONV/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/CONV/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/DENSE/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/DENSE/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/DENSE/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/DENSE/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/DENSE/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/DENSE/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/NORM/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/NORM/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/NORM/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/NORM/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/NORM/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/NORM/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/POOL/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/POOL/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/POOL/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/LAYERS/POOL/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/POOL/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/POOL/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/MODELS/CNN/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/CNN/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/CNN/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/MODELS/CNN/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/CNN/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/CNN/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/MODELS/MLP/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/MLP/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/MLP/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/MODELS/MLP/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/MLP/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/MLP/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/MODELS/SEQUENTIAL/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/SEQUENTIAL/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/SEQUENTIAL/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/MODELS/SEQUENTIAL/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/SEQUENTIAL/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/SEQUENTIAL/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/QUANT/CONFIG/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/CONFIG/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/CONFIG/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/QUANT/CONFIG/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/CONFIG/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/CONFIG/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/QUANT/FP8/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/FP8/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/FP8/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/QUANT/FP8/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/FP8/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/FP8/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/QUANT/INT/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/INT/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/INT/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/QUANT/INT/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/INT/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/INT/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/TRAIN/DATASET/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/TRAIN/DATASET/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/TRAIN/DATASET/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/TRAIN/DATASET/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/TRAIN/DATASET/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/TRAIN/DATASET/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/TRAIN/TRAINER/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/TRAIN/TRAINER/code/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/TRAIN/TRAINER/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/TRAIN/TRAINER/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/TRAIN/TRAINER/notes/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/TRAIN/TRAINER/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/AI/USAGE/usage/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/USAGE/usage/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/USAGE/usage/"/>
+    </url>
+    <url>
         <loc>https://localhost:8000/ARCHITECTURE/architecture/</loc>
         <lastmod>2026-04-30</lastmod>
         <changefreq>daily</changefreq>
@@ -412,6 +727,321 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/ai/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/ai/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/CORE/ACTIVATION/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/ACTIVATION/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/ACTIVATION/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/CORE/ACTIVATION/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/ACTIVATION/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/ACTIVATION/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/CORE/LOSS/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/LOSS/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/LOSS/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/CORE/LOSS/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/LOSS/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/LOSS/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/CORE/OPTIMIZER/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/OPTIMIZER/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/OPTIMIZER/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/CORE/OPTIMIZER/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/OPTIMIZER/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/OPTIMIZER/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/CORE/TENSOR/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/TENSOR/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/TENSOR/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/CORE/TENSOR/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/CORE/TENSOR/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/CORE/TENSOR/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/EXAMPLES/ATTENTION/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/ATTENTION/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/ATTENTION/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/EXAMPLES/ATTENTION/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/ATTENTION/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/ATTENTION/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/EXAMPLES/CNN/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/CNN/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/CNN/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/EXAMPLES/CNN/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/CNN/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/CNN/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/EXAMPLES/MLP/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/MLP/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/MLP/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/EXAMPLES/MLP/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/EXAMPLES/MLP/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/EXAMPLES/MLP/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/HEADER-FILE/tiny_ai/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/HEADER-FILE/tiny_ai/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/HEADER-FILE/tiny_ai/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/HEADER-FILE/tiny_ai_config/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/HEADER-FILE/tiny_ai_config/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/HEADER-FILE/tiny_ai_config/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/ATTENTION/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/ATTENTION/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/ATTENTION/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/ATTENTION/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/ATTENTION/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/ATTENTION/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/BASE/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/BASE/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/BASE/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/BASE/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/BASE/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/BASE/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/CONV/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/CONV/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/CONV/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/CONV/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/CONV/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/CONV/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/DENSE/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/DENSE/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/DENSE/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/DENSE/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/DENSE/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/DENSE/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/NORM/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/NORM/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/NORM/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/NORM/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/NORM/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/NORM/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/POOL/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/POOL/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/POOL/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/LAYERS/POOL/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/LAYERS/POOL/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/LAYERS/POOL/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/MODELS/CNN/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/CNN/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/CNN/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/MODELS/CNN/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/CNN/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/CNN/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/MODELS/MLP/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/MLP/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/MLP/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/MODELS/MLP/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/MLP/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/MLP/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/MODELS/SEQUENTIAL/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/SEQUENTIAL/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/SEQUENTIAL/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/MODELS/SEQUENTIAL/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/MODELS/SEQUENTIAL/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/MODELS/SEQUENTIAL/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/QUANT/CONFIG/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/CONFIG/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/CONFIG/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/QUANT/CONFIG/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/CONFIG/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/CONFIG/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/QUANT/FP8/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/FP8/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/FP8/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/QUANT/FP8/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/FP8/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/FP8/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/QUANT/INT/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/INT/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/INT/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/QUANT/INT/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/QUANT/INT/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/QUANT/INT/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/TRAIN/DATASET/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/TRAIN/DATASET/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/TRAIN/DATASET/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/TRAIN/DATASET/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/TRAIN/DATASET/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/TRAIN/DATASET/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/TRAIN/TRAINER/code/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/TRAIN/TRAINER/code/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/TRAIN/TRAINER/code/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/TRAIN/TRAINER/notes/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/TRAIN/TRAINER/notes/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/TRAIN/TRAINER/notes/"/>
+    </url>
+    <url>
+        <loc>https://localhost:8000/zh/AI/USAGE/usage/</loc>
+        <lastmod>2026-04-30</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://localhost:8000/zh/AI/USAGE/usage/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://localhost:8000/AI/USAGE/usage/"/>
     </url>
     <url>
         <loc>https://localhost:8000/zh/ARCHITECTURE/architecture/</loc>
