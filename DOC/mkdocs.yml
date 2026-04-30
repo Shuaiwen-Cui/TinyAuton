@@ -155,6 +155,30 @@ plugins:
             NOTES: 说明
             CODE: 代码
             LOG: 日志
+            CORE: 核心
+            LAYERS: 网络层
+            MODELS: 模型
+            QUANT: 量化
+            TRAIN: 训练
+            TENSOR: 张量
+            ACTIVATION: 激活函数
+            LOSS: 损失函数
+            OPTIMIZER: 优化器
+            BASE: 基础层
+            DENSE: 全连接
+            CONV: 卷积
+            POOL: 池化
+            NORM: 归一化
+            ATTENTION: 注意力
+            SEQUENTIAL: 序列容器
+            MLP: 多层感知机
+            CNN: 卷积神经网络
+            INT: 整型量化
+            FP8: FP8量化
+            DATASET: 数据集
+            TRAINER: 训练器
+            TINYAI: TinyAI库头文件
+            TINYAI-CONFIG: TinyAI配置
 
 # # Hooks
 # hooks:
@@ -361,6 +385,79 @@ nav:
               - TEST: "DSP/TRANSFORM/ICA/test.md"
   - AI:
       - "AI/ai.md"
+      - USAGE: "AI/USAGE/usage.md"
+      - HEADER-FILE:
+          - TINYAI-CONFIG: "AI/HEADER-FILE/tiny_ai_config.md"
+          - TINYAI: "AI/HEADER-FILE/tiny_ai.md"
+      - CORE:
+          - TENSOR:
+              - NOTES: "AI/CORE/TENSOR/notes.md"
+              - CODE: "AI/CORE/TENSOR/code.md"
+          - ACTIVATION:
+              - NOTES: "AI/CORE/ACTIVATION/notes.md"
+              - CODE: "AI/CORE/ACTIVATION/code.md"
+          - LOSS:
+              - NOTES: "AI/CORE/LOSS/notes.md"
+              - CODE: "AI/CORE/LOSS/code.md"
+          - OPTIMIZER:
+              - NOTES: "AI/CORE/OPTIMIZER/notes.md"
+              - CODE: "AI/CORE/OPTIMIZER/code.md"
+      - LAYERS:
+          - BASE:
+              - NOTES: "AI/LAYERS/BASE/notes.md"
+              - CODE: "AI/LAYERS/BASE/code.md"
+          - DENSE:
+              - NOTES: "AI/LAYERS/DENSE/notes.md"
+              - CODE: "AI/LAYERS/DENSE/code.md"
+          - CONV:
+              - NOTES: "AI/LAYERS/CONV/notes.md"
+              - CODE: "AI/LAYERS/CONV/code.md"
+          - POOL:
+              - NOTES: "AI/LAYERS/POOL/notes.md"
+              - CODE: "AI/LAYERS/POOL/code.md"
+          - NORM:
+              - NOTES: "AI/LAYERS/NORM/notes.md"
+              - CODE: "AI/LAYERS/NORM/code.md"
+          - ATTENTION:
+              - NOTES: "AI/LAYERS/ATTENTION/notes.md"
+              - CODE: "AI/LAYERS/ATTENTION/code.md"
+      - MODELS:
+          - SEQUENTIAL:
+              - NOTES: "AI/MODELS/SEQUENTIAL/notes.md"
+              - CODE: "AI/MODELS/SEQUENTIAL/code.md"
+          - MLP:
+              - NOTES: "AI/MODELS/MLP/notes.md"
+              - CODE: "AI/MODELS/MLP/code.md"
+          - CNN:
+              - NOTES: "AI/MODELS/CNN/notes.md"
+              - CODE: "AI/MODELS/CNN/code.md"
+      - QUANT:
+          - CONFIGURATION:
+              - NOTES: "AI/QUANT/CONFIG/notes.md"
+              - CODE: "AI/QUANT/CONFIG/code.md"
+          - INT:
+              - NOTES: "AI/QUANT/INT/notes.md"
+              - CODE: "AI/QUANT/INT/code.md"
+          - FP8:
+              - NOTES: "AI/QUANT/FP8/notes.md"
+              - CODE: "AI/QUANT/FP8/code.md"
+      - TRAIN:
+          - DATASET:
+              - NOTES: "AI/TRAIN/DATASET/notes.md"
+              - CODE: "AI/TRAIN/DATASET/code.md"
+          - TRAINER:
+              - NOTES: "AI/TRAIN/TRAINER/notes.md"
+              - CODE: "AI/TRAIN/TRAINER/code.md"
+      - EXAMPLES:
+          - MLP:
+              - NOTES: "AI/EXAMPLES/MLP/notes.md"
+              - CODE: "AI/EXAMPLES/MLP/code.md"
+          - CNN:
+              - NOTES: "AI/EXAMPLES/CNN/notes.md"
+              - CODE: "AI/EXAMPLES/CNN/code.md"
+          - ATTENTION:
+              - NOTES: "AI/EXAMPLES/ATTENTION/notes.md"
+              - CODE: "AI/EXAMPLES/ATTENTION/code.md"
 
 
     

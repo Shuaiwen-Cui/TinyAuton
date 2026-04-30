@@ -64,6 +64,7 @@ This is the only convolution module that uses **platform-specific acceleration**
 ### 2.2 Three-Stage Generic Convolution
 
 The generic convolution is structured as three explicit loops (Stage I/II/III). This form:
+
 - Is slightly more readable than a single-loop with min/max clamping.
 - Allows each stage to be optimized independently by the compiler.
 - Correctly handles both `siglen >= kernlen` and `siglen < kernlen` (the C standard doesn't restrict relative sizes).
@@ -367,13 +368,14 @@ Computes convolution with explicit control over padding strategy and output slic
 
 Regardless of `conv_mode`, the output buffer for both functions must be sized for the **full convolution**:
 
-$$\text{buffer\_size} \ge siglen + kernlen - 1$$
+$$\mathrm{buffer\_size} \ge siglen + kernlen - 1$$
 
 In `tiny_conv_ex_f32`, the full result is written first and then the requested slice is shifted to the front. A buffer smaller than `siglen + kernlen - 1` will cause a heap buffer overflow.
 
 ### 5.2 ESP32 Signal/Kernel Length Ordering
 
 On ESP32, `dsps_conv_f32` requires `siglen >= kernlen`. If this precondition is violated:
+
 - `tiny_conv_f32` returns `TINY_ERR_DSP_INVALID_PARAM`.
 - `tiny_conv_ex_f32` falls through to the generic path (which handles any ordering).
 

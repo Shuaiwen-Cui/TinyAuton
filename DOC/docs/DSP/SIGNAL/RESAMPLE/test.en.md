@@ -184,7 +184,7 @@ void tiny_resample_test(void)
 }
 ```
 
-## Test Output
+## TEST RESULTS
 
 ```c
 ========== TinyResample Test ==========

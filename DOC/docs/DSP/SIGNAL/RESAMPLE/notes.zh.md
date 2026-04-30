@@ -12,7 +12,7 @@
 
 ### 1.1 保留/跳过模式的下采样
 
-不同于简单的等距抽取（keep=1, skip=N），本库实现了**保留-跳过模式**：用户可以指定每个周期内保留多少连续样本（`keep`），跳过多少连续样本（`skip`）。
+不同于简单的等距抽取（keep=1, skip=N），本库实现了 **保留-跳过模式** ：用户可以指定每个周期内保留多少连续样本（ `keep` ），跳过多少连续样本（ `skip` ）。
 
 **模式示例**：
 ```
@@ -45,9 +45,9 @@ input[i / F] & \text{当 } i \bmod F = 0 \text{ 且 } i/F < input\_len \\
 
 ### 1.3 任意因子线性插值重采样
 
-对于任意升/降采样（非整数倍率），库采用**线性插值**：
+对于任意升/降采样（非整数倍率），库采用 **线性插值** ：
 
-1. 计算比率：\(r = target\_len / input\_len\)
+1. 计算比率：\(r = \frac{\mathrm{target}_{\mathrm{len}}}{\mathrm{input}_{\mathrm{len}}}\)
 2. 对每个输出索引 \(i\)，找到在输入中对应的浮点位置：
    \[
    pos = i / r
@@ -57,9 +57,10 @@ input[i / F] & \text{当 } i \bmod F = 0 \text{ 且 } i/F < input\_len \\
    \[
    output[i] = input[idx] \cdot (1 - frac) + input[idx+1] \cdot frac
    \]
-5. 末端钳制：如果 \(idx \ge input\_len - 1\)，使用 `input[input_len - 1]`。
+5. 末端钳制：如果 \(idx \ge \mathrm{input}_{\mathrm{len}} - 1\)，使用 `input[input_len - 1]`。
 
-该方法为 O(N) 轻量级算法，**不包含**抗混叠滤波——详见注意事项章节。
+
+该方法为 O(N) 轻量级算法，**不包含** 抗混叠滤波——详见注意事项章节。
 
 ---
 
@@ -68,6 +69,7 @@ input[i / F] & \text{当 } i \bmod F = 0 \text{ 且 } i/F < input\_len \\
 ### 2.1 灵活的保留/跳过下采样
 
 简单的等距抽取（`keep=1`）会丢弃大块样本而不考虑信号结构。保留-跳过模式允许用户保留连续分组，在以下场景中很有用：
+
 - 信号的每个"块"具有特定含义（如分包传输数据）
 - 模拟非矩形窗口后抽取的效果
 - 控制短时事件保留程度
@@ -75,6 +77,7 @@ input[i / F] & \text{当 } i \bmod F = 0 \text{ 且 } i/F < input\_len \\
 ### 2.2 零插入作为构建模块
 
 零插入被有意地与插值滤波分离。这使用户可以控制：
+
 - 后续应用何种插值滤波器（如低通 FIR 核）
 - 是否与 `tiny_conv_f32` 级联实现完整插值
 - 保持上采样步骤本身无内存分配且速度快
@@ -82,6 +85,7 @@ input[i / F] & \text{当 } i \bmod F = 0 \text{ 且 } i/F < input\_len \\
 ### 2.3 线性插值追求简洁性
 
 在资源受限的 MCU 上，完整的多相重采样代价高昂。线性插值提供：
+
 - O(target_len) 时间，O(1) 辅助内存
 - 当输入相对其带宽充分过采样时可接受的质量
 - 可预测的性能特性（无动态分配）
@@ -89,6 +93,7 @@ input[i / F] & \text{当 } i \bmod F = 0 \text{ 且 } i/F < input\_len \\
 ### 2.4 边界保护
 
 三个函数均包含下溢/溢出防护逻辑：
+
 - `tiny_downsample_skip_f32`：`copy_n = min(keep, input_len - in_idx)` 防止过读
 - `tiny_upsample_zero_f32`：`src < input_len` 防止 `target_len` 非精确倍数时的越界访问
 - `tiny_resample_f32`：`index >= input_len - 1` 钳制防止读取数组末尾之外
@@ -410,7 +415,7 @@ tiny_error_t tiny_resample_f32(const float *input,
 
 ### 5.1 下采样 — 混叠风险
 
-`tiny_downsample_skip_f32` 执行**纯选取**，不含抗混叠滤波。如果输入信号中存在高于新奈奎斯特频率（\(f_s' / 2 = f_s / (2 \cdot stride)\)）的频率分量，将发生混叠。如果信号有显著高频内容，**调用此函数前先用低通滤波器预处理**（如 `tiny_fir_filter_f32`）。
+`tiny_downsample_skip_f32` 执行 **纯选取** ，不含抗混叠滤波。如果输入信号中存在高于新奈奎斯特频率（\(f_s' / 2 = f_s / (2 \cdot stride)\)）的频率分量，将发生混叠。如果信号有显著高频内容，**调用此函数前先用低通滤波器预处理**（如 `tiny_fir_filter_f32`）。
 
 ### 5.2 上采样 — 零填充频谱
 
@@ -419,6 +424,7 @@ tiny_error_t tiny_resample_f32(const float *input,
 ### 5.3 重采样 — 线性插值的局限
 
 `tiny_resample_f32` 使用纯线性插值：
+
 - **不含抗混叠**：降采样可能引入混叠伪影。
 - **不含抗镜像**：升采样可能有阶梯效应。
 - 当信号充分过采样（如 Nyquist 率的 10 倍以上）时质量可接受。
@@ -441,6 +447,5 @@ tiny_error_t tiny_resample_f32(const float *input,
 - `tiny_resample_f32`：任意 `target_len > 0`（升采样或降采样均可）。
 
 ### 5.6 平台独立性
-
 三个函数均为**平台无关**的纯 C 实现，不含 `#if ESP32` 分支。在所有支持的 MCU 平台上行为一致。
 

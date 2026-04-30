@@ -16,6 +16,7 @@ The sliding correlation (pattern matching) slides a short pattern across a longe
 \]
 
 Where:
+
 - \(S\) is the input signal of length \(L_s\)
 - \(P\) is the pattern of length \(L_p\)
 - \(n \in [0, L_s - L_p]\)
@@ -33,6 +34,7 @@ R_{xy}[n] = \sum_{k} x[k] \cdot y[k + n]
 \]
 
 Where:
+
 - \(x\) is the longer sequence (length \(L_x\))
 - \(y\) is the shorter sequence (length \(L_y\))
 - \(n \in [0, L_x + L_y - 2]\)
@@ -48,12 +50,14 @@ Like convolution, this computation naturally proceeds in three stages (warm-up, 
 ### 2.1 Two Different Correlation Semantics
 
 `tiny_corr_f32` and `tiny_ccorr_f32` serve fundamentally different purposes:
+
 - **Sliding correlation** only returns positions where the pattern is fully inside the signal — useful for template matching.
 - **Full cross-correlation** returns all possible shift alignments including partial overlaps — useful for signal alignment, time-delay estimation, and full correlation analysis.
 
 ### 2.2 Length Swap in Generic Cross-Correlation
 
 `tiny_ccorr_f32` swaps signal and kernel so `lsig >= lkern` in the **generic fallback path only** (`#else`). This is because:
+
 - The ESP32 ESP-DSP backend (`dsps_ccorr_f32`) expects the original order.
 - The three-stage loop indexing assumes the longer sequence is the "signal".
 - On ESP32, the caller must ensure `siglen >= kernlen` (or the backend may misbehave).
@@ -297,5 +301,6 @@ Correlation does NOT flip the kernel/pattern. Convolution flips. If you accident
 ### 5.4 Platform Differences
 
 On ESP32, both functions delegate to the ESP-DSP library. The generic fallback is used on all other platforms. The behavioral guarantee for length ordering differs:
+
 - `tiny_ccorr_f32` generic path: always works regardless of which is longer.
 - `tiny_ccorr_f32` ESP32 path: behavior depends on `dsps_ccorr_f32` — test with your specific ESP-IDF version.

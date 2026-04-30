@@ -44,7 +44,7 @@ When `target_len` is not an exact multiple of `input_len`, trailing positions be
 
 For arbitrary up/down‑sampling (non‑integer ratios), the library uses **linear interpolation**:
 
-1. Compute the ratio: \\(r = target\\_len / input\\_len\\)
+1. Compute the ratio: \\(r = \\frac{\\mathrm{target}_{\\mathrm{len}}}{\\mathrm{input}_{\\mathrm{len}}}\\)
 2. For each output index \\(i\\), find the corresponding floating‑point position in the input:
    \\[
    pos = i / r
@@ -54,7 +54,7 @@ For arbitrary up/down‑sampling (non‑integer ratios), the library uses **line
    \\[
    output[i] = input[idx] \\cdot (1 - frac) + input[idx+1] \\cdot frac
    \\]
-5. Clamp at the end: if \\(idx \\ge input\\_len - 1\\), use `input[input_len - 1]`.
+5. Clamp at the end: if \\(idx \\ge \\mathrm{input}_{\\mathrm{len}} - 1\\), use `input[input_len - 1]`.
 
 This is a lightweight, O(N) method. It does **not** include anti‑aliasing filtering — see the notes section for caveats.
 
@@ -369,6 +369,7 @@ Resamples a signal to a target length using linear interpolation. Supports arbit
 ### 5.3 Resampling — Linear Interpolation Limits
 
 `tiny_resample_f32` uses pure linear interpolation:
+
 - **No anti‑aliasing**: downsampling may introduce aliasing artifacts.
 - **No anti‑imaging**: upsampling may have stair‑step artifacts.
 - Quality is acceptable when the signal is heavily oversampled (e.g., 10× the Nyquist rate).

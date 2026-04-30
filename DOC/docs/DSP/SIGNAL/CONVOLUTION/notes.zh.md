@@ -12,7 +12,7 @@ $$y(t) = \int_{-\infty}^{\infty} x(\tau) h(t - \tau) d\tau$$
 
 $$y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]$$
 
-卷积核 $h$ 被**翻转**（时间反转）后**滑过**信号 $x$。在每个移位位置，重叠值相乘并求和。
+卷积核 $h$ 被 **翻转** （时间反转）后 **滑过** 信号 $x$。在每个移位位置，重叠值相乘并求和。
 
 ![](https://www.brandonrohrer.com/images/conv1d/aa_copy.gif)
 
@@ -30,9 +30,9 @@ $$y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]$$
 
 长度为 $L_s$ 的信号与长度为 $L_k$ 的卷积核的完整卷积产生 $L_s + L_k - 1$ 个输出点。计算自然地分三个阶段进行：
 
-- **阶段 I**（上升期）：卷积核仅部分覆盖信号左边缘
-- **阶段 II**（稳态期）：卷积核完全在信号内部
-- **阶段 III**（下降期）：卷积核滑过右边缘
+- **阶段 I** （上升期）：卷积核仅部分覆盖信号左边缘
+- **阶段 II** （稳态期）：卷积核完全在信号内部
+- **阶段 III** （下降期）：卷积核滑过右边缘
 
 ### 1.2 填充模式
 
@@ -59,16 +59,17 @@ $$y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]$$
 
 ### 2.1 双路径架构（ESP32 vs 通用）
 
-这是全库中**唯一**使用平台特定加速的卷积模块。在 ESP32 上，使用 ESP- DSP 库的 `dsps_conv_f32` 进行硬件优化卷积。通用回退路径使用纯 C 三阶段实现，**可处理任意信号/卷积核长度顺序**。
+这是全库中 **唯一** 使用平台特定加速的卷积模块。在 ESP32 上，使用 ESP- DSP 库的 `dsps_conv_f32` 进行硬件优化卷积。通用回退路径使用纯 C 三阶段实现，**可处理任意信号/卷积核长度顺序** 。
 
 ### 2.2 三段式通用卷积
 
 通用卷积显式组织为三个循环（阶段 I/II/III）。这种形式：
+
 - 比带 min/max 钳制的单循环更清晰可读
 - 允许编译器对每个阶段独立优化
 - 正确处理 `siglen >= kernlen` 和 `siglen < kernlen` 两种情况
 
-**平台不对称重要提示**：ESP32 ESP-DSP 后端**要求** `siglen >= kernlen`，如果违反此条件返回 `TINY_ERR_DSP_INVALID_PARAM`。通用回退路径没有此限制。
+**平台不对称重要提示**：ESP32 ESP-DSP 后端 **要求** `siglen >= kernlen`，如果违反此条件返回 `TINY_ERR_DSP_INVALID_PARAM`。通用回退路径没有此限制。
 
 ### 2.3 `const` 正确性
 
@@ -365,15 +366,16 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
 
 ### 5.1 输出缓冲区最小大小
 
-无论 `conv_mode` 如何，两个函数的输出缓冲区都必须按**完整卷积**大小分配：
+无论 `conv_mode` 如何，两个函数的输出缓冲区都必须按 **完整卷积** 大小分配：
 
-$$\text{buffer\_size} \ge siglen + kernlen - 1$$
+$$\mathrm{buffer\_size} \ge siglen + kernlen - 1$$
 
 在 `tiny_conv_ex_f32` 中，完整结果先写入，然后将请求的切片前移。如果缓冲区小于 `siglen + kernlen - 1`，将导致堆缓冲区溢出。
 
 ### 5.2 ESP32 信号/卷积核长度顺序
 
 在 ESP32 上，`dsps_conv_f32` 要求 `siglen >= kernlen`。如果违反此条件：
+
 - `tiny_conv_f32` 返回 `TINY_ERR_DSP_INVALID_PARAM`
 - `tiny_conv_ex_f32` 回退到通用路径（可处理任意顺序）
 
