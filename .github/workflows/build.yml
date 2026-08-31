@@ -1,0 +1,28 @@
+name: build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  esp-idf-build:
+    name: ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - CODE/AIoTNode-TinyAuton-MATH
+          - CODE/AIoTNode-TinyAuton-DSP
+          - CODE/AIoTNode-TinyAuton-AI
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build with ESP-IDF
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.3
+          target: esp32s3
+          path: ${{ matrix.project }}
