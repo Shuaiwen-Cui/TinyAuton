@@ -18,11 +18,14 @@ jobs:
           - CODE/AIoTNode-TinyAuton-DSP
           - CODE/AIoTNode-TinyAuton-AI
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
+      # ESP-IDF version must match the one the projects were configured with.
+      # sdkconfig says CONFIG_IDF_INIT_VERSION="6.0.0" and dependencies.lock
+      # records idf 6.0.0, so anything older fails before it reaches the compiler.
       - name: Build with ESP-IDF
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v5.3
+          esp_idf_version: v6.0
           target: esp32s3
           path: ${{ matrix.project }}
