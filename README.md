@@ -6,7 +6,7 @@ decide on its own instead of shipping raw data somewhere else.
 
 [![build](https://github.com/Shuaiwen-Cui/TinyAuton/actions/workflows/build.yml/badge.svg)](https://github.com/Shuaiwen-Cui/TinyAuton/actions/workflows/build.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![docs](https://img.shields.io/badge/docs-EN%20%7C%20ZH-brightgreen.svg)](https://shuaiwen-cui.github.io/TinyAuton/)
+[![docs](https://img.shields.io/badge/docs-EN%20%7C%20ZH-brightgreen.svg)](http://www.cuishuaiwen.com:9300/)
 
 TinyAuton ships as ESP-IDF components with no external runtime dependency. Every kernel has a
 portable C implementation and, where the platform offers one, dispatches to a vendor-accelerated
@@ -71,7 +71,7 @@ idf.py set-target esp32s3
 idf.py build flash monitor
 ```
 
-Requires ESP-IDF v5.x. See [Prerequisites](https://shuaiwen-cui.github.io/TinyAuton/PREREQUISITE/)
+Requires ESP-IDF v5.x. See [Prerequisites](http://www.cuishuaiwen.com:9300/PREREQUISITE/)
 for the toolchain setup.
 
 ---
@@ -104,7 +104,7 @@ tiny_ai     example_mlp, example_cnn, example_attention  (train → quantise →
 
 Vector and matrix kernels are cross-checked against the ESP-DSP reference implementations, and
 every test reports iteration timing so regressions show up as slowdowns, not just as wrong
-answers. Full results and expected output: [test documentation](https://shuaiwen-cui.github.io/TinyAuton/).
+answers. Full results and expected output: [test documentation](http://www.cuishuaiwen.com:9300/).
 
 ---
 
