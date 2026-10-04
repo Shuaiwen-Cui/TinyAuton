@@ -1,6 +1,14 @@
-# CODE
+# TinyDSP · Transform · FFT — Implementation and source {#code}
 
-## tiny_fft.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_fft.h` {#tiny_ffth}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_fft.h</code> · 131 lines</summary>
 
 ```c
 /**
@@ -136,7 +144,12 @@ extern "C"
 
 ```
 
-## tiny_fft.c
+</details>
+
+## `tiny_fft.c` {#tiny_fftc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_fft.c</code> · 669 lines</summary>
 
 ```c
 /**
@@ -809,3 +822,5 @@ tiny_error_t tiny_fft_find_top_frequencies(const float *power_spectrum, int fft_
 
 
 ```
+
+</details>

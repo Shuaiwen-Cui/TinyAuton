@@ -1,4 +1,7 @@
-# TOOLBOX
+# TOOLBOX {#toolbox}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "tiny_toolbox"
     tiny_toolbox is a library designed for **platform adaptation and optimization**, providing **various practical tools** to serve edge computing and application development. **Note that the adaptation and tools are included in the same library because many tools utilize the functions provided by the platform at a lower level. Therefore, placing platform adaptation and various tools together facilitates usage and maintenance.**
@@ -6,7 +9,7 @@
 !!! warning
     Currently, development is based on ESP32, and migration to platforms like STM32 requires some modifications to the adaptation layer.
 
-## ARCHITECTURE AND FUNCTION DIRECTORY
+## ARCHITECTURE AND FUNCTION DIRECTORY {#architecture-and-function-directory}
 
 ```txt
     tiny_toolbox
@@ -19,7 +22,7 @@
     └── ...
 ```
 
-### [TIME](./TIME/notes.en.md)
+### [TIME](./TIME/notes.en.md) {#time}
 
 - Get Running Time: `tiny_get_running_time()`
 - SNTP Time Synchronization: `sync_time_with_timezone("CST-8")`
@@ -29,12 +32,12 @@ TODO:
 
 - Local Time Synchronization for Wireless Sensor Networks - Microsecond Level
 
-## CODE
+## CODE {#code}
 
 !!! tip
     tiny_toolbox.h serves merely as a directory, integrating all submodules. The specific functionalities are implemented in each submodule. tiny_toolbox.c is just a formal source file without specific functionality.
 
-### CMakeLists.txt
+### CMakeLists.txt {#cmakeliststxt}
 
 ```cmake
 set(src_dirs
@@ -60,7 +63,7 @@ idf_component_register(SRC_DIRS ${src_dirs} INCLUDE_DIRS ${include_dirs} REQUIRE
 
 ```
 
-### tiny_toolbox.h
+### tiny_toolbox.h {#tiny_toolboxh}
 
 ```c
 /**

@@ -1,6 +1,12 @@
-# CODE
+# C++ matrix implementation {#code}
 
-## tiny_matrix.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## tiny_matrix.hpp {#tiny_matrixhpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand tiny_matrix.hpp · 442 lines</summary>
 
 ```cpp
 /**
@@ -447,7 +453,12 @@ namespace tiny
 
 ```
 
-## tiny_matrix.cpp
+</details>
+
+## tiny_matrix.cpp {#tiny_matrixcpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand tiny_matrix.cpp · 7140 lines</summary>
 
 ```cpp
 /**
@@ -7591,3 +7602,5 @@ namespace tiny
 
 
 ```
+
+</details>

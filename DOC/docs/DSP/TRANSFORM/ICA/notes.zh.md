@@ -1,11 +1,14 @@
-# 说明
+# TinyICA — 原理与接口 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     独立成分分析（ICA）是一种盲源分离技术，将混合信号分离为独立的源成分。它假设观测信号是统计独立源的线性混合。ICA 广泛应用于信号处理、神经科学、图像处理和音频源分离应用。
 
-## ICA 概述
+## ICA 概述 {#ica}
 
-### 数学原理
+### 数学原理 {#_2}
 
 ICA 解决盲源分离问题：
 
@@ -37,16 +40,16 @@ ICA 解决盲源分离问题：
 
 4. **方阵或超定**：观测数量 ≥ 源数量
 
-### ICA vs PCA
+### ICA vs PCA {#ica-vs-pca}
 
 - **PCA**：找到最大方差的正交方向（二阶统计量）
 - **ICA**：找到统计独立的方向（高阶统计量）
 - **PCA**：去相关数据（去除线性依赖）
 - **ICA**：分离独立源（去除所有依赖）
 
-## 算法
+## 算法 {#_3}
 
-### FastICA
+### FastICA {#fastica}
 
 库实现了 FastICA 算法，基于最大化非高斯性：
 
@@ -72,9 +75,9 @@ ICA 解决盲源分离问题：
 
 4. 正交化成分（Gram-Schmidt）
 
-## 预处理
+## 预处理 {#_4}
 
-### 中心化
+### 中心化 {#_5}
 
 从每个观测中减去均值：
 
@@ -84,7 +87,7 @@ ICA 解决盲源分离问题：
 
 其中 \( \bar{\mathbf{x}} \) 是均值向量。
 
-### 白化
+### 白化 {#_6}
 
 将数据变换为具有单位方差和零相关：
 
@@ -104,9 +107,9 @@ ICA 解决盲源分离问题：
 \mathbf{W}_{whiten} = \mathbf{D}^{-1/2} \mathbf{E}^T
 \]
 
-## 函数
+## 函数 {#_7}
 
-### tiny_ica_separate_f32
+### tiny_ica_separate_f32 {#tiny_ica_separate_f32}
 
 ```c
 /**
@@ -177,7 +180,7 @@ tiny_error_t tiny_ica_separate_f32(const float *mixed_signals,
 
 此函数在内部执行所有步骤。对于重复分离，使用基于结构的 API（`tiny_ica_init`、`tiny_ica_fit`、`tiny_ica_transform`）以避免重新计算白化矩阵。
 
-### tiny_ica_init
+### tiny_ica_init {#tiny_ica_init}
 
 ```c
 /**
@@ -211,7 +214,7 @@ tiny_error_t tiny_ica_init(tiny_ica_t *ica, int num_obs, int num_sources);
 
 函数在内部分配内存。调用 `tiny_ica_deinit()` 释放它。
 
-### tiny_ica_fit
+### tiny_ica_fit {#tiny_ica_fit}
 
 ```c
 /**
@@ -263,7 +266,7 @@ tiny_error_t tiny_ica_fit(tiny_ica_t *ica,
 
 拟合后，ICA 结构包含学习到的解混矩阵和白化矩阵。这些可以重复用于变换新数据。
 
-### tiny_ica_transform
+### tiny_ica_transform {#tiny_ica_transform}
 
 ```c
 /**
@@ -303,7 +306,7 @@ tiny_error_t tiny_ica_transform(const tiny_ica_t *ica,
 
 需要先使用 `tiny_ica_fit()` 拟合 `ica`。输入信号使用训练数据的均值进行中心化。
 
-### tiny_ica_deinit
+### tiny_ica_deinit {#tiny_ica_deinit}
 
 ```c
 /**
@@ -327,9 +330,9 @@ tiny_error_t tiny_ica_deinit(tiny_ica_t *ica);
 
 成功时返回 `TINY_OK`，失败时返回错误代码。
 
-## 使用流程
+## 使用流程 {#_8}
 
-### 简单一次性分离
+### 简单一次性分离 {#_9}
 
 ```c
 float mixed_signals[2 * 512];  // 2 个观测，每个 512 个样本
@@ -341,7 +344,7 @@ tiny_error_t ret = tiny_ica_separate_f32(
     TINY_ICA_FASTICA, TINY_ICA_NONLINEARITY_TANH, 100, 1e-4f);
 ```
 
-### 重复分离（结构 API）
+### 重复分离（结构 API） {#api}
 
 ```c
 tiny_ica_t ica;
@@ -360,7 +363,7 @@ tiny_ica_transform(&ica, new_mixed, 512, separated);
 tiny_ica_deinit(&ica);
 ```
 
-## 应用场景
+## 应用场景 {#_10}
 
 ICA 广泛应用于：
 
@@ -371,16 +374,16 @@ ICA 广泛应用于：
 - **神经科学**：分析脑信号、fMRI 数据
 - **传感器阵列处理**：从多个传感器分离信号
 
-## 优缺点
+## 优缺点 {#_11}
 
-### 优点
+### 优点 {#_12}
 
 - **盲分离**：不需要混合矩阵的先验知识
 - **统计独立性**：找到真正独立的源
 - **非高斯源**：适用于非高斯信号
 - **灵活**：可以处理不同数量的源和观测
 
-### 缺点
+### 缺点 {#_13}
 
 - **模糊性**：分离源的尺度和符号是模糊的
 - **顺序模糊性**：分离源的顺序是任意的
@@ -388,37 +391,36 @@ ICA 广泛应用于：
 - **计算成本**：白化和特征值分解可能很昂贵
 - **收敛性**：对于某些信号类型可能不收敛
 
-## 设计考虑
+## 设计考虑 {#_14}
 
-### 源数量 vs 观测数量
+### 源数量 vs 观测数量 {#vs}
 
 - **方阵情况**（num_obs = num_sources）：标准 ICA 问题
 - **超定**（num_obs > num_sources）：可以首先使用 PCA 降低维度
 - **欠定**（num_obs < num_sources）：不支持（无法提取比观测更多的源）
 
-### 非线性选择
+### 非线性选择 {#_15}
 
 - **tanh**：默认选择，适用于大多数超高斯源（语音、音乐）
 - **cube**：用于次高斯源（均匀噪声、某些图像信号）
 - **gauss**：适用于对称分布的源
 - **skew**：当源具有明显偏斜性时有用
 
-### 收敛参数
+### 收敛参数 {#_16}
 
 - **max_iter**：通常 50-200 次迭代。困难情况下需要更多迭代。
 - **tolerance**：通常 1e-4 到 1e-6。更小的容差 = 更准确但更慢。
 
-### 数据要求
+### 数据要求 {#_17}
 
 - **样本大小**：更多样本 = 更好的分离质量
 - **独立性**：源必须在统计上独立
 - **非高斯性**：最多一个源可以是高斯分布
 
-## 注意事项
+## 注意事项 {#_18}
 
 - ICA 只能分离源到缩放因子和排列的程度
 - 分离源的顺序可能与原始顺序不匹配
 - 当源具有不同统计特性时，ICA 效果最好
 - 白化是 ICA 的关键预处理步骤
 - FastICA 因其速度和简单性而成为流行算法
-

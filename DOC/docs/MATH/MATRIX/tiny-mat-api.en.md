@@ -1,14 +1,17 @@
-# MATRIX OPERATIONS - TINY_MAT
+# MATRIX OPERATIONS - TINY_MAT {#matrix-operations-tiny_mat}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! INFO "About tiny_mat library"
     tiny_mat is a C implementation of a matrix library that provides basic matrix operation functions. It supports operations such as addition, subtraction, and multiplication of floating-point matrices. This library is suitable for embedded systems and real-time applications that require matrix calculations. The library is based on the ANSI C standard, ensuring good portability and performance, while also supporting platform acceleration through configuration files (ESP32).
 
 !!! TIP "About the usage of tiny_mat library"
-    The functionality of tiny_mat is completely covered by tiny_matrix, which means that the functions in tiny_matrix include all the functions of tiny_mat. For simple matrix operations, you can only include the tiny_mat library; for complex matrix operations, it is recommended to use the tiny_matrix library. The tiny_matrix library is a C++ implementation of a matrix library that provides richer functionality and better performance. It supports operations such as addition, subtraction, multiplication, transposition, and inversion of floating-point and integer matrices.
+    `tiny_mat` accepts float arrays, dimensions and padding/stride arguments. `tiny::Mat` offers objects, ROI, operators and advanced linear algebra. Choose according to language, ownership and layout rather than treating the APIs as interchangeable.
 
 
 
-## LIST OF FUNCTIONS
+## LIST OF FUNCTIONS {#list-of-functions}
 
 ```c
 TinyMath
@@ -35,9 +38,9 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
 tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
-## UTILITY FUNCTIONS
+## UTILITY FUNCTIONS {#utility-functions}
 
-### Print Matrix
+### Print Matrix {#print-matrix}
 ```c
 void print_matrix(const char *name, const float *mat, int rows, int cols);
 ```
@@ -55,7 +58,7 @@ void print_matrix(const char *name, const float *mat, int rows, int cols);
 
 **Returns:** None.
 
-### Print Padded Matrix
+### Print Padded Matrix {#print-padded-matrix}
 ```c
 void print_matrix_padded(const char *name, const float *mat, int rows, int cols, int step);
 ```
@@ -74,9 +77,9 @@ void print_matrix_padded(const char *name, const float *mat, int rows, int cols,
 
 **Returns:** None.
 
-## ADDITION
+## ADDITION {#addition}
 
-### Matrix Addition
+### Matrix Addition {#matrix-addition}
 ```c
 tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
 ```
@@ -109,7 +112,7 @@ tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *o
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
-### Matrix Addition with Constant
+### Matrix Addition with Constant {#matrix-addition-with-constant}
 ```c
 tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
@@ -138,9 +141,9 @@ tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int r
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
-## SUBTRACTION
+## SUBTRACTION {#subtraction}
 
-### Matrix Subtraction
+### Matrix Subtraction {#matrix-subtraction}
 ```c
 tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
 ```
@@ -173,7 +176,7 @@ tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *o
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
-### Matrix Subtraction with Constant
+### Matrix Subtraction with Constant {#matrix-subtraction-with-constant}
 ```c
 tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
@@ -202,9 +205,9 @@ tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int r
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
-## MULTIPLICATION
+## MULTIPLICATION {#multiplication}
 
-### Matrix Multiplication
+### Matrix Multiplication {#matrix-multiplication}
 ```c
 tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, int n, int k);
 ```
@@ -227,7 +230,7 @@ tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, 
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
-### Extended Matrix Multiplication
+### Extended Matrix Multiplication {#extended-matrix-multiplication}
 ```c
 tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int A_rows, int A_cols, int B_cols, int A_padding, int B_padding, int C_padding);
 ```
@@ -256,7 +259,7 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
 
 **Returns:** `tiny_error_t` indicating success or failure.
 
-### Matrix Multiplication with Constant
+### Matrix Multiplication with Constant {#matrix-multiplication-with-constant}
 ```c
 tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
@@ -284,4 +287,5 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
 - `stride_out`: Step size for the output matrix.
 
 **Returns:** `tiny_error_t` indicating success or failure.
+```
 ```

@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Layers · Norm — Implementation and source {#code}
 
-## tiny_norm.hpp (excerpt)
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## tiny_norm.hpp (excerpt) {#tiny_normhpp-excerpt}
 
 ```cpp
 class LayerNorm : public Layer
@@ -37,7 +42,7 @@ public:
 };
 ```
 
-## tiny_norm.cpp (core logic)
+## tiny_norm.cpp (core logic) {#tiny_normcpp-core-logic}
 
 ```cpp
 Tensor BatchNorm1D::forward(const Tensor &x)

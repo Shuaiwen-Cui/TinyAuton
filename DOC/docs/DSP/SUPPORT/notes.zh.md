@@ -1,9 +1,12 @@
-# 说明
+# TinyView — 原理与接口 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     支持模块为信号处理提供可视化和分析工具。这些函数帮助开发者可视化信号、分析数据并调试 DSP 算法，通过提供基于 ASCII 的图表和格式化输出。这在可能没有图形显示的嵌入式系统中特别有用。
 
-## 概述
+## 概述 {#_2}
 
 支持模块包括四个主要函数：
 
@@ -12,9 +15,9 @@
 3. **数组打印**：以格式化表格打印数组
 4. **统计信息**：计算并显示信号的统计信息
 
-## 信号可视化
+## 信号可视化 {#_3}
 
-### tiny_view_signal_f32
+### tiny_view_signal_f32 {#tiny_view_signal_f32}
 
 ```c
 /**
@@ -107,9 +110,9 @@ Value
 Range: [-1.200, 1.200], Length: 64
 ```
 
-## 频谱可视化
+## 频谱可视化 {#_4}
 
-### tiny_view_spectrum_f32
+### tiny_view_spectrum_f32 {#tiny_view_spectrum_f32}
 
 ```c
 /**
@@ -172,9 +175,9 @@ tiny_error_t tiny_view_spectrum_f32(const float *power_spectrum, int len, float 
 
 函数假设功率频谱长度是 FFT 长度的一半（实信号的典型情况）。频率标签计算为：`freq = index * sample_rate / (2 * len)`。
 
-## 数组打印
+## 数组打印 {#_5}
 
-### tiny_view_array_f32
+### tiny_view_array_f32 {#tiny_view_array_f32}
 
 ```c
 /**
@@ -238,9 +241,9 @@ Test Signal [64 elements]:
   ...
 ```
 
-## 统计信息
+## 统计信息 {#_6}
 
-### tiny_view_statistics_f32
+### tiny_view_statistics_f32 {#tiny_view_statistics_f32}
 
 ```c
 /**
@@ -317,9 +320,9 @@ tiny_error_t tiny_view_statistics_f32(const float *data, int len, const char *na
 
 - **范围**：\( \text{range} = \max(x) - \min(x) \)
 
-## 使用流程
+## 使用流程 {#_7}
 
-### 典型的可视化流程
+### 典型的可视化流程 {#_8}
 
 1. **可视化信号**:
    ```c
@@ -345,7 +348,7 @@ tiny_error_t tiny_view_statistics_f32(const float *data, int len, const char *na
    tiny_view_spectrum_f32(power, 128, 1000.0f, "功率频谱");
    ```
 
-## 应用场景
+## 应用场景 {#_9}
 
 支持模块适用于：
 
@@ -361,7 +364,7 @@ tiny_error_t tiny_view_statistics_f32(const float *data, int len, const char *na
 
 - **文档**：为文档生成 ASCII 图表
 
-## 注意事项
+## 注意事项 {#_10}
 
 - 所有可视化函数使用 `printf` 输出到 `stdout`
 

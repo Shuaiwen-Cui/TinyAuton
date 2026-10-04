@@ -1,9 +1,12 @@
-# TinyAI Header
+# TinyAI Header {#tinyai-header}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! info
     `tiny_ai.h` is the unified entry-point header. It pulls in every quant / core / layers / models / train submodule in dependency order and exposes three C-callable example entry points (`example_mlp` / `example_cnn` / `example_attention`). After porting, simply add `#include "tiny_ai.h"` to any source file that uses AI features.
 
-## INCLUDE HIERARCHY
+## INCLUDE HIERARCHY {#include-hierarchy}
 
 ```txt
 tiny_ai.h
@@ -38,7 +41,7 @@ tiny_ai.h
 !!! note
     All C++ headers live inside an `#ifdef __cplusplus` block. For pure C projects, `tiny_ai.h` only exposes the macros / error codes from `tiny_ai_config.h` plus the three `extern "C"` example entry points.
 
-## FULL SOURCE
+## FULL SOURCE {#full-source}
 
 ```c
 /**

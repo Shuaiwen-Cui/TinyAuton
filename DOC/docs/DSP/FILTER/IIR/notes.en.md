@@ -1,11 +1,14 @@
-# NOTES
+# TinyIIR — Principles and API {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Note"
     Infinite Impulse Response (IIR) filters are recursive digital filters that use feedback, making them more efficient than FIR filters for the same specifications. However, IIR filters can be unstable if not designed carefully. They are widely used in audio processing, control systems, and signal conditioning where computational efficiency is important.
 
-## IIR FILTER OVERVIEW
+## IIR FILTER OVERVIEW {#iir-filter-overview}
 
-### Mathematical Principle
+### Mathematical Principle {#mathematical-principle}
 
 An IIR filter is defined by its difference equation, which includes both feedforward and feedback terms:
 
@@ -43,7 +46,7 @@ H(z) = \frac{\sum_{k=0}^{M} b[k] \cdot z^{-k}}{1 + \sum_{k=1}^{N} a[k] \cdot z^{
 
 - **Non-Linear Phase**: Generally has non-linear phase response
 
-## FILTER TYPES
+## FILTER TYPES {#filter-types}
 
 The library supports four basic filter types:
 
@@ -52,9 +55,9 @@ The library supports four basic filter types:
 - **Band-Pass**: Passes frequencies within a band, attenuates outside
 - **Band-Stop (Notch)**: Attenuates frequencies within a band, passes outside
 
-## FILTER DESIGN
+## FILTER DESIGN {#filter-design}
 
-### Design Methods
+### Design Methods {#design-methods}
 
 The library supports Butterworth filter design (with plans for Chebyshev, Elliptic, and Bessel):
 
@@ -64,7 +67,7 @@ The library supports Butterworth filter design (with plans for Chebyshev, Ellipt
 - **Elliptic**: Equiripple in both passband and stopband (future)
 - **Bessel**: Linear phase response (future)
 
-### Bilinear Transform
+### Bilinear Transform {#bilinear-transform}
 
 IIR filters are designed using the bilinear transform, which maps the analog s-plane to the digital z-plane:
 
@@ -74,7 +77,7 @@ s = \frac{2}{T} \cdot \frac{1 - z^{-1}}{1 + z^{-1}}
 
 Where \( T \) is the sampling period.
 
-### Design Parameters
+### Design Parameters {#design-parameters}
 
 - **Cutoff Frequency**: Normalized frequency (0.0 to 0.5, where 0.5 = Nyquist)
 - **Filter Order**: Determines sharpness of transition and stopband attenuation
@@ -88,9 +91,9 @@ f_{norm} = \frac{f_{cutoff}}{f_s / 2}
 
 Where \( f_s \) is the sampling rate.
 
-## FILTER DESIGN FUNCTIONS
+## FILTER DESIGN FUNCTIONS {#filter-design-functions}
 
-### tiny_iir_design_lowpass
+### tiny_iir_design_lowpass {#tiny_iir_design_lowpass}
 
 ```c
 /**
@@ -136,7 +139,7 @@ Returns success or error code.
 
 The coefficients are in normalized form where `a[0] = 1.0`. Higher order filters would need to be decomposed into cascaded biquads (second-order sections).
 
-### tiny_iir_design_highpass
+### tiny_iir_design_highpass {#tiny_iir_design_highpass}
 
 ```c
 /**
@@ -178,7 +181,7 @@ Designs a high-pass IIR filter using the specified design method. Currently supp
 
 Returns success or error code.
 
-### tiny_iir_design_bandpass
+### tiny_iir_design_bandpass {#tiny_iir_design_bandpass}
 
 ```c
 /**
@@ -224,7 +227,7 @@ Designs a band-pass IIR filter. Currently returns `TINY_ERR_NOT_SUPPORTED` as fu
 
 Currently returns `TINY_ERR_NOT_SUPPORTED`.
 
-### tiny_iir_design_bandstop
+### tiny_iir_design_bandstop {#tiny_iir_design_bandstop}
 
 ```c
 /**
@@ -270,11 +273,11 @@ Designs a band-stop (notch) IIR filter. Currently returns `TINY_ERR_NOT_SUPPORTE
 
 Currently returns `TINY_ERR_NOT_SUPPORTED`.
 
-## FILTER APPLICATION
+## FILTER APPLICATION {#filter-application}
 
-### Batch Processing
+### Batch Processing {#batch-processing}
 
-### tiny_iir_filter_f32
+### tiny_iir_filter_f32 {#tiny_iir_filter_f32}
 
 ```c
 /**
@@ -335,9 +338,9 @@ Returns success or error code.
 
 The filter uses Direct Form II Transposed structure, which is computationally efficient and requires minimal state storage.
 
-### Real-Time Processing
+### Real-Time Processing {#real-time-processing}
 
-### tiny_iir_init
+### tiny_iir_init {#tiny_iir_init}
 
 ```c
 /**
@@ -379,7 +382,7 @@ Returns success or error code.
 
 The function allocates memory internally. Use `tiny_iir_deinit()` to free it.
 
-### tiny_iir_deinit
+### tiny_iir_deinit {#tiny_iir_deinit}
 
 ```c
 /**
@@ -403,7 +406,7 @@ Deinitializes an IIR filter and frees all allocated memory.
 
 Returns success or error code.
 
-### tiny_iir_process_sample
+### tiny_iir_process_sample {#tiny_iir_process_sample}
 
 ```c
 /**
@@ -434,7 +437,7 @@ Returns filtered output sample.
 
 The filter maintains internal state between calls. Use `tiny_iir_reset()` to clear the state.
 
-### tiny_iir_reset
+### tiny_iir_reset {#tiny_iir_reset}
 
 ```c
 /**
@@ -458,11 +461,11 @@ Resets the IIR filter state by clearing the state variables. Useful when startin
 
 Returns success or error code.
 
-## BIQUAD FILTERS
+## BIQUAD FILTERS {#biquad-filters}
 
 Biquad (second-order) filters are a special case of IIR filters that are particularly efficient and commonly used. Higher-order filters are often decomposed into cascaded biquads for numerical stability.
 
-### tiny_iir_biquad_init
+### tiny_iir_biquad_init {#tiny_iir_biquad_init}
 
 ```c
 /**
@@ -497,7 +500,7 @@ Initializes a biquad (second-order) IIR filter. Biquads are efficient and common
 
 Returns success or error code.
 
-### tiny_iir_biquad_process_sample
+### tiny_iir_biquad_process_sample {#tiny_iir_biquad_process_sample}
 
 ```c
 /**
@@ -524,7 +527,7 @@ Processes a single input sample through the biquad filter and returns the filter
 
 Returns filtered output sample.
 
-### tiny_iir_biquad_reset
+### tiny_iir_biquad_reset {#tiny_iir_biquad_reset}
 
 ```c
 /**
@@ -548,9 +551,9 @@ Resets the biquad filter state by clearing internal state variables.
 
 Returns success or error code.
 
-## USAGE WORKFLOW
+## USAGE WORKFLOW {#usage-workflow}
 
-### Batch Filtering Workflow
+### Batch Filtering Workflow {#batch-filtering-workflow}
 
 1. **Design Filter**:
    ```c
@@ -564,7 +567,7 @@ Returns success or error code.
    tiny_iir_filter_f32(input, 256, b_coeffs, 3, a_coeffs, 3, output, NULL);
    ```
 
-### Real-Time Filtering Workflow
+### Real-Time Filtering Workflow {#real-time-filtering-workflow}
 
 1. **Design Filter**:
    ```c
@@ -591,7 +594,7 @@ Returns success or error code.
    tiny_iir_deinit(&filter);
    ```
 
-### Biquad Workflow
+### Biquad Workflow {#biquad-workflow}
 
 1. **Design Filter** (or use pre-designed coefficients):
    ```c
@@ -614,7 +617,7 @@ Returns success or error code.
    }
    ```
 
-## APPLICATIONS
+## APPLICATIONS {#applications}
 
 IIR filters are widely used in:
 
@@ -625,23 +628,23 @@ IIR filters are widely used in:
 - **Sensor Signal Processing**: Noise reduction, signal conditioning
 - **Real-Time Systems**: Where computational efficiency is critical
 
-## ADVANTAGES AND DISADVANTAGES
+## ADVANTAGES AND DISADVANTAGES {#advantages-and-disadvantages}
 
-### Advantages
+### Advantages {#advantages}
 
 - **Efficient**: Fewer coefficients than FIR for same specifications
 - **Sharp Transition**: Can achieve sharp frequency response with low order
 - **Low Latency**: Minimal group delay compared to FIR
 - **Memory Efficient**: Requires less memory than FIR
 
-### Disadvantages
+### Disadvantages {#disadvantages}
 
 - **Potential Instability**: Can be unstable if poles are outside unit circle
 - **Non-Linear Phase**: Generally has non-linear phase response
 - **Design Complexity**: More complex design than FIR window method
 - **Limit Cycles**: Can exhibit quantization-induced limit cycles
 
-## STABILITY CONSIDERATIONS
+## STABILITY CONSIDERATIONS {#stability-considerations}
 
 For an IIR filter to be stable, all poles must lie inside the unit circle in the z-plane:
 
@@ -655,26 +658,26 @@ Where \( p_k \) are the poles of the transfer function.
 
 The denominator polynomial \( A(z) = 1 + \sum_{k=1}^{N} a[k] \cdot z^{-k} \) must have all roots inside the unit circle.
 
-## DESIGN CONSIDERATIONS
+## DESIGN CONSIDERATIONS {#design-considerations}
 
-### Filter Order
+### Filter Order {#filter-order}
 
 - **Higher Order**: Sharper transition, better stopband attenuation, but more complex
 - **Lower Order**: Simpler, faster, but wider transition band
 - **Butterworth**: Order determines -3 dB point and stopband attenuation
 
-### Normalized Frequency
+### Normalized Frequency {#normalized-frequency}
 
 Remember to normalize frequencies:
 
 - Cutoff at 100 Hz with 1 kHz sample rate: `0.2` (100 / 500)
 - Cutoff at 1 kHz with 10 kHz sample rate: `0.2` (1000 / 5000)
 
-### Coefficient Normalization
+### Coefficient Normalization {#coefficient-normalization}
 
 IIR filters use normalized coefficients where `a[0] = 1.0`. This is standard practice and simplifies implementation.
 
-## NOTES
+## NOTES {#notes_1}
 
 - IIR filters can be unstable if not designed properly
 - Always check stability when designing custom filters
@@ -683,4 +686,3 @@ IIR filters use normalized coefficients where `a[0] = 1.0`. This is standard pra
 - For real-time applications, use `tiny_iir_init()` and `tiny_iir_process_sample()`
 - For batch processing, use `tiny_iir_filter_f32()`
 - Biquad filters are recommended for higher-order designs
-

@@ -1,6 +1,13 @@
-# TESTS
+# TinyDSP · Transform · DWT — Tests and results {#tests}
 
-## tiny_dwt_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_dwt_testc"></span>
+<span id="tiny_dwt_testh"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## `tiny_dwt_test.h` {#tinydwttesth}
 
 ```c
 /**
@@ -54,7 +61,10 @@ void tiny_dwt_test_all(void);
 
 ```
 
-## tiny_dwt_test.c
+## `tiny_dwt_test.c` {#tinydwttestc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_dwt_test.c</code> · 609 lines</summary>
 
 ```c
 /**
@@ -667,3 +677,5 @@ void tiny_dwt_test_all(void)
     printf("╚══════════════════════════════════════════════════════════╝\n");
 }
 ```
+
+</details>

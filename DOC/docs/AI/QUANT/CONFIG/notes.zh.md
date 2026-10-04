@@ -1,9 +1,31 @@
-# 说明
+# TinyAI · 量化 · 配置 — 设计说明 {#_1}
+
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_dtype_t"></span>
+<span id="tiny_quant_params_t"></span>
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     `tiny_quant_config.h` 集中定义了量化子系统的数据类型枚举、量化参数结构以及各种格式的极值常量。所有 INT / FP8 量化函数都依赖这些类型，是整个 quant 模块的基石。
 
-## tiny_dtype_t
+!!! abstract "Quant Config — 量化数据类型与参数结构体"
+    定义 \(tiny\_dtype\_t\) 枚举和 \(tiny\_quant\_params\_t\) 结构体。
+
+## 参考 {#_2}
+
+| 枚举值 | 名称 | 位宽 |
+|--------|------|------|
+| `TINY_DTYPE_FP32` | 32 位浮点 | 32 |
+| `TINY_DTYPE_INT8` | 8 位有符号整数 | 8 |
+| `TINY_DTYPE_INT16` | 16 位有符号整数 | 16 |
+| `TINY_DTYPE_E4M3FN` | FP8 (E4M3FN) | 8 |
+| `TINY_DTYPE_E5M2` | FP8 (E5M2) | 8 |
+
+---
+
+## tiny_dtype_t {#tinydtypet}
 
 ```c
 typedef enum
@@ -16,7 +38,7 @@ typedef enum
 } tiny_dtype_t;
 ```
 
-## tiny_quant_params_t
+## tiny_quant_params_t {#tinyquantparams_t}
 
 ```c
 typedef struct
@@ -42,7 +64,7 @@ x = \text{scale} \cdot \mathrm{quant}
 
 其中 \( Q_\text{max} \) 为 INT8 = 127、INT16 = 32767、FP8 E4M3 = 448、FP8 E5M2 = 57344。
 
-## 格式极值
+## 格式极值 {#_3}
 
 ```c
 // FP8 E4M3FN（OCP 规范）：无 ±inf，NaN 编码为 0x7F / 0xFF
@@ -63,7 +85,7 @@ x = \text{scale} \cdot \mathrm{quant}
 #define TINY_INT16_MIN (-32768)
 ```
 
-## 选择哪种 dtype
+## 选择哪种 dtype {#dtype}
 
 | 场景 | 建议 dtype | 备注 |
 | --- | --- | --- |
@@ -73,7 +95,7 @@ x = \text{scale} \cdot \mathrm{quant}
 | 梯度 / 反向中间结果 | `FP8_E5M2` | 范围更大、精度更低，适合梯度 |
 | 训练时全程 | `FLOAT32` | 反向稳定性最高 |
 
-## 命名空间
+## 命名空间 {#_4}
 
 `tiny_quant_config.h` 中的类型与常量都暴露在全局 / `extern "C"` 段，C 与 C++ 都能直接使用。`tiny_quant.hpp` 在此基础上提供 `tiny::QuantParams`：
 

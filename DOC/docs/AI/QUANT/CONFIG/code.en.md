@@ -1,6 +1,12 @@
-# Code
+# TinyAI · Quant · Config — Implementation and source {#code}
 
-## tiny_quant_config.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_quant_configh"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## `tiny_quant_config.h` {#tinyquantconfigh}
 
 ```c
 /**

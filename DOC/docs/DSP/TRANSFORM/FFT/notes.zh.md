@@ -1,11 +1,14 @@
-# 说明
+# TinyFFT — 原理与接口 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     快速傅里叶变换（FFT）是信号处理中的基础算法，用于高效计算离散傅里叶变换（DFT）。它将信号从时域转换到频域，实现频率分析、频谱分析和滤波操作。FFT广泛应用于音频处理、通信、结构健康监测和许多其他应用。
 
-## FFT 概述
+## FFT 概述 {#fft}
 
-### 数学原理
+### 数学原理 {#_2}
 
 长度为 \( N \) 的序列 \( x[n] \) 的离散傅里叶变换（DFT）定义为：
 
@@ -43,7 +46,7 @@ X[k] = \sum_{n=0}^{N-1} x[n] \cdot e^{-j \frac{2\pi kn}{N}}
 f_k = k \cdot \frac{f_s}{N}
 \]
 
-## 窗函数
+## 窗函数 {#_3}
 
 窗函数在 FFT 之前应用于信号，以减少频谱泄漏。库支持多种窗类型：
 
@@ -55,9 +58,9 @@ f_k = k \cdot \frac{f_s}{N}
 
 - **布莱克曼窗（Blackman）**：最佳旁瓣抑制，但主瓣更宽
 
-## 初始化和反初始化
+## 初始化和反初始化 {#_4}
 
-### tiny_fft_init
+### tiny_fft_init {#tiny_fft_init}
 
 ```c
 /**
@@ -96,7 +99,7 @@ tiny_error_t tiny_fft_init(int fft_size);
 
 - 所有后续的 FFT 操作必须使用大小 ≤ `fft_size`。
 
-### tiny_fft_deinit
+### tiny_fft_deinit {#tiny_fft_deinit}
 
 ```c
 /**
@@ -115,9 +118,9 @@ tiny_error_t tiny_fft_deinit(void);
 
 返回成功或错误代码。
 
-## 正向 FFT
+## 正向 FFT {#fft_1}
 
-### tiny_fft_f32
+### tiny_fft_f32 {#tiny_fft_f32}
 
 ```c
 /**
@@ -187,9 +190,9 @@ tiny_error_t tiny_fft_f32(const float *input, int input_len, float *output_fft, 
 
 - 箱N/2+1 到 N-1：箱1 到 N/2-1 的镜像（对于实信号）
 
-## 逆 FFT
+## 逆 FFT {#fft_2}
 
-### tiny_fft_ifft_f32
+### tiny_fft_ifft_f32 {#tiny_fft_ifft_f32}
 
 ```c
 /**
@@ -230,9 +233,9 @@ tiny_error_t tiny_fft_ifft_f32(const float *input_fft, int fft_len, float *outpu
 
 重建的信号应与原始输入信号匹配（在数值精度范围内），假设未对 FFT 结果进行修改。
 
-## 频谱分析
+## 频谱分析 {#_5}
 
-### tiny_fft_magnitude_f32
+### tiny_fft_magnitude_f32 {#tiny_fft_magnitude_f32}
 
 ```c
 /**
@@ -269,7 +272,7 @@ tiny_error_t tiny_fft_magnitude_f32(const float *fft_result, int fft_len, float 
 
 返回成功或错误代码。
 
-### tiny_fft_power_spectrum_f32
+### tiny_fft_power_spectrum_f32 {#tiny_fft_power_spectrum_f32}
 
 ```c
 /**
@@ -306,9 +309,9 @@ P[k] = \frac{|X[k]|^2}{N} = \frac{\text{Re}[X[k]]^2 + \text{Im}[X[k]]^2}{N}
 
 返回成功或错误代码。
 
-## 频率检测
+## 频率检测 {#_6}
 
-### tiny_fft_find_peak_frequency
+### tiny_fft_find_peak_frequency {#tiny_fft_find_peak_frequency}
 
 ```c
 /**
@@ -352,7 +355,7 @@ tiny_error_t tiny_fft_find_peak_frequency(const float *power_spectrum, int fft_l
 
 返回成功或错误代码。
 
-### tiny_fft_find_top_frequencies
+### tiny_fft_find_top_frequencies {#tiny_fft_find_top_frequencies}
 
 ```c
 /**
@@ -405,9 +408,9 @@ tiny_error_t tiny_fft_find_top_frequencies(const float *power_spectrum, int fft_
 
 如果找到的峰值少于 `top_n` 个，输出数组中剩余条目将设置为零。
 
-## 使用流程
+## 使用流程 {#_7}
 
-### 典型的 FFT 分析流程
+### 典型的 FFT 分析流程 {#fft_3}
 
 1. **初始化 FFT**:
    ```c
@@ -438,7 +441,7 @@ tiny_error_t tiny_fft_find_top_frequencies(const float *power_spectrum, int fft_
    tiny_fft_deinit();
    ```
 
-## 应用场景
+## 应用场景 {#_8}
 
 FFT 广泛应用于各种应用：
 

@@ -1,6 +1,9 @@
-# 向量操作
+# 向量操作 {#_1}
 
-## 目录
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## 目录 {#_2}
 
 ```c
 tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
@@ -19,9 +22,9 @@ tiny_error_t tiny_vec_dotprod_f32(const float *src1, const float *src2, float *d
 tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *dest, int len, int stride1, int stride2);
 ```
 
-## 加法
+## 加法 {#_3}
 
-### 两个向量的加法
+### 两个向量的加法 {#_4}
 
 ```c
 tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
@@ -40,7 +43,7 @@ tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *o
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-### 向量与常数的加法
+### 向量与常数的加法 {#_5}
 
 ```c
 tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
@@ -58,9 +61,9 @@ tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-## 减法
+## 减法 {#_6}
 
-### 两个向量的减法
+### 两个向量的减法 {#_7}
 
 ```c
 tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
@@ -80,7 +83,7 @@ tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *o
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-### 向量与常数的减法
+### 向量与常数的减法 {#_8}
 
 ```c
 tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
@@ -99,9 +102,9 @@ tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float
   
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-## 乘法
+## 乘法 {#_9}
 
-### 两个向量的乘法
+### 两个向量的乘法 {#_10}
 
 ```c
 tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
@@ -121,7 +124,7 @@ tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *o
   
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-### 向量与常数的乘法
+### 向量与常数的乘法 {#_11}
 
 ```c
 tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
@@ -140,9 +143,9 @@ tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-## 除法
+## 除法 {#_12}
 
-### 两个向量的除法
+### 两个向量的除法 {#_13}
 
 ```c
 tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out, bool allow_divide_by_zero);
@@ -161,7 +164,7 @@ tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *o
 - `stride_out`：输出向量的步长。
 - `allow_divide_by_zero`：布尔值，指示是否允许除以零的操作。
 
-### 向量与常数的除法
+### 向量与常数的除法 {#_14}
 
 ```c
 tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out, bool allow_divide_by_zero);
@@ -181,9 +184,9 @@ tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-## 平方根
+## 平方根 {#_15}
 
-### 向量的平方根
+### 向量的平方根 {#_16}
 
 ```c
 tiny_error_t tiny_vec_sqrt_f32(const float *input, float *output, int len);
@@ -199,7 +202,7 @@ tiny_error_t tiny_vec_sqrt_f32(const float *input, float *output, int len);
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-### 向量的平方根（快速）
+### 向量的平方根（快速） {#_17}
 
 ```c
 tiny_error_t tiny_vec_sqrtf_f32(const float *input, float *output, int len);
@@ -215,7 +218,7 @@ tiny_error_t tiny_vec_sqrtf_f32(const float *input, float *output, int len);
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-### 向量的平方根倒数
+### 向量的平方根倒数 {#_18}
 
 ```c
 tiny_error_t tiny_vec_inv_sqrt_f32(const float *input, float *output, int len);
@@ -231,7 +234,7 @@ tiny_error_t tiny_vec_inv_sqrt_f32(const float *input, float *output, int len);
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-### 向量的平方根倒数（快速）
+### 向量的平方根倒数（快速） {#_19}
 
 ```c
 tiny_error_t tiny_vec_inv_sqrtf_f32(const float *input, float *output, int len);
@@ -247,9 +250,9 @@ tiny_error_t tiny_vec_inv_sqrtf_f32(const float *input, float *output, int len);
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-## 点积
+## 点积 {#_20}
 
-### 向量的点积
+### 向量的点积 {#_21}
 
 ```c
 tiny_error_t tiny_vec_dotprod_f32(const float *src1, const float *src2, float *dest, int len);
@@ -266,7 +269,7 @@ tiny_error_t tiny_vec_dotprod_f32(const float *src1, const float *src2, float *d
 
 **返回值：** 返回 `tiny_error_t` 类型的错误码，表示操作是否成功。
 
-### 向量的点积（带步长）
+### 向量的点积（带步长） {#_22}
 
 ```c
 tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *dest, int len, int stride1, int stride2);

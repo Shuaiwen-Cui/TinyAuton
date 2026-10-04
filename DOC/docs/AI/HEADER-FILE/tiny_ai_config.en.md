@@ -1,9 +1,12 @@
-# TinyAI Configuration
+# TinyAI Configuration {#tinyai-configuration}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! info
     `tiny_ai_config.h` is the global configuration file for the `tiny_ai` middleware. It centralises platform macros, feature flags, the memory strategy, and AI-specific error codes. Documentation may lag the implementation; treat the source as the source of truth.
 
-## DEPENDENCIES
+## DEPENDENCIES {#dependencies}
 
 `tiny_ai_config.h` includes `tiny_math.h` and `tiny_dsp.h`, so it inherits all platform macros from `tiny_math` (`MCU_PLATFORM_SELECTED`, `MCU_PLATFORM_ESP32`, `TINY_PI`, `TINY_MATH_MIN_DENOMINATOR`, …).
 
@@ -12,7 +15,7 @@
 #include "tiny_dsp.h"
 ```
 
-## FEATURE FLAGS
+## FEATURE FLAGS {#feature-flags}
 
 | Macro | Default | Meaning |
 | --- | --- | --- |
@@ -24,7 +27,7 @@
 !!! note
     ESP32-S3 has no FP8 hardware; FP8 is fully software-emulated. E4M3FN is preferred for weights/activations, while E5M2 is preferred for gradients.
 
-## MEMORY STRATEGY
+## MEMORY STRATEGY {#memory-strategy}
 
 ESP32-S3 WROOM-1U ships with ~390 KB of internal SRAM and 8 MB of octal PSRAM (80 MHz). `tiny_ai` exposes two allocation macros to separate the hot path from bulk data:
 
@@ -53,7 +56,7 @@ ESP32-S3 WROOM-1U ships with ~390 KB of internal SRAM and 8 MB of octal PSRAM (8
 
 `Tensor` defaults to `TINY_AI_MALLOC`, so medium-size MLPs / CNNs entirely live in SRAM. When the model exceeds the SRAM budget, allocate a PSRAM buffer manually and wrap it via `Tensor::from_data()` (a non-owning view).
 
-## ERROR CODES
+## ERROR CODES {#error-codes}
 
 Error codes share the global `tiny_error_t` enum used by `tiny_math` / `tiny_dsp`. The AI-specific block starts at `0x90000`:
 
@@ -71,7 +74,7 @@ Error codes share the global `tiny_error_t` enum used by `tiny_math` / `tiny_dsp
 #define TINY_ERR_AI_NO_CACHE           (TINY_ERR_AI_BASE + 10) // backward called before forward
 ```
 
-## FULL SOURCE
+## FULL SOURCE {#full-source}
 
 ```c
 /**

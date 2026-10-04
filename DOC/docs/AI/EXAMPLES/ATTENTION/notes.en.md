@@ -1,9 +1,48 @@
-# Notes
+# TinyAI · Examples · Attention — Design notes {#notes}
+
+!!! info "Training output and loss"
+    Cross entropy computes Softmax internally from logits. Historical examples with final Softmax retain their original configuration; choose new output layers according to the loss API. MLP’s named INT8 evaluation uses float predict with mismatched labels and does not evaluate the INT8 kernel.
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## Reading this experiment {#doc-reading-this-experiment}
+
+The Iris example reports 99.17% train and 90.00% test accuracy; logged loss falls from 0.319672 to 0.027159. This run illustrates convergence but does not establish robustness across random splits or structural monitoring data.
+
+The output dated 2026-04-30 is retained line for line. Training was not rerun for this documentation revision; device and firmware commit were not recorded. Read the output and interpretation before the data, model and training walkthrough.
 
 !!! info "Demo overview"
     `example_attention` is a minimal Transformer-style classifier: 4 Iris features are projected into "4 tokens × 8 dims", then fed to a Multi-Head Self-Attention block, followed by global average pooling and a linear classifier. It validates that `Attention`, `GlobalAvgPool`, and `Dense` can be trained on-device on a small dataset.
 
-## DATA SOURCE
+## Measured output (2026-04-30) {#measured-output-2026-04-30}
+
+```txt
+========================================
+  tiny_ai  |  Attention Example (Iris)
+========================================
+Dataset split: 120 train / 30 test
+Model summary:
+  Dense(4, 32) + ReLU
+  reshape [B, 32] -> [B, 4, 8]  (tokens, embed_dim)
+  Attention(embed_dim=8, heads=2, head_dim=4)
+  GlobalAvgPool
+  Dense(8, 3)  [raw logits]
+
+Training...
+Epoch [ 20/100]  loss: 0.319672
+Epoch [ 40/100]  loss: 0.110597
+Epoch [ 60/100]  loss: 0.046880
+Epoch [ 80/100]  loss: 0.033336
+Epoch [100/100]  loss: 0.027159
+
+--- Float32 Results ---
+  Train accuracy: 99.17%
+  Test  accuracy: 90.00%
+example_attention  DONE
+```
+
+## DATA SOURCE {#data-source}
 
 ```cpp
 Dataset dataset(
@@ -16,7 +55,7 @@ dataset.split(0.2f, train_ds, test_ds, 42);
 
 Same Iris data (`iris_data.hpp`) used by the MLP example: 150 samples × 4 features × 3 classes.
 
-## MODEL
+## MODEL {#model}
 
 ```txt
 Input          : [B, 4]
@@ -34,7 +73,7 @@ Key points:
 - Because `cross_entropy_forward(logits, y)` consumes raw logits, the classifier **does not** end with a softmax layer.
 - Since the data flow toggles between `[B, 32]` and `[B, 4, 8]`, the example wires layers up directly instead of using `Sequential`.
 
-## TRAINING LOOP
+## TRAINING LOOP {#training-loop}
 
 Reshape-aware training loop:
 
@@ -83,7 +122,7 @@ Notes:
 - The backward chain mirrors forward exactly, including the `reshape_3d / reshape_2d` pair.
 - `Attention` already caches the intermediate `Q/K/V/A` tensors internally; no manual bookkeeping is needed.
 
-## EVALUATION
+## EVALUATION {#evaluation}
 
 ```cpp
 auto eval_accuracy = [&](Dataset &ds, const char *tag) {
@@ -105,45 +144,18 @@ auto eval_accuracy = [&](Dataset &ds, const char *tag) {
 
 Because `Sequential::predict` cannot express the reshape, the example does an inline argmax instead.
 
-## Measured output (2026-04-30)
-
-```txt
-========================================
-  tiny_ai  |  Attention Example (Iris)
-========================================
-Dataset split: 120 train / 30 test
-Model summary:
-  Dense(4, 32) + ReLU
-  reshape [B, 32] -> [B, 4, 8]  (tokens, embed_dim)
-  Attention(embed_dim=8, heads=2, head_dim=4)
-  GlobalAvgPool
-  Dense(8, 3)  [raw logits]
-
-Training...
-Epoch [ 20/100]  loss: 0.319672
-Epoch [ 40/100]  loss: 0.110597
-Epoch [ 60/100]  loss: 0.046880
-Epoch [ 80/100]  loss: 0.033336
-Epoch [100/100]  loss: 0.027159
-
---- Float32 Results ---
-  Train accuracy: 99.17%
-  Test  accuracy: 90.00%
-example_attention  DONE
-```
-
-## Interpretation
+## Interpretation {#interpretation}
 
 - **Convergence is strong**: loss decreases from `0.319` to `0.027`, showing stable learning across the attention pipeline.
 - **There is a generalization gap**: `Train 99.17%` vs `Test 90.00%`; this is common on small datasets and can be further checked with early stopping, regularization, or multi-seed runs.
 - **Compared with MLP**: both current Attention and MLP runs reach about `90%` test accuracy, so Attention is not clearly superior under this setup, but its full training path is validated.
 
-## RESOURCE COST
+## RESOURCE COST {#resource-cost}
 
 - The attention block caches `[B, S, F]`, `[B, H, S, dh]`, `[B, H, S, S]` per batch; with batch=16, S=4, F=8 these are only a few KB.
 - Total training-time memory is well under 100 KB and runs comfortably in ESP32-S3 internal RAM. For larger configurations, redirect `embed_proj` and `attn` intermediate tensors to PSRAM.
 
-## ENTRY POINT
+## ENTRY POINT {#entry-point}
 
 ```cpp
 extern "C" void example_attention(void);

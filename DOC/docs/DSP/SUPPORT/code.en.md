@@ -1,6 +1,14 @@
-# CODE
+# TinyDSP · Support — Implementation and source {#code}
 
-## tiny_view.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_view.h` {#tiny_viewh}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_view.h</code> · 74 lines</summary>
 
 ```c
 /**
@@ -79,7 +87,12 @@ extern "C"
 
 ```
 
-## tiny_view.c
+</details>
+
+## `tiny_view.c` {#tiny_viewc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_view.c</code> · 382 lines</summary>
 
 ```c
 /**
@@ -465,3 +478,5 @@ tiny_error_t tiny_view_statistics_f32(const float *data, int len, const char *na
 
 
 ```
+
+</details>

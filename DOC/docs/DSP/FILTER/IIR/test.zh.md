@@ -1,6 +1,128 @@
-# 测试
+# TinyDSP · 滤波 · IIR — 测试与结果 {#_1}
 
-## tiny_iir_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_iir_testc"></span>
+<span id="tiny_iir_testh"></span>
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## 输出结果 {#_2}
+
+```c
+==========================================
+       TinyIIR Filter Test Suite
+==========================================
+
+========== IIR Filter Design Test ==========
+
+Test 1: Low-Pass Butterworth Filter Design
+  Parameters: cutoff=0.1 (normalized), order=2
+  [PASS] Low-pass filter designed successfully
+  B coefficients: 0.067455 0.134911 0.067455 
+  A coefficients: 1.000000 -1.142980 0.412802 
+  Note: a[0] should be 1.0 (normalized)
+
+Test 2: High-Pass Butterworth Filter Design
+  Parameters: cutoff=0.2 (normalized), order=2
+  [PASS] High-pass filter designed successfully
+  B coefficients: 0.391336 -0.782672 0.391336 
+  A coefficients: 1.000000 -0.369527 0.195816 
+
+Test 3: Band-Pass Filter Design
+  Parameters: low=0.1, high=0.3 (normalized), order=2
+  [SKIP] Band-pass design not yet implemented (expected)
+
+========================================
+
+========== IIR Batch Filtering Test ==========
+
+Test: Low-Pass IIR Filtering (Butterworth)
+  Input signal: DC + 10Hz + 50Hz + 100Hz components
+  Filter: Low-pass Butterworth, cutoff=100.0 Hz (normalized=0.100)
+  Order: 2
+
+  [PASS] Filtering completed successfully
+
+Signal Visualization:
+
+Original Signal
+Value
+  3.02 |                                                                
+  2.65 |     **                                               **        
+  2.28 |     **                      ***                      ***  **   
+  1.92 |**  ***** **             **  * ** **             **   * ** **   
+  1.55 |*****   ****            ******  *****            ******  * **   
+  1.18 |*  **   ** **           *   **   ** **           *       *****  
+  0.82 |*           ** **   **  *            * **   **   *           ** 
+  0.45 |             ****  ******            *****  ******            * 
+  0.08 |             ** ****   **             ** ** *                 **
+ -0.28 |                  **                      ***                   
+ -0.65 |                  **                       **                   
+ -1.02 |                                                                
+       ----------------------------------------------------------------
+       0       8       16      24      32      40      48      56       (Sample Index)
+Range: [-1.018, 3.018], Length: 256
+
+
+Filtered Signal (Low-Pass IIR)
+Value
+  2.93 |                                                                
+  2.58 |     **                       **                       **       
+  2.23 |     ***                      ***                      **       
+  1.89 | **  * ** **             **   * ** **             **  ***** **  
+  1.54 |******  *****            ******  ****             *****   ****  
+  1.19 |*        ** *            *  **   ** **            *  **   ** ** 
+  0.84 |*           ** **   **   *           ** **   **  **           **
+  0.49 |*            *****  ******            * **   *****              
+  0.14 |*             ** ** *  **             ***** **  **              
+ -0.21 |                  ***                     ***                   
+ -0.56 |                  **                       **                   
+ -0.91 |                                                                
+       ----------------------------------------------------------------
+       0       8       16      24      32      40      48      56       (Sample Index)
+Range: [-0.907, 2.933], Length: 256
+
+
+Statistics:
+  Input:  mean=1.1294, power=1.9174
+  Output: mean=1.1262, power=1.8846
+  Power reduction: 1.71%
+
+========================================
+
+========== IIR Real-Time Filtering Test ==========
+
+Test: Real-Time IIR Filtering
+  Filter: Low-pass Butterworth, order=2
+  Processing samples one by one...
+
+  Input samples: 1.0 2.0 3.0 4.0 5.0 4.0 3.0 2.0 1.0 0.0 0.0 1.0 2.0 3.0 4.0 3.0 2.0 1.0 0.0 0.0 
+  Output samples: 0.067 0.347 0.908 1.704 2.652 3.542 4.033 3.957 3.398 2.520 1.545 0.793 0.539 0.828 1.533 2.355 2.868 2.846 2.339 1.566 
+
+  Testing filter reset...
+  [PASS] Filter reset successful
+
+========================================
+
+========== IIR Biquad Filter Test ==========
+
+Test: Biquad (Second-Order) IIR Filter
+  Coefficients: b0=0.067455, b1=0.134911, b2=0.067455, a1=-1.142980, a2=0.412802
+
+  Input samples: 1.0 2.0 3.0 4.0 5.0 4.0 3.0 2.0 1.0 0.0 
+  Output samples: 0.067 0.347 0.908 1.704 2.652 3.542 4.033 3.957 3.398 2.520 
+
+  [PASS] Biquad reset successful
+
+========================================
+
+==========================================
+       All IIR Tests Completed
+==========================================
+```
+
+## `tiny_iir_test.h` {#tinyiirtesth}
 
 ```c
 /**
@@ -32,7 +154,10 @@ void tiny_iir_test(void);
 
 ```
 
-## tiny_iir_test.c
+## `tiny_iir_test.c` {#tinyiirtestc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_iir_test.c</code> · 416 行</summary>
 
 ```c
 /**
@@ -453,117 +578,4 @@ void tiny_iir_test(void)
 
 ```
 
-## 输出结果
-
-```c
-==========================================
-       TinyIIR Filter Test Suite
-==========================================
-
-========== IIR Filter Design Test ==========
-
-Test 1: Low-Pass Butterworth Filter Design
-  Parameters: cutoff=0.1 (normalized), order=2
-  [PASS] Low-pass filter designed successfully
-  B coefficients: 0.067455 0.134911 0.067455 
-  A coefficients: 1.000000 -1.142980 0.412802 
-  Note: a[0] should be 1.0 (normalized)
-
-Test 2: High-Pass Butterworth Filter Design
-  Parameters: cutoff=0.2 (normalized), order=2
-  [PASS] High-pass filter designed successfully
-  B coefficients: 0.391336 -0.782672 0.391336 
-  A coefficients: 1.000000 -0.369527 0.195816 
-
-Test 3: Band-Pass Filter Design
-  Parameters: low=0.1, high=0.3 (normalized), order=2
-  [SKIP] Band-pass design not yet implemented (expected)
-
-========================================
-
-========== IIR Batch Filtering Test ==========
-
-Test: Low-Pass IIR Filtering (Butterworth)
-  Input signal: DC + 10Hz + 50Hz + 100Hz components
-  Filter: Low-pass Butterworth, cutoff=100.0 Hz (normalized=0.100)
-  Order: 2
-
-  [PASS] Filtering completed successfully
-
-Signal Visualization:
-
-Original Signal
-Value
-  3.02 |                                                                
-  2.65 |     **                                               **        
-  2.28 |     **                      ***                      ***  **   
-  1.92 |**  ***** **             **  * ** **             **   * ** **   
-  1.55 |*****   ****            ******  *****            ******  * **   
-  1.18 |*  **   ** **           *   **   ** **           *       *****  
-  0.82 |*           ** **   **  *            * **   **   *           ** 
-  0.45 |             ****  ******            *****  ******            * 
-  0.08 |             ** ****   **             ** ** *                 **
- -0.28 |                  **                      ***                   
- -0.65 |                  **                       **                   
- -1.02 |                                                                
-       ----------------------------------------------------------------
-       0       8       16      24      32      40      48      56       (Sample Index)
-Range: [-1.018, 3.018], Length: 256
-
-
-Filtered Signal (Low-Pass IIR)
-Value
-  2.93 |                                                                
-  2.58 |     **                       **                       **       
-  2.23 |     ***                      ***                      **       
-  1.89 | **  * ** **             **   * ** **             **  ***** **  
-  1.54 |******  *****            ******  ****             *****   ****  
-  1.19 |*        ** *            *  **   ** **            *  **   ** ** 
-  0.84 |*           ** **   **   *           ** **   **  **           **
-  0.49 |*            *****  ******            * **   *****              
-  0.14 |*             ** ** *  **             ***** **  **              
- -0.21 |                  ***                     ***                   
- -0.56 |                  **                       **                   
- -0.91 |                                                                
-       ----------------------------------------------------------------
-       0       8       16      24      32      40      48      56       (Sample Index)
-Range: [-0.907, 2.933], Length: 256
-
-
-Statistics:
-  Input:  mean=1.1294, power=1.9174
-  Output: mean=1.1262, power=1.8846
-  Power reduction: 1.71%
-
-========================================
-
-========== IIR Real-Time Filtering Test ==========
-
-Test: Real-Time IIR Filtering
-  Filter: Low-pass Butterworth, order=2
-  Processing samples one by one...
-
-  Input samples: 1.0 2.0 3.0 4.0 5.0 4.0 3.0 2.0 1.0 0.0 0.0 1.0 2.0 3.0 4.0 3.0 2.0 1.0 0.0 0.0 
-  Output samples: 0.067 0.347 0.908 1.704 2.652 3.542 4.033 3.957 3.398 2.520 1.545 0.793 0.539 0.828 1.533 2.355 2.868 2.846 2.339 1.566 
-
-  Testing filter reset...
-  [PASS] Filter reset successful
-
-========================================
-
-========== IIR Biquad Filter Test ==========
-
-Test: Biquad (Second-Order) IIR Filter
-  Coefficients: b0=0.067455, b1=0.134911, b2=0.067455, a1=-1.142980, a2=0.412802
-
-  Input samples: 1.0 2.0 3.0 4.0 5.0 4.0 3.0 2.0 1.0 0.0 
-  Output samples: 0.067 0.347 0.908 1.704 2.652 3.542 4.033 3.957 3.398 2.520 
-
-  [PASS] Biquad reset successful
-
-========================================
-
-==========================================
-       All IIR Tests Completed
-==========================================
-```
+</details>

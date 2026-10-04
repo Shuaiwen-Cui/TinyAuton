@@ -1,0 +1,5 @@
+# GitHub Pages build only. Inherits everything from mkdocs.yml and overrides
+# site_url so the language switcher resolves under the /TinyAuton/ sub-path.
+# Build with:  mkdocs gh-deploy --force -f mkdocs.gh.yml
+INHERIT: mkdocs.yml
+site_url: https://shuaiwen-cui.github.io/TinyAuton/

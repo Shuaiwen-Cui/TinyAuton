@@ -1,11 +1,47 @@
-# Notes
+# TinyAI · Core · Tensor — Design notes {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     `tiny::Tensor` is the universal data carrier of `tiny_ai`. It provides up to 4-D float32 tensors, PSRAM-aware allocation, and a zero-copy bridge to `tiny::Mat`. All other modules (activations, layers, losses) consume and produce `Tensor`.
 
-## CONCEPT
+!!! abstract "Tensor — N-D Data Container"
+    Tensor is TinyAI's fundamental data unit. Think of it as **an array with a shape label** that tells you how to interpret the numbers.
+    
+## Intuition {#intuition}
 
-### Shape and size
+### Tensor = Labeled Container {#tensor-labeled-container}
+
+| Dimensions | Name | Example | Shape |
+|-----------|------|---------|-------|
+| 1 | Vector | 4 features of one sample | `[4]` |
+| 2 | Matrix | 150 samples × 4 features | `[150, 4]` |
+| 3 | 3-D tensor | 32 samples × 3 channels × 64 points | `[32, 3, 64]` |
+| 4 | 4-D tensor | Batch of images | `[B, C, H, W]` |
+
+**Key intuition**: the last dimension is usually features/channels; earlier dims are batch/samples.
+
+### Broadcasting {#broadcasting}
+
+When shapes differ, the smaller tensor is automatically "expanded":
+
+- `A[3, 1] + B[1, 4]` → expand to `A[3, 4]` + `B[3, 4]` → result `[3, 4]`
+- Rule: compare right to left; a dimension broadcasts if it's 1 or missing
+
+!!! tip "Accessing data"
+    ```cpp
+    Tensor x({32, 3, 64});         // 32 samples × 3 channels × 64 points
+    x.shape();                      // → [32, 3, 64]
+    x.size();                       // → 32*3*64 = 6144
+    x(0, 1, 2);                     // sample 0, channel 1, point 2
+    ```
+
+---
+
+## CONCEPT {#concept}
+
+### Shape and size {#shape-and-size}
 
 ```cpp
 class Tensor
@@ -22,7 +58,7 @@ class Tensor
 - **`size = shape[0] * shape[1] * shape[2] * shape[3]`** — unused dims are 1, so `size` always equals the element count.
 - **Ownership**: tensors built via constructors own their buffer (`owns_data = true`); views built via `from_data()` do not, and the caller must keep the buffer alive.
 
-### Common shape conventions
+### Common shape conventions {#common-shape-conventions}
 
 | Module | Shape | Notes |
 | --- | --- | --- |
@@ -32,9 +68,9 @@ class Tensor
 | Attention | `[batch, seq_len, embed_dim]` | 3-D |
 | GlobalAvgPool input | `[batch, seq_len, feat]` → output `[batch, feat]` | seq → vector |
 
-## CONSTRUCTORS & NAMED FACTORIES
+## CONSTRUCTORS & NAMED FACTORIES {#constructors-named-factories}
 
-### Direct construction
+### Direct construction {#direct-construction}
 
 ```cpp
 Tensor t1(N);              // 1-D
@@ -46,7 +82,7 @@ Tensor t0;                 // empty (no allocation)
 
 Construction calls the private `alloc()` which `TINY_AI_MALLOC`s `size * sizeof(float)` bytes and zero-fills.
 
-### Named factories
+### Named factories {#named-factories}
 
 ```cpp
 Tensor::zeros(n0);                          // 1-D zero
@@ -62,7 +98,7 @@ Tensor::from_data(buf, ndim, shape);        // wrap external buffer; no copy, no
 !!! warning "from_data ownership"
     The Tensor returned by `from_data()` does *not* own the buffer. The caller must guarantee `buf` outlives the tensor (e.g. weights placed in PSRAM whose lifetime ≥ the model).
 
-## ELEMENT ACCESS
+## ELEMENT ACCESS {#element-access}
 
 `Tensor` exposes inline `at()` overloads keyed on the number of indices:
 
@@ -86,7 +122,7 @@ for (int b = 0; b < B; b++)
 
 Direct `x.data[idx]` access is also allowed and matches the row-major layout.
 
-## SHAPE SEMANTIC ACCESSORS
+## SHAPE SEMANTIC ACCESSORS {#shape-semantic-accessors}
 
 ```cpp
 int batch();     // ndim>=3 ? shape[0] : 1
@@ -97,7 +133,7 @@ int channels();  // ndim==4 ? shape[1] : 1
 
 These let activations / losses treat 2-D and 3-D tensors uniformly with "last dim = class/feature axis". For example, `softmax_inplace` uses `rows = size / cols, cls = cols` to normalise along the last dim.
 
-## IN-PLACE OPS
+## IN-PLACE OPS {#in-place-ops}
 
 ```cpp
 void zero();                          // memset 0
@@ -106,7 +142,7 @@ void copy_from(const Tensor &src);    // shapes must match
 Tensor clone() const;                 // deep copy (owns_data=true)
 ```
 
-## RESHAPE
+## RESHAPE {#reshape}
 
 ```cpp
 tiny_error_t reshape(int ndim, const int *new_shape);   // element count must match
@@ -118,7 +154,7 @@ tiny_error_t reshape_3d(int n0, int n1, int n2);
 
 The Attention example uses `reshape_3d / reshape_2d` to flip between `[B, F]` and `[B, T, E]`.
 
-## INTEROP WITH `tiny::Mat`
+## INTEROP WITH `tiny::Mat` {#interop-with-tinymat}
 
 ```cpp
 Mat to_mat() const;
@@ -132,7 +168,7 @@ Mat xm = x.to_mat();          // [B, F] view, zero-copy
 // dispatch tiny_math matrix APIs through xm
 ```
 
-## SHAPE COMPARISON & PRINTING
+## SHAPE COMPARISON & PRINTING {#shape-comparison-printing}
 
 ```cpp
 bool same_shape(const Tensor &other) const;
@@ -141,7 +177,7 @@ void print(const char *name = "") const;
 
 `print()` shows the shape metadata then dumps up to 32 elements — a quick way to diagnose problems over the serial console.
 
-## COPY / MOVE
+## COPY / MOVE {#copy-move}
 
 `Tensor` follows the rule of five:
 

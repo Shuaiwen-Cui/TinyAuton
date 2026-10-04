@@ -1,9 +1,15 @@
-# NOTES
+# TinyView — Principles and API {#notes}
+
+<!-- Original section links retained for compatibility. -->
+<span id="notes_1"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Note"
     The support module provides visualization and analysis utilities for signal processing. These functions help developers visualize signals, analyze data, and debug DSP algorithms by providing ASCII-based plots and formatted output. This is particularly useful in embedded systems where graphical displays may not be available.
 
-## OVERVIEW
+## OVERVIEW {#overview}
 
 The support module includes four main functions:
 
@@ -12,9 +18,9 @@ The support module includes four main functions:
 3. **Array Printing**: Print arrays in formatted tables
 4. **Statistics**: Calculate and display statistical information about signals
 
-## SIGNAL VISUALIZATION
+## SIGNAL VISUALIZATION {#signal-visualization}
 
-### tiny_view_signal_f32
+### tiny_view_signal_f32 {#tiny_view_signal_f32}
 
 ```c
 /**
@@ -108,9 +114,9 @@ Value
 Range: [-1.200, 1.200], Length: 64
 ```
 
-## SPECTRUM VISUALIZATION
+## SPECTRUM VISUALIZATION {#-max-maximum-y-axis-value-if-min-max-the-function-will-auto-detect-the-range}
 
-### tiny_view_spectrum_f32
+### tiny_view_spectrum_f32 {#spectrum-visualization}
 
 ```c
 /**
@@ -173,9 +179,9 @@ The function prints:
 
 The function assumes the power spectrum length is half of the FFT length (typical for real signals). Frequency labels are calculated as: `freq = index * sample_rate / (2 * len)`.
 
-## ARRAY PRINTING
+## ARRAY PRINTING {#tiny_view_spectrum_f32}
 
-### tiny_view_array_f32
+### tiny_view_array_f32 {#array-printing}
 
 ```c
 /**
@@ -240,9 +246,9 @@ Test Signal [64 elements]:
   ...
 ```
 
-## STATISTICS
+## STATISTICS {#tiny_view_array_f32}
 
-### tiny_view_statistics_f32
+### tiny_view_statistics_f32 {#statistics}
 
 ```c
 /**
@@ -317,9 +323,9 @@ The function prints:
 
 - **Range**: \( \text{range} = \max(x) - \min(x) \)
 
-## USAGE WORKFLOW
+## USAGE WORKFLOW {#tiny_view_statistics_f32}
 
-### Typical Visualization Workflow
+### Typical Visualization Workflow {#usage-workflow}
 
 1. **Visualize Signal**:
    ```c
@@ -345,7 +351,7 @@ The function prints:
    tiny_view_spectrum_f32(power, 128, 1000.0f, "Power Spectrum");
    ```
 
-## APPLICATIONS
+## APPLICATIONS {#typical-visualization-workflow}
 
 The support module is useful for:
 
@@ -361,7 +367,7 @@ The support module is useful for:
 
 - **Documentation**: Generate ASCII plots for documentation
 
-## NOTES
+## NOTES {#applications}
 
 - All visualization functions output to `stdout` using `printf`
 

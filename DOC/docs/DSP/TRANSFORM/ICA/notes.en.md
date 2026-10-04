@@ -1,11 +1,14 @@
-# NOTES
+# TinyICA — Principles and API {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Note"
     Independent Component Analysis (ICA) is a blind source separation technique that separates mixed signals into their independent source components. It assumes that the observed signals are linear mixtures of statistically independent sources. ICA is widely used in signal processing, neuroscience, image processing, and audio source separation applications.
 
-## ICA OVERVIEW
+## ICA OVERVIEW {#ica-overview}
 
-### Mathematical Principle
+### Mathematical Principle {#mathematical-principle}
 
 ICA addresses the blind source separation problem:
 
@@ -37,16 +40,16 @@ Where:
 
 4. **Square or Overdetermined**: Number of observations ≥ number of sources
 
-### ICA vs PCA
+### ICA vs PCA {#ica-vs-pca}
 
 - **PCA**: Finds orthogonal directions of maximum variance (second-order statistics)
 - **ICA**: Finds statistically independent directions (higher-order statistics)
 - **PCA**: Decorrelates data (removes linear dependencies)
 - **ICA**: Separates independent sources (removes all dependencies)
 
-## ALGORITHMS
+## ALGORITHMS {#algorithms}
 
-### FastICA
+### FastICA {#fastica}
 
 The library implements the FastICA algorithm, which is based on maximizing non-Gaussianity:
 
@@ -72,9 +75,9 @@ The library implements the FastICA algorithm, which is based on maximizing non-G
 
 4. Orthogonalize components (Gram-Schmidt)
 
-## PREPROCESSING
+## PREPROCESSING {#preprocessing}
 
-### Centering
+### Centering {#centering}
 
 Subtract the mean from each observation:
 
@@ -84,7 +87,7 @@ Subtract the mean from each observation:
 
 Where \( \bar{\mathbf{x}} \) is the mean vector.
 
-### Whitening
+### Whitening {#whitening}
 
 Transform data to have unit variance and zero correlation:
 
@@ -104,9 +107,9 @@ Where:
 \mathbf{W}_{whiten} = \mathbf{D}^{-1/2} \mathbf{E}^T
 \]
 
-## FUNCTIONS
+## FUNCTIONS {#functions}
 
-### tiny_ica_separate_f32
+### tiny_ica_separate_f32 {#tiny_ica_separate_f32}
 
 ```c
 /**
@@ -177,7 +180,7 @@ Returns `TINY_OK` on success, or error code on failure.
 
 This function performs all steps internally. For repeated separations, use the structure-based API (`tiny_ica_init`, `tiny_ica_fit`, `tiny_ica_transform`) to avoid recomputing whitening matrix.
 
-### tiny_ica_init
+### tiny_ica_init {#tiny_ica_init}
 
 ```c
 /**
@@ -211,7 +214,7 @@ Returns `TINY_OK` on success, or error code on failure.
 
 Function allocates memory internally. Call `tiny_ica_deinit()` to free it.
 
-### tiny_ica_fit
+### tiny_ica_fit {#tiny_ica_fit}
 
 ```c
 /**
@@ -263,7 +266,7 @@ Returns `TINY_OK` on success, or error code on failure.
 
 After fitting, the ICA structure contains the learned unmixing matrix and whitening matrix. These can be reused for transforming new data.
 
-### tiny_ica_transform
+### tiny_ica_transform {#tiny_ica_transform}
 
 ```c
 /**
@@ -303,7 +306,7 @@ Returns `TINY_OK` on success, or error code on failure.
 
 Requires `ica` to be fitted first using `tiny_ica_fit()`. The input signals are centered using the mean from the training data.
 
-### tiny_ica_deinit
+### tiny_ica_deinit {#tiny_ica_deinit}
 
 ```c
 /**
@@ -327,9 +330,9 @@ Deinitializes an ICA structure and frees all allocated memory.
 
 Returns `TINY_OK` on success, or error code on failure.
 
-## USAGE WORKFLOW
+## USAGE WORKFLOW {#usage-workflow}
 
-### Simple One-Shot Separation
+### Simple One-Shot Separation {#simple-one-shot-separation}
 
 ```c
 float mixed_signals[2 * 512];  // 2 observations, 512 samples each
@@ -341,7 +344,7 @@ tiny_error_t ret = tiny_ica_separate_f32(
     TINY_ICA_FASTICA, TINY_ICA_NONLINEARITY_TANH, 100, 1e-4f);
 ```
 
-### Repeated Separations (Structure API)
+### Repeated Separations (Structure API) {#repeated-separations-structure-api}
 
 ```c
 tiny_ica_t ica;
@@ -360,7 +363,7 @@ tiny_ica_transform(&ica, new_mixed, 512, separated);
 tiny_ica_deinit(&ica);
 ```
 
-## APPLICATIONS
+## APPLICATIONS {#applications}
 
 ICA is widely used in:
 
@@ -371,14 +374,14 @@ ICA is widely used in:
 - **Neuroscience**: Analyzing brain signals, fMRI data
 - **Sensor Array Processing**: Separating signals from multiple sensors
 
-## ADVANTAGES
+## ADVANTAGES {#advantages}
 
 - **Blind Separation**: No prior knowledge of mixing matrix needed
 - **Statistical Independence**: Finds truly independent sources
 - **Non-Gaussian Sources**: Works well with non-Gaussian signals
 - **Flexible**: Can handle different numbers of sources and observations
 
-## DISADVANTAGES
+## DISADVANTAGES {#disadvantages}
 
 - **Ambiguity**: Scale and sign of separated sources are ambiguous
 - **Order Ambiguity**: Order of separated sources is arbitrary
@@ -386,37 +389,36 @@ ICA is widely used in:
 - **Computational Cost**: Whitening and eigenvalue decomposition can be expensive
 - **Convergence**: May not converge for some signal types
 
-## DESIGN CONSIDERATIONS
+## DESIGN CONSIDERATIONS {#design-considerations}
 
-### Number of Sources vs Observations
+### Number of Sources vs Observations {#number-of-sources-vs-observations}
 
 - **Square Case** (num_obs = num_sources): Standard ICA problem
 - **Overdetermined** (num_obs > num_sources): Can use PCA to reduce dimensionality first
 - **Underdetermined** (num_obs < num_sources): Not supported (cannot extract more sources than observations)
 
-### Nonlinearity Selection
+### Nonlinearity Selection {#nonlinearity-selection}
 
 - **tanh**: Default choice, works well for most super-Gaussian sources (speech, music)
 - **cube**: Preferred for sub-Gaussian sources (uniform noise, some image signals)
 - **gauss**: Recommended for symmetric source distributions
 - **skew**: Useful when sources exhibit skewness
 
-### Convergence Parameters
+### Convergence Parameters {#convergence-parameters}
 
 - **max_iter**: Typically 50-200 iterations. More iterations for difficult cases.
 - **tolerance**: Typically 1e-4 to 1e-6. Smaller tolerance = more accurate but slower.
 
-### Data Requirements
+### Data Requirements {#data-requirements}
 
 - **Sample Size**: More samples = better separation quality
 - **Independence**: Sources must be statistically independent
 - **Non-Gaussianity**: At most one source can be Gaussian
 
-## NOTES
+## NOTES {#notes_1}
 
 - ICA can only separate sources up to a scaling factor and permutation
 - The order of separated sources may not match the original order
 - ICA works best when sources have different statistical properties
 - Whitening is a critical preprocessing step for ICA
 - FastICA is a popular algorithm due to its speed and simplicity
-

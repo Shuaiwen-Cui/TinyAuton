@@ -1,11 +1,14 @@
-# NOTES
+# TinyFFT — Principles and API {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Note"
     Fast Fourier Transform (FFT) is a fundamental algorithm in signal processing that efficiently computes the Discrete Fourier Transform (DFT). It converts signals from the time domain to the frequency domain, enabling frequency analysis, spectral analysis, and filtering operations. FFT is widely used in audio processing, communications, structural health monitoring, and many other applications.
 
-## FFT OVERVIEW
+## FFT OVERVIEW {#fft-overview}
 
-### Mathematical Principle
+### Mathematical Principle {#mathematical-principle}
 
 The Discrete Fourier Transform (DFT) of a sequence \( x[n] \) of length \( N \) is defined as:
 
@@ -43,7 +46,7 @@ Where:
 f_k = k \cdot \frac{f_s}{N}
 \]
 
-## WINDOW FUNCTIONS
+## WINDOW FUNCTIONS {#window-functions}
 
 Window functions are applied to signals before FFT to reduce spectral leakage. The library supports several window types:
 
@@ -55,9 +58,9 @@ Window functions are applied to signals before FFT to reduce spectral leakage. T
 
 - **Blackman**: Best sidelobe suppression, but wider main lobe
 
-## INITIALIZATION AND DEINITIALIZATION
+## INITIALIZATION AND DEINITIALIZATION {#initialization-and-deinitialization}
 
-### tiny_fft_init
+### tiny_fft_init {#tiny_fft_init}
 
 ```c
 /**
@@ -96,7 +99,7 @@ Returns success or error code.
 
 - All subsequent FFT operations must use sizes ≤ `fft_size`.
 
-### tiny_fft_deinit
+### tiny_fft_deinit {#tiny_fft_deinit}
 
 ```c
 /**
@@ -115,9 +118,9 @@ Deinitializes FFT tables and frees allocated resources.
 
 Returns success or error code.
 
-## FORWARD FFT
+## FORWARD FFT {#forward-fft}
 
-### tiny_fft_f32
+### tiny_fft_f32 {#tiny_fft_f32}
 
 ```c
 /**
@@ -187,9 +190,9 @@ The output is stored as an interleaved complex array:
 
 - Bins N/2+1 to N-1: Mirror of bins 1 to N/2-1 (for real signals)
 
-## INVERSE FFT
+## INVERSE FFT {#inverse-fft}
 
-### tiny_fft_ifft_f32
+### tiny_fft_ifft_f32 {#tiny_fft_ifft_f32}
 
 ```c
 /**
@@ -230,9 +233,9 @@ Returns success or error code.
 
 The reconstructed signal should match the original input signal (within numerical precision), assuming no modifications were made to the FFT result.
 
-## SPECTRUM ANALYSIS
+## SPECTRUM ANALYSIS {#spectrum-analysis}
 
-### tiny_fft_magnitude_f32
+### tiny_fft_magnitude_f32 {#tiny_fft_magnitude_f32}
 
 ```c
 /**
@@ -269,7 +272,7 @@ Calculates the magnitude spectrum from FFT result. The magnitude represents the 
 
 Returns success or error code.
 
-### tiny_fft_power_spectrum_f32
+### tiny_fft_power_spectrum_f32 {#tiny_fft_power_spectrum_f32}
 
 ```c
 /**
@@ -306,9 +309,9 @@ P[k] = \frac{|X[k]|^2}{N} = \frac{\text{Re}[X[k]]^2 + \text{Im}[X[k]]^2}{N}
 
 Returns success or error code.
 
-## FREQUENCY DETECTION
+## FREQUENCY DETECTION {#frequency-detection}
 
-### tiny_fft_find_peak_frequency
+### tiny_fft_find_peak_frequency {#tiny_fft_find_peak_frequency}
 
 ```c
 /**
@@ -352,7 +355,7 @@ Finds the frequency with the maximum power in the power spectrum. Uses parabolic
 
 Returns success or error code.
 
-### tiny_fft_find_top_frequencies
+### tiny_fft_find_top_frequencies {#tiny_fft_find_top_frequencies}
 
 ```c
 /**
@@ -405,9 +408,9 @@ Returns success or error code.
 
 If fewer than `top_n` peaks are found, remaining entries in the output arrays are set to zero.
 
-## USAGE WORKFLOW
+## USAGE WORKFLOW {#usage-workflow}
 
-### Typical FFT Analysis Workflow
+### Typical FFT Analysis Workflow {#typical-fft-analysis-workflow}
 
 1. **Initialize FFT**:
    ```c
@@ -438,7 +441,7 @@ If fewer than `top_n` peaks are found, remaining entries in the output arrays ar
    tiny_fft_deinit();
    ```
 
-## APPLICATIONS
+## APPLICATIONS {#applications}
 
 FFT is widely used in various applications:
 

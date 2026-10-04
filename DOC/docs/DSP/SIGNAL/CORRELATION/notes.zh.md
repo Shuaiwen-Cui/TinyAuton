@@ -1,13 +1,34 @@
-# 说明
+# TinyCorr — 原理与接口 {#_1}
+
+<!-- Original section links retained for compatibility. -->
+<span id="1"></span>
+<span id="11"></span>
+<span id="12"></span>
+<span id="2"></span>
+<span id="21"></span>
+<span id="22"></span>
+<span id="23-const"></span>
+<span id="3-api"></span>
+<span id="31-tiny_corr_f32"></span>
+<span id="32-tiny_ccorr_f32"></span>
+<span id="4"></span>
+<span id="5"></span>
+<span id="51-vs"></span>
+<span id="52"></span>
+<span id="53-siglen-patlen"></span>
+<span id="54"></span>
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     相关性是信号处理中的重要概念，用于分析信号之间的相似性或依赖性，广泛应用于模式识别、时间序列分析和信号检测。本库提供两个层次的相关功能：滑动相关（`tiny_corr_f32`）和完全互相关（`tiny_ccorr_f32`）。
 
 ---
 
-## 1. 算法原理
+## 1. 算法原理 {#1}
 
-### 1.1 滑动相关
+### 1.1 滑动相关 {#11}
 
 滑动相关（模式匹配）将短模式在长信号上滑动，在模式完全重叠的每个有效位置计算点积：
 
@@ -25,7 +46,7 @@
 
 **与卷积不同，模式不翻转** —— 直接原样在信号上滑动。
 
-### 1.2 完全互相关
+### 1.2 完全互相关 {#12}
 
 完全互相关计算两个序列在所有可能移位位置（包括部分重叠）的相关性：
 
@@ -45,16 +66,16 @@ R_{xy}[n] = \sum_{k} x[k] \cdot y[k + n]
 
 ---
 
-## 2. 代码设计理念
+## 2. 代码设计理念 {#2}
 
-### 2.1 两种不同的相关语义
+### 2.1 两种不同的相关语义 {#21}
 
 `tiny_corr_f32` 和 `tiny_ccorr_f32` 服务于根本不同的目的：
 
 - **滑动相关** 仅返回模式完全在信号内部的位置——适用于模板匹配。
 - **完全互相关** 返回所有可能的移位对齐，包括部分重叠——适用于信号对齐、时延估计和完全相关分析。
 
-### 2.2 通用互相关中的长度交换
+### 2.2 通用互相关中的长度交换 {#22}
 
 `tiny_ccorr_f32` **仅在通用回退路径** （`#else`）中交换信号和核以使 `lsig >= lkern`。原因是：
 
@@ -62,15 +83,15 @@ R_{xy}[n] = \sum_{k} x[k] \cdot y[k + n]
 - 三阶段循环索引假定较长序列为"信号"。
 - 在 ESP32 上，调用者需确保 `siglen >= kernlen`（否则后端可能异常）。
 
-### 2.3 const 正确性
+### 2.3 const 正确性 {#23-const}
 
 在通用路径中，局部指针声明为 `const float *sig`、`const float *kern`，保持输入数组的只读属性。这与只读语义一致，并有助于编译器优化。
 
 ---
 
-## 3. API 接口 — 函数
+## 3. API 接口 — 函数 {#3-api}
 
-### 3.1 `tiny_corr_f32`
+### 3.1 `tiny_corr_f32` {#31-tiny_corr_f32}
 
 ```c
 /**
@@ -146,7 +167,7 @@ tiny_error_t tiny_corr_f32(const float *Signal, const int siglen,
 
 ---
 
-### 3.2 `tiny_ccorr_f32`
+### 3.2 `tiny_ccorr_f32` {#32-tiny_ccorr_f32}
 
 ```c
 /**
@@ -251,7 +272,7 @@ tiny_error_t tiny_ccorr_f32(const float *Signal, const int siglen,
 
 ---
 
-## 4. 函数对比
+## 4. 函数对比 {#4}
 
 | 特性 | `tiny_corr_f32` | `tiny_ccorr_f32` |
 |------|----------------|------------------|
@@ -262,14 +283,14 @@ tiny_error_t tiny_ccorr_f32(const float *Signal, const int siglen,
 | **ESP32 外部依赖** | `dsps_corr_f32` | `dsps_ccorr_f32` |
 | **使用场景** | 模式匹配 / 模板检测 | 时延估计 / 信号对齐 |
 
-### 何时使用 `tiny_corr_f32`
+### 何时使用 `tiny_corr_f32` {#tiny_corr_f32}
 
 - 在较长信号中搜索已知模式
 - 仅关心模式完全在信号内的位置
 - 需要最高效的计算（无部分重叠开销）
 - 示例：检测接收比特流中的前导码
 
-### 何时使用 `tiny_ccorr_f32`
+### 何时使用 `tiny_ccorr_f32` {#tiny_ccorr_f32}
 
 - 需要包含部分重叠的互相关
 - 估计两个信号之间的时间延迟
@@ -278,28 +299,28 @@ tiny_error_t tiny_ccorr_f32(const float *Signal, const int siglen,
 
 ---
 
-## 5. ⚠️ 重要注意事项
+## 5. ⚠️ 重要注意事项 {#5}
 
-### 5.1 相关 vs 卷积
+### 5.1 相关 vs 卷积 {#51-vs}
 
 相关 **不翻转** 核/模式。卷积会翻转。如果你误以为可以用带反转核的卷积来做相关，请注意：
 
 - 两者的边界处理实现不同。
 - 明确使用 `tiny_corr_f32` 或 `tiny_ccorr_f32` 进行相关——不要误用卷积函数。
 
-### 5.2 输出缓冲区最小大小
+### 5.2 输出缓冲区最小大小 {#52}
 
 | 函数 | 最小输出缓冲区大小 |
 |------|-------------------|
 | `tiny_corr_f32` | `siglen - patlen + 1` |
 | `tiny_ccorr_f32` | `siglen + kernlen - 1` |
 
-### 5.3 `siglen < patlen` 的处理
+### 5.3 `siglen < patlen` 的处理 {#53-siglen-patlen}
 
 - `tiny_corr_f32`：立即返回 `TINY_ERR_DSP_MISMATCH`（模式必须适配信号）。
 - `tiny_ccorr_f32`：通用路径自动交换操作数。在 ESP32 上，`dsps_ccorr_f32` 可能处理或拒绝此情况，取决于其内部实现——为保证可移植性，请确保 `siglen >= kernlen` 或在目标平台上测试。
 
-### 5.4 平台差异
+### 5.4 平台差异 {#54}
 
 在 ESP32 上，两个函数均委托给 ESP-DSP 库。所有其他平台使用通用回退路径。长度排序的行为保证不同：
 

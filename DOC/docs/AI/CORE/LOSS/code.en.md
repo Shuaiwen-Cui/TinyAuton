@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Core · Loss — Implementation and source {#code}
 
-## tiny_loss.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_loss.hpp` {#tiny_losshpp}
 
 ```cpp
 /**
@@ -58,7 +63,10 @@ Tensor loss_backward(const Tensor &pred, const Tensor &target,
 #endif // __cplusplus
 ```
 
-## tiny_loss.cpp
+## `tiny_loss.cpp` {#tiny_losscpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_loss.cpp</code> · 159 lines</summary>
 
 ```cpp
 /**
@@ -221,3 +229,5 @@ Tensor loss_backward(const Tensor &pred, const Tensor &target,
 
 #endif // __cplusplus
 ```
+
+</details>

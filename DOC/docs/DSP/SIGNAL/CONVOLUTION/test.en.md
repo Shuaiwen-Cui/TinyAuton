@@ -1,6 +1,89 @@
-# TESTS
+# TinyDSP · Signal · Convolution — Tests and results {#tests}
 
-## tiny_conv_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_conv_testc"></span>
+<span id="tiny_conv_testh"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## test results {#test-results}
+
+```c
+===== tiny_conv_f32 and tiny_conv_ex_f32 Test Start =====
+Signal: 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00 10.00 11.00 
+Kernel: 0.20 0.50 0.30 
+
+[Test] tiny_conv_f32 basic full convolution...
+[PASS] tiny_conv_f32 full convolution completed.
+
+[Test] tiny_conv_ex_f32 padding=zero, mode=full...
+[PASS] tiny_conv_ex_f32 matches tiny_conv_f32 (zero padding, full mode).
+
+[Test] tiny_conv_ex_f32 padding=ZERO, mode=FULL...
+[PASS] tiny_conv_ex_f32 completed (padding=ZERO, mode=FULL).
+Output:
+0.20000 0.90000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 8.50000 3.30000 
+
+[Test] tiny_conv_ex_f32 padding=ZERO, mode=HEAD...
+[PASS] tiny_conv_ex_f32 completed (padding=ZERO, mode=HEAD).
+Output:
+0.20000 0.90000 1.90000 
+
+[Test] tiny_conv_ex_f32 padding=ZERO, mode=CENTER...
+[PASS] tiny_conv_ex_f32 completed (padding=ZERO, mode=CENTER).
+Output:
+0.90000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 8.50000 
+
+[Test] tiny_conv_ex_f32 padding=ZERO, mode=TAIL...
+[PASS] tiny_conv_ex_f32 completed (padding=ZERO, mode=TAIL).
+Output:
+9.90000 8.50000 3.30000 
+
+[Test] tiny_conv_ex_f32 padding=SYMMETRIC, mode=FULL...
+[PASS] tiny_conv_ex_f32 completed (padding=SYMMETRIC, mode=FULL).
+Output:
+1.30000 1.20000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 10.70000 10.80000 
+
+[Test] tiny_conv_ex_f32 padding=SYMMETRIC, mode=HEAD...
+[PASS] tiny_conv_ex_f32 completed (padding=SYMMETRIC, mode=HEAD).
+Output:
+1.30000 1.20000 1.90000 
+
+[Test] tiny_conv_ex_f32 padding=SYMMETRIC, mode=CENTER...
+[PASS] tiny_conv_ex_f32 completed (padding=SYMMETRIC, mode=CENTER).
+Output:
+1.20000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 10.70000 
+
+[Test] tiny_conv_ex_f32 padding=SYMMETRIC, mode=TAIL...
+[PASS] tiny_conv_ex_f32 completed (padding=SYMMETRIC, mode=TAIL).
+Output:
+9.90000 10.70000 10.80000 
+
+[Test] tiny_conv_ex_f32 padding=PERIODIC, mode=FULL...
+[PASS] tiny_conv_ex_f32 completed (padding=PERIODIC, mode=FULL).
+Output:
+8.50000 3.90000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 8.70000 4.20000 
+
+[Test] tiny_conv_ex_f32 padding=PERIODIC, mode=HEAD...
+[PASS] tiny_conv_ex_f32 completed (padding=PERIODIC, mode=HEAD).
+Output:
+8.50000 3.90000 1.90000 
+
+[Test] tiny_conv_ex_f32 padding=PERIODIC, mode=CENTER...
+[PASS] tiny_conv_ex_f32 completed (padding=PERIODIC, mode=CENTER).
+Output:
+3.90000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 8.70000 
+
+[Test] tiny_conv_ex_f32 padding=PERIODIC, mode=TAIL...
+[PASS] tiny_conv_ex_f32 completed (padding=PERIODIC, mode=TAIL).
+Output:
+9.90000 8.70000 4.20000 
+
+===== tiny_conv_f32 and tiny_conv_ex_f32 Test End =====
+```
+
+## `tiny_conv_test.h` {#tinyconvtesth}
 
 ```c
 /**
@@ -33,8 +116,11 @@ void tiny_signal_conv_test(void);
 
 ```
 
-## tiny_conv_test.c
+## `tiny_conv_test.c` {#tinyconvtestc}
 
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_conv_test.c</code> · 145 lines</summary>
 
 ```c
 /**
@@ -184,79 +270,4 @@ void tiny_signal_conv_test(void)
 
 ```
 
-
-## test results
-
-```c
-===== tiny_conv_f32 and tiny_conv_ex_f32 Test Start =====
-Signal: 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00 10.00 11.00 
-Kernel: 0.20 0.50 0.30 
-
-[Test] tiny_conv_f32 basic full convolution...
-[PASS] tiny_conv_f32 full convolution completed.
-
-[Test] tiny_conv_ex_f32 padding=zero, mode=full...
-[PASS] tiny_conv_ex_f32 matches tiny_conv_f32 (zero padding, full mode).
-
-[Test] tiny_conv_ex_f32 padding=ZERO, mode=FULL...
-[PASS] tiny_conv_ex_f32 completed (padding=ZERO, mode=FULL).
-Output:
-0.20000 0.90000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 8.50000 3.30000 
-
-[Test] tiny_conv_ex_f32 padding=ZERO, mode=HEAD...
-[PASS] tiny_conv_ex_f32 completed (padding=ZERO, mode=HEAD).
-Output:
-0.20000 0.90000 1.90000 
-
-[Test] tiny_conv_ex_f32 padding=ZERO, mode=CENTER...
-[PASS] tiny_conv_ex_f32 completed (padding=ZERO, mode=CENTER).
-Output:
-0.90000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 8.50000 
-
-[Test] tiny_conv_ex_f32 padding=ZERO, mode=TAIL...
-[PASS] tiny_conv_ex_f32 completed (padding=ZERO, mode=TAIL).
-Output:
-9.90000 8.50000 3.30000 
-
-[Test] tiny_conv_ex_f32 padding=SYMMETRIC, mode=FULL...
-[PASS] tiny_conv_ex_f32 completed (padding=SYMMETRIC, mode=FULL).
-Output:
-1.30000 1.20000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 10.70000 10.80000 
-
-[Test] tiny_conv_ex_f32 padding=SYMMETRIC, mode=HEAD...
-[PASS] tiny_conv_ex_f32 completed (padding=SYMMETRIC, mode=HEAD).
-Output:
-1.30000 1.20000 1.90000 
-
-[Test] tiny_conv_ex_f32 padding=SYMMETRIC, mode=CENTER...
-[PASS] tiny_conv_ex_f32 completed (padding=SYMMETRIC, mode=CENTER).
-Output:
-1.20000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 10.70000 
-
-[Test] tiny_conv_ex_f32 padding=SYMMETRIC, mode=TAIL...
-[PASS] tiny_conv_ex_f32 completed (padding=SYMMETRIC, mode=TAIL).
-Output:
-9.90000 10.70000 10.80000 
-
-[Test] tiny_conv_ex_f32 padding=PERIODIC, mode=FULL...
-[PASS] tiny_conv_ex_f32 completed (padding=PERIODIC, mode=FULL).
-Output:
-8.50000 3.90000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 8.70000 4.20000 
-
-[Test] tiny_conv_ex_f32 padding=PERIODIC, mode=HEAD...
-[PASS] tiny_conv_ex_f32 completed (padding=PERIODIC, mode=HEAD).
-Output:
-8.50000 3.90000 1.90000 
-
-[Test] tiny_conv_ex_f32 padding=PERIODIC, mode=CENTER...
-[PASS] tiny_conv_ex_f32 completed (padding=PERIODIC, mode=CENTER).
-Output:
-3.90000 1.90000 2.90000 3.90000 4.90000 5.90000 6.90000 7.90000 8.90000 9.90000 8.70000 
-
-[Test] tiny_conv_ex_f32 padding=PERIODIC, mode=TAIL...
-[PASS] tiny_conv_ex_f32 completed (padding=PERIODIC, mode=TAIL).
-Output:
-9.90000 8.70000 4.20000 
-
-===== tiny_conv_f32 and tiny_conv_ex_f32 Test End =====
-```
+</details>

@@ -1,6 +1,14 @@
-# Code
+# TinyAI · Layers · Conv — Implementation and source {#code}
 
-## tiny_conv.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_conv.hpp` {#tiny_convhpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_conv.hpp</code> · 79 lines</summary>
 
 ```cpp
 /**
@@ -84,7 +92,12 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_conv.cpp
+</details>
+
+## `tiny_conv.cpp` {#tiny_convcpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_conv.cpp</code> · 248 lines</summary>
 
 ```cpp
 /**
@@ -336,3 +349,5 @@ void Conv2D::collect_params(std::vector<ParamGroup> &groups)
 
 #endif // __cplusplus
 ```
+
+</details>

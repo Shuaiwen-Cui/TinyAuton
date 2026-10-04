@@ -1,6 +1,12 @@
-# 代码
+# C++ 矩阵实现源码 {#_1}
 
-## tiny_matrix.hpp
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## tiny_matrix.hpp {#tiny_matrixhpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 tiny_matrix.hpp · 442 行</summary>
 
 ```cpp
 /**
@@ -447,7 +453,12 @@ namespace tiny
 
 ```
 
-## tiny_matrix.cpp
+</details>
+
+## tiny_matrix.cpp {#tiny_matrixcpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 tiny_matrix.cpp · 7140 行</summary>
 
 ```cpp
 /**
@@ -7591,3 +7602,4 @@ namespace tiny
 
 
 ```
+</details>

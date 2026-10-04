@@ -1,6 +1,14 @@
-# Code
+# TinyAI · Core · Optimizer — Implementation and source {#code}
 
-## tiny_optimizer.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_optimizer.hpp` {#tiny_optimizerhpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_optimizer.hpp</code> · 63 lines</summary>
 
 ```cpp
 /**
@@ -68,7 +76,12 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_optimizer.cpp
+</details>
+
+## `tiny_optimizer.cpp` {#tiny_optimizercpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_optimizer.cpp</code> · 99 lines</summary>
 
 ```cpp
 /**
@@ -171,3 +184,5 @@ void Adam::step(std::vector<ParamGroup> &groups)
 
 #endif // __cplusplus
 ```
+
+</details>

@@ -1,9 +1,12 @@
-# TinyAI 头文件
+# TinyAI 头文件 {#tinyai}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! info
     `tiny_ai.h` 是 `tiny_ai` 库的统一入口头文件，按依赖顺序拉入了 quant / core / layers / models / train 子模块全部头文件，并暴露三个供 C 调用的示例入口（`example_mlp` / `example_cnn` / `example_attention`）。完成移植后，在使用 AI 功能的源文件中加入 `#include "tiny_ai.h"` 即可获得整套 API。
 
-## 包含层级
+## 包含层级 {#_1}
 
 ```txt
 tiny_ai.h
@@ -38,7 +41,7 @@ tiny_ai.h
 !!! note
     所有 C++ 头文件都在 `#ifdef __cplusplus` 块内展开。对于纯 C 项目，`tiny_ai.h` 只暴露 `tiny_ai_config.h` 的宏 / 错误码以及三个 `extern "C"` 示例入口。
 
-## 完整源码
+## 完整源码 {#_2}
 
 ```c
 /**

@@ -1,0 +1,35 @@
+/* Shared reading layout, including dark mode and small screens. */
+:root {
+  --auton-radius: .6rem;
+}
+.md-typeset { font-size: .82rem; line-height: 1.8; }
+.md-typeset h1 { color: var(--md-default-fg-color); font-weight: 700; letter-spacing: -.025em; margin-bottom: .9em; }
+.md-typeset h2 { font-weight: 650; margin-top: 2.1em; padding-bottom: .3em; border-bottom: 1px solid var(--md-default-fg-color--lightest); }
+.md-typeset h3 { font-weight: 600; }
+.md-typeset code, .md-typeset pre { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+.md-typeset pre { line-height: 1.6; }
+.md-typeset table:not([class]) { font-size: .72rem; line-height: 1.65; border-radius: var(--auton-radius); }
+.md-typeset table:not([class]) th { background: var(--md-code-bg-color); }
+.md-typeset table:not([class]) td { vertical-align: top; }
+.md-typeset .admonition, .md-typeset details { border-radius: var(--auton-radius); font-size: .76rem; }
+.md-typeset details.auton-source { border-color: var(--md-default-fg-color--lightest); box-shadow: none; }
+.md-typeset details.auton-source > summary { background: var(--md-code-bg-color); }
+.md-typeset details.auton-source > summary::before { background-color: var(--md-accent-fg-color); }
+.md-typeset .grid.cards > ul > li { border-radius: var(--auton-radius); padding: 1.1rem; }
+@media (min-width: 900px) {
+  .md-typeset .grid.auton-entry-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.md-typeset img.auton-cover { display: block; width: 100%; max-height: 320px; object-fit: cover; border-radius: var(--auton-radius); margin: 1.4rem auto; }
+.md-typeset img.auton-hardware { display: block; max-width: min(100%, 680px); max-height: 470px; object-fit: contain; margin: 1.3rem auto; }
+.md-typeset .auton-caption { color: var(--md-default-fg-color--light); font-size: .7rem; }
+@media (max-width: 600px) {
+  .md-typeset { font-size: .8rem; }
+  .md-typeset h1 { font-size: 1.65em; }
+  .md-typeset img.auton-cover { max-height: 210px; }
+  .md-typeset .grid.cards > ul > li { padding: .8rem; }
+}
+@media print {
+  .md-typeset details.auton-source > :not(summary) { display: block !important; }
+}
+
+.md-typeset .auton-reading { color: var(--md-default-fg-color--light); }

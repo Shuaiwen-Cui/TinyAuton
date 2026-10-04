@@ -1,81 +1,17 @@
-# 测试
+# TinyDSP · 变换 · ICA — 测试与结果 {#_1}
 
-## tiny_ica_test.hpp
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_ica_testcpp"></span>
+<span id="tiny_ica_testcpp_1"></span>
+<span id="tiny_ica_testhpp"></span>
 
-```c
-/**
- * @file tiny_ica_test.hpp
- * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
- * @brief tiny_ica | test | header
- * @version 1.0
- * @date 2025-04-30
- * @copyright Copyright (c) 2025
- *
- */
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
-#pragma once
+## `tiny_ica_test.hpp` {#tinyicatesthpp}
 
-/* DEPENDENCIES */
-#include "tiny_ica.hpp"
-
-#ifdef __cplusplus
-
-namespace tiny
-{
-    /**
-     * @name tiny_ica_test_basic
-     * @brief Basic test for ICA with simple synthetic signals
-     */
-    void tiny_ica_test_basic(void);
-
-    /**
-     * @name tiny_ica_test_sinusoidal
-     * @brief Test ICA with sinusoidal source signals
-     */
-    void tiny_ica_test_sinusoidal(void);
-
-    /**
-     * @name tiny_ica_test_nonlinearity
-     * @brief Test different nonlinearity functions
-     */
-    void tiny_ica_test_nonlinearity(void);
-
-    /**
-     * @name tiny_ica_test_reconstruction
-     * @brief Test signal reconstruction from separated sources
-     */
-    void tiny_ica_test_reconstruction(void);
-
-    /**
-     * @name tiny_ica_test_all
-     * @brief Run all ICA tests
-     */
-    void tiny_ica_test_all(void);
-
-} // namespace tiny
-
-#endif // __cplusplus
-
-// C interface wrapper — placed OUTSIDE #ifdef __cplusplus so pure C code can also see these.
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void tiny_ica_test_basic(void);
-void tiny_ica_test_sinusoidal(void);
-void tiny_ica_test_nonlinearity(void);
-void tiny_ica_test_reconstruction(void);
-void tiny_ica_test_all(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-
-```
-
-
-## tiny_ica_test.cpp
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_ica_test.hpp</code> · 69 行</summary>
 
 ```c
 /**
@@ -149,8 +85,93 @@ void tiny_ica_test_all(void);
 
 ```
 
+</details>
 
-## tiny_ica_test.cpp
+
+## `tiny_ica_test.cpp` {#tinyicatestcpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_ica_test.hpp</code> · 69 行</summary>
+
+```c
+/**
+ * @file tiny_ica_test.hpp
+ * @author SHUAIWEN CUI (SHUAIWEN001@e.ntu.edu.sg)
+ * @brief tiny_ica | test | header
+ * @version 1.0
+ * @date 2025-04-30
+ * @copyright Copyright (c) 2025
+ *
+ */
+
+#pragma once
+
+/* DEPENDENCIES */
+#include "tiny_ica.hpp"
+
+#ifdef __cplusplus
+
+namespace tiny
+{
+    /**
+     * @name tiny_ica_test_basic
+     * @brief Basic test for ICA with simple synthetic signals
+     */
+    void tiny_ica_test_basic(void);
+
+    /**
+     * @name tiny_ica_test_sinusoidal
+     * @brief Test ICA with sinusoidal source signals
+     */
+    void tiny_ica_test_sinusoidal(void);
+
+    /**
+     * @name tiny_ica_test_nonlinearity
+     * @brief Test different nonlinearity functions
+     */
+    void tiny_ica_test_nonlinearity(void);
+
+    /**
+     * @name tiny_ica_test_reconstruction
+     * @brief Test signal reconstruction from separated sources
+     */
+    void tiny_ica_test_reconstruction(void);
+
+    /**
+     * @name tiny_ica_test_all
+     * @brief Run all ICA tests
+     */
+    void tiny_ica_test_all(void);
+
+} // namespace tiny
+
+#endif // __cplusplus
+
+// C interface wrapper — placed OUTSIDE #ifdef __cplusplus so pure C code can also see these.
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void tiny_ica_test_basic(void);
+void tiny_ica_test_sinusoidal(void);
+void tiny_ica_test_nonlinearity(void);
+void tiny_ica_test_reconstruction(void);
+void tiny_ica_test_all(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+```
+
+</details>
+
+
+## `tiny_ica_test.cpp` {#tinyicatestcpp_1}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_ica_test.cpp</code> · 648 行</summary>
 
 ```c
 /**
@@ -802,6 +823,8 @@ extern "C"
 
 
 ```
+
+</details>
 
 ```
 

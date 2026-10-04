@@ -1,6 +1,12 @@
-# 代码
+# TinyAI · 量化 · 配置 — 实现与源码 {#_1}
 
-## tiny_quant_config.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_quant_configh"></span>
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## `tiny_quant_config.h` {#tinyquantconfigh}
 
 ```c
 /**

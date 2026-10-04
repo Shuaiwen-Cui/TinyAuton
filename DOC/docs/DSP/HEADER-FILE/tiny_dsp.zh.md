@@ -1,7 +1,13 @@
-# TinyDSP 头文件
+# TinyDSP 头文件 {#tinydsp}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! INFO
     这是TinyDSP库的主头文件。它包含所有必要的头文件，并提供了一个统一的接口来使用库的功能。在项目中完成该库的移植后，在需要使用相关函数的地方插入该头文件即可使用库内的所有函数。文档更新速度较慢，可能与实际代码不一致，请以实际代码为准。
+
+<details class="auton-source" markdown="1">
+<summary>展开 历史摘录 · 214 行</summary>
 
 ```c
 
@@ -219,3 +225,4 @@ extern "C"
 }
 #endif
 ```
+</details>

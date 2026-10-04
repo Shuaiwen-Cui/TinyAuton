@@ -1,6 +1,14 @@
-# 代码
+# TinyDSP · SIGNAL · CONVOLUTION — 实现与源码 {#_1}
 
-## tiny_conv.h
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+本页保留完整源码摘录，按文件展开阅读。先看[设计说明](notes.md)了解数据流、接口和算法，再核对实现；源码摘录可能属于历史版本，当前实现请以所选工程为准。
+
+## `tiny_conv.h` {#tiny_convh}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_conv.h</code> · 91 行</summary>
 
 ```c
 /**
@@ -96,7 +104,12 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen, const float
 
 ```
 
-## tiny_conv.c
+</details>
+
+## `tiny_conv.c` {#tiny_convc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_conv.c</code> · 227 行</summary>
 
 ```c
 /**
@@ -327,3 +340,5 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
     return TINY_OK;
 }
 ```
+
+</details>

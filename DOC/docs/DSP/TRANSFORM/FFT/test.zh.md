@@ -1,6 +1,89 @@
-# 测试
+# TinyFFT — 测试与结果 {#_1}
 
-## tiny_fft_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_fft_testc"></span>
+<span id="tiny_fft_testh"></span>
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+!!! abstract "验证目标"
+    本例验证 15 / 70 / 120 Hz 合成信号的 FFT、谱峰搜索与 IFFT 重建。原始结果和完整测试源码均保留在下方。
+
+## 历史结果速览 {#doc-历史结果速览}
+
+记录未注明运行日期、设备和固件版本；源码文件日期不作为运行日期。以下数值摘自原始输出。
+
+| 验证项 | 输入或参考 | 历史输出 | 解释 |
+|---|---|---|---|
+| 第一峰 | 15 Hz | 15.61 Hz | 绝对差 0.61 Hz |
+| 第二峰 | 70 Hz | 70.32 Hz | 绝对差 0.32 Hz |
+| 第三峰 | 120 Hz | 120.99 Hz | 绝对差 0.99 Hz |
+| IFFT | 原输入信号 | 最大差值 `0.000002` | 本次记录的重建误差 |
+| Hann 窗主峰 | 15 Hz | 15.29 Hz | 绝对差 0.29 Hz |
+| 测试状态 | 原测试判据 | `PASS` | 仅对应本次运行和所用判据 |
+
+## 配置、判据与结论 {#doc-配置-判据与结论}
+
+采样率 `fs = 1000 Hz`，FFT 长度 `N = 256`，频点间隔 `fs/N = 3.90625 Hz`。实现对相邻谱点进行抛物线插值，所以峰值可以带小数；显示两位小数不等于验证了 0.01 Hz 的测量精度。
+
+测试对无窗主峰使用 `|peak - 15| <= 5 Hz`，对前两个峰检查其频率为正，对 IFFT 使用最大误差 `<= 1e-3`；不能把 `PASS` 理解为三个峰都经过严格误差检验。Hann 窗可减轻泄漏，本次主峰更接近输入；原日志关于“改善频率分辨率”的文字作为历史记录保留，不应扩展为同样点数下必然能分辨更密集的频率。
+
+复现入口为所选工程的 `middleware/tiny_dsp/transform/tiny_fft_test.c` 中 `tiny_fft_test()`。确认入口实际调用此函数，并同时保留配置和完整串口输出。
+
+## 测试结果 {#_2}
+
+```
+========== TinyFFT Test ==========
+
+1. FFT Initialization:
+  ✓ FFT initialized (max size: 256)
+
+2. Test Signal Generation:
+  Input: Signal with frequencies 15 Hz, 70 Hz, and 120 Hz
+  Sample rate: 1000.0 Hz
+  Signal length: 256 samples
+  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
+
+3. FFT (No Window):
+  Input: Test signal (length=256)
+  ✓ FFT completed
+  Output: FFT result (complex, length=256)
+  Magnitude spectrum: First 10 values: 4.801 5.603 8.669 20.017 111.409 16.176 9.060 6.401 4.987 4.095 
+
+4. Peak Frequency Detection:
+  Input: Power spectrum (length=256)
+  Output: Peak frequency = 15.61 Hz (power = 48.484)
+  Expected: strongest peak near ~15 Hz
+
+5. Top Frequencies Detection:
+  Input: Power spectrum (length=256)
+  Output: Top 3 frequencies:
+    [1] 15.61 Hz (power = 48.484)
+    [2] 70.32 Hz (power = 10.440)
+    [3] 120.99 Hz (power = 1.998)
+  Expected: top frequencies should include ~15 Hz and ~70 Hz
+
+6. IFFT (Signal Reconstruction):
+  Input: FFT result (complex, length=256)
+  Output: Reconstructed signal (length=256)
+  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
+  Max difference from original: 0.000002
+  ✓ IFFT reconstruction completed
+
+7. FFT with Hanning Window:
+  Input: Test signal (length=256) with Hanning window
+  Output: Peak frequency = 15.29 Hz (power = 12.439)
+  Note: Window reduces spectral leakage, improving frequency resolution
+
+8. FFT Deinitialization:
+  ✓ FFT deinitialized
+  Result: PASS
+
+========================================
+```
+
+## `tiny_fft_test.h` {#tinyffttesth}
 
 ```c
 /**
@@ -33,7 +116,10 @@ void tiny_fft_test(void);
 
 ```
 
-## tiny_fft_test.c
+## `tiny_fft_test.c` {#tinyffttestc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_fft_test.c</code> · 241 行</summary>
 
 ```c
 /**
@@ -279,55 +365,4 @@ cleanup:
 
 ```
 
-
-## 测试结果
-
-```
-========== TinyFFT Test ==========
-
-1. FFT Initialization:
-  ✓ FFT initialized (max size: 256)
-
-2. Test Signal Generation:
-  Input: Signal with frequencies 15 Hz, 70 Hz, and 120 Hz
-  Sample rate: 1000.0 Hz
-  Signal length: 256 samples
-  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
-
-3. FFT (No Window):
-  Input: Test signal (length=256)
-  ✓ FFT completed
-  Output: FFT result (complex, length=256)
-  Magnitude spectrum: First 10 values: 4.801 5.603 8.669 20.017 111.409 16.176 9.060 6.401 4.987 4.095 
-
-4. Peak Frequency Detection:
-  Input: Power spectrum (length=256)
-  Output: Peak frequency = 15.61 Hz (power = 48.484)
-  Expected: strongest peak near ~15 Hz
-
-5. Top Frequencies Detection:
-  Input: Power spectrum (length=256)
-  Output: Top 3 frequencies:
-    [1] 15.61 Hz (power = 48.484)
-    [2] 70.32 Hz (power = 10.440)
-    [3] 120.99 Hz (power = 1.998)
-  Expected: top frequencies should include ~15 Hz and ~70 Hz
-
-6. IFFT (Signal Reconstruction):
-  Input: FFT result (complex, length=256)
-  Output: Reconstructed signal (length=256)
-  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
-  Max difference from original: 0.000002
-  ✓ IFFT reconstruction completed
-
-7. FFT with Hanning Window:
-  Input: Test signal (length=256) with Hanning window
-  Output: Peak frequency = 15.29 Hz (power = 12.439)
-  Note: Window reduces spectral leakage, improving frequency resolution
-
-8. FFT Deinitialization:
-  ✓ FFT deinitialized
-  Result: PASS
-
-========================================
-```
+</details>

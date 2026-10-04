@@ -1,6 +1,13 @@
-# CONSTANTS 
+# CONSTANTS {#constants}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
 !!! INFO
     This file contains the definition of some constants, which are used for upper-level calculations and applications. The documentation update speed is slow and may not be consistent with the actual code. Please refer to the code for accuracy.
+
+<details class="auton-source" markdown="1">
+<summary>Expand CONSTANTS · 79 lines</summary>
 
 ```c
 /**
@@ -83,3 +90,4 @@ extern "C"
 #endif
 
 ```
+</details>

@@ -1,4 +1,13 @@
-# ARTIFICIAL INTELLIGENCE
+# ARTIFICIAL INTELLIGENCE {#artificial-intelligence}
+
+## Reading entries {#auton-ai-guide}
+
+[Current usage](USAGE/usage.md) → [Tensors](CORE/TENSOR/notes.md) → [Layers](LAYERS/BASE/notes.md) → [Trainer](TRAIN/TRAINER/notes.md). Examples: [MLP](EXAMPLES/MLP/notes.md), [CNN1D](EXAMPLES/CNN/notes.md), [Attention](EXAMPLES/ATTENTION/notes.md).
+
+INT8/FP8 representations, quantization API demonstrations and full low-precision model execution are described separately. The historical MLP 8.67% figure is not an INT8 accuracy result.
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note
     This component delivers a lightweight neural-network inference + on-device training stack for edge devices. The whole library is written in C++17 with a minimal dependency footprint, specifically tuned for ESP32-S3 (WROOM-1U) class MCUs that ship with PSRAM.
@@ -6,7 +15,7 @@
 !!! note
     `tiny_ai` sits at the top of the TinyAuton middleware chain `tiny_toolbox → tiny_math → tiny_dsp → tiny_ai`. It reuses the tensor / matrix primitives in `tiny_math` and the spectral / filtering / resampling building blocks in `tiny_dsp`, forming an end-to-end pipeline from sensor capture to on-device inference.
 
-## COMPONENT DEPENDENCIES
+## COMPONENT DEPENDENCIES {#component-dependencies}
 
 ```c
 # tiny_ai component CMakeLists.txt
@@ -43,13 +52,13 @@ idf_component_register(
 )
 ```
 
-## ARCHITECTURE & FUNCTIONALITY
+## ARCHITECTURE & FUNCTIONALITY {#architecture-functionality}
 
-### Dependency Diagram
+### Dependency Diagram {#dependency-diagram}
 
 ![](tiny_ai.png)
 
-### Source Tree
+### Source Tree {#source-tree}
 
 ```txt
 tiny_ai/
@@ -94,7 +103,7 @@ tiny_ai/
     └── example_attention.cpp        # tiny Transformer (Iris)
 ```
 
-## FEATURE MATRIX
+## FEATURE MATRIX {#feature-matrix}
 
 | Feature | Macro / API | Description |
 | --- | --- | --- |
@@ -104,7 +113,7 @@ tiny_ai/
 | INT16 quant | `TINY_AI_QUANT_INT16` | Symmetric, higher-precision fallback |
 | FP8 quant | `TINY_AI_QUANT_FP8` | Software OCP E4M3FN (weights/activations) and E5M2 (gradients) |
 
-## DESIGN HIGHLIGHTS
+## DESIGN HIGHLIGHTS {#design-highlights}
 
 - **C++17 + `namespace tiny`**: every class / function is wrapped inside `namespace tiny`. C interfaces (`tiny_quant.h`, error codes) stay in the global scope.
 - **Shape conventions**: `Tensor` supports up to 4 dimensions, row-major. Common layouts: `[batch, ...]`; Conv1D `[B, C, L]`; Conv2D `[B, C, H, W]`; Attention `[B, S, E]`.

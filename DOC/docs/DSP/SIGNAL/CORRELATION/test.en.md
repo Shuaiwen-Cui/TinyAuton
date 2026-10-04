@@ -1,6 +1,45 @@
-# TESTS
+# TinyDSP · Signal · Correlation — Tests and results {#tests}
 
-## tiny_corr_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_corr_testc"></span>
+<span id="tiny_corr_testh"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## TEST RESULTS {#test-results}
+
+```c
+========== Correlation & Cross-Correlation Test ==========
+
+--- Test 1: tiny_corr_f32 ---
+Input Signal : [1.00, 2.00, 3.00, 4.00, 2.00, 1.00]
+Pattern      : [2.00, 1.00, 0.00]
+Output vs Expected:
+  [0] Output = 4.000 | Expected = 4.000
+  [1] Output = 7.000 | Expected = 7.000
+  [2] Output = 10.000 | Expected = 10.000
+  [3] Output = 10.000 | Expected = 10.000
+[tiny_corr_f32 Test] [PASS]
+
+--- Test 2: tiny_ccorr_f32 ---
+Input Signal X: [1.00, 3.00, 2.00, 0.00, 1.00, 2.00]
+Input Signal Y: [2.00, 1.00, 0.00, -1.00]
+Output vs Expected:
+  [0] Output = -1.000 | Expected = -1.000
+  [1] Output = -3.000 | Expected = -3.000
+  [2] Output = -1.000 | Expected = -1.000
+  [3] Output = 5.000 | Expected = 5.000
+  [4] Output = 7.000 | Expected = 7.000
+  [5] Output = 2.000 | Expected = 2.000
+  [6] Output = 1.000 | Expected = 1.000
+  [7] Output = 4.000 | Expected = 4.000
+  [8] Output = 4.000 | Expected = 4.000
+[tiny_ccorr_f32 Test] [PASS]
+==========================================================
+```
+
+## `tiny_corr_test.h` {#tinycorrtesth}
 
 ```c
 
@@ -33,7 +72,10 @@ void tiny_signal_corr_ccorr_test(void);
 
 ```
 
-## tiny_corr_test.c
+## `tiny_corr_test.c` {#tinycorrtestc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_corr_test.c</code> · 93 lines</summary>
 
 ```c
 /**
@@ -131,35 +173,4 @@ void tiny_signal_corr_ccorr_test(void)
 }
 ```
 
-
-## TEST RESULTS
-
-```c
-========== Correlation & Cross-Correlation Test ==========
-
---- Test 1: tiny_corr_f32 ---
-Input Signal : [1.00, 2.00, 3.00, 4.00, 2.00, 1.00]
-Pattern      : [2.00, 1.00, 0.00]
-Output vs Expected:
-  [0] Output = 4.000 | Expected = 4.000
-  [1] Output = 7.000 | Expected = 7.000
-  [2] Output = 10.000 | Expected = 10.000
-  [3] Output = 10.000 | Expected = 10.000
-[tiny_corr_f32 Test] [PASS]
-
---- Test 2: tiny_ccorr_f32 ---
-Input Signal X: [1.00, 3.00, 2.00, 0.00, 1.00, 2.00]
-Input Signal Y: [2.00, 1.00, 0.00, -1.00]
-Output vs Expected:
-  [0] Output = -1.000 | Expected = -1.000
-  [1] Output = -3.000 | Expected = -3.000
-  [2] Output = -1.000 | Expected = -1.000
-  [3] Output = 5.000 | Expected = 5.000
-  [4] Output = 7.000 | Expected = 7.000
-  [5] Output = 2.000 | Expected = 2.000
-  [6] Output = 1.000 | Expected = 1.000
-  [7] Output = 4.000 | Expected = 4.000
-  [8] Output = 4.000 | Expected = 4.000
-[tiny_ccorr_f32 Test] [PASS]
-==========================================================
-```
+</details>

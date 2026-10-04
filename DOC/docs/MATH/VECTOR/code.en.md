@@ -1,6 +1,9 @@
-# CODE
+# CODE {#code}
 
-## tiny_vec.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## tiny_vec.h {#tiny_vech}
 
 ```c
 /**
@@ -58,7 +61,10 @@ tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *
 
 ```
 
-## tiny_vec.c
+## tiny_vec.c {#tiny_vecc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand tiny_vec.c · 724 lines</summary>
 
 ```c
 /**
@@ -786,3 +792,4 @@ tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *
     return TINY_OK;
 }
 ```
+</details>

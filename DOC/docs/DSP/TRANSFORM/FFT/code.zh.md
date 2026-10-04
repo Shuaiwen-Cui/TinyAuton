@@ -1,6 +1,14 @@
-# 代码
+# TinyDSP · 变换 · FFT — 实现与源码 {#_1}
 
-## tiny_fft.h
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+本页保留完整源码摘录，按文件展开阅读。先看[设计说明](notes.md)了解数据流、接口和算法，再核对实现；源码摘录可能属于历史版本，当前实现请以所选工程为准。
+
+## `tiny_fft.h` {#tiny_ffth}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_fft.h</code> · 131 行</summary>
 
 ```c
 /**
@@ -136,7 +144,12 @@ extern "C"
 
 ```
 
-## tiny_fft.c
+</details>
+
+## `tiny_fft.c` {#tiny_fftc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_fft.c</code> · 669 行</summary>
 
 ```c
 /**
@@ -809,3 +822,5 @@ tiny_error_t tiny_fft_find_top_frequencies(const float *power_spectrum, int fft_
 
 
 ```
+
+</details>

@@ -1,9 +1,12 @@
-# 使用说明
+# 使用说明 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! info "使用说明"
     该文档是对 `tiny_math` 模块的使用说明。
 
-## 整体引入TinyMath
+## 整体引入TinyMath {#tinymath}
 
 !!! info
     适用于C项目，或者结构较为简单的C++项目。
@@ -12,7 +15,7 @@
 #include "tiny_math.h"
 ```
 
-## 分模块引入TinyMath
+## 分模块引入TinyMath {#tinymath_1}
 
 !!! info
     适用于需要精确控制引入模块的项目，或者复杂的C++项目。

@@ -1,6 +1,16 @@
-# TESTS
+# TinyDSP · Transform · ICA — Tests and results {#tests}
 
-## tiny_ica_test.hpp
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_ica_testcpp"></span>
+<span id="tiny_ica_testhpp"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## `tiny_ica_test.hpp` {#tinyicatesthpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_ica_test.hpp</code> · 69 lines</summary>
 
 ```c
 /**
@@ -74,7 +84,12 @@ void tiny_ica_test_all(void);
 
 ```
 
-## tiny_ica_test.cpp
+</details>
+
+## `tiny_ica_test.cpp` {#tinyicatestcpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_ica_test.cpp</code> · 648 lines</summary>
 
 ```c
 /**
@@ -727,8 +742,10 @@ extern "C"
 
 ```
 
+</details>
 
-## OUTPUTS
+
+## OUTPUTS {#outputs}
 
 ```txt
 ╔══════════════════════════════════════════════════════════╗

@@ -1,9 +1,26 @@
-# Notes
+# TinyAI · Quant · FP8 — Design notes {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     `tiny_fp8` provides a pure-software implementation of OCP-spec 8-bit floating-point formats: E4M3FN for weights / activations and E5M2 for gradients. ESP32-S3 has no FP8 ALU, so all values are stored as `uint8_t` and upcast to `float32` for arithmetic.
 
-## FORMAT OVERVIEW
+!!! abstract "FP8 — 8-bit Floating Point: E4M3FN & E5M2"
+    OCP standard: E4M3FN for weights/activations, E5M2 for gradients.
+
+## Intuition {#intuition}
+
+| Format | Exp | Mantissa | Range | Precision | Role |
+|--------|-----|----------|-------|-----------|------|
+| **E4M3FN** | 4 | 3 | \(\pm 448\) | High | Weights, activations |
+| **E5M2** | 5 | 2 | \(\pm 57344\) | Low | Gradients |
+
+Pure software emulation. E4M3FN: higher precision; E5M2: larger dynamic range.
+
+---
+
+## FORMAT OVERVIEW {#format-overview}
 
 | Format | Bit layout | Bias | Max value | Min normal | Special encodings |
 | --- | --- | --- | --- | --- | --- |
@@ -12,7 +29,7 @@
 
 E4M3FN trades ±inf for four extra normal values — OCP's recommended "fitting normal" format for weights / activations. E5M2 mirrors a subset of IEEE 754 (keeps ±inf / NaN) and is recommended for gradients.
 
-## E4M3FN
+## E4M3FN {#e4m3fn}
 
 ```cpp
 uint8_t fp32_to_fp8_e4m3 (float val);
@@ -36,7 +53,7 @@ Decode flow:
 - `exp == 0` → subnormal: `val = (-1)^S · 2⁻⁶ · (mant / 8)`.
 - Otherwise → normal: `val = (-1)^S · 2^(exp - 7) · (1 + mant / 8)`.
 
-## E5M2
+## E5M2 {#e5m2}
 
 ```cpp
 uint8_t fp32_to_fp8_e5m2 (float val);
@@ -52,7 +69,7 @@ Differences vs E4M3:
 - Values beyond ±57344 → encode ±Inf.
 - IEEE-style ±Inf / NaN are preserved.
 
-## FORMAT DISPATCH
+## FORMAT DISPATCH {#format-dispatch}
 
 ```cpp
 uint8_t fp32_to_fp8(float val, tiny_dtype_t dtype);   // pick E4M3 / E5M2
@@ -63,9 +80,9 @@ void    fp8_to_fp32_batch(const uint8_t *src, float *dst, int n, tiny_dtype_t dt
 
 `tiny::quantize / dequantize` (in `tiny_quant.hpp`) auto-dispatch to these helpers based on `params.dtype`, so application code rarely needs to call the batch functions directly.
 
-## USAGE PATTERNS
+## USAGE PATTERNS {#usage-patterns}
 
-### Weight compression
+### Weight compression {#weight-compression}
 
 ```cpp
 QuantParams qp = calibrate(weight, TINY_DTYPE_FP8_E4M3);
@@ -82,7 +99,7 @@ dequantize(buf, restored, qp);
 
 `example_cnn.cpp` demonstrates the end-to-end 4× compression flow with error stats — see [EXAMPLES/CNN](../../EXAMPLES/CNN/notes.md).
 
-### Gradient communication / checkpointing
+### Gradient communication / checkpointing {#gradient-communication-checkpointing}
 
 Compress gradients to E5M2 before stashing them in PSRAM:
 
@@ -94,13 +111,13 @@ quantize(grad, gb, qp_g);
 
 Decompress back to fp32 when needed.
 
-## ACCURACY & TRADE-OFFS
+## ACCURACY & TRADE-OFFS {#accuracy-trade-offs}
 
 - **E4M3FN**: relative error ~1/8 = 12.5%; works well for sparsified weights / activations after ReLU.
 - **E5M2**: relative error ~1/4 = 25% but range is 128× larger, suitable for the long-tailed distributions of gradients.
 - **Recommendation**: pair with INT8 — when INT8 loses precision on layers with extreme dynamic range (typical for attention weights), switch to E4M3 instead.
 
-## SOFTWARE IMPLEMENTATION COST
+## SOFTWARE IMPLEMENTATION COST {#software-implementation-cost}
 
 ESP32-S3 has no FP8 ALU, so every quant / dequant call goes through pure C++ bit packing (with `expf / powf`). Recommendations:
 

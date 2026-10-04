@@ -1,9 +1,31 @@
-# Notes
+# TinyAI · Quant · Config — Design notes {#notes}
+
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_dtype_t"></span>
+<span id="tiny_quant_params_t"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     `tiny_quant_config.h` centralises the dtype enum, the quantisation parameter struct, and the format-specific limits. Every INT / FP8 quantiser depends on these types, so this header is the foundation of the entire `quant` subsystem.
 
-## tiny_dtype_t
+!!! abstract "Quant Config — Data Type Enum & Quant Parameters Struct"
+    Defines \(tiny\_dtype\_t\) enum and \(tiny\_quant\_params\_t\) struct.
+
+## Reference {#reference}
+
+| Enum | Name | Bit width |
+|------|------|-----------|
+| `TINY_DTYPE_FP32` | 32-bit float | 32 |
+| `TINY_DTYPE_INT8` | 8-bit signed integer | 8 |
+| `TINY_DTYPE_INT16` | 16-bit signed integer | 16 |
+| `TINY_DTYPE_E4M3FN` | FP8 (E4M3FN) | 8 |
+| `TINY_DTYPE_E5M2` | FP8 (E5M2) | 8 |
+
+---
+
+## tiny_dtype_t {#tinydtypet}
 
 ```c
 typedef enum
@@ -16,7 +38,7 @@ typedef enum
 } tiny_dtype_t;
 ```
 
-## tiny_quant_params_t
+## tiny_quant_params_t {#tinyquantparams_t}
 
 ```c
 typedef struct
@@ -42,7 +64,7 @@ x = \text{scale} \cdot \mathrm{quant}
 
 with \( Q_\text{max} \) = 127 (INT8), 32767 (INT16), 448 (FP8 E4M3), 57344 (FP8 E5M2).
 
-## FORMAT LIMITS
+## FORMAT LIMITS {#format-limits}
 
 ```c
 // FP8 E4M3FN (OCP spec): no ±inf, NaN = 0x7F / 0xFF
@@ -63,7 +85,7 @@ with \( Q_\text{max} \) = 127 (INT8), 32767 (INT16), 448 (FP8 E4M3), 57344 (FP8 
 #define TINY_INT16_MIN (-32768)
 ```
 
-## CHOOSING A dtype
+## CHOOSING A dtype {#choosing-a-dtype}
 
 | Scenario | Suggested dtype | Notes |
 | --- | --- | --- |
@@ -73,7 +95,7 @@ with \( Q_\text{max} \) = 127 (INT8), 32767 (INT16), 448 (FP8 E4M3), 57344 (FP8 
 | Gradients / backward intermediates | `FP8_E5M2` | Larger range, lower precision, ideal for gradients |
 | Training | `FLOAT32` | Maximum numerical stability |
 
-## NAMESPACING
+## NAMESPACING {#namespacing}
 
 The types and constants in `tiny_quant_config.h` live in the global / `extern "C"` scope and are usable from both C and C++. `tiny_quant.hpp` adds the C++ `tiny::QuantParams` wrapper:
 

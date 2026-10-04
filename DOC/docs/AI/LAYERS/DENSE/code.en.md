@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Layers · Dense — Implementation and source {#code}
 
-## tiny_dense.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_dense.hpp` {#tiny_densehpp}
 
 ```cpp
 /**
@@ -58,7 +63,10 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_dense.cpp
+## `tiny_dense.cpp` {#tiny_densecpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_dense.cpp</code> · 104 lines</summary>
 
 ```cpp
 /**
@@ -166,3 +174,5 @@ void Dense::collect_params(std::vector<ParamGroup> &groups)
 
 #endif // __cplusplus
 ```
+
+</details>

@@ -1,6 +1,9 @@
-# 代码
+# 代码 {#_1}
 
-## tiny_vec.h
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## tiny_vec.h {#tiny_vech}
 
 ```c
 /**
@@ -58,7 +61,10 @@ tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *
 
 ```
 
-## tiny_vec.c
+## tiny_vec.c {#tiny_vecc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 tiny_vec.c · 724 行</summary>
 
 ```c
 /**
@@ -786,3 +792,4 @@ tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *
     return TINY_OK;
 }
 ```
+</details>

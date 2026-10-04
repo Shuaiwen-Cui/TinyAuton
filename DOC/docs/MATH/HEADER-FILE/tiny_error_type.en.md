@@ -1,7 +1,13 @@
-# ERROR TYPES DEFINITION
+# ERROR TYPES DEFINITION {#error-types-definition}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! INFO
     This file defines some common error types in calculations to assist in determining the cause of errors. The documentation update speed is slow and may not match the actual code, please refer to the code for accuracy.
+
+<details class="auton-source" markdown="1">
+<summary>Expand Historical excerpt · 74 lines</summary>
 
 ```c
 /**
@@ -79,3 +85,4 @@ extern "C"
 #endif
 
 ```
+</details>

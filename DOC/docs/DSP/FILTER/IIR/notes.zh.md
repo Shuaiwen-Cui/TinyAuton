@@ -1,11 +1,14 @@
-# 说明
+# TinyIIR — 原理与接口 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     无限脉冲响应（IIR）滤波器是使用反馈的递归数字滤波器，在相同规格下比 FIR 滤波器更高效。但是，如果设计不当，IIR 滤波器可能不稳定。它们广泛应用于音频处理、控制系统和信号调理，其中计算效率很重要。
 
-## IIR 滤波器概述
+## IIR 滤波器概述 {#iir}
 
-### 数学原理
+### 数学原理 {#_2}
 
 IIR 滤波器由其差分方程定义，包括前馈项和反馈项：
 
@@ -43,7 +46,7 @@ H(z) = \frac{\sum_{k=0}^{M} b[k] \cdot z^{-k}}{1 + \sum_{k=1}^{N} a[k] \cdot z^{
 
 - **非线性相位**：通常具有非线性相位响应
 
-## 滤波器类型
+## 滤波器类型 {#_3}
 
 库支持四种基本滤波器类型：
 
@@ -52,9 +55,9 @@ H(z) = \frac{\sum_{k=0}^{M} b[k] \cdot z^{-k}}{1 + \sum_{k=1}^{N} a[k] \cdot z^{
 - **带通**：通过频带内的频率，衰减外部频率
 - **带阻（陷波）**：衰减频带内的频率，通过外部频率
 
-## 滤波器设计
+## 滤波器设计 {#_4}
 
-### 设计方法
+### 设计方法 {#_5}
 
 库支持 Butterworth 滤波器设计（计划支持 Chebyshev、Elliptic 和 Bessel）：
 
@@ -64,7 +67,7 @@ H(z) = \frac{\sum_{k=0}^{M} b[k] \cdot z^{-k}}{1 + \sum_{k=1}^{N} a[k] \cdot z^{
 - **Elliptic**：通带和阻带都等波纹（未来）
 - **Bessel**：线性相位响应（未来）
 
-### 双线性变换
+### 双线性变换 {#_6}
 
 IIR 滤波器使用双线性变换设计，将模拟 s 平面映射到数字 z 平面：
 
@@ -74,7 +77,7 @@ s = \frac{2}{T} \cdot \frac{1 - z^{-1}}{1 + z^{-1}}
 
 其中 \( T \) 是采样周期。
 
-### 设计参数
+### 设计参数 {#_7}
 
 - **截止频率**：归一化频率（0.0 到 0.5，其中 0.5 = 奈奎斯特频率）
 - **滤波器阶数**：决定过渡的陡度和阻带衰减
@@ -88,9 +91,9 @@ f_{norm} = \frac{f_{cutoff}}{f_s / 2}
 
 其中 \( f_s \) 是采样率。
 
-## 滤波器设计函数
+## 滤波器设计函数 {#_8}
 
-### tiny_iir_design_lowpass
+### tiny_iir_design_lowpass {#tiny_iir_design_lowpass}
 
 ```c
 /**
@@ -136,7 +139,7 @@ tiny_error_t tiny_iir_design_lowpass(float cutoff_freq, int order,
 
 系数采用归一化形式，其中 `a[0] = 1.0`。更高阶的滤波器需要分解为级联双二阶（二阶节）。
 
-### tiny_iir_design_highpass
+### tiny_iir_design_highpass {#tiny_iir_design_highpass}
 
 ```c
 /**
@@ -178,7 +181,7 @@ tiny_error_t tiny_iir_design_highpass(float cutoff_freq, int order,
 
 返回成功或错误代码。
 
-### tiny_iir_design_bandpass
+### tiny_iir_design_bandpass {#tiny_iir_design_bandpass}
 
 ```c
 /**
@@ -224,7 +227,7 @@ tiny_error_t tiny_iir_design_bandpass(float low_freq, float high_freq,
 
 目前返回 `TINY_ERR_NOT_SUPPORTED`。
 
-### tiny_iir_design_bandstop
+### tiny_iir_design_bandstop {#tiny_iir_design_bandstop}
 
 ```c
 /**
@@ -270,11 +273,11 @@ tiny_error_t tiny_iir_design_bandstop(float low_freq, float high_freq,
 
 目前返回 `TINY_ERR_NOT_SUPPORTED`。
 
-## 滤波器应用
+## 滤波器应用 {#_9}
 
-### 批处理
+### 批处理 {#_10}
 
-### tiny_iir_filter_f32
+### tiny_iir_filter_f32 {#tiny_iir_filter_f32}
 
 ```c
 /**
@@ -335,9 +338,9 @@ tiny_error_t tiny_iir_filter_f32(const float *input, int input_len,
 
 滤波器使用直接型 II 转置结构，计算效率高，需要最少的状态存储。
 
-### 实时处理
+### 实时处理 {#_11}
 
-### tiny_iir_init
+### tiny_iir_init {#tiny_iir_init}
 
 ```c
 /**
@@ -379,7 +382,7 @@ tiny_error_t tiny_iir_init(tiny_iir_filter_t *filter,
 
 函数在内部分配内存。使用 `tiny_iir_deinit()` 释放它。
 
-### tiny_iir_deinit
+### tiny_iir_deinit {#tiny_iir_deinit}
 
 ```c
 /**
@@ -403,7 +406,7 @@ tiny_error_t tiny_iir_deinit(tiny_iir_filter_t *filter);
 
 返回成功或错误代码。
 
-### tiny_iir_process_sample
+### tiny_iir_process_sample {#tiny_iir_process_sample}
 
 ```c
 /**
@@ -434,7 +437,7 @@ float tiny_iir_process_sample(tiny_iir_filter_t *filter, float input);
 
 滤波器在调用之间维护内部状态。使用 `tiny_iir_reset()` 清除状态。
 
-### tiny_iir_reset
+### tiny_iir_reset {#tiny_iir_reset}
 
 ```c
 /**
@@ -458,11 +461,11 @@ tiny_error_t tiny_iir_reset(tiny_iir_filter_t *filter);
 
 返回成功或错误代码。
 
-## 双二阶滤波器
+## 双二阶滤波器 {#_12}
 
 双二阶（二阶）滤波器是 IIR 滤波器的特殊情况，特别高效且常用。高阶滤波器通常分解为级联双二阶以提高数值稳定性。
 
-### tiny_iir_biquad_init
+### tiny_iir_biquad_init {#tiny_iir_biquad_init}
 
 ```c
 /**
@@ -497,7 +500,7 @@ tiny_error_t tiny_iir_biquad_init(tiny_iir_biquad_t *biquad,
 
 返回成功或错误代码。
 
-### tiny_iir_biquad_process_sample
+### tiny_iir_biquad_process_sample {#tiny_iir_biquad_process_sample}
 
 ```c
 /**
@@ -524,7 +527,7 @@ float tiny_iir_biquad_process_sample(tiny_iir_biquad_t *biquad, float input);
 
 返回滤波后的输出样本。
 
-### tiny_iir_biquad_reset
+### tiny_iir_biquad_reset {#tiny_iir_biquad_reset}
 
 ```c
 /**
@@ -548,9 +551,9 @@ tiny_error_t tiny_iir_biquad_reset(tiny_iir_biquad_t *biquad);
 
 返回成功或错误代码。
 
-## 使用流程
+## 使用流程 {#_13}
 
-### 批处理滤波流程
+### 批处理滤波流程 {#_14}
 
 1. **设计滤波器**:
    ```c
@@ -564,7 +567,7 @@ tiny_error_t tiny_iir_biquad_reset(tiny_iir_biquad_t *biquad);
    tiny_iir_filter_f32(input, 256, b_coeffs, 3, a_coeffs, 3, output, NULL);
    ```
 
-### 实时滤波流程
+### 实时滤波流程 {#_15}
 
 1. **设计滤波器**:
    ```c
@@ -591,7 +594,7 @@ tiny_error_t tiny_iir_biquad_reset(tiny_iir_biquad_t *biquad);
    tiny_iir_deinit(&filter);
    ```
 
-### 双二阶流程
+### 双二阶流程 {#_16}
 
 1. **设计滤波器**（或使用预设计的系数）:
    ```c
@@ -614,7 +617,7 @@ tiny_error_t tiny_iir_biquad_reset(tiny_iir_biquad_t *biquad);
    }
    ```
 
-## 应用场景
+## 应用场景 {#_17}
 
 IIR 滤波器广泛应用于：
 
@@ -625,23 +628,23 @@ IIR 滤波器广泛应用于：
 - **传感器信号处理**：降噪、信号调理
 - **实时系统**：计算效率至关重要的场景
 
-## 优缺点
+## 优缺点 {#_18}
 
-### 优点
+### 优点 {#_19}
 
 - **高效**：相同规格下比 FIR 需要更少的系数
 - **陡峭过渡**：可以用低阶实现陡峭的频率响应
 - **低延迟**：与 FIR 相比群延迟最小
 - **内存高效**：比 FIR 需要更少的内存
 
-### 缺点
+### 缺点 {#_20}
 
 - **潜在不稳定**：如果极点在单位圆外可能不稳定
 - **非线性相位**：通常具有非线性相位响应
 - **设计复杂**：设计比 FIR 窗函数法更复杂
 - **极限环**：可能出现量化引起的极限环
 
-## 稳定性考虑
+## 稳定性考虑 {#_21}
 
 对于 IIR 滤波器要稳定，所有极点必须位于 z 平面的单位圆内：
 
@@ -655,26 +658,26 @@ IIR 滤波器广泛应用于：
 
 分母多项式 \( A(z) = 1 + \sum_{k=1}^{N} a[k] \cdot z^{-k} \) 的所有根必须在单位圆内。
 
-## 设计考虑
+## 设计考虑 {#_22}
 
-### 滤波器阶数
+### 滤波器阶数 {#_23}
 
 - **更高阶**：更陡的过渡，更好的阻带衰减，但更复杂
 - **更低阶**：更简单，更快，但过渡带更宽
 - **Butterworth**：阶数决定 -3 dB 点和阻带衰减
 
-### 归一化频率
+### 归一化频率 {#_24}
 
 记住要归一化频率：
 
 - 在 1 kHz 采样率下 100 Hz 截止：`0.2`（100 / 500）
 - 在 10 kHz 采样率下 1 kHz 截止：`0.2`（1000 / 5000）
 
-### 系数归一化
+### 系数归一化 {#_25}
 
 IIR 滤波器使用归一化系数，其中 `a[0] = 1.0`。这是标准做法，简化了实现。
 
-## 注意事项
+## 注意事项 {#_26}
 
 - IIR 滤波器如果设计不当可能不稳定
 - 设计自定义滤波器时始终检查稳定性
@@ -683,4 +686,3 @@ IIR 滤波器使用归一化系数，其中 `a[0] = 1.0`。这是标准做法，
 - 对于实时应用，使用 `tiny_iir_init()` 和 `tiny_iir_process_sample()`
 - 对于批处理，使用 `tiny_iir_filter_f32()`
 - 双二阶滤波器推荐用于高阶设计
-

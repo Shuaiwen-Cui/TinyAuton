@@ -1,6 +1,9 @@
-# CODE
+# C matrix implementation {#code}
 
-## tiny_mat.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## tiny_mat.h {#tiny_math}
 
 ```c
 /**
@@ -60,7 +63,10 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
 
 ```
 
-## tiny_mat.c
+## tiny_mat.c {#tiny_matc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand tiny_mat.c · 473 lines</summary>
 
 ```c
 /**
@@ -537,3 +543,4 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
     return TINY_OK;
 }
 ```
+</details>

@@ -1,6 +1,14 @@
-# CODE
+# TinyDSP · Filter · Iir — Implementation and source {#code}
 
-## tiny_iir.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_iir.h` {#tiny_iirh}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_iir.h</code> · 301 lines</summary>
 
 ```c
 /**
@@ -306,7 +314,12 @@ extern "C"
 
 ```
 
-## tiny_iir.c
+</details>
+
+## `tiny_iir.c` {#tiny_iirc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_iir.c</code> · 482 lines</summary>
 
 ```c
 /**
@@ -792,3 +805,5 @@ tiny_error_t tiny_iir_biquad_reset(tiny_iir_biquad_t *biquad)
 
 
 ```
+
+</details>

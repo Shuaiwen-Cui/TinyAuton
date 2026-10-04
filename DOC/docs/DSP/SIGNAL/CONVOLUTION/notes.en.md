@@ -1,8 +1,34 @@
-# NOTES
+# TinyConv — Principles and API {#notes}
+
+<!-- Original section links retained for compatibility. -->
+<span id="1-algorithm-principles"></span>
+<span id="11-full-convolution-default-output"></span>
+<span id="12-padding-modes"></span>
+<span id="13-output-modes"></span>
+<span id="2-code-design-philosophy"></span>
+<span id="21-dual-path-architecture-esp32-vs-generic"></span>
+<span id="22-three-stage-generic-convolution"></span>
+<span id="23-const-correctness"></span>
+<span id="24-memmove-for-result-slicing"></span>
+<span id="25-dynamic-allocation-in-extended-mode"></span>
+<span id="3-api-interface-methods"></span>
+<span id="31-tiny_conv_f32"></span>
+<span id="32-tiny_conv_ex_f32"></span>
+<span id="4-function-comparison"></span>
+<span id="5-important-notes"></span>
+<span id="51-output-buffer-minimum-size"></span>
+<span id="52-esp32-signalkernel-length-ordering"></span>
+<span id="53-dynamic-allocation-in-extended-mode"></span>
+<span id="54-memmove-vs-memcpy"></span>
+<span id="55-padding-modes-and-signal-length"></span>
+<span id="56-convolution-is-not-correlation"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 ---
 
-## 1. ALGORITHM PRINCIPLES
+## 1. ALGORITHM PRINCIPLES {#1-algorithm-principles}
 
 Convolution is a fundamental operation in signal processing that combines two signals to produce a third. Mathematically, it is defined as:
 
@@ -26,7 +52,7 @@ The kernel $h$ is **flipped** (time-reversed) and then **slid** across the signa
 
 </div>
 
-### 1.1 Full Convolution (default output)
+### 1.1 Full Convolution (default output) {#11-full-convolution-default-output}
 
 The full convolution between a signal of length $L_s$ and a kernel of length $L_k$ produces $L_s + L_k - 1$ output points. The computation naturally proceeds in three stages:
 
@@ -34,7 +60,7 @@ The full convolution between a signal of length $L_s$ and a kernel of length $L_
 - **Stage II** (steady-state): the kernel is fully inside the signal.
 - **Stage III** (ramp-down): the kernel slides past the right edge.
 
-### 1.2 Padding Modes
+### 1.2 Padding Modes {#12-padding-modes}
 
 When the kernel extends beyond the signal boundaries, padding provides synthetic samples:
 
@@ -44,7 +70,7 @@ When the kernel extends beyond the signal boundaries, padding provides synthetic
 | **Symmetric** (`TINY_PADDING_SYMMETRIC`) | Signal is mirrored at the edge |
 | **Periodic** (`TINY_PADDING_PERIODIC`) | Signal wraps around (circular) |
 
-### 1.3 Output Modes
+### 1.3 Output Modes {#13-output-modes}
 
 | Mode | Output Length | Description |
 |------|--------------|-------------|
@@ -55,13 +81,13 @@ When the kernel extends beyond the signal boundaries, padding provides synthetic
 
 ---
 
-## 2. CODE DESIGN PHILOSOPHY
+## 2. CODE DESIGN PHILOSOPHY {#2-code-design-philosophy}
 
-### 2.1 Dual-Path Architecture (ESP32 vs Generic)
+### 2.1 Dual-Path Architecture (ESP32 vs Generic) {#21-dual-path-architecture-esp32-vs-generic}
 
 This is the only convolution module that uses **platform-specific acceleration**. On ESP32, `dsps_conv_f32` from the ESP-DSP library provides hardware-optimized convolution. The generic fallback uses a pure-C three-stage implementation that handles **arbitrary signal/kernel ordering**.
 
-### 2.2 Three-Stage Generic Convolution
+### 2.2 Three-Stage Generic Convolution {#22-three-stage-generic-convolution}
 
 The generic convolution is structured as three explicit loops (Stage I/II/III). This form:
 
@@ -71,23 +97,23 @@ The generic convolution is structured as three explicit loops (Stage I/II/III). 
 
 **Important platform asymmetry**: The ESP32 ESP-DSP backend **requires** `siglen >= kernlen` and returns `TINY_ERR_DSP_INVALID_PARAM` if this precondition is violated. The generic fallback has no such restriction.
 
-### 2.3 `const` Correctness
+### 2.3 `const` Correctness {#23-const-correctness}
 
 Both signal and kernel pointers are treated as read-only (`const float *`) in the generic path. This prevents accidental modification and allows the compiler to perform better alias analysis.
 
-### 2.4 `memmove` for Result Slicing
+### 2.4 `memmove` for Result Slicing {#24-memmove-for-result-slicing}
 
 `tiny_conv_ex_f32` selects a sub-slice of the full convolution output by shifting data to the front of the output buffer. It uses **`memmove`** rather than a `for` loop or `memcpy` because the source and destination ranges may overlap (e.g., in Center mode where `start_idx > 0`).
 
-### 2.5 Dynamic Allocation in Extended Mode
+### 2.5 Dynamic Allocation in Extended Mode {#25-dynamic-allocation-in-extended-mode}
 
 `tiny_conv_ex_f32` allocates a padded temporary buffer via `calloc`. This is necessary because padding adds `2 * (kernlen - 1)` extra samples. The buffer is freed before return. For real-time or memory-constrained applications, use `tiny_conv_f32` which performs no dynamic allocation.
 
 ---
 
-## 3. API INTERFACE — METHODS
+## 3. API INTERFACE — METHODS {#3-api-interface-methods}
 
-### 3.1 `tiny_conv_f32`
+### 3.1 `tiny_conv_f32` {#31-tiny_conv_f32}
 
 ```c
 /**
@@ -190,7 +216,7 @@ Computes the full convolution between an input signal and a kernel. On ESP32, de
 
 ---
 
-### 3.2 `tiny_conv_ex_f32`
+### 3.2 `tiny_conv_ex_f32` {#32-tiny_conv_ex_f32}
 
 ```c
 /**
@@ -331,7 +357,7 @@ Computes convolution with explicit control over padding strategy and output slic
 
 ---
 
-## 4. FUNCTION COMPARISON
+## 4. FUNCTION COMPARISON {#4-function-comparison}
 
 | Feature | `tiny_conv_f32` | `tiny_conv_ex_f32` |
 |---------|----------------|-------------------|
@@ -344,7 +370,7 @@ Computes convolution with explicit control over padding strategy and output slic
 | **Boundary Handling** | Zero-padding implicit in 3-stage loops | Explicit padding (zero/symmetric/periodic) |
 | **Use When** | Simple full convolution, real-time, no allocation | Custom padding or output slice needed |
 
-### When to Use `tiny_conv_f32`
+### When to Use `tiny_conv_f32` {#when-to-use-tiny_conv_f32}
 
 - You need a simple full convolution result.
 - Zero padding at boundaries is acceptable.
@@ -352,7 +378,7 @@ Computes convolution with explicit control over padding strategy and output slic
 - You want to avoid dynamic memory allocation entirely.
 - Real-time or interrupt-context processing.
 
-### When to Use `tiny_conv_ex_f32`
+### When to Use `tiny_conv_ex_f32` {#when-to-use-tiny_conv_ex_f32}
 
 - You need symmetric or periodic padding to reduce boundary artifacts.
 - You want to extract only a specific slice (head/center/tail) of the result.
@@ -362,9 +388,9 @@ Computes convolution with explicit control over padding strategy and output slic
 
 ---
 
-## 5. ⚠️ IMPORTANT NOTES
+## 5. ⚠️ IMPORTANT NOTES {#5-important-notes}
 
-### 5.1 Output Buffer Minimum Size
+### 5.1 Output Buffer Minimum Size {#51-output-buffer-minimum-size}
 
 Regardless of `conv_mode`, the output buffer for both functions must be sized for the **full convolution**:
 
@@ -372,7 +398,7 @@ $$\mathrm{buffer\_size} \ge siglen + kernlen - 1$$
 
 In `tiny_conv_ex_f32`, the full result is written first and then the requested slice is shifted to the front. A buffer smaller than `siglen + kernlen - 1` will cause a heap buffer overflow.
 
-### 5.2 ESP32 Signal/Kernel Length Ordering
+### 5.2 ESP32 Signal/Kernel Length Ordering {#52-esp32-signalkernel-length-ordering}
 
 On ESP32, `dsps_conv_f32` requires `siglen >= kernlen`. If this precondition is violated:
 
@@ -381,7 +407,7 @@ On ESP32, `dsps_conv_f32` requires `siglen >= kernlen`. If this precondition is 
 
 **Recommendation**: always ensure `siglen >= kernlen` for portable code.
 
-### 5.3 Dynamic Allocation in Extended Mode
+### 5.3 Dynamic Allocation in Extended Mode {#53-dynamic-allocation-in-extended-mode}
 
 `tiny_conv_ex_f32` calls `calloc` internally. If the allocation fails:
 - Returns `TINY_ERR_DSP_MEMORY_ALLOC`.
@@ -389,16 +415,15 @@ On ESP32, `dsps_conv_f32` requires `siglen >= kernlen`. If this precondition is 
 
 In memory-constrained or real-time systems, prefer `tiny_conv_f32` or pre-allocate the padded buffer externally.
 
-### 5.4 `memmove` vs `memcpy`
+### 5.4 `memmove` vs `memcpy` {#54-memmove-vs-memcpy}
 
 The slice extraction in `tiny_conv_ex_f32` uses `memmove` (not `memcpy`) because the source and destination ranges overlap. For example, in Center mode, bytes at `convout[start_idx]` are copied to `convout[0]`, and these regions overlap when `start_idx < out_len`.
 
-### 5.5 Padding Modes and Signal Length
+### 5.5 Padding Modes and Signal Length {#55-padding-modes-and-signal-length}
 
 - Symmetric and periodic padding both read `Signal[0]` and `Signal[siglen-1]` for mirror/wrap operations. If `siglen == 1`, the left and right padding edges reference the same single sample.
 - Periodic mode uses `% siglen` — division by zero if `siglen == 0`, but this is caught by the `siglen <= 0` parameter check.
 
-### 5.6 Convolution is NOT Correlation
+### 5.6 Convolution is NOT Correlation {#56-convolution-is-not-correlation}
 
 Convolution flips the kernel; correlation does not. If you need correlation, use `tiny_corr_f32` or `tiny_ccorr_f32` from the CORRELATION module — do not simply reverse the kernel manually, as the internal implementations differ in boundary handling.
-

@@ -31,29 +31,15 @@ without pulling in `tiny_ai`.
 
 ## Quick start
 
-Train a classifier, quantise it and run inference — entirely on the MCU:
+Run the bundled training example on the MCU. The docs distinguish float evaluation from quantization API demonstrations:
 
 ```cpp
 #include "tiny_ai.h"
-using namespace tiny;
 
-Sequential model;
-model.add(new Dense(4, 16));
-model.add(new ActivationLayer(ActType::RELU));
-model.add(new Dense(16, 8));
-model.add(new ActivationLayer(ActType::RELU));
-model.add(new Dense(8, 3));
-model.add(new ActivationLayer(ActType::SOFTMAX));
-
-Adam opt(1e-3f);
-Trainer trainer(&model, &opt, LossType::CROSS_ENTROPY);
-
-Trainer::Config cfg;
-cfg.epochs     = 100;
-cfg.batch_size = 16;
-trainer.fit(train_ds, cfg);          // backprop runs in firmware
-
-float acc = trainer.evaluate(test_ds);
+extern "C" void app_main(void)
+{
+    example_mlp();
+}
 ```
 
 Three ready-to-flash ESP-IDF projects live under `CODE/`, each pulling in progressively more of
@@ -71,7 +57,7 @@ idf.py set-target esp32s3
 idf.py build flash monitor
 ```
 
-Requires ESP-IDF v5.x. See [Prerequisites](http://www.cuishuaiwen.com:9300/PREREQUISITE/)
+Current projects and CI use ESP-IDF v6.0 on ESP32-S3. See [Getting started](DOC/docs/GETTING_STARTED/getting_started.en.md) and [Prerequisites](DOC/docs/PREREQUISITE/prerequisite.en.md)
 for the toolchain setup.
 
 ---
@@ -81,19 +67,17 @@ for the toolchain setup.
 | Platform | Status | Acceleration |
 |---|---|---|
 | ESP32 / ESP32-S3 | **Primary target** — developed and tested here | ESP-DSP / ESP-DL |
-| Any C99 toolchain | Supported via `MCU_PLATFORM_GENERIC` | portable C reference path |
+| Generic kernels | Available for selected functions; full stack port unverified | portable reference paths |
 | STM32 | Adaptation layer reserved, **not yet implemented** | CMSIS-DSP planned |
 | RISC-V | Adaptation layer reserved, **not yet implemented** | — |
 
-Selected at compile time in `tiny_math_config.h`. Porting means rewriting `tiny_toolbox` only
-(FreeRTOS → CMSIS-RTOS, `esp_timer` → HAL timer); the modules above it are platform-agnostic.
+Platform selection is configured in `tiny_math_config.h`. A complete port also needs build dependencies, allocation and direct platform calls adapted. See [architecture](DOC/docs/ARCHITECTURE/architecture.en.md).
 
 ---
 
 ## Tests
 
-Each module ships an on-target test harness that runs on the MCU itself rather than on a host —
-correctness and per-function timing are measured on the hardware the code is meant for.
+Each module includes an on-target test harness. MATH currently enables G1/G2/G3 matrix quality checks; DSP enables FFT/DWT/ICA; AI runs all three examples. Historical outputs are distinguished from current coverage.
 
 ```
 tiny_math   tiny_vec_test, tiny_mat_test, tiny_matrix_test
@@ -114,9 +98,12 @@ A bilingual (English / 中文) API reference is built with MkDocs Material and c
 header and test.
 
 ```bash
-cd DOC
-mkdocs serve      # http://localhost:8000
+python -m pip install -r DOC/requirements.txt
+python DOC/tools/check_preservation.py
+python -m mkdocs serve -f DOC/mkdocs.yml
 ```
+
+Start with [getting started](DOC/docs/GETTING_STARTED/getting_started.en.md), [projects](DOC/docs/PROJECTS/projects.en.md) and [documentation maintenance](DOC/README.md).
 
 ---
 

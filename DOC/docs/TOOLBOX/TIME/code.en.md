@@ -1,6 +1,12 @@
-# TIME
+# TIME {#time}
 
-## tiny_time.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## tiny_time.h {#tiny_timeh}
+
+<details class="auton-source" markdown="1">
+<summary>Expand tiny_time.h · 79 lines</summary>
 
 ```c
 /**
@@ -84,7 +90,9 @@ extern "C"
 #endif
 ```
 
-## Design Notes
+</details>
+
+## Design Notes {#design-notes}
 
 The core idea of this module is to separate two time concepts that often get mixed together in embedded code: monotonic running time and synchronized wall-clock time. `tiny_get_running_time()` is built on `esp_timer_get_time()`, so it gives a stable microsecond counter that is ideal for measuring intervals, delays, and callback timing. `sync_time_with_timezone()` handles the other side of the problem: it applies the timezone, starts SNTP, waits until the system clock becomes valid, and then writes the result into the RTC path so the device can keep a usable local time after synchronization.
 
@@ -94,7 +102,10 @@ The test program reflects those design goals directly. Test 1 checks the running
 
 The timer precision test is the most important proof of the timing design. It records 15 timestamps at 2-second intervals, avoids printing inside the callback to reduce overhead, and then reports each interval, error, total drift, and average spacing. If the intervals stay close to 2,000,000 microseconds, the result shows that the module preserves microsecond precision and that the callback path is light enough to observe real timer behavior instead of logging noise. In other words, the test does not just show that the code runs; it shows that the design choices around precision, low overhead, and time synchronization are working together.
 
-## tiny_time.c
+## tiny_time.c {#tiny_timec}
+
+<details class="auton-source" markdown="1">
+<summary>Expand tiny_time.c · 183 lines</summary>
 
 ```c
 /**
@@ -282,8 +293,13 @@ TinyDateTime_t tiny_get_current_datetime(bool print_flag)
 }
 ```
 
+</details>
 
-## main.cpp
+
+## main.cpp {#maincpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand main.cpp · 284 lines</summary>
 
 ```cpp
 /**
@@ -572,7 +588,9 @@ void app_main(void)
 
 ```
 
-## output
+</details>
+
+## output {#output}
 
 ```txt
 I (25) boot: ESP-IDF v6.0-dev-1833-g758939caec 2nd stage bootloader
@@ -759,7 +777,7 @@ I (41915) tiny_time_test: ========================================
 
 ```
 
-## Result Interpretation
+## Result Interpretation {#result-interpretation}
 
 The output logs confirm the design in a concrete way. The early boot lines only show platform startup, which is expected and not part of the TIME module itself. The important evidence starts when the test program prints the running time and later the elapsed time: these values come from `esp_timer_get_time()`, so they demonstrate that the module is using a monotonic microsecond source as the base for measurement. That is exactly why the API separates running time from wall-clock time.
 

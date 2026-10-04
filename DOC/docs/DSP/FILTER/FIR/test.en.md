@@ -1,6 +1,13 @@
-# TESTS
+# TinyDSP · Filter · Fir — Tests and results {#tests}
 
-## tiny_fir_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_fir_testc"></span>
+<span id="tiny_fir_testh"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## `tiny_fir_test.h` {#tinyfirtesth}
 
 ```c
 /**
@@ -32,7 +39,10 @@ void tiny_fir_test(void);
 
 ```
 
-## tiny_fir_test.c
+## `tiny_fir_test.c` {#tinyfirtestc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_fir_test.c</code> · 310 lines</summary>
 
 ```c
 /**
@@ -347,7 +357,9 @@ void tiny_fir_test(void)
 
 ```
 
-## OUTPUTS
+</details>
+
+## OUTPUTS {#outputs}
 
 ```c
 ==========================================

@@ -1,6 +1,14 @@
-# Code
+# TinyAI · Train · Dataset — Implementation and source {#code}
 
-## tiny_dataset.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_dataset.hpp` {#tiny_datasethpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_dataset.hpp</code> · 61 lines</summary>
 
 ```cpp
 /**
@@ -66,7 +74,12 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_dataset.cpp
+</details>
+
+## `tiny_dataset.cpp` {#tiny_datasetcpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_dataset.cpp</code> · 167 lines</summary>
 
 ```cpp
 /**
@@ -237,3 +250,5 @@ Tensor Dataset::to_tensor() const
 
 #endif // __cplusplus
 ```
+
+</details>

@@ -1,6 +1,9 @@
-# ESP-DSP EXAMPLES
+# ESP-DSP EXAMPLES {#esp-dsp-examples}
 
-## List of esp-dsp Examples
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## List of esp-dsp Examples {#list-of-esp-dsp-examples}
 
 Signal processing APIs use dsps prefix. The following modules are available:
 
@@ -22,7 +25,7 @@ Signal processing APIs use dsps prefix. The following modules are available:
 
 - Matrix - example demonstrates how to use Mat class functionality
 
-## Basic math
+## Basic math {#basic-math}
 
 This example demonstrates how to use basic math functions from esp-dsp library. The example does the following steps:
 
@@ -44,7 +47,7 @@ This example demonstrates how to use basic math functions from esp-dsp library. 
 
 For more details please look to the examples/basic_math/README.md
 
-### Dot-product
+### Dot-product {#dot-product}
 
 The example demonstrates how to use dotprod dsps_dotprod_f32 from esp-dsp library. Example does the following steps:
 
@@ -56,7 +59,7 @@ The example demonstrates how to use dotprod dsps_dotprod_f32 from esp-dsp librar
 
 For more details please look to the examples/dotprod/README.md
 
-### FFT
+### FFT {#fft}
 
 This example demonstrates how to use FFT functionality from esp-dsp library. Example does the following steps:
 
@@ -78,7 +81,7 @@ This example demonstrates how to use FFT functionality from esp-dsp library. Exa
 
 For more details please look to the examples/fft/README.md
 
-### FFT Window
+### FFT Window {#fft-window}
 
 This example demonstrates how to use Window and FFT functionality from esp-dsp library. Example does the following steps:
 
@@ -98,7 +101,7 @@ This example demonstrates how to use Window and FFT functionality from esp-dsp l
 
 For more details please look to the examples/fft_window/README.md
 
-### FFT 4 Real
+### FFT 4 Real {#fft-4-real}
 
 This example demonstrates how to use FFT functionality from esp-dsp library. Example does the following steps:
 
@@ -118,7 +121,7 @@ This example demonstrates how to use FFT functionality from esp-dsp library. Exa
 
 For more details please look to the examples/fft4real/README.md
 
-### IIR
+### IIR {#iir}
 
 This example demonstrates how to use IIR filters functionality from esp-dsp library. Example does the following steps:
 
@@ -142,7 +145,7 @@ This example demonstrates how to use IIR filters functionality from esp-dsp libr
 
 For more details please look to the examples/fir/README.md
 
-### FIR
+### FIR {#fir}
 
 This example demonstrates how to use FIR filter functionality from esp-dsp library. Example does the following steps:
 
@@ -156,7 +159,7 @@ This example demonstrates how to use FIR filter functionality from esp-dsp libra
 
 For more details please look to the examples/fir/README.md
 
-### Kalman Filter
+### Kalman Filter {#kalman-filter}
 
 This example emulate system with IMU sensors and show how to use Extended Kalman Filter (EKF), with 13 values states vector, to estimate gyroscope errors and calculate system attitude. Also, this example show how to use esp-dsp library to operate with matrices and vectors.
 
@@ -165,7 +168,7 @@ In real system, the emulated sensors values should be replace by the real sensor
 For more details please look to the examples/kalman/README.md
 
 
-### Matrix
+### Matrix {#matrix}
 
 This example demonstrates how to use Mat class functionality from esp-dsp library. Example does the following steps:
 

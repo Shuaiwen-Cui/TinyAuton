@@ -1,6 +1,62 @@
-# TESTS
+# TinyDSP · Signal · Resample — Tests and results {#tests}
 
-## tiny_resample.h
+<!-- Original section links retained for compatibility. -->
+<span id="test-results"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## Test Output {#test-output}
+
+```c
+========== TinyResample Test ==========
+
+Original Signal (length=8):
+  Input:  1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00
+
+Test 1: Downsampling (keep=1, skip=1, effective stride=2)
+  Description: Keep one sample then skip one, repeat
+  Input:   1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00  (length=8)
+  Output:  1.00 3.00 5.00 7.00  (length=4)
+  Expected: input[0,2,4,6] -> [1.00, 3.00, 5.00, 7.00]
+
+Test 1b: Downsampling (keep=2, skip=1)
+  Description: Keep two samples then skip one, repeat
+  Output:  1.00 2.00 4.00 5.00 7.00 8.00  (length=6)
+  Expected: input[0,1,3,4,6,7] -> [1.00, 2.00, 4.00, 5.00, 7.00, 8.00]
+
+Test 2: Upsampling (Zero-insertion)
+  Description: Insert zeros between samples to increase length
+  Input:   1.00 3.00 5.00 7.00  (length=4)
+  Output:  1.00 0.00 0.00 0.00 3.00 0.00 0.00 0.00 5.00 0.00 0.00 0.00 7.00 0.00 0.00 0.00  (length=16)
+  Mapping: input[0,1,2,3] -> output[0,4,8,12] = [1.00, 3.00, 5.00, 7.00]
+           (zeros inserted at positions 1,2,3,5,6,7,9,10,11,13,14,15)
+
+Test 3: Resampling (Linear Interpolation)
+  Description: Resample from 8 to 12 samples using linear interpolation
+  Input:   1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00  (length=8)
+  Output:  1.00 1.67 2.33 3.00 3.67 4.33 5.00 5.67 6.33 7.00 7.67 8.00  (length=12)
+  Mapping: Linear interpolation between input samples
+           output[0,2,4,6,8,10] = input[0,1,2,3,4,5] = [1.00, 2.00, 3.00, 4.00, 5.00, 6.00]
+           output[1,3,5,7,9,11] = interpolated midpoints
+
+Test 4: Validation - Verify Linear Interpolation Correctness
+  Purpose: Verify interpolation / edge clamping behavior
+           if index < input_len-1: output = input[index]*(1-frac) + input[index+1]*frac
+           else (tail): output = input[input_len-1] (clamped)
+
+  Sample verification (checking a few key points):
+    output[ 0]: pos=0.000, index=0, frac=0.000 -> 1.00 (expected: 1.00) [OK]
+    output[ 1]: pos=0.667, index=0, frac=0.667 -> 1.67 (expected: 1.67) [OK]
+    output[ 2]: pos=1.333, index=1, frac=0.333 -> 2.33 (expected: 2.33) [OK]
+    output[ 6]: pos=4.000, index=4, frac=0.000 -> 5.00 (expected: 5.00) [OK]
+    output[11]: pos=7.333, index=7 (tail clamp) -> 8.00 (expected: 8.00) [OK]
+  [PASS] All interpolated values are correct.
+
+========================================
+```
+
+## `tiny_resample.h` {#tiny_resampleh}
 
 ```c
 /**
@@ -31,7 +87,10 @@ void tiny_resample_test(void);
 
 ```
 
-## tiny_resample.c
+## `tiny_resample.c` {#tiny_resamplec}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_resample_test.c</code> · 148 lines</summary>
 
 ```c
 /**
@@ -184,52 +243,4 @@ void tiny_resample_test(void)
 }
 ```
 
-## TEST RESULTS
-
-```c
-========== TinyResample Test ==========
-
-Original Signal (length=8):
-  Input:  1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00
-
-Test 1: Downsampling (keep=1, skip=1, effective stride=2)
-  Description: Keep one sample then skip one, repeat
-  Input:   1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00  (length=8)
-  Output:  1.00 3.00 5.00 7.00  (length=4)
-  Expected: input[0,2,4,6] -> [1.00, 3.00, 5.00, 7.00]
-
-Test 1b: Downsampling (keep=2, skip=1)
-  Description: Keep two samples then skip one, repeat
-  Output:  1.00 2.00 4.00 5.00 7.00 8.00  (length=6)
-  Expected: input[0,1,3,4,6,7] -> [1.00, 2.00, 4.00, 5.00, 7.00, 8.00]
-
-Test 2: Upsampling (Zero-insertion)
-  Description: Insert zeros between samples to increase length
-  Input:   1.00 3.00 5.00 7.00  (length=4)
-  Output:  1.00 0.00 0.00 0.00 3.00 0.00 0.00 0.00 5.00 0.00 0.00 0.00 7.00 0.00 0.00 0.00  (length=16)
-  Mapping: input[0,1,2,3] -> output[0,4,8,12] = [1.00, 3.00, 5.00, 7.00]
-           (zeros inserted at positions 1,2,3,5,6,7,9,10,11,13,14,15)
-
-Test 3: Resampling (Linear Interpolation)
-  Description: Resample from 8 to 12 samples using linear interpolation
-  Input:   1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00  (length=8)
-  Output:  1.00 1.67 2.33 3.00 3.67 4.33 5.00 5.67 6.33 7.00 7.67 8.00  (length=12)
-  Mapping: Linear interpolation between input samples
-           output[0,2,4,6,8,10] = input[0,1,2,3,4,5] = [1.00, 2.00, 3.00, 4.00, 5.00, 6.00]
-           output[1,3,5,7,9,11] = interpolated midpoints
-
-Test 4: Validation - Verify Linear Interpolation Correctness
-  Purpose: Verify interpolation / edge clamping behavior
-           if index < input_len-1: output = input[index]*(1-frac) + input[index+1]*frac
-           else (tail): output = input[input_len-1] (clamped)
-
-  Sample verification (checking a few key points):
-    output[ 0]: pos=0.000, index=0, frac=0.000 -> 1.00 (expected: 1.00) [OK]
-    output[ 1]: pos=0.667, index=0, frac=0.667 -> 1.67 (expected: 1.67) [OK]
-    output[ 2]: pos=1.333, index=1, frac=0.333 -> 2.33 (expected: 2.33) [OK]
-    output[ 6]: pos=4.000, index=4, frac=0.000 -> 5.00 (expected: 5.00) [OK]
-    output[11]: pos=7.333, index=7 (tail clamp) -> 8.00 (expected: 8.00) [OK]
-  [PASS] All interpolated values are correct.
-
-========================================
-```
+</details>

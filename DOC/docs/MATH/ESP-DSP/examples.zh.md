@@ -1,6 +1,9 @@
-# ESP-DSP 案例
+# ESP-DSP 案例 {#esp-dsp}
 
-## esp-dsp 示例列表
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## esp-dsp 示例列表 {#esp-dsp_1}
 
 信号处理 API 使用 dsps 前缀。以下模块可用：
 
@@ -22,7 +25,7 @@
 
 - 矩阵 - 本示例演示如何使用 Mat 类功能
 
-## 基础数学
+## 基础数学 {#_1}
 
 本示例演示了如何使用 esp-dsp 库中的基本数学函数。示例执行以下步骤：
 
@@ -44,7 +47,7 @@
 
 更多详细信息，请参阅 examples/basic_math/README.md
 
-### 点积
+### 点积 {#_2}
 
 本示例演示了如何使用 esp-dsp 库中的 dotprod dsps_dotprod_f32 函数。示例执行以下步骤：
 
@@ -56,7 +59,7 @@
 
 更多详情，请参阅 examples/dotprod/README.md
 
-### FFT
+### FFT {#fft}
 
 本示例演示了如何使用 ESP-DSP 库中的 FFT 功能。示例执行以下步骤：
 
@@ -78,7 +81,7 @@
 
 更多详细信息，请参阅 examples/fft/README.md
 
-### FFT 窗口
+### FFT 窗口 {#fft_1}
 
 本示例演示了如何使用 esp-dsp 库中的窗口和 FFT 功能。示例执行以下步骤：
 
@@ -98,7 +101,7 @@
 
 更多详细信息，请参阅 examples/fft_window/README.md
 
-### FFT 4 Real
+### FFT 4 Real {#fft-4-real}
 
 本示例演示了如何使用 ESP-DSP 库中的 FFT 功能。示例执行以下步骤：
 
@@ -118,7 +121,7 @@
 
 更多详细信息，请参阅 examples/fft4real/README.md
 
-### IIR
+### IIR {#iir}
 
 本示例演示了如何使用 ESP-DSP 库中的 IIR 滤波器功能。示例执行以下步骤：
 
@@ -142,7 +145,7 @@
 
 更多详细信息，请参阅 examples/fir/README.md
 
-### FIR
+### FIR {#fir}
 
 本示例演示了如何使用 ESP-DSP 库中的 FIR 滤波器功能。示例执行以下步骤：
 
@@ -156,7 +159,7 @@
 
 更多详细信息，请参阅 examples/fir/README.md
 
-### 卡尔曼滤波器
+### 卡尔曼滤波器 {#_3}
 
 本示例模拟了带有 IMU 传感器的系统，并展示了如何使用具有 13 个状态向量的扩展卡尔曼滤波器 (EKF) 来估计陀螺仪误差并计算系统姿态。此外，本示例还展示了如何使用 esp-dsp 库对矩阵和向量进行运算。
 
@@ -164,7 +167,7 @@
 
 更多详细信息，请参阅 examples/kalman/README.md
 
-### 矩阵
+### 矩阵 {#_4}
 
 本示例演示如何使用 esp-dsp 库中的 Mat 类功能。示例执行以下步骤：
 

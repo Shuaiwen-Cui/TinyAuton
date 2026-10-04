@@ -1,6 +1,11 @@
-# 代码
+# TinyAI · 核心 · 损失函数 — 实现与源码 {#_1}
 
-## tiny_loss.hpp
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+本页保留完整源码摘录，按文件展开阅读。先看[设计说明](notes.md)了解数据流、接口和算法，再核对实现；源码摘录可能属于历史版本，当前实现请以所选工程为准。
+
+## `tiny_loss.hpp` {#tiny_losshpp}
 
 ```cpp
 /**
@@ -58,7 +63,10 @@ Tensor loss_backward(const Tensor &pred, const Tensor &target,
 #endif // __cplusplus
 ```
 
-## tiny_loss.cpp
+## `tiny_loss.cpp` {#tiny_losscpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_loss.cpp</code> · 159 行</summary>
 
 ```cpp
 /**
@@ -221,3 +229,5 @@ Tensor loss_backward(const Tensor &pred, const Tensor &target,
 
 #endif // __cplusplus
 ```
+
+</details>

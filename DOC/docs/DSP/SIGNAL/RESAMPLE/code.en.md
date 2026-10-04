@@ -1,6 +1,14 @@
-# CODE
+# TinyDSP · Signal · Resample — Implementation and source {#code}
 
-## tiny_resample.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_resample.h` {#tiny_resampleh}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_resample.h</code> · 72 lines</summary>
 
 ```c
 /**
@@ -77,7 +85,12 @@ extern "C"
 
 ```
 
-## tiny_resample.c
+</details>
+
+## `tiny_resample.c` {#tiny_resamplec}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_resample.c</code> · 140 lines</summary>
 
 ```c
 /**
@@ -221,3 +234,5 @@ tiny_error_t tiny_resample_f32(const float *input,
 }
 
 ```
+
+</details>

@@ -1,4 +1,7 @@
-# TinyMath HEADER FILE
+# TinyMath HEADER FILE {#tinymath-header-file}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! INFO
     This is the main header file of the TinyMath library. It includes all necessary header files and provides a unified interface to use the functions of the library. After completing the porting of this library in the project, you can insert this header file where you want to use the relevant functions to use all functions in the library. The documentation update speed is slow and may not be consistent with the actual code, please refer to the actual code.

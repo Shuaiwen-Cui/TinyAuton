@@ -1,4 +1,7 @@
-# LOG
+# LOG {#log}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 > 2025-04-10
 

@@ -1,9 +1,41 @@
-# 说明
+# TinyAI · 模型 · CNN — 设计说明 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     `CNN1D` 是 1-D 卷积神经网络的便捷封装，继承自 `Sequential`。它通过 `CNN1DConfig` 描述每个卷积块的输出通道、卷积核大小、池化窗口和最终的全连接头，自动构造完整的「Conv1D + ReLU + MaxPool1D」流水线。
 
-## CNN1DConfig
+!!! abstract "CNN — 卷积神经网络：让 Conv 做特征提取，Dense 做分类"
+    对于 SHM 时序信号，CNN1D 是默认选择：Conv 层自动学习频域/时域特征，Pool 层压缩，Dense 层分类。
+
+## 算法直觉 {#_2}
+
+### CNN1D 处理流水线 {#cnn1d}
+
+```
+输入信号 → [Conv1D → ReLU → MaxPool] × N → Flatten → Dense → 输出
+```
+
+1. **Conv1D**: 用多个卷积核扫描信号，学不同模式（频率、冲击、趋势）
+2. **MaxPool**: 下采样，保留最强响应，减少数据量
+3. **Flatten**: 把多维特征展平成一维向量
+4. **Dense**: 在展平的特征上做分类
+
+### CNN1DConfig 快速配置 {#cnn1dconfig}
+
+```cpp
+CNN1DConfig config;
+config.in_channels  = 1;       // 单通道加速度信号
+config.out_channels = {16, 32}; // 第1层16个核，第2层32个核
+config.kernel_sizes = {9, 5};  // 第1层核宽9，第2层核宽5
+config.strides = {2, 2};       // 每层步长2
+config.num_classes = 3;        // 3类输出
+```
+
+---
+
+## CNN1DConfig {#cnn1dconfig_1}
 
 ```cpp
 struct CNN1DConfig
@@ -21,7 +53,7 @@ struct CNN1DConfig
 };
 ```
 
-## 构造逻辑
+## 构造逻辑 {#_3}
 
 `CNN1D::CNN1D(const CNN1DConfig &cfg)` 流程：
 
@@ -38,7 +70,7 @@ struct CNN1DConfig
 
 `flat_features()` 返回展平后维度，便于推断 Dense 大小。
 
-## 使用示例
+## 使用示例 {#_4}
 
 ```cpp
 CNN1DConfig cfg;
@@ -71,13 +103,13 @@ Dense(32 → 3)           -> [B, 3]
 SOFTMAX                 -> [B, 3]
 ```
 
-## 计算 / 内存
+## 计算 / 内存 {#_5}
 
 - **参数量**：取决于 `filters / kernels / fc_units`。`{16, 32}` + `fc_units=32` 大约 14 KB float 权重。
 - **激活内存**：每个卷积块的中间张量按 `B × ch × L` 大小存放；训练开启时还要再缓存一份输入。
 - **PSRAM**：`example_cnn.cpp` 中默认在 `B=8` 下推理；ESP32-S3 PSRAM 8 MB 完全够用。
 
-## 适用场景
+## 适用场景 {#_6}
 
 - 振动 / 加速度信号分类。
 - 心电、肌电、语音帧分类。

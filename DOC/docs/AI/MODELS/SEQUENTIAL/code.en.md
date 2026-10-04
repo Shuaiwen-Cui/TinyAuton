@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Models · Sequential — Implementation and source {#code}
 
-## tiny_sequential.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_sequential.hpp` {#tiny_sequentialhpp}
 
 ```cpp
 /**
@@ -51,7 +56,10 @@ protected:
 #endif // __cplusplus
 ```
 
-## tiny_sequential.cpp
+## `tiny_sequential.cpp` {#tiny_sequentialcpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_sequential.cpp</code> · 83 lines</summary>
 
 ```cpp
 /**
@@ -138,3 +146,5 @@ float Sequential::accuracy(const Tensor &x, const int *labels, int n_samples)
 
 #endif // __cplusplus
 ```
+
+</details>

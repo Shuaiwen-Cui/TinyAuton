@@ -1,8 +1,34 @@
-# 说明
+# TinyConv — 原理与接口 {#_1}
+
+<!-- Original section links retained for compatibility. -->
+<span id="1"></span>
+<span id="11"></span>
+<span id="12"></span>
+<span id="13"></span>
+<span id="2"></span>
+<span id="21-esp32-vs"></span>
+<span id="22"></span>
+<span id="23-const"></span>
+<span id="24-memmove"></span>
+<span id="25"></span>
+<span id="3-api"></span>
+<span id="31-tiny_conv_f32"></span>
+<span id="32-tiny_conv_ex_f32"></span>
+<span id="4"></span>
+<span id="5"></span>
+<span id="51"></span>
+<span id="52-esp32"></span>
+<span id="53"></span>
+<span id="54-memmove-vs-memcpy"></span>
+<span id="55"></span>
+<span id="56"></span>
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 ---
 
-## 1. 算法原理
+## 1. 算法原理 {#1}
 
 卷积是信号处理中的基础运算，将两个信号合并生成第三个信号。数学定义如下：
 
@@ -26,7 +52,7 @@ $$y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]$$
 
 </div>
 
-### 1.1 完整卷积（默认输出）
+### 1.1 完整卷积（默认输出） {#11}
 
 长度为 $L_s$ 的信号与长度为 $L_k$ 的卷积核的完整卷积产生 $L_s + L_k - 1$ 个输出点。计算自然地分三个阶段进行：
 
@@ -34,7 +60,7 @@ $$y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]$$
 - **阶段 II** （稳态期）：卷积核完全在信号内部
 - **阶段 III** （下降期）：卷积核滑过右边缘
 
-### 1.2 填充模式
+### 1.2 填充模式 {#12}
 
 当卷积核超出信号边界时，由填充提供合成样本：
 
@@ -44,7 +70,7 @@ $$y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]$$
 | **对称填充** (`TINY_PADDING_SYMMETRIC`) | 在边缘处镜像信号 |
 | **周期填充** (`TINY_PADDING_PERIODIC`) | 信号环绕（循环） |
 
-### 1.3 输出模式
+### 1.3 输出模式 {#13}
 
 | 模式 | 输出长度 | 说明 |
 |------|---------|------|
@@ -55,13 +81,13 @@ $$y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]$$
 
 ---
 
-## 2. 代码设计理念
+## 2. 代码设计理念 {#2}
 
-### 2.1 双路径架构（ESP32 vs 通用）
+### 2.1 双路径架构（ESP32 vs 通用） {#21-esp32-vs}
 
 这是全库中 **唯一** 使用平台特定加速的卷积模块。在 ESP32 上，使用 ESP- DSP 库的 `dsps_conv_f32` 进行硬件优化卷积。通用回退路径使用纯 C 三阶段实现，**可处理任意信号/卷积核长度顺序** 。
 
-### 2.2 三段式通用卷积
+### 2.2 三段式通用卷积 {#22}
 
 通用卷积显式组织为三个循环（阶段 I/II/III）。这种形式：
 
@@ -71,23 +97,23 @@ $$y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]$$
 
 **平台不对称重要提示**：ESP32 ESP-DSP 后端 **要求** `siglen >= kernlen`，如果违反此条件返回 `TINY_ERR_DSP_INVALID_PARAM`。通用回退路径没有此限制。
 
-### 2.3 `const` 正确性
+### 2.3 `const` 正确性 {#23-const}
 
 信号和卷积核指针在通用路径中均视为只读（`const float *`），防止意外修改，并允许编译器进行更优的别名分析。
 
-### 2.4 `memmove` 结果切片
+### 2.4 `memmove` 结果切片 {#24-memmove}
 
 `tiny_conv_ex_f32` 通过将数据前移到输出缓冲区开头来选取完整卷积的子切片。使用 **`memmove`** 而非 `for` 循环或 `memcpy`，因为源和目标区域可能重叠（例如 Center 模式中 `start_idx > 0` 时）。
 
-### 2.5 扩展模式的动态分配
+### 2.5 扩展模式的动态分配 {#25}
 
 `tiny_conv_ex_f32` 通过 `calloc` 分配填充临时缓冲区。这是由于填充增加了 `2 * (kernlen - 1)` 个额外采样点。缓冲区在返回前释放。对于实时或内存受限的应用，应使用不进行动态分配的 `tiny_conv_f32`。
 
 ---
 
-## 3. API 接口 — 函数
+## 3. API 接口 — 函数 {#3-api}
 
-### 3.1 `tiny_conv_f32`
+### 3.1 `tiny_conv_f32` {#31-tiny_conv_f32}
 
 ```c
 /**
@@ -190,7 +216,7 @@ tiny_error_t tiny_conv_f32(const float *Signal, const int siglen,
 
 ---
 
-### 3.2 `tiny_conv_ex_f32`
+### 3.2 `tiny_conv_ex_f32` {#32-tiny_conv_ex_f32}
 
 ```c
 /**
@@ -331,7 +357,7 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
 
 ---
 
-## 4. 函数对比
+## 4. 函数对比 {#4}
 
 | 特性 | `tiny_conv_f32` | `tiny_conv_ex_f32` |
 |------|----------------|-------------------|
@@ -344,7 +370,7 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
 | **边界处理** | 三阶段循环隐式零填充 | 显式填充（零/对称/周期） |
 | **适用场景** | 简单完整卷积、实时、无内存分配 | 需要自定义填充或输出切片 |
 
-### 何时使用 `tiny_conv_f32`
+### 何时使用 `tiny_conv_f32` {#tiny_conv_f32}
 
 - 需要简单的完整卷积结果
 - 边界处零填充可接受
@@ -352,7 +378,7 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
 - 需要完全避免动态内存分配
 - 实时或中断上下文处理
 
-### 何时使用 `tiny_conv_ex_f32`
+### 何时使用 `tiny_conv_ex_f32` {#tiny_conv_ex_f32}
 
 - 需要对称或周期填充以减少边界伪影
 - 需要提取结果的特定部分（头部/中心/尾部）
@@ -362,9 +388,9 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
 
 ---
 
-## 5. ⚠️ 重要注意事项
+## 5. ⚠️ 重要注意事项 {#5}
 
-### 5.1 输出缓冲区最小大小
+### 5.1 输出缓冲区最小大小 {#51}
 
 无论 `conv_mode` 如何，两个函数的输出缓冲区都必须按 **完整卷积** 大小分配：
 
@@ -372,7 +398,7 @@ $$\mathrm{buffer\_size} \ge siglen + kernlen - 1$$
 
 在 `tiny_conv_ex_f32` 中，完整结果先写入，然后将请求的切片前移。如果缓冲区小于 `siglen + kernlen - 1`，将导致堆缓冲区溢出。
 
-### 5.2 ESP32 信号/卷积核长度顺序
+### 5.2 ESP32 信号/卷积核长度顺序 {#52-esp32}
 
 在 ESP32 上，`dsps_conv_f32` 要求 `siglen >= kernlen`。如果违反此条件：
 
@@ -381,7 +407,7 @@ $$\mathrm{buffer\_size} \ge siglen + kernlen - 1$$
 
 **建议**：便携代码始终确保 `siglen >= kernlen`。
 
-### 5.3 扩展模式的动态分配
+### 5.3 扩展模式的动态分配 {#53}
 
 `tiny_conv_ex_f32` 内部调用 `calloc`。如果分配失败：
 - 返回 `TINY_ERR_DSP_MEMORY_ALLOC`
@@ -389,16 +415,15 @@ $$\mathrm{buffer\_size} \ge siglen + kernlen - 1$$
 
 在内存受限或实时系统中，应优先使用 `tiny_conv_f32` 或外部预分配填充缓冲区。
 
-### 5.4 `memmove` vs `memcpy`
+### 5.4 `memmove` vs `memcpy` {#54-memmove-vs-memcpy}
 
 `tiny_conv_ex_f32` 使用 `memmove`（非 `memcpy`）进行切片提取，因为源和目标范围可能重叠。例如 Center 模式中，`convout[start_idx]` 的字节复制到 `convout[0]`，当 `start_idx < out_len` 时这些区域存在重叠。
 
-### 5.5 填充模式与信号长度
+### 5.5 填充模式与信号长度 {#55}
 
 - 对称和周期填充都会读取 `Signal[0]` 和 `Signal[siglen-1]` 用于镜像/环绕操作。若 `siglen == 1`，左右填充边缘引用同一样本。
 - 周期模式使用 `% siglen` —— 若 `siglen == 0` 会导致除零错误，但这已被 `siglen <= 0` 参数检查截获。
 
-### 5.6 卷积 ≠ 相关
+### 5.6 卷积 ≠ 相关 {#56}
 
 卷积翻转核，相关不翻转。若需相关运算，请使用 CORRELATION 模块的 `tiny_corr_f32` 或 `tiny_ccorr_f32`——不要手动反转卷积核，因为内部边界处理存在差异。
-

@@ -1,11 +1,49 @@
-# 说明
+# TinyAI · 核心 · 张量 — 设计说明 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     `tiny::Tensor` 是 `tiny_ai` 中所有数据流的载体，提供最多 4 维的 float32 张量、PSRAM 感知的内存分配、与 `tiny::Mat` 的零拷贝互通。它是激活、层、损失等其它模块的输入输出类型。
 
-## 张量概念
+!!! abstract "Tensor — N 维数据容器"
+    Tensor 是 TinyAI 的数据基本单位。简单说，它就是**带形状的数组**。形状告诉你怎么解读这堆数字。
+    
+## 算法直觉 {#_2}
 
-### 形状与 size
+### 张量 = 集装箱 {#_3}
+
+如果把数据比作货物，Tensor 就是带标签的集装箱：
+
+| 维度数 | 名称 | 例子 | 形状 |
+|--------|------|------|------|
+| 1 | 向量 | 一个样本的 4 个特征 | `[4]` |
+| 2 | 矩阵 | 150 个样本 × 4 个特征 | `[150, 4]` |
+| 3 | 3D 张量 | 32 个样本 × 3 通道 × 64 点 | `[32, 3, 64]` |
+| 4 | 4D 张量 | 批量图像批次 | `[B, C, H, W]` |
+
+**关键直觉**：形状的最后一个维度通常是"特征/通道"，前面的维度是"批次/样本数"。
+
+### 广播机制 {#_4}
+
+形状不同的张量做运算时，小张量会自动"扩展"成大张量的形状：
+
+- `A[3, 1] + B[1, 4]` → 先扩展为 `A[3, 4]` + `B[3, 4]` → 结果 `[3, 4]`
+- 规则：从右向左逐维比较，维度为 1 或缺失即可广播
+
+!!! tip "访问数据"
+    ```cpp
+    Tensor x({32, 3, 64});         // 32 样本 × 3 通道 × 64 点
+    x.shape();                      // → [32, 3, 64]
+    x.size();                       // → 32*3*64 = 6144
+    x(0, 1, 2);                     // 样本 0，通道 1，第 2 个点
+    ```
+
+---
+
+## 张量概念 {#_5}
+
+### 形状与 size {#size}
 
 ```cpp
 class Tensor
@@ -22,7 +60,7 @@ class Tensor
 - **`size = shape[0] * shape[1] * shape[2] * shape[3]`**：未使用的维度填 1，因此 `size` 始终等于元素总数。
 - **所有权**：构造函数申请的张量 `owns_data = true`，析构时自动释放；`from_data()` 创建的视图 `owns_data = false`，由调用方保证生命周期。
 
-### 常见形状约定
+### 常见形状约定 {#_6}
 
 | 模块 | 形状 | 说明 |
 | --- | --- | --- |
@@ -32,9 +70,9 @@ class Tensor
 | Attention | `[batch, seq_len, embed_dim]` | 三维 |
 | GlobalAvgPool 输入 | `[batch, seq_len, feat]` → 输出 `[batch, feat]` | 序列到向量 |
 
-## 构造与命名构造
+## 构造与命名构造 {#_7}
 
-### 直接构造
+### 直接构造 {#_8}
 
 ```cpp
 Tensor t1(N);              // 1-D
@@ -46,7 +84,7 @@ Tensor t0;                 // empty (no allocation)
 
 构造时调用内部 `alloc()` 申请 `size * sizeof(float)` 字节，`memset` 清零。
 
-### 命名构造
+### 命名构造 {#_9}
 
 ```cpp
 Tensor::zeros(n0);                          // 1-D 零张量
@@ -62,7 +100,7 @@ Tensor::from_data(buf, ndim, shape);        // 包装外部缓冲区；不拷贝
 !!! warning "from_data 的所有权"
     `from_data()` 返回的 Tensor 不拥有数据，调用方必须保证 `buf` 在张量销毁前不会被释放或重定位（例如把权重放在 PSRAM，但确保它的生命周期 ≥ 模型对象）。
 
-## 元素访问
+## 元素访问 {#_10}
 
 `Tensor` 提供 `at()` 内联重载，按维度数自动计算下标：
 
@@ -86,7 +124,7 @@ for (int b = 0; b < B; b++)
 
 直接读写 `x.data[idx]` 也是允许的，等价于内部行主序展平。
 
-## 形状语义访问器
+## 形状语义访问器 {#_11}
 
 ```cpp
 int batch();     // ndim>=3 ? shape[0] : 1
@@ -97,7 +135,7 @@ int channels();  // ndim==4 ? shape[1] : 1
 
 这些访问器允许激活函数、损失函数等组件以「最后一维 = 类别 / 特征」的统一方式处理 2D/3D 张量。例如 `softmax_inplace` 用 `rows = size / cols, cls = cols` 沿最后一维做归一化。
 
-## 原地操作
+## 原地操作 {#_12}
 
 ```cpp
 void zero();                          // memset 0
@@ -106,7 +144,7 @@ void copy_from(const Tensor &src);    // 形状必须一致
 Tensor clone() const;                 // 深拷贝（owns_data=true）
 ```
 
-## 形状重塑
+## 形状重塑 {#_13}
 
 ```cpp
 tiny_error_t reshape(int ndim, const int *new_shape);   // 元素总数不变
@@ -118,7 +156,7 @@ reshape 只改 `ndim` / `shape`，不重新分配缓冲区。若 `new_shape` 总
 
 `Attention` 例子里就利用 `reshape_3d / reshape_2d` 在 `[B, F]` 与 `[B, T, E]` 之间来回切换。
 
-## 与 `tiny::Mat` 互通
+## 与 `tiny::Mat` 互通 {#tinymat}
 
 ```cpp
 Mat to_mat() const;
@@ -132,7 +170,7 @@ Mat xm = x.to_mat();          // [B, F] 视图，零拷贝
 // 通过 xm 调用 tiny_math 的矩阵 API
 ```
 
-## 形状比较与打印
+## 形状比较与打印 {#_14}
 
 ```cpp
 bool same_shape(const Tensor &other) const;
@@ -141,7 +179,7 @@ void print(const char *name = "") const;
 
 `print()` 显示形状元数据并最多打印前 32 个元素，便于在串口里快速调试。
 
-## 复制 / 移动
+## 复制 / 移动 {#_15}
 
 `Tensor` 实现了规则五大件：
 

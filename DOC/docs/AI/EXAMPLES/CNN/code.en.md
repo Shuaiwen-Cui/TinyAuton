@@ -1,6 +1,14 @@
-# Code
+# TinyAI · Examples · CNN — Implementation and source {#code}
 
-## example_cnn.cpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `example_cnn.cpp` {#example_cnncpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>example_cnn.cpp</code> · 226 lines</summary>
 
 ```cpp
 /**
@@ -231,7 +239,9 @@ void example_cnn(void)
 #endif // __cplusplus
 ```
 
-## New snippet: BatchNorm2D demo
+</details>
+
+## New snippet: BatchNorm2D demo {#new-snippet-batchnorm2d-demo}
 
 ```cpp
 #if TINY_AI_TRAINING_ENABLED

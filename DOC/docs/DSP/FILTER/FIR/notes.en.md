@@ -1,11 +1,14 @@
-# NOTES
+# TinyFIR — Principles and API {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Note"
     Finite Impulse Response (FIR) filters are digital filters with no feedback, making them always stable. FIR filters can achieve linear phase response, which is important for applications requiring phase preservation. They are implemented via convolution and are widely used in audio processing, communications, and signal conditioning.
 
-## FIR FILTER OVERVIEW
+## FIR FILTER OVERVIEW {#fir-filter-overview}
 
-### Mathematical Principle
+### Mathematical Principle {#mathematical-principle}
 
 An FIR filter is defined by its impulse response \( h[n] \), which has finite length. The output \( y[n] \) is computed as:
 
@@ -39,9 +42,9 @@ H(z) = \sum_{k=0}^{M-1} h[k] \cdot z^{-k}
 
 - **No Feedback**: Output depends only on input
 
-## FILTER TYPES
+## FILTER TYPES {#filter-types}
 
-### Bandpass Design — Modulation Method
+### Bandpass Design — Modulation Method {#bandpass-design-modulation-method}
 
 The bandpass filter is designed by modulating a low-pass prototype:\n\n1. Design a low-pass filter with cutoff = bandwidth / 2:\n   \\\\( h_{LP}[n] = \\\\frac{\\\\sin(\\\\pi \\\\cdot BW \\\\cdot n)}{\\\\pi \\\\cdot n} \\\\) (for \\\\( n \\\\neq 0\\\\))\n2. Modulate to the center frequency \\\\( f_c = (f_{low} + f_{high}) / 2 \\\\):\n\n\\\\[\nh_{BP}[n] = 2 \\\\cdot h_{LP}[n] \\\\cdot \\\\cos(2\\\\pi \\\\cdot f_c \\\\cdot n)\n\\\\]\n\nFor \\\\(n = 0\\\\): \\\\( h_{BP}[0] = 2 \\\\cdot BW \\\\)\n\n### Bandstop — LP + HP Combination\n\nThe bandstop filter is implemented as the sum of an individually-designed low-pass (at \\\\(f_{low}\\\)) and high-pass (at \\\\(f_{high}\\\\)), summed after windowing.\n\n## FILTER TYPES\n\nThe library supports four basic filter types:"
 
@@ -50,9 +53,9 @@ The bandpass filter is designed by modulating a low-pass prototype:\n\n1. Design
 - **Band-Pass**: Passes frequencies within a band, attenuates outside
 - **Band-Stop (Notch)**: Attenuates frequencies within a band, passes outside
 
-## FILTER DESIGN
+## FILTER DESIGN {#filter-design}
 
-### Window Method
+### Window Method {#window-method}
 
 The library uses the window method for FIR filter design:
 
@@ -80,7 +83,7 @@ The library uses the window method for FIR filter design:
 
 - **Rectangular**: Only for very simple applications
 
-### Design Parameters
+### Design Parameters {#design-parameters}
 
 - **Cutoff Frequency**: Normalized frequency (0.0 to 0.5, where 0.5 = Nyquist)
 - **Number of Taps**: Should be odd for linear phase (Type I filter)
@@ -94,9 +97,9 @@ f_{norm} = \frac{f_{cutoff}}{f_s / 2}
 
 Where \( f_s \) is the sampling rate.
 
-## FILTER DESIGN FUNCTIONS
+## FILTER DESIGN FUNCTIONS {#filter-design-functions}
 
-### tiny_fir_design_lowpass
+### tiny_fir_design_lowpass {#tiny_fir_design_lowpass}
 
 ```c
 /**
@@ -135,7 +138,7 @@ Returns success or error code.
 
 The cutoff frequency is normalized: `cutoff_freq = actual_freq / (sample_rate / 2)`. For example, a 100 Hz cutoff at 1 kHz sample rate would be `0.2` (100 / 500).
 
-### tiny_fir_design_highpass
+### tiny_fir_design_highpass {#tiny_fir_design_highpass}
 
 ```c
 /**
@@ -170,7 +173,7 @@ Designs a high-pass FIR filter using the window method. The ideal high-pass filt
 
 Returns success or error code.
 
-### tiny_fir_design_bandpass
+### tiny_fir_design_bandpass {#tiny_fir_design_bandpass}
 
 ```c
 /**
@@ -209,7 +212,7 @@ Designs a band-pass FIR filter using the window method. The filter passes freque
 
 Returns success or error code.
 
-### tiny_fir_design_bandstop
+### tiny_fir_design_bandstop {#tiny_fir_design_bandstop}
 
 ```c
 /**
@@ -248,11 +251,11 @@ Designs a band-stop (notch) FIR filter using the window method. The filter atten
 
 Returns success or error code.
 
-## FILTER APPLICATION
+## FILTER APPLICATION {#filter-application}
 
-### Batch Processing
+### Batch Processing {#batch-processing}
 
-### tiny_fir_filter_f32
+### tiny_fir_filter_f32 {#tiny_fir_filter_f32}
 
 ```c
 /**
@@ -302,9 +305,9 @@ Applies an FIR filter to an entire signal using convolution. This is suitable fo
 
 Returns success or error code.
 
-### Real-Time Processing
+### Real-Time Processing {#real-time-processing}
 
-### tiny_fir_init
+### tiny_fir_init {#tiny_fir_init}
 
 ```c
 /**
@@ -339,7 +342,7 @@ Returns success or error code.
 
 The function allocates memory internally. Use `tiny_fir_deinit()` to free it.
 
-### tiny_fir_deinit
+### tiny_fir_deinit {#tiny_fir_deinit}
 
 ```c
 /**
@@ -363,7 +366,7 @@ Deinitializes an FIR filter and frees all allocated memory.
 
 Returns success or error code.
 
-### tiny_fir_process_sample
+### tiny_fir_process_sample {#tiny_fir_process_sample}
 
 ```c
 /**
@@ -394,7 +397,7 @@ Returns filtered output sample.
 
 The filter maintains internal state (delay line) between calls. Use `tiny_fir_reset()` to clear the state.
 
-### tiny_fir_reset
+### tiny_fir_reset {#tiny_fir_reset}
 
 ```c
 /**
@@ -418,9 +421,9 @@ Resets the FIR filter state by clearing the delay line. Useful when starting a n
 
 Returns success or error code.
 
-## USAGE WORKFLOW
+## USAGE WORKFLOW {#usage-workflow}
 
-### Batch Filtering Workflow
+### Batch Filtering Workflow {#batch-filtering-workflow}
 
 1. **Design Filter**:
    ```c
@@ -434,7 +437,7 @@ Returns success or error code.
    tiny_fir_filter_f32(input, 256, coeffs, 51, output, TINY_PADDING_SYMMETRIC);
    ```
 
-### Real-Time Filtering Workflow
+### Real-Time Filtering Workflow {#real-time-filtering-workflow}
 
 1. **Design Filter**:
    ```c
@@ -461,7 +464,7 @@ Returns success or error code.
    tiny_fir_deinit(&filter);
    ```
 
-## APPLICATIONS
+## APPLICATIONS {#applications}
 
 FIR filters are widely used in:
 
@@ -472,48 +475,47 @@ FIR filters are widely used in:
 - **Image Processing**: Edge detection, smoothing, sharpening
 - **Sensor Signal Processing**: Noise reduction, signal conditioning
 
-## ADVANTAGES AND DISADVANTAGES
+## ADVANTAGES AND DISADVANTAGES {#advantages-and-disadvantages}
 
-### Advantages
+### Advantages {#advantages}
 
 - **Always Stable**: No feedback, guaranteed stability
 - **Linear Phase**: Can achieve exact linear phase response
 - **Simple Design**: Window method is straightforward
 - **No Limit Cycles**: No quantization-induced oscillations
 
-### Disadvantages
+### Disadvantages {#disadvantages}
 
 - **Higher Computational Cost**: Requires more taps than IIR for same specifications
 - **Longer Delay**: Group delay proportional to filter length
 - **Memory Requirements**: Needs storage for all filter taps
 
-## DESIGN CONSIDERATIONS
+## DESIGN CONSIDERATIONS {#design-considerations}
 
-### Number of Taps
+### Number of Taps {#number-of-taps}
 
 - **More Taps**: Sharper transition, better stopband attenuation, but higher computation
 - **Fewer Taps**: Faster computation, but wider transition band
 - **Rule of Thumb**: Transition bandwidth ≈ 4 / num_taps (for Hamming window)
 
-### Window Selection
+### Window Selection {#window-selection}
 
 - **Hamming**: Good general-purpose choice
 - **Hanning**: Better side lobe suppression
 - **Blackman**: Best side lobe suppression, wider transition
 - **Rectangular**: Only for very simple cases (not recommended)
 
-### Normalized Frequency
+### Normalized Frequency {#normalized-frequency}
 
 Remember to normalize frequencies:
 
 - Cutoff at 100 Hz with 1 kHz sample rate: `0.2` (100 / 500)
 - Cutoff at 1 kHz with 10 kHz sample rate: `0.2` (1000 / 5000)
 
-## NOTES
+## NOTES {#notes_1}
 
 - FIR filters are always stable (no poles)
 - Linear phase requires odd number of taps and symmetric coefficients
 - Window method is simple but may not be optimal for all applications
 - For real-time applications, use `tiny_fir_init()` and `tiny_fir_process_sample()`
 - For batch processing, use `tiny_fir_filter_f32()`
-

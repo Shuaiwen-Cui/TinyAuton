@@ -1,4 +1,12 @@
-# 矩阵操作 - TINY_MATRIX
+# 矩阵操作 - TINY_MATRIX {#-tiny_matrix}
+
+<!-- Original section links retained for compatibility. -->
+<span id="1"></span>
+
+[按功能阅读接口](OVERVIEW/api.md)。本页保留改版前的完整接口记录和章节地址；长头文件已折叠。
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! INFO "TINY_MATRIX库"
     - 该库是一个轻量级的矩阵运算库，基于C++实现，提供了基本的矩阵操作和线性代数功能。
@@ -9,7 +17,7 @@
 
 本页记录了 `tiny::Mat` 的完整接口，包括矩阵存储、元素访问、ROI 工具、运算符重载、线性方程求解、矩阵分解以及特征值计算接口。
 
-## 函数列表
+## 函数列表 {#_1}
 
 ```c
 TinyMath
@@ -18,6 +26,9 @@ TinyMath
         ├── tiny_mat (c)
         └── tiny_matrix (c++) <---
 ```
+
+<details class="auton-source" markdown="1">
+<summary>展开 历史摘录 · 442 行</summary>
 
 ```cpp
 /**
@@ -464,12 +475,14 @@ namespace tiny
 
 ```
 
-## 矩阵元数据
+</details>
+
+## 矩阵元数据 {#_2}
 
 !!! INFO "矩阵结构"
     Mat类使用行主序存储布局，支持填充和step。`stride`在该类中是`step`的向后兼容别名。这种设计实现了高效的内存访问模式，并与DSP库兼容。
 
-### 核心维度
+### 核心维度 {#_3}
 
 - **`int row`** : 矩阵的行数。
 
@@ -477,7 +490,7 @@ namespace tiny
 
 - **`int element`** : 元素总数 = 行数 × 列数。
 
-### 内存布局
+### 内存布局 {#_4}
 
 - **`int step` / `int stride`** : 每行总元素数（逻辑列 + 填充）。在本类中二者等价，`stride`是`step`别名。
 
@@ -485,13 +498,13 @@ namespace tiny
 
 - **`int memory`** : 数据缓冲区大小 = 行数 × step（以float元素为单位）。
 
-### 数据指针
+### 数据指针 {#_5}
 
 - **`float *data`** : 指向包含矩阵元素的数据缓冲区的指针。元素按行主序存储：位置(i, j)的元素位于 `data[i * step + j]`。
 
 - **`float *temp`** : 指向临时数据缓冲区的指针（如果已分配）。某些操作内部使用。
 
-### 内存管理标志
+### 内存管理标志 {#_6}
 
 - **`bool ext_buff`** : 标志矩阵是否使用外部缓冲区。当为`true`时，析构函数不会释放内存（调用者负责管理）。
 
@@ -512,12 +525,12 @@ namespace tiny
     [i j k l _ _]   行 2: data[2*6+0] 到 data[2*6+3]，填充在 data[2*6+4,5]
     ```
 
-## ROI 结构
+## ROI 结构 {#roi}
 
 !!! INFO "感兴趣区域"
     ROI（感兴趣区域）结构表示矩阵的矩形子区域。它与`view_roi()`和`copy_roi()`函数一起使用，以高效地提取或引用子矩阵。
 
-### ROI 元数据
+### ROI 元数据 {#roi_1}
 
 - **`int pos_x`** : 起始列索引（左上角的x坐标）。
 
@@ -527,7 +540,7 @@ namespace tiny
 
 - **`int height`** : ROI的高度（行数）。
 
-### ROI 构造函数
+### ROI 构造函数 {#roi_2}
 
 ```cpp
 Mat::ROI::ROI(int pos_x = 0, int pos_y = 0, int width = 0, int height = 0);
@@ -547,7 +560,7 @@ Mat::ROI::ROI(int pos_x = 0, int pos_y = 0, int width = 0, int height = 0);
 
 - `int height`: ROI 的高度（行数）
 
-### ROI 重置函数
+### ROI 重置函数 {#roi_3}
 
 ```cpp
 void Mat::ROI::resize_roi(int pos_x, int pos_y, int width, int height);
@@ -571,7 +584,7 @@ void Mat::ROI::resize_roi(int pos_x, int pos_y, int width, int height);
 
 void
 
-### ROI 面积函数
+### ROI 面积函数 {#roi_4}
 
 ```cpp
 int Mat::ROI::area_roi(void) const;
@@ -589,12 +602,12 @@ void
 
 整数类型 ROI 的面积
 
-## 打印函数
+## 打印函数 {#_7}
 
 !!! TIP "调试工具"
     这些函数对于调试和理解矩阵状态至关重要。使用它们来验证矩阵维度、内存布局和数据值。
 
-### 打印矩阵信息
+### 打印矩阵信息 {#_8}
 
 ```cpp
 void Mat::print_info() const;
@@ -630,7 +643,7 @@ void
 
 - **子矩阵检测**: 清楚地指示矩阵是否为视图，这会影响内存管理。
 
-### 打印矩阵元素
+### 打印矩阵元素 {#_9}
 
 ```cpp
    void Mat::print_matrix(bool show_padding) const;
@@ -656,12 +669,12 @@ void
 
 - **大矩阵**: 对于非常大的矩阵，考虑使用`view_roi()`打印特定区域。
 
-## 构造与析构函数
+## 构造与析构函数 {#_10}
 
 !!! INFO "内存管理"
     构造函数自动处理内存分配。析构函数仅在内存是内部分配的情况下安全释放内存（不包括外部缓冲区或视图）。构造后始终检查`data`指针以确保分配成功。
 
-### 内存分配
+### 内存分配 {#_11}
 
 ```cpp
 void Mat::alloc_mem();
@@ -687,7 +700,7 @@ void
 
 - **错误处理**: 如果分配失败，`data`保持为`nullptr`。构造后始终检查`data`。
 
-### 默认构造函数
+### 默认构造函数 {#_12}
 
 ```cpp
 Mat::Mat();
@@ -709,7 +722,7 @@ void
 
 Mat - 一个元素为0的1×1矩阵。
 
-### 构造函数 - Mat(int rows, int cols)
+### 构造函数 - Mat(int rows, int cols) {#-matint-rows-int-cols}
 
 ```cpp
 Mat::Mat(int rows, int cols);
@@ -737,7 +750,7 @@ Mat - 一个rows×cols的矩阵，所有元素初始化为0。
 
 - **错误处理**: 如果内存分配失败，`data`将为`nullptr`。始终验证分配成功。
 
-### 构造函数 - Mat(int rows, int cols, int step)
+### 构造函数 - Mat(int rows, int cols, int step) {#-matint-rows-int-cols-int-step}
 
 ```cpp
 Mat::Mat(int rows, int cols, int step);
@@ -767,7 +780,7 @@ Mat - 一个具有步幅的rows×cols矩阵，所有元素初始化为0。
 
 - **兼容性**: 实现与使用步幅内存布局的外部库的兼容性。
 
-### 构造函数 - Mat(float *data, int rows, int cols)
+### 构造函数 - Mat(float *data, int rows, int cols) {#-matfloat-data-int-rows-int-cols}
 
 ```cpp
 Mat::Mat(float *data, int rows, int cols);
@@ -805,7 +818,7 @@ Mat - 一个`ext_buff = true`的矩阵视图。
 
   - 避免不必要的拷贝
 
-### 构造函数 - Mat(float *data, int rows, int cols, int step)
+### 构造函数 - Mat(float *data, int rows, int cols, int step) {#-matfloat-data-int-rows-int-cols-int-step}
 
 ```cpp
 Mat::Mat(float *data, int rows, int cols, int step);
@@ -837,7 +850,7 @@ Mat - 一个`ext_buff = true`并具有指定step的矩阵视图。
 
 - **填充支持**: 可以处理行间有填充的缓冲区。
 
-### 拷贝构造函数 - Mat(const Mat &src)
+### 拷贝构造函数 - Mat(const Mat &src) {#-matconst-mat-src}
 
 ```cpp
 Mat::Mat(const Mat &src);
@@ -869,7 +882,7 @@ Mat - 根据源类型具有拷贝或共享数据的新矩阵。
 
 - **独立性**: 深拷贝是独立的；修改不会影响源。
 
-### 析构函数
+### 析构函数 {#_13}
 
 ```cpp
 Mat::~Mat();
@@ -902,12 +915,12 @@ void
     - 构造后始终检查`data != nullptr`以验证分配成功
 
 
-## 元素访问
+## 元素访问 {#_14}
 
 !!! INFO "矩阵索引"
     Mat类使用运算符重载提供直观的矩阵元素访问。`operator()`允许使用`A(i, j)`这样的自然语法，而不是`A.data[i * step + j]`。实现自动处理步幅和填充。
 
-### 访问矩阵元素（非常量）
+### 访问矩阵元素（非常量） {#_15}
 
 ```cpp
 inline float &operator()(int row, int col);
@@ -941,7 +954,7 @@ inline float &operator()(int row, int col);
 
 - **示例**: `A(2, 3) = 5.0f;` 将第2行第3列的元素设置为5.0。
 
-### 访问矩阵元素（常量）
+### 访问矩阵元素（常量） {#_16}
 
 ```cpp
 inline const float &operator()(int row, int col) const;
@@ -977,9 +990,9 @@ inline const float &operator()(int row, int col) const;
     float val2 = B(1, 2);   // 只读访问（使用const版本）
     ```
 
-## 数据操作
+## 数据操作 {#_17}
 
-### 复制其他矩阵到当前矩阵
+### 复制其他矩阵到当前矩阵 {#_18}
 
 ```cpp
 tiny_error_t copy_paste(const Mat &src, int row_pos, int col_pos);
@@ -1001,7 +1014,7 @@ tiny_error_t copy_paste(const Mat &src, int row_pos, int col_pos);
 
 错误代码
 
-### 复制矩阵头部
+### 复制矩阵头部 {#_19}
 
 ```cpp
 tiny_error_t copy_head(const Mat &src);
@@ -1019,7 +1032,7 @@ tiny_error_t copy_head(const Mat &src);
 
 错误代码
 
-### 获取子矩阵视图
+### 获取子矩阵视图 {#_20}
 
 ```cpp
 Mat view_roi(int start_row, int start_col, int roi_rows, int roi_cols) const;
@@ -1043,7 +1056,7 @@ Mat view_roi(int start_row, int start_col, int roi_rows, int roi_cols) const;
 
 子矩阵对象
 
-### 获取子矩阵视图 - 使用 ROI 结构
+### 获取子矩阵视图 - 使用 ROI 结构 {#-roi}
 
 ```cpp
 Mat view_roi(const Mat::ROI &roi) const;
@@ -1065,7 +1078,7 @@ Mat view_roi(const Mat::ROI &roi) const;
     与 ESP-DSP 不同，view_roi 不允许设置步长，因为它会根据列数和填充数自动计算步长。该函数还会拒绝非法请求，即超出范围的请求。
 
 
-### 获取子矩阵副本
+### 获取子矩阵副本 {#_21}
 
 ```cpp
 Mat copy_roi(int start_row, int start_col, int height, int width);
@@ -1089,7 +1102,7 @@ Mat copy_roi(int start_row, int start_col, int height, int width);
 
 子矩阵对象
 
-### 获取子矩阵副本 - 使用 ROI 结构
+### 获取子矩阵副本 - 使用 ROI 结构 {#-roi_1}
 
 ```cpp
 Mat copy_roi(const Mat::ROI &roi);
@@ -1107,7 +1120,7 @@ Mat copy_roi(const Mat::ROI &roi);
 
 子矩阵对象
 
-### 获取矩阵块
+### 获取矩阵块 {#_22}
 
 ```cpp
 Mat block(int start_row, int start_col, int block_rows, int block_cols);
@@ -1138,7 +1151,7 @@ Mat block(int start_row, int start_col, int block_rows, int block_cols);
     - `copy_roi` : 从该矩阵深拷贝子矩阵 (ROI)。复制内存拷贝，速度更快。
 
     - `block` : 从该矩阵深拷贝块。逐个元素拷贝，速度更慢。
-### 交换行
+### 交换行 {#_23}
 
 ```cpp
 void Mat::swap_rows(int row1, int row2);
@@ -1158,7 +1171,7 @@ void Mat::swap_rows(int row1, int row2);
 
 void
 
-### 交换列
+### 交换列 {#_24}
 
 ```cpp
 void Mat::swap_cols(int col1, int col2);
@@ -1178,7 +1191,7 @@ void Mat::swap_cols(int col1, int col2);
 
 void
 
-### 清除矩阵
+### 清除矩阵 {#_25}
 
 ```cpp
 void Mat::clear(void);
@@ -1196,12 +1209,12 @@ void
 
 void
 
-## 算术运算符
+## 算术运算符 {#_26}
 
 !!! INFO "就地操作"
     本节定义了作用于当前矩阵本身的算术运算符（就地操作）。这些运算符修改矩阵并返回其引用，支持链式操作如`A += B += C`。这些运算符经过优化以处理填充，并在可用时使用DSP加速函数。
 
-### 拷贝赋值
+### 拷贝赋值 {#_27}
 
 ```cpp
 Mat &operator=(const Mat &src);
@@ -1233,7 +1246,7 @@ Mat& - 对当前矩阵的引用（支持链式操作）。
 
 - **性能**: 对于n×n矩阵为O(n²)。对于大矩阵，考虑视图是否足够。
 
-### 加法运算符
+### 加法运算符 {#_28}
 
 ```cpp
 Mat &operator+=(const Mat &A);
@@ -1247,7 +1260,7 @@ Mat &operator+=(const Mat &A);
 
 - `const Mat &A`: 源矩阵对象
 
-### 加法运算符 - 常量
+### 加法运算符 - 常量 {#-}
 
 ```cpp
 Mat &operator+=(float C);
@@ -1265,7 +1278,7 @@ Mat &operator+=(float C);
 
 Mat& - 当前矩阵的引用
 
-### 减法运算符
+### 减法运算符 {#_29}
 
 ```cpp
 Mat &operator-=(const Mat &A);
@@ -1283,7 +1296,7 @@ Mat &operator-=(const Mat &A);
 
 Mat& - 当前矩阵的引用
 
-### 减法运算符 - 常量
+### 减法运算符 - 常量 {#-_1}
 
 ```cpp
 Mat &operator-=(float C);
@@ -1301,7 +1314,7 @@ Mat &operator-=(float C);
 
 Mat& - 当前矩阵的引用
 
-### 矩阵乘法
+### 矩阵乘法 {#_30}
 
 ```cpp
 Mat &operator*=(const Mat &A);
@@ -1340,7 +1353,7 @@ Mat& - 对当前矩阵的引用。
 
 - **常见错误**: 这是矩阵乘法，不是逐元素的。对于逐元素，使用带有`operator()()`的循环。
 
-### 乘法运算符 - 常量
+### 乘法运算符 - 常量 {#-_2}
 
 ```cpp
 Mat &operator*=(float C);
@@ -1358,7 +1371,7 @@ Mat &operator*=(float C);
 
 Mat& - 当前矩阵的引用
 
-### 除法运算符
+### 除法运算符 {#_31}
 
 ```cpp
 Mat &operator/=(const Mat &B);
@@ -1376,7 +1389,7 @@ Mat &operator/=(const Mat &B);
 
 Mat& - 当前矩阵的引用
 
-### 除法运算符 - 常量
+### 除法运算符 - 常量 {#-_3}
 
 ```cpp
 Mat &operator/=(float C);
@@ -1394,7 +1407,7 @@ Mat &operator/=(float C);
 
 Mat& - 当前矩阵的引用
 
-### 幂运算符
+### 幂运算符 {#_32}
 
 ```cpp
 Mat operator^(int C);
@@ -1412,9 +1425,9 @@ Mat operator^(int C);
 
 Mat - 幂运算后的新矩阵
 
-## 线性代数
+## 线性代数 {#_33}
 
-### 转置矩阵
+### 转置矩阵 {#_34}
 
 ```cpp
 Mat Mat::transpose();
@@ -1456,7 +1469,7 @@ Mat - 转置后的矩阵 (col × row)。
 
   - 矩阵方程: A^T * A（正规方程）
 
-### 余子式矩阵
+### 余子式矩阵 {#_35}
 
 ```cpp
 Mat Mat::minor(int target_row, int target_col);
@@ -1476,7 +1489,7 @@ Mat Mat::minor(int target_row, int target_col);
 
 Mat - (n-1)x(n-1) 的余子式矩阵
 
-### 代数余子式矩阵
+### 代数余子式矩阵 {#_36}
 
 ```cpp
 Mat Mat::cofactor(int target_row, int target_col);
@@ -1497,7 +1510,7 @@ Mat Mat::cofactor(int target_row, int target_col);
 Mat - (n-1)x(n-1) 的代数余子式矩阵（与余子式矩阵相同）
 
 
-### 行列式（自动选择方法）
+### 行列式（自动选择方法） {#_37}
 
 ```cpp
 float Mat::determinant();
@@ -1541,7 +1554,7 @@ float - 行列式的值
 
 - **精度要求**: 对于小矩阵，`determinant_laplace()` 可能提供更好的数值精度
 
-### 行列式 - 拉普拉斯展开法
+### 行列式 - 拉普拉斯展开法 {#-_4}
 
 ```cpp
 float Mat::determinant_laplace();
@@ -1574,7 +1587,7 @@ float - 行列式的值
 !!! warning "性能警告"
     时间复杂度为 O(n!)，仅适用于小矩阵（n ≤ 4）。对于大矩阵，请使用 `determinant_lu()` 或 `determinant_gaussian()`。
 
-### 行列式 - LU分解法
+### 行列式 - LU分解法 {#-lu}
 
 ```cpp
 float Mat::determinant_lu();
@@ -1627,7 +1640,7 @@ float - 行列式的值。如果矩阵是奇异的或接近奇异的，返回 0.
 
 - **奇异矩阵**: 如果矩阵是奇异的，LU分解会失败，函数返回 0.0
 
-### 行列式 - 高斯消元法
+### 行列式 - 高斯消元法 {#-_5}
 
 ```cpp
 float Mat::determinant_gaussian();
@@ -1665,7 +1678,7 @@ float - 行列式的值。如果矩阵是奇异的，返回 0.0
 - **实现简单**: 相比LU分解，实现更直观，但功能较少（不能用于求解线性系统）
 
 
-### 伴随矩阵
+### 伴随矩阵 {#_38}
 
 ```cpp
 Mat Mat::adjoint();
@@ -1684,7 +1697,7 @@ void
 Mat - 伴随矩阵对象
 
 
-### 归一化
+### 归一化 {#_39}
 
 ```cpp
 void Mat::normalize();
@@ -1702,7 +1715,7 @@ void
 
 void
 
-### 范数
+### 范数 {#_40}
 
 ```cpp
 float Mat::norm() const;
@@ -1720,7 +1733,7 @@ void
 
 float - 计算得到的矩阵范数
 
-### 矩阵求逆 -- 基于伴随矩阵
+### 矩阵求逆 -- 基于伴随矩阵 {#-_6}
 ```cpp
 Mat Mat::inverse_adjoint();
 ```
@@ -1737,7 +1750,7 @@ void
 
 Mat - 逆矩阵对象。如果矩阵是奇异的，返回零矩阵
 
-### 单位矩阵
+### 单位矩阵 {#_41}
 
 ```cpp
 static Mat Mat::eye(int size);
@@ -1755,7 +1768,7 @@ static Mat Mat::eye(int size);
 
 Mat - 单位矩阵 (size x size)
 
-### 增广矩阵（水平连接）
+### 增广矩阵（水平连接） {#_42}
 
 ```cpp
 static Mat Mat::augment(const Mat &A, const Mat &B);
@@ -1775,7 +1788,7 @@ static Mat Mat::augment(const Mat &A, const Mat &B);
 
 Mat - 增广矩阵 [A B]
 
-### 垂直堆叠
+### 垂直堆叠 {#_43}
 
 ```cpp
 static Mat Mat::vstack(const Mat &A, const Mat &B);
@@ -1795,7 +1808,7 @@ static Mat Mat::vstack(const Mat &A, const Mat &B);
 
 Mat - 垂直堆叠的矩阵 [A; B]
 
-### Gram-Schmidt正交化
+### Gram-Schmidt正交化 {#gram-schmidt}
 
 ```cpp
 static bool Mat::gram_schmidt_orthogonalize(const Mat &vectors, Mat &orthogonal_vectors, 
@@ -1840,7 +1853,7 @@ static bool Mat::gram_schmidt_orthogonalize(const Mat &vectors, Mat &orthogonal_
 
 - **性能**: 对于大矩阵，考虑计算成本。对于m维向量和n个向量，复杂度为O(mn²)。
 
-### 全1矩阵（矩形）
+### 全1矩阵（矩形） {#1}
 
 ```cpp
 static Mat Mat::ones(int rows, int cols);
@@ -1860,7 +1873,7 @@ static Mat Mat::ones(int rows, int cols);
 
 Mat - 矩阵 [rows x cols]，所有元素 = 1
 
-### 全1矩阵（方阵）
+### 全1矩阵（方阵） {#1_1}
 
 ```cpp
 static Mat Mat::ones(int size);
@@ -1878,7 +1891,7 @@ static Mat Mat::ones(int size);
 
 Mat - 方阵 [size x size]，所有元素 = 1
 
-### 高斯消元法
+### 高斯消元法 {#_44}
 
 ```cpp
 Mat Mat::gaussian_eliminate() const;
@@ -1936,7 +1949,7 @@ Mat - 上三角矩阵（REF形式）。
 
 - **工作副本视角**: 算法改变的是等价的工作副本，不是数学意义上的原矩阵对象。不要假设原始行顺序会保留。
 
-### 从高斯消元到行最简形式
+### 从高斯消元到行最简形式 {#_45}
 
 ```cpp
 Mat Mat::row_reduce_from_gaussian() const;
@@ -1972,7 +1985,7 @@ void
 
 Mat - RREF形式的矩阵
 
-### 高斯-约旦消元法求逆
+### 高斯-约旦消元法求逆 {#-_7}
 
 ```cpp
 Mat Mat::inverse_gje() const;
@@ -2010,7 +2023,7 @@ void
 
 Mat - 如果矩阵可逆则返回逆矩阵，否则返回空矩阵
 
-### 点积
+### 点积 {#_46}
 
 ```cpp
 float Mat::dotprod(const Mat &A, const Mat &B);
@@ -2030,7 +2043,7 @@ float Mat::dotprod(const Mat &A, const Mat &B);
 
 float - 计算得到的点积值
 
-### 解线性方程组
+### 解线性方程组 {#_47}
 
 ```cpp
 Mat Mat::solve(const Mat &A, const Mat &b) const;
@@ -2092,7 +2105,7 @@ Mat - 解向量 (N×1)，包含方程Ax = b的根。如果系统是奇异的或�
 
 - **不要先求逆**: 显式求 A⁻¹ 再乘 b 通常更慢，也更不稳定。
 
-### 带状矩阵求解
+### 带状矩阵求解 {#_48}
 
 ```cpp
 Mat Mat::band_solve(Mat A, Mat b, int k) const;
@@ -2134,7 +2147,7 @@ Mat Mat::band_solve(Mat A, Mat b, int k) const;
 
 Mat - 解向量 (Nx1)，包含方程 Ax = b 的根
 
-### 线性系统求根
+### 线性系统求根 {#_49}
 
 ```cpp
 Mat Mat::roots(Mat A, Mat y) const;
@@ -2164,14 +2177,14 @@ Mat Mat::roots(Mat A, Mat y) const;
 
 Mat - 矩阵 [N]x[1]，包含根
 
-## 矩阵属性与分解
+## 矩阵属性与分解 {#_50}
 
 !!! INFO "矩阵分解概述"
     矩阵分解是数值线性代数中的基本工具。它们将矩阵分解为更简单的组件，揭示其结构并实现高效计算。不同的分解适用于不同类型的矩阵和应用。
 
-### 矩阵属性检查
+### 矩阵属性检查 {#_51}
 
-#### 检查对称性
+#### 检查对称性 {#_52}
 
 ```cpp
 bool Mat::is_symmetric(float tolerance = 1e-6f) const;
@@ -2201,7 +2214,7 @@ bool Mat::is_symmetric(float tolerance = 1e-6f) const;
 
 - **结构动力学**: 结构分析中的刚度和质量矩阵通常是对称的。
 
-#### 检查正定性
+#### 检查正定性 {#_53}
 
 ```cpp
 bool Mat::is_positive_definite(float tolerance = 1e-6f, int max_minors_to_check = -1) const;
@@ -2232,9 +2245,9 @@ Sylvester准则指出，对称矩阵是正定的当且仅当所有前导主子�
 
 - **稳定性分析**: 在控制系统中，某些矩阵的正定性确保系统稳定性。
 
-### 矩阵分解结构
+### 矩阵分解结构 {#_54}
 
-#### LU分解结构
+#### LU分解结构 {#lu}
 
 ```cpp
 struct Mat::LUDecomposition
@@ -2257,7 +2270,7 @@ LU分解结果的容器。分解A = P * L * U（带主元）或A = L * U（不�
 
 LU分解将矩阵分解为下三角和上三角矩阵，实现线性系统的高效求解。使用主元时，可以更好地处理近奇异矩阵。
 
-#### Cholesky分解结构
+#### Cholesky分解结构 {#cholesky}
 
 ```cpp
 struct Mat::CholeskyDecomposition
@@ -2277,7 +2290,7 @@ Cholesky分解结果的容器。对于对称正定矩阵，A = L * L^T，其中L
 
 Cholesky分解是用于对称正定矩阵的专用LU分解。它只需要LU分解的一半存储和计算。
 
-#### QR分解结构
+#### QR分解结构 {#qr}
 
 ```cpp
 struct Mat::QRDecomposition
@@ -2298,7 +2311,7 @@ QR分解结果的容器。A = Q * R，其中Q是正交的（Q^T * Q = I），R�
 
 QR分解将矩阵表示为正交矩阵和上三角矩阵的乘积。它在数值上稳定，是最小二乘问题的基础。
 
-#### SVD分解结构
+#### SVD分解结构 {#svd}
 
 ```cpp
 struct Mat::SVDDecomposition
@@ -2322,9 +2335,9 @@ SVD分解结果的容器。A = U * S * V^T，其中U和V是正交矩阵，S在�
 
 SVD是最通用的矩阵分解。奇异值揭示矩阵的秩、条件数，并能够计算秩亏矩阵的伪逆。
 
-### 矩阵分解方法
+### 矩阵分解方法 {#_55}
 
-#### LU分解
+#### LU分解 {#lu_1}
 
 ```cpp
 Mat::LUDecomposition Mat::lu_decompose(bool use_pivoting = true) const;
@@ -2368,7 +2381,7 @@ Mat::LUDecomposition Mat::lu_decompose(bool use_pivoting = true) const;
 
 - **行列式符号会变**: 置换矩阵 P 会改变行列式符号。
 
-#### Cholesky分解
+#### Cholesky分解 {#cholesky_1}
 
 ```cpp
 Mat::CholeskyDecomposition Mat::cholesky_decompose() const;
@@ -2414,7 +2427,7 @@ Mat::CholeskyDecomposition Mat::cholesky_decompose() const;
 
 - **先验已知时再用**: 如果你已经知道矩阵是SPD，这就是正确选择；否则先用 `is_symmetric()` 和 `is_positive_definite()` 检查。
 
-#### QR分解
+#### QR分解 {#qr_1}
 
 ```cpp
 Mat::QRDecomposition Mat::qr_decompose() const;
@@ -2454,7 +2467,7 @@ QR分解将任何矩阵表示为正交矩阵Q（Q^T * Q = I）和上三角矩阵
 
 - **秩亏要看容差**: R 对角线上很小的值往往意味着近线性相关，必须结合容差判断。
 
-#### SVD分解
+#### SVD分解 {#svd_1}
 
 ```cpp
 Mat::SVDDecomposition Mat::svd_decompose(int max_iter = 100, float tolerance = 1e-6f) const;
@@ -2515,9 +2528,9 @@ SVD将任何m × n矩阵A分解为：
 
 - **解释要谨慎**: 奇异值可以反映条件数和能量集中程度，但不能自动替你完成建模选择。
 
-### 使用分解求解线性系统
+### 使用分解求解线性系统 {#_56}
 
-#### 使用LU分解求解
+#### 使用LU分解求解 {#lu_2}
 
 ```cpp
 static Mat Mat::solve_lu(const LUDecomposition &lu, const Mat &b);
@@ -2557,7 +2570,7 @@ Mat - 解向量 (N×1)。
 
 - **置换矩阵不能忽略**: 求解时必须把 P 考虑进去，否则答案会错。
 
-#### 使用Cholesky分解求解
+#### 使用Cholesky分解求解 {#cholesky_2}
 
 ```cpp
 static Mat Mat::solve_cholesky(const CholeskyDecomposition &chol, const Mat &b);
@@ -2597,7 +2610,7 @@ Mat - 解向量 (N×1)。
 
 - **先检查再分解**: 先做对称性/正定性检查，比事后排查分解失败更省时间。
 
-#### 使用QR分解求解（最小二乘）
+#### 使用QR分解求解（最小二乘） {#qr_2}
 
 ```cpp
 static Mat Mat::solve_qr(const QRDecomposition &qr, const Mat &b);
@@ -2644,7 +2657,7 @@ Mat - 最小二乘解向量 (N×1)。
 
 - **仍要看秩**: `R` 的对角线上若出现很小的值，说明问题可能病态或秩亏。
 
-### 伪逆
+### 伪逆 {#_57}
 
 ```cpp
 static Mat Mat::pseudo_inverse(const SVDDecomposition &svd, float tolerance = 1e-6f);
@@ -2702,9 +2715,9 @@ Mat - 伪逆矩阵。
 
 - **能直接 solve 就别伪逆**: 如果矩阵方正且条件良好，直接求解通常更便宜。
 
-## 线性代数 - 特征值与特征向量
+## 线性代数 - 特征值与特征向量 {#-_8}
 
-### 结构体：`Mat::EigenPair`
+### 结构体：`Mat::EigenPair` {#mateigenpair}
 
 ```cpp
 Mat::EigenPair::EigenPair();
@@ -2723,7 +2736,7 @@ Mat::EigenPair::EigenPair();
 
 这个结构刻意保持很小：一个特征值、一个特征向量、再加收敛信息。它适合迭代法只关心一个模态的场景。
 
-### 结构体：`Mat::EigenDecomposition`
+### 结构体：`Mat::EigenDecomposition` {#mateigendecomposition}
 
 ```cpp
 Mat::EigenDecomposition::EigenDecomposition();
@@ -2742,7 +2755,7 @@ Mat::EigenDecomposition::EigenDecomposition();
 
 这是完整的谱信息快照。只有在矩阵规模可控、且你确实需要多个模态或基变换时，它才划算。
 
-### 幂迭代（求主特征值/向量）
+### 幂迭代（求主特征值/向量） {#_58}
 
 ```cpp
 Mat::EigenPair Mat::power_iteration(int max_iter, float tolerance) const;
@@ -2812,7 +2825,7 @@ Mat::EigenPair Mat::power_iteration(int max_iter, float tolerance) const;
 
 - **缩放会影响收敛**: 缩放很差的矩阵会让收敛速度和向量质量变差。
 
-### 反幂迭代（求最小特征值/向量）
+### 反幂迭代（求最小特征值/向量） {#_59}
 
 ```cpp
 Mat::EigenPair Mat::inverse_power_iteration(int max_iter, float tolerance) const;
@@ -2909,7 +2922,7 @@ Mat::EigenPair Mat::inverse_power_iteration(int max_iter, float tolerance) const
 
 - **最小模不等于最小数值**: 对有正有负的谱来说，“绝对值最小”和“最负”不是一回事。
 
-### Jacobi 特征分解（对称矩阵）
+### Jacobi 特征分解（对称矩阵） {#jacobi}
 
 ```cpp
 Mat::EigenDecomposition Mat::eigendecompose_jacobi(float tolerance, int max_iter) const;
@@ -2973,7 +2986,7 @@ Jacobi方法通过一系列正交相似变换（Givens旋转）对角化对称�
 
 - **对角化后仍是近似值**: 浮点误差会留下极小的非对角项，要把结果当作近似对角化。
 
-### QR 特征分解（一般矩阵）
+### QR 特征分解（一般矩阵） {#qr_3}
 
 ```cpp
 Mat::EigenDecomposition Mat::eigendecompose_qr(int max_iter, float tolerance) const;
@@ -3039,7 +3052,7 @@ QR在此实现中使用Gram–Schmidt构造Q/R；对于病态矩阵可能不太�
 
 - **正交化质量很重要**: Q 用 Gram-Schmidt 构造，病态输入会影响迭代质量。
 
-### 自动特征分解（根据矩阵特性选择方法）
+### 自动特征分解（根据矩阵特性选择方法） {#_60}
 
 ```cpp
 Mat::EigenDecomposition Mat::eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
@@ -3097,9 +3110,9 @@ Mat::EigenDecomposition Mat::eigendecompose(float tolerance = 1e-6f, int max_ite
 - **大矩阵不友好**: 在嵌入式平台上，完整特征分解很容易成为时间和内存瓶颈。
 
 
-## 流操作符
+## 流操作符 {#_61}
 
-### 矩阵输出流操作符
+### 矩阵输出流操作符 {#_62}
 
 ```cpp
 std::ostream &operator<<(std::ostream &os, const Mat &m);
@@ -3115,7 +3128,7 @@ std::ostream &operator<<(std::ostream &os, const Mat &m);
 
 - `const Mat &m` : 要输出的矩阵。
 
-### ROI输出流操作符
+### ROI输出流操作符 {#roi_5}
 
 ```cpp
 std::ostream &operator<<(std::ostream &os, const Mat::ROI &roi);
@@ -3131,7 +3144,7 @@ ROI结构体的重载输出流操作符。
 
 - `const Mat::ROI &roi` : ROI结构。
 
-### 矩阵输入流操作符
+### 矩阵输入流操作符 {#_63}
 
 ```cpp
 std::istream &operator>>(std::istream &is, Mat &m);
@@ -3150,7 +3163,7 @@ std::istream &operator>>(std::istream &is, Mat &m);
 !!! tip 
     本节实际上在显示矩阵方面与打印函数有些重叠。
 
-## 全局算术运算符
+## 全局算术运算符 {#_64}
 
 !!! INFO "非修改操作"
     本节中的运算符返回一个新的矩阵对象，作为运算结果。原始矩阵保持不变。这些是函数式操作，不修改其操作数，使其可以安全地与const引用和临时对象一起使用。
@@ -3159,7 +3172,7 @@ std::istream &operator>>(std::istream &is, Mat &m);
     - 使用全局运算符 (A + B) 当您想保留原始矩阵时
     - 使用成员运算符 (A += B) 当您想就地修改矩阵时（更节省内存）
 
-### 加法运算符
+### 加法运算符 {#_65}
 
 ```cpp
 Mat operator+(const Mat &A, const Mat &B);
@@ -3179,7 +3192,7 @@ Mat operator+(const Mat &A, const Mat &B);
 
 Mat - 结果矩阵 A+B
 
-### 加法运算符 - 常量
+### 加法运算符 - 常量 {#-_9}
 
 ```cpp
 Mat operator+(const Mat &A, float C);
@@ -3199,7 +3212,7 @@ Mat operator+(const Mat &A, float C);
 
 Mat - 结果矩阵 A+C
 
-### 减法运算符
+### 减法运算符 {#_66}
 
 ```cpp
 Mat operator-(const Mat &A, const Mat &B);
@@ -3219,7 +3232,7 @@ Mat operator-(const Mat &A, const Mat &B);
 
 Mat - 结果矩阵 A-B
 
-### 减法运算符 - 常量
+### 减法运算符 - 常量 {#-_10}
 
 ```cpp
 Mat operator-(const Mat &A, float C);
@@ -3239,7 +3252,7 @@ Mat operator-(const Mat &A, float C);
 
 Mat - 结果矩阵 A-C
 
-### 乘法运算符
+### 乘法运算符 {#_67}
 
 ```cpp
 Mat operator*(const Mat &A, const Mat &B);
@@ -3259,7 +3272,7 @@ Mat operator*(const Mat &A, const Mat &B);
 
 Mat - 结果矩阵 A*B
 
-### 乘法运算符 - 常量
+### 乘法运算符 - 常量 {#-_11}
 
 ```cpp
 Mat operator*(const Mat &A, float C);
@@ -3279,7 +3292,7 @@ Mat operator*(const Mat &A, float C);
 
 Mat - 结果矩阵 A*C
 
-### 乘法运算符 - 常量（左侧）
+### 乘法运算符 - 常量（左侧） {#-_12}
 
 ```cpp
 Mat operator*(float C, const Mat &A);
@@ -3299,7 +3312,7 @@ Mat operator*(float C, const Mat &A);
 
 Mat - 结果矩阵 C*A
 
-### 除法运算符
+### 除法运算符 {#_68}
 
 ```cpp
 Mat operator/(const Mat &A, float C);
@@ -3319,7 +3332,7 @@ Mat operator/(const Mat &A, float C);
 
 Mat - 结果矩阵 A/C
 
-### 除法运算符 - 矩阵
+### 除法运算符 - 矩阵 {#-_13}
 
 ```cpp
 Mat operator/(const Mat &A, const Mat &B);
@@ -3339,7 +3352,7 @@ Mat operator/(const Mat &A, const Mat &B);
 
 Mat - 结果矩阵 C，其中 C[i,j] = A[i,j]/B[i,j]
 
-### 等于运算符
+### 等于运算符 {#_69}
 
 ```cpp
 bool operator==(const Mat &A, const Mat &B);
@@ -3358,9 +3371,3 @@ bool operator==(const Mat &A, const Mat &B);
 **返回值**:
 
 布尔值，表示两个矩阵是否相等
-
-
-
-
-
-

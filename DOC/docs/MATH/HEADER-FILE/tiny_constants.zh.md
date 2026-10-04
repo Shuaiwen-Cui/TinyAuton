@@ -1,7 +1,13 @@
-# 常量定义
+# 常量定义 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! INFO
     该文件包含了一些常量的定义用于上层计算和应用。文档更新速度较慢，可能与实际代码不一致，请以代码为准。
+
+<details class="auton-source" markdown="1">
+<summary>展开 历史摘录 · 79 行</summary>
 
 ```c
 /**
@@ -84,3 +90,4 @@ extern "C"
 #endif
 
 ```
+</details>

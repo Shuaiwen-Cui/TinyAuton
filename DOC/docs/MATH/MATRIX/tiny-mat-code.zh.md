@@ -1,6 +1,9 @@
-# 代码
+# C 矩阵实现源码 {#_1}
 
-## tiny_mat.h
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## tiny_mat.h {#tiny_math}
 
 ```c
 /**
@@ -60,7 +63,10 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
 
 ```
 
-## tiny_mat.c
+## tiny_mat.c {#tiny_matc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 tiny_mat.c · 473 行</summary>
 
 ```c
 /**
@@ -537,3 +543,4 @@ tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int 
     return TINY_OK;
 }
 ```
+</details>

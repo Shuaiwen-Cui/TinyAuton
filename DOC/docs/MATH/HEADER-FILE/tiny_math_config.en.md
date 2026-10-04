@@ -1,4 +1,7 @@
-# TinyMath CONFIGURATION
+# TinyMath CONFIGURATION {#tinymath-configuration}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! INFO
     This header file serves to configure the entire TinyMath module, and each submodule includes this header file. It defines the configuration options and macros for TinyMath, allowing users to customize settings as needed. By modifying the configuration options in this header file, users can easily adjust the behavior and functionality of TinyMath to meet specific requirements. The documentation may be updated slowly and may not match the actual code, so please refer to the code for accuracy.

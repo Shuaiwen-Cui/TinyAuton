@@ -1,9 +1,31 @@
-# 说明
+# TinyAI · 量化 · FP8 — 设计说明 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     `tiny_fp8` 在纯软件层面实现了 OCP 规范的 8-bit 浮点格式：E4M3FN 适合权重 / 激活，E5M2 适合梯度。ESP32-S3 没有 FP8 硬件，所有数据按 `uint8_t` 存储，运算时升回 `float32` 完成。
 
-## 格式总览
+!!! abstract "FP8 — 8 位浮点数：两种格式应对不同角色"
+    OCP 标准：E4M3FN 用于权重和激活，E5M2 用于梯度。
+
+## 算法直觉 {#_2}
+
+### FP8 = FP32 的精简版 {#fp8-fp32}
+
+| 格式 | 指数位 | 尾数位 | 动态范围 | 精度 | 用途 |
+|------|--------|--------|----------|------|------|
+| **E4M3FN** | 4 位 | 3 位 | \(\pm 448\) | 高 | 权重、激活 |
+| **E5M2** | 5 位 | 2 位 | \(\pm 57344\) | 低 | 梯度 |
+
+- E4M3FN 精度高，适合参数和激活值（范围较小）
+- E5M2 动态范围大，适合梯度（值可能很大或很小）
+
+这是纯软件实现，不需要硬件支持。主要用于验证量化方案。
+
+---
+
+## 格式总览 {#_3}
 
 | 格式 | 位排列 | bias | 最大值 | 最小正常值 | 特殊编码 |
 | --- | --- | --- | --- | --- | --- |
@@ -12,7 +34,7 @@
 
 E4M3FN 牺牲了 ±inf 来换取额外的 4 个数值，是 OCP 推荐的「fitting normal」格式，用于权重 / 激活。E5M2 与 IEEE 754 子集结构一致，保留 ±inf / NaN，被推荐用于梯度的反向传播。
 
-## E4M3FN
+## E4M3FN {#e4m3fn}
 
 ```cpp
 uint8_t fp32_to_fp8_e4m3 (float val);
@@ -36,7 +58,7 @@ void    fp8_e4m3_to_fp32_batch(const uint8_t *src, float *dst, int n);
 - `exp == 0` → subnormal：`val = (-1)^S · 2⁻⁶ · (mant / 8)`。
 - 否则 → normal：`val = (-1)^S · 2^(exp - 7) · (1 + mant / 8)`。
 
-## E5M2
+## E5M2 {#e5m2}
 
 ```cpp
 uint8_t fp32_to_fp8_e5m2 (float val);
@@ -52,7 +74,7 @@ void    fp8_e5m2_to_fp32_batch(const uint8_t *src, float *dst, int n);
 - 大于 `±57344` → 编码 `±Inf`。
 - IEEE 形式上的 ±Inf / NaN 都直接保留。
 
-## 格式 dispatch 助手
+## 格式 dispatch 助手 {#dispatch}
 
 ```cpp
 uint8_t fp32_to_fp8(float val, tiny_dtype_t dtype);   // 按 dtype 选 E4M3 / E5M2
@@ -63,9 +85,9 @@ void    fp8_to_fp32_batch(const uint8_t *src, float *dst, int n, tiny_dtype_t dt
 
 `tiny::quantize / dequantize`（`tiny_quant.hpp`）会根据 `params.dtype` 自动调用上述 dispatch 函数，所以应用层往往不需要直接接触 batch 函数。
 
-## 使用模式
+## 使用模式 {#_4}
 
-### 权重压缩存档
+### 权重压缩存档 {#_5}
 
 ```cpp
 QuantParams qp = calibrate(weight, TINY_DTYPE_FP8_E4M3);
@@ -82,7 +104,7 @@ dequantize(buf, restored, qp);
 
 `example_cnn.cpp` 演示了 4× 内存节省（`fp32 → e4m3`）+ 误差统计的流程，详见 [EXAMPLES/CNN](../../EXAMPLES/CNN/notes.md)。
 
-### 梯度通信 / 检查点
+### 梯度通信 / 检查点 {#_6}
 
 将梯度先压成 E5M2 再写入 PSRAM 备份，可显著缩减检查点体积：
 
@@ -94,13 +116,13 @@ quantize(grad, gb, qp_g);
 
 需要时再 `dequantize` 回 fp32 继续训练。
 
-## 精度与误差
+## 精度与误差 {#_7}
 
 - **E4M3FN**：相对误差约 1/8 = 12.5%（最低）；适合 ReLU 后已经稀疏化的权重 / 激活。
 - **E5M2**：相对误差约 1/4 = 25%（更低），但范围大 128 倍，适合「分布尾部很长」的梯度。
 - **建议**：与 INT8 互补使用 —— 当 INT8 由于过大动态范围（典型见 attention 权重）丢精度时，切换到 E4M3 往往更稳。
 
-## 软件实现的代价
+## 软件实现的代价 {#_8}
 
 ESP32-S3 没有 FP8 ALU，因此每次量化 / 反量化都要走纯 C++ 的浮点位拼接（包含 `expf / powf`）。建议：
 

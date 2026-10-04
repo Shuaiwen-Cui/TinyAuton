@@ -1,9 +1,41 @@
-# Notes
+# TinyAI · Models · CNN — Design notes {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     `CNN1D` is a convenience wrapper around `Sequential` for 1-D convolutional neural networks. It uses a `CNN1DConfig` struct to describe each conv block's filter count, kernel size, pool window and the final classification head, then auto-builds the full "Conv1D + ReLU + MaxPool1D" pipeline.
 
-## CNN1DConfig
+!!! abstract "CNN — Convolutional Neural Network: Conv for Features, Dense for Classification"
+    For SHM time-series signals, CNN1D is the default choice: Conv layers learn spectral/temporal features, Pool layers compress, Dense layers classify.
+
+## Intuition {#intuition}
+
+### CNN1D Pipeline {#cnn1d-pipeline}
+
+```
+Input signal → [Conv1D → ReLU → MaxPool] × N → Flatten → Dense → Output
+```
+
+1. **Conv1D**: scan signal with multiple kernels, learn different patterns (frequency, impulse, trend)
+2. **MaxPool**: downsample, retain strongest responses, reduce data
+3. **Flatten**: flatten multidim features to 1D vector
+4. **Dense**: classify on flattened features
+
+### CNN1DConfig Quick Config {#cnn1dconfig-quick-config}
+
+```cpp
+CNN1DConfig config;
+config.in_channels  = 1;       // single-channel acceleration
+config.out_channels = {16, 32}; // layer1: 16 kernels, layer2: 32 kernels
+config.kernel_sizes = {9, 5};  // kernel widths
+config.strides = {2, 2};       // stride per layer
+config.num_classes = 3;        // 3 output classes
+```
+
+---
+
+## CNN1DConfig {#cnn1dconfig}
 
 ```cpp
 struct CNN1DConfig
@@ -21,7 +53,7 @@ struct CNN1DConfig
 };
 ```
 
-## CONSTRUCTION LOGIC
+## CONSTRUCTION LOGIC {#construction-logic}
 
 `CNN1D::CNN1D(const CNN1DConfig &cfg)`:
 
@@ -38,7 +70,7 @@ struct CNN1DConfig
 
 `flat_features()` returns the flattened dimension so you can size the Dense correctly.
 
-## EXAMPLE
+## EXAMPLE {#example}
 
 ```cpp
 CNN1DConfig cfg;
@@ -71,13 +103,13 @@ Dense(32 → 3)           -> [B, 3]
 SOFTMAX                 -> [B, 3]
 ```
 
-## COMPUTE / MEMORY
+## COMPUTE / MEMORY {#compute-memory}
 
 - **Parameter count**: depends on `filters / kernels / fc_units`. `{16, 32}` + `fc_units=32` is roughly 14 KB of float weights.
 - **Activation memory**: each conv block stores `B × ch × L` activations; training also caches the inputs.
 - **PSRAM**: `example_cnn.cpp` runs at `B=8` comfortably on ESP32-S3 with its 8 MB PSRAM.
 
-## USE CASES
+## USE CASES {#use-cases}
 
 - Vibration / accelerometer classification.
 - ECG, EMG, voice-frame classification.

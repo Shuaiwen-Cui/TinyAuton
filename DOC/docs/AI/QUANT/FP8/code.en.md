@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Quant · FP8 — Implementation and source {#code}
 
-## tiny_fp8.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_fp8.hpp` {#tiny_fp8hpp}
 
 ```cpp
 /**
@@ -44,7 +49,10 @@ void    fp8_to_fp32_batch(const uint8_t *src, float *dst, int n, tiny_dtype_t dt
 #endif // __cplusplus
 ```
 
-## tiny_fp8.cpp
+## `tiny_fp8.cpp` {#tiny_fp8cpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_fp8.cpp</code> · 187 lines</summary>
 
 ```cpp
 /**
@@ -235,3 +243,5 @@ void fp8_to_fp32_batch(const uint8_t *src, float *dst, int n, tiny_dtype_t dtype
 
 #endif // __cplusplus
 ```
+
+</details>

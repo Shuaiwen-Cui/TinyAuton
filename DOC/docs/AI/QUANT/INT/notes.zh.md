@@ -1,9 +1,43 @@
-# 说明
+# TinyAI · 量化 · 整数量化 — 设计说明 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     INT 量化是 `tiny_ai` 部署阶段的主力路径：通过对称的 min-max 校准，把 float32 权重 / 激活映射到 INT8 或 INT16 整数空间，再使用 INT8 dense kernel 进行纯整数推理。该模块同时提供 C 与 C++ 两套接口。
 
-## 校准（min-max，对称）
+!!! abstract "INT8 — 量化：把 FP32 压缩 4 倍，几乎不掉精度"
+    FP32 → INT8 量化将每个 32 位浮点数压缩成 8 位整数。权重体积缩小 4 倍，推理加速。
+
+## 算法直觉 {#_2}
+
+### 量化 = 缩放映射 {#_3}
+
+```
+FP32 范围 [min, max]  →  映射到  INT8 范围 [-128, 127]
+```
+
+关键就是找到一个缩放因子 \(scale\)：
+
+\[
+x_{int8} = \text{round}(x_{fp32} / scale), \quad scale = \max(|min|, |max|) / 127
+\]
+
+### PTQ（训练后量化）流程 {#ptq}
+
+1. **校准**：传入权重张量，根据其 min/max 计算 scale
+2. **量化**：FP32 权重 → INT8（实际存储时省 4 倍空间）
+3. **推理**：量化后的权重用 INT32 累加做矩阵乘法，比 FP32 乘加更快
+
+### 注意事项 {#_4}
+
+- 对称量化假设数据是对称的（正负范围相等）
+- 激活值也可量化（`tiny_quant_quantize_f32`），但精度损失稍大
+- INT8 dense kernel 用 INT32 累加避免溢出，最后再缩放回 FP32
+
+---
+
+## 校准（min-max，对称） {#min-max}
 
 ```c
 tiny_error_t tiny_quant_calibrate_minmax(const float *data, int n,
@@ -21,7 +55,7 @@ tiny_error_t tiny_quant_calibrate_minmax(const float *data, int n,
 
 `Q_max = 127 (INT8) / 32767 (INT16)`。当 `abs_max < TINY_MATH_MIN_DENOMINATOR` 时回退到 `1.0f`。
 
-## INT8 量化 / 反量化
+## INT8 量化 / 反量化 {#int8}
 
 ```c
 tiny_error_t tiny_quant_f32_to_int8(const float *src, int8_t *dst, int n,
@@ -33,11 +67,11 @@ tiny_error_t tiny_quant_int8_to_f32(const int8_t *src, float *dst, int n,
 
 量化：`q = clamp(round(x / scale) + zp, -128, 127)`，反量化：`x = (q - zp) * scale`。
 
-## INT16 量化 / 反量化
+## INT16 量化 / 反量化 {#int16}
 
 API 形式相同，仅类型替换为 `int16_t`，范围 `[-32768, 32767]`。当对精度敏感（如 IMU 中间统计量）时用 INT16。
 
-## INT8 dense forward kernel
+## INT8 dense forward kernel {#int8-dense-forward-kernel}
 
 ```c
 tiny_error_t tiny_quant_dense_forward_int8(
@@ -59,7 +93,7 @@ tiny_error_t tiny_quant_dense_forward_int8(
 
 `bias` 是预先量化好的 INT32（典型做法是把浮点 bias 除以 `input_scale * weight_scale` 后取整）。
 
-## C++ 包装：QuantParams + Tensor 接口
+## C++ 包装：QuantParams + Tensor 接口 {#c-quantparams-tensor}
 
 ```cpp
 struct QuantParams
@@ -93,7 +127,7 @@ tiny_error_t requantize_int8(const int8_t *src, int8_t *dst, int n,
 3. `tiny_quant_f32_to_int8(t.data, buf, t.size, params.to_c())`。
 4. 调用方负责 `TINY_AI_FREE(buf)`。
 
-## PTQ 流程示例
+## PTQ 流程示例 {#ptq_1}
 
 ```cpp
 using namespace tiny;
@@ -123,7 +157,7 @@ tiny_quant_dense_forward_int8(
     in_qp.scale, qp.scale, out_qp.scale);
 ```
 
-## 重量化（INT8 → INT8）
+## 重量化（INT8 → INT8） {#int8-int8}
 
 ```c
 tiny_error_t requantize_int8(const int8_t *src, int8_t *dst, int n,
@@ -136,7 +170,7 @@ tiny_error_t requantize_int8(const int8_t *src, int8_t *dst, int n,
 q' = \mathrm{clamp}\!\big(\mathrm{round}(q \cdot s_\text{src} / s_\text{dst}),\,-128,\,127\big)
 \]
 
-## 精度损失
+## 精度损失 {#_5}
 
 - **INT8**：在 `[-1, 1]` 经过对称量化后误差大致为 `scale ≈ 1/127 ≈ 0.0079`。配合 ReLU / sigmoid 通常 1~3% 精度损失可接受。
 - **INT16**：误差降至 `scale ≈ 1/32767`，几乎无损。

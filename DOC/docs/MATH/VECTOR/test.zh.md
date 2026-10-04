@@ -1,11 +1,14 @@
-# 向量操作测试
+# 向量操作测试 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "向量操作测试"
     该测试用于测试向量相关函数的性能。
 
-## 测试代码
+## 测试代码 {#_2}
 
-### tiny_vec_test.h
+### tiny_vec_test.h {#tiny_vec_testh}
 
 ```c
 /**
@@ -41,7 +44,10 @@ extern "C"
 
 ```
 
-### tiny_vec_test.c
+### tiny_vec_test.c {#tiny_vec_testc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 tiny_vec_test.c · 115 行</summary>
 
 ```c
 /**
@@ -161,7 +167,9 @@ void tiny_vec_test(void)
 }
 ```
 
-### main.cpp
+</details>
+
+### main.cpp {#maincpp}
 
 ```cpp
 /**
@@ -194,7 +202,7 @@ void app_main(void)
 
 ```
 
-## 测试结果
+## 测试结果 {#_3}
 
 基础C计算情况
 

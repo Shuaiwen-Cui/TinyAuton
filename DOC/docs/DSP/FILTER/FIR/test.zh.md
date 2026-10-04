@@ -1,6 +1,116 @@
-# 测试
+# TinyDSP · 滤波 · FIR — 测试与结果 {#_1}
 
-## tiny_fir_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_fir_testc"></span>
+<span id="tiny_fir_testh"></span>
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## 输出结果 {#_2}
+
+```c
+==========================================
+       TinyFIR Filter Test Suite
+==========================================
+
+========== FIR Filter Design Test ==========
+
+Test 1: Low-Pass Filter Design
+  Parameters: cutoff=0.1 (normalized), taps=51, window=Hamming
+  [PASS] Low-pass filter designed successfully
+  Coefficient range: [-0.000000, 0.200000]
+
+Test 2: High-Pass Filter Design
+  Parameters: cutoff=0.2 (normalized), taps=51, window=Hanning
+  [PASS] High-pass filter designed successfully
+
+Test 3: Band-Pass Filter Design
+  Parameters: low=0.1, high=0.3 (normalized), taps=51, window=Blackman
+  [PASS] Band-pass filter designed successfully
+
+Test 4: Band-Stop Filter Design
+  Parameters: low=0.1, high=0.3 (normalized), taps=51, window=Hamming
+  [PASS] Band-stop filter designed successfully
+
+========================================
+
+========== FIR Batch Filtering Test ==========
+
+Test: Low-Pass FIR Filtering
+  Input signal: DC + 10Hz + 50Hz + 100Hz components
+  Filter: Low-pass, cutoff=100.0 Hz (normalized=0.100)
+  Taps: 51, Window: Hamming
+
+  [PASS] Filtering completed successfully
+
+Signal Visualization:
+
+Original Signal
+Value
+  3.02 |                                                                
+  2.65 |     **                                               **        
+  2.28 |     **                      ***                      ***  **   
+  1.92 |**  ***** **             **  * ** **             **   * ** **   
+  1.55 |*****   ****            ******  *****            ******  * **   
+  1.18 |*  **   ** **           *   **   ** **           *       *****  
+  0.82 |*           ** **   **  *            * **   **   *           ** 
+  0.45 |             ****  ******            *****  ******            * 
+  0.08 |             ** ****   **             ** ** *                 **
+ -0.28 |                  **                      ***                   
+ -0.65 |                  **                       **                   
+ -1.02 |                                                                
+       ----------------------------------------------------------------
+       0       8       16      24      32      40      48      56       (Sample Index)
+Range: [-1.018, 3.018], Length: 256
+
+
+Filtered Signal (Low-Pass)
+Value
+  2.88 |                                                                
+  2.54 |     **                       **                      **        
+  2.20 |     ***                     ***                      ***       
+  1.85 | ** ** ** **             **  * ** ***             **  * ** **   
+  1.51 |*****   ****            ******  *** *            ******  *****  
+  1.17 |   **   ** **           *        ** **           *           *  
+  0.83 |            *  **   **  *            * **        *           ** 
+  0.49 |            *****   *** *            *****  ******            **
+  0.15 |             ** ** ** ***             ** ** *  **               
+ -0.19 |                 ***                      * *                   
+ -0.53 |                  **                      ***                   
+ -0.87 |                                                                
+       ----------------------------------------------------------------
+       0       8       16      24      32      40      48      56       (Sample Index)
+Range: [-0.872, 2.877], Length: 256
+
+
+Statistics:
+  Input:  mean=1.1294, power=1.9174
+  Output: mean=1.1321, power=1.8899
+  Power reduction: 1.43%
+
+========================================
+
+========== FIR Real-Time Filtering Test ==========
+
+Test: Real-Time FIR Filtering
+  Filter: Low-pass, taps=21
+  Processing samples one by one...
+
+  Input samples: 1.0 2.0 3.0 4.0 5.0 4.0 3.0 2.0 1.0 0.0 0.0 1.0 2.0 3.0 4.0 3.0 2.0 1.0 0.0 0.0 
+  Output samples: 0.000 -0.002 -0.011 -0.031 -0.063 -0.096 -0.092 0.006 0.265 0.733 1.400 2.184 2.934 3.472 3.652 3.419 2.845 2.109 1.446 1.063 
+
+  Testing filter reset...
+  [PASS] Filter reset successful
+
+========================================
+
+==========================================
+       All FIR Tests Completed
+==========================================
+```
+
+## `tiny_fir_test.h` {#tinyfirtesth}
 
 ```c
 /**
@@ -32,7 +142,10 @@ void tiny_fir_test(void);
 
 ```
 
-## tiny_fir_test.c
+## `tiny_fir_test.c` {#tinyfirtestc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_fir_test.c</code> · 310 行</summary>
 
 ```c
 /**
@@ -347,105 +460,4 @@ void tiny_fir_test(void)
 
 ```
 
-## 输出结果
-
-```c
-==========================================
-       TinyFIR Filter Test Suite
-==========================================
-
-========== FIR Filter Design Test ==========
-
-Test 1: Low-Pass Filter Design
-  Parameters: cutoff=0.1 (normalized), taps=51, window=Hamming
-  [PASS] Low-pass filter designed successfully
-  Coefficient range: [-0.000000, 0.200000]
-
-Test 2: High-Pass Filter Design
-  Parameters: cutoff=0.2 (normalized), taps=51, window=Hanning
-  [PASS] High-pass filter designed successfully
-
-Test 3: Band-Pass Filter Design
-  Parameters: low=0.1, high=0.3 (normalized), taps=51, window=Blackman
-  [PASS] Band-pass filter designed successfully
-
-Test 4: Band-Stop Filter Design
-  Parameters: low=0.1, high=0.3 (normalized), taps=51, window=Hamming
-  [PASS] Band-stop filter designed successfully
-
-========================================
-
-========== FIR Batch Filtering Test ==========
-
-Test: Low-Pass FIR Filtering
-  Input signal: DC + 10Hz + 50Hz + 100Hz components
-  Filter: Low-pass, cutoff=100.0 Hz (normalized=0.100)
-  Taps: 51, Window: Hamming
-
-  [PASS] Filtering completed successfully
-
-Signal Visualization:
-
-Original Signal
-Value
-  3.02 |                                                                
-  2.65 |     **                                               **        
-  2.28 |     **                      ***                      ***  **   
-  1.92 |**  ***** **             **  * ** **             **   * ** **   
-  1.55 |*****   ****            ******  *****            ******  * **   
-  1.18 |*  **   ** **           *   **   ** **           *       *****  
-  0.82 |*           ** **   **  *            * **   **   *           ** 
-  0.45 |             ****  ******            *****  ******            * 
-  0.08 |             ** ****   **             ** ** *                 **
- -0.28 |                  **                      ***                   
- -0.65 |                  **                       **                   
- -1.02 |                                                                
-       ----------------------------------------------------------------
-       0       8       16      24      32      40      48      56       (Sample Index)
-Range: [-1.018, 3.018], Length: 256
-
-
-Filtered Signal (Low-Pass)
-Value
-  2.88 |                                                                
-  2.54 |     **                       **                      **        
-  2.20 |     ***                     ***                      ***       
-  1.85 | ** ** ** **             **  * ** ***             **  * ** **   
-  1.51 |*****   ****            ******  *** *            ******  *****  
-  1.17 |   **   ** **           *        ** **           *           *  
-  0.83 |            *  **   **  *            * **        *           ** 
-  0.49 |            *****   *** *            *****  ******            **
-  0.15 |             ** ** ** ***             ** ** *  **               
- -0.19 |                 ***                      * *                   
- -0.53 |                  **                      ***                   
- -0.87 |                                                                
-       ----------------------------------------------------------------
-       0       8       16      24      32      40      48      56       (Sample Index)
-Range: [-0.872, 2.877], Length: 256
-
-
-Statistics:
-  Input:  mean=1.1294, power=1.9174
-  Output: mean=1.1321, power=1.8899
-  Power reduction: 1.43%
-
-========================================
-
-========== FIR Real-Time Filtering Test ==========
-
-Test: Real-Time FIR Filtering
-  Filter: Low-pass, taps=21
-  Processing samples one by one...
-
-  Input samples: 1.0 2.0 3.0 4.0 5.0 4.0 3.0 2.0 1.0 0.0 0.0 1.0 2.0 3.0 4.0 3.0 2.0 1.0 0.0 0.0 
-  Output samples: 0.000 -0.002 -0.011 -0.031 -0.063 -0.096 -0.092 0.006 0.265 0.733 1.400 2.184 2.934 3.472 3.652 3.419 2.845 2.109 1.446 1.063 
-
-  Testing filter reset...
-  [PASS] Filter reset successful
-
-========================================
-
-==========================================
-       All FIR Tests Completed
-==========================================
-```
+</details>

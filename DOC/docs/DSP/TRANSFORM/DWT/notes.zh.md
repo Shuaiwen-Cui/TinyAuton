@@ -1,11 +1,49 @@
-# 说明
+# TinyDWT — 原理与接口 {#_1}
+
+## 当前多级接口 {#auton-current-dwt}
+
+以 DSP/AI 工程为准，每一级输入长度必须为偶数，单级系数长度为输入长度的一半。下面演示 128 点、3 级分解。输出的 `cA/cD/cD_lens` 由函数分配，调用方释放；重构需要保留各级细节长度。
+
+```c
+#include "tiny_dwt.h"
+#include <stdlib.h>
+
+void dwt_demo(void)
+{
+    float input[128] = {0}, output[128] = {0};
+    float *cA = NULL, *cD = NULL;
+    int cA_len = 0, cD_total = 0;
+    int *cD_lens = NULL;
+    tiny_error_t status = tiny_dwt_multilevel_decompose_f32(
+        input, 128, TINY_WAVELET_DB4, 3,
+        &cA, &cD, &cA_len, &cD_lens, &cD_total);
+    if (status == TINY_OK) {
+        status = tiny_dwt_multilevel_reconstruct_f32(
+            cA, cD, cA_len, TINY_WAVELET_DB4, cD_lens, 3, output);
+    }
+    free(cA);
+    free(cD);
+    free(cD_lens);
+    if (status != TINY_OK) return;
+}
+```
+
+[头文件与实现](code.md) · [历史测试与判据](test.md)
+
+## 原理与历史接口摘录 {#auton-historical-dwt}
+
+下方旧版多级签名和示例不能直接用于 DSP/AI 新版接口。历史舍入长度公式不代表当前实现接受奇数输入；使用上方调用方式并对照所选工程头文件。
+
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     离散小波变换（DWT）是一种强大的信号处理技术，可在多个分辨率级别将信号分解为不同的频率分量。与提供全局频率信息的 FFT 不同，DWT 提供时间和频率的局部化，使其非常适合分析非平稳信号、去噪、压缩和特征提取。
 
-## DWT 概述
+## DWT 概述 {#dwt}
 
-### 数学原理
+### 数学原理 {#_2}
 
 离散小波变换使用一对滤波器将信号分解为近似（低频）和细节（高频）系数：低通滤波器（尺度函数）和高通滤波器（小波函数）。
 
@@ -49,7 +87,7 @@ x[n] = \sum_{k} (cA[k] \cdot g_0[n - 2k] + cD[k] \cdot g_1[n - 2k])
 
 - \( g_1 \) 是高通重构滤波器
 
-## 小波类型
+## 小波类型 {#_3}
 
 库支持 Daubechies 小波（DB1 到 DB10）：
 
@@ -67,9 +105,9 @@ L_{filter} = 2 \times N
 
 其中 \( N \) 是小波阶数（DB1: N=1, DB2: N=2, ..., DB10: N=10）。
 
-## 单级 DWT
+## 单级 DWT {#dwt_1}
 
-### tiny_dwt_decompose_f32
+### tiny_dwt_decompose_f32 {#tiny_dwt_decompose_f32}
 
 ```c
 /**
@@ -129,7 +167,7 @@ tiny_error_t tiny_dwt_decompose_f32(const float *input, int input_len,
 
 输出系数数组的长度约为输入信号长度的一半。由于卷积操作，信号边缘附近可能出现边界效应。
 
-### tiny_dwt_reconstruct_f32
+### tiny_dwt_reconstruct_f32 {#tiny_dwt_reconstruct_f32}
 
 ```c
 /**
@@ -184,9 +222,9 @@ tiny_error_t tiny_dwt_reconstruct_f32(const float *cA, const float *cD, int coef
 
 重构信号长度为 `coeff_len * 2`。可能出现边界效应，尤其是在信号边缘附近。中心区域通常具有非常高的重构精度。
 
-## 多级 DWT
+## 多级 DWT {#dwt_2}
 
-### tiny_dwt_multilevel_decompose_f32
+### tiny_dwt_multilevel_decompose_f32 {#tiny_dwt_multilevel_decompose_f32}
 
 ```c
 /**
@@ -257,7 +295,7 @@ tiny_error_t tiny_dwt_multilevel_decompose_f32(const float *input, int input_len
 
 `cD_out` 数组包含：连接的 [cD1, cD2, ..., cDN]。
 
-### tiny_dwt_multilevel_reconstruct_f32
+### tiny_dwt_multilevel_reconstruct_f32 {#tiny_dwt_multilevel_reconstruct_f32}
 
 ```c
 /**
@@ -312,9 +350,9 @@ tiny_error_t tiny_dwt_multilevel_reconstruct_f32(const float *cA_init, const flo
 
 `cD_all` 数组应按顺序包含细节系数：[cD_level1, cD_level2, ..., cD_levelN]。边界效应随着分解级别的增加而变得更加明显。
 
-## 系数处理
+## 系数处理 {#_4}
 
-### tiny_dwt_coeffs_process
+### tiny_dwt_coeffs_process {#tiny_dwt_coeffs_process}
 
 ```c
 /**
@@ -357,9 +395,9 @@ void tiny_dwt_coeffs_process(float *cA, float *cD, int cA_len, int cD_len, int l
 
 - 异常检测
 
-## 使用流程
+## 使用流程 {#_5}
 
-### 单级 DWT 流程
+### 单级 DWT 流程 {#dwt_3}
 
 1. **分解信号**:
    ```c
@@ -381,7 +419,7 @@ void tiny_dwt_coeffs_process(float *cA, float *cD, int cA_len, int cD_len, int l
    tiny_dwt_reconstruct_f32(cA, cD, cA_len, TINY_WAVELET_DB4, output, &output_len);
    ```
 
-### 多级 DWT 流程
+### 多级 DWT 流程 {#dwt_4}
 
 1. **多级分解**:
    ```c
@@ -407,7 +445,7 @@ void tiny_dwt_coeffs_process(float *cA, float *cD, int cA_len, int cD_len, int l
    free(cD);
    ```
 
-## 应用场景
+## 应用场景 {#_6}
 
 DWT 广泛应用于各种应用：
 
@@ -419,7 +457,7 @@ DWT 广泛应用于各种应用：
 - **结构健康监测**：振动分析、损伤检测
 - **时频分析**：在时间和频率上定位事件
 
-## 边界效应
+## 边界效应 {#_7}
 
 DWT 操作使用对称填充来处理信号边界。但是，仍可能出现边界效应：
 
@@ -428,7 +466,7 @@ DWT 操作使用对称填充来处理信号边界。但是，仍可能出现边�
 - **中心区域**：通常具有非常高的重构精度
 - **建议**：使用长度大于 2 × filter_length × levels 的信号以获得最佳结果
 
-## 能量保持
+## 能量保持 {#_8}
 
 对于完美重构小波（如 Daubechies），能量应该大致保持：
 

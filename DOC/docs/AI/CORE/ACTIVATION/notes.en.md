@@ -1,9 +1,44 @@
-# Notes
+# TinyAI · Core · Activation — Design notes {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     `tiny_activation` provides forward / backward / in-place implementations of seven common activation functions, all operating on `tiny::Tensor`. Softmax is computed numerically stably along the last dimension, ready to be plugged into the output layer of a classifier.
 
-## ActType ENUM
+!!! abstract "Activation — Injecting Non-Linearity Into Neural Networks"
+    Without activation functions, stacking linear layers is mathematically equivalent to a single linear layer—no matter how deep.
+
+## Intuition {#intuition}
+
+### Why Non-Linearity? {#why-non-linearity}
+
+- A linear layer is \(y = xW + b\). Stack two: \(y = (xW_1 + b_1)W_2 + b_2 = x(W_1W_2) + (b_1W_2 + b_2)\) → still linear!
+- Non-linear activations (ReLU, Sigmoid, etc.) "break" the linearity between layers, letting the network learn complex patterns
+
+### Common Activations {#common-activations}
+
+| Function | Formula | Range | Characteristic | Best for |
+|----------|---------|-------|----------------|----------|
+| ReLU | \(\max(0, x)\) | \([0, \infty)\) | Fast, mitigates vanishing gradient | **Default hidden layer** |
+| Leaky ReLU | \(x > 0 ? x : \alpha x\) | \((-\infty, \infty)\) | Fixes dead ReLU | Deep networks |
+| Sigmoid | \(1/(1+e^{-x})\) | \((0, 1)\) | Output ≈ probability | Binary classification output |
+| Tanh | \((e^x-e^{-x})/(e^x+e^{-x})\) | \((-1, 1)\) | Zero-centered | Some RNN variants |
+| Softmax | \(e^{x_i}/\sum e^{x_j}\) | \((0, 1)\) sums to 1 | Probability distribution | **Multi-class output** |
+
+!!! tip "Selection guide"
+    - **Hidden layers**: ReLU. Simple, fast, works
+    - **Binary output**: Sigmoid (maps to 0-1 probability)
+    - **Multi-class output**: Softmax (all class probs sum to 1)
+    - **Avoid**: Sigmoid/Tanh in hidden layers—prone to vanishing gradients
+
+!!! warning "Sigmoid saturation"
+    Very large or small inputs produce near-zero gradients. This made training deep networks very difficult in the early days of deep learning.
+
+
+---
+
+## ActType ENUM {#acttype-enum}
 
 ```cpp
 enum class ActType
@@ -18,7 +53,7 @@ enum class ActType
 };
 ```
 
-## MATH
+## MATH {#math}
 
 | Activation | Forward | Backward |
 | --- | --- | --- |
@@ -32,9 +67,9 @@ enum class ActType
 !!! tip "Softmax stability"
     The implementation first subtracts the row max, then `exp` and normalises — equivalent to \(\operatorname{softmax}(x)\) but free of overflow. The denominator gets `TINY_MATH_MIN_DENOMINATOR` added to avoid divide-by-zero.
 
-## API OVERVIEW
+## API OVERVIEW {#api-overview}
 
-### Forward (returns a new Tensor)
+### Forward (returns a new Tensor) {#forward-returns-a-new-tensor}
 
 ```cpp
 Tensor relu_forward       (const Tensor &x);
@@ -47,7 +82,7 @@ Tensor gelu_forward       (const Tensor &x);
 
 Each `*_forward` clones the input then dispatches to the matching `*_inplace`.
 
-### In-place (mutates x)
+### In-place (mutates x) {#in-place-mutates-x}
 
 ```cpp
 void relu_inplace       (Tensor &x);
@@ -60,7 +95,7 @@ void gelu_inplace       (Tensor &x);
 
 Useful when you do not need to keep the input (typical inference pipeline).
 
-### Backward (compiled only when `TINY_AI_TRAINING_ENABLED`)
+### Backward (compiled only when `TINY_AI_TRAINING_ENABLED`) {#backward-compiled-only-when-tiny_ai_training_enabled}
 
 ```cpp
 Tensor relu_backward       (const Tensor &x, const Tensor &grad_out);
@@ -76,7 +111,7 @@ Tensor gelu_backward       (const Tensor &x, const Tensor &grad_out);
     - **Sigmoid / Tanh / Softmax**: pass `y` (the forward output) so we don't recompute the activation.
     `ActivationLayer::forward()` automatically caches the right tensor following this rule.
 
-### Dispatch helpers
+### Dispatch helpers {#dispatch-helpers}
 
 ```cpp
 Tensor act_forward (const Tensor &x, ActType type, float alpha = 0.01f);
@@ -87,7 +122,7 @@ Tensor act_backward(const Tensor &cache, const Tensor &grad_out,
 
 Switch on the enum value, useful when the activation type is configured at runtime.
 
-## TYPICAL USAGE
+## TYPICAL USAGE {#typical-usage}
 
 ```cpp
 // Functional API
@@ -103,7 +138,7 @@ m.add(new Dense(in, hid));
 m.add(new ActivationLayer(ActType::RELU));
 ```
 
-## WHEN TO USE WHAT
+## WHEN TO USE WHAT {#when-to-use-what}
 
 - **Hidden activation**: ReLU / LeakyReLU / GELU.
 - **Probability output**: Sigmoid (binary), Softmax (multi-class).

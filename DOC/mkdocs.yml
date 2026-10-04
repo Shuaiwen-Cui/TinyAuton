@@ -3,13 +3,15 @@
 
 # Project information
 site_name: TinyAuton
-site_url: https://localhost:8000/ # build and run on server, to visit it, type in the server's IP address and port number like this: xxx.xxx.xxx.xxx:8000
+# ROLLBACK: site_url: https://localhost:8000/
+site_url: http://www.cuishuaiwen.com:9300/  # personal server build; GitHub Pages uses mkdocs.gh.yml
 site_author: Shuaiwen Cui
 site_description: >-
-  
+  MCU numerics, signal processing and on-device neural network training; API and historical validation records.MCU numerics, signal processing and on-device neural network training; API and historical validation records.
 # Repository
 repo_name: Shuaiwen-Cui/TinyAuton
 repo_url: https://github.com/Shuaiwen-Cui/TinyAuton.git
+edit_uri: edit/main/DOC/docs/
 
 # Copyright
 copyright: Copyright &copy; 2025 ~ now | 🚀 Shuaiwen Cui (Shaun)
@@ -82,6 +84,16 @@ theme:
       hardware-tag: fontawesome/solid/microchip
       software-tag: fontawesome/solid/laptop-code
 
+extra_css:
+  - stylesheets/tinyauton.css
+hooks:
+  - hooks/rss_i18n.py
+
+extra_css:
+  - stylesheets/tinyauton.css
+hooks:
+  - hooks/rss_i18n.py
+
 # Plugins
 plugins:
   - tags
@@ -95,7 +107,8 @@ plugins:
         - tags 
   # - social
   - search:
-      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+      lang: [en]
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])|(?=[\u3400-\u9fff])|(?<=[\u3400-\u9fff])'
   - minify:
       minify_html: true
   # - privacy
@@ -103,7 +116,7 @@ plugins:
       docs_structure: suffix
       fallback_to_default: true
       reconfigure_material: true
-      reconfigure_search: true
+      reconfigure_search: false
       languages:
         - locale: en
           default: true
@@ -114,6 +127,44 @@ plugins:
           name: 简体中文
           build: true
           nav_translations: # note that all titles and subtitles in the navigation bar that need to be translated can be put here, but with no indentation
+            START HERE: 入门
+            HOME: 首页
+            GETTING STARTED: 快速开始
+            PROJECTS: 工程与版本
+            OVERVIEW: 概览
+            ARITH: 算术与操作
+            LINALG: 线性系统
+            DECOMP: 矩阵分解
+            EIGEN: 特征值
+            COMPLETE REFERENCE: 完整接口记录
+            FOUNDATION: 对象基础
+            BASIC OPERATIONS: 基础操作
+            PROPERTIES: 矩阵特性
+            LINEAR SYSTEMS: 线性系统
+            DECOMPOSITIONS: 矩阵分解
+            EIGEN APPLICATIONS: 特征值应用
+            AUXILIARY: 辅助功能
+            QUALITY: 质量保证
+            COMPLETE RECORD: 完整历史记录
+            START HERE: 入门
+            HOME: 首页
+            GETTING STARTED: 快速开始
+            PROJECTS: 工程与版本
+            OVERVIEW: 概览
+            ARITH: 算术与操作
+            LINALG: 线性系统
+            DECOMP: 矩阵分解
+            EIGEN: 特征值
+            COMPLETE REFERENCE: 完整接口记录
+            FOUNDATION: 对象基础
+            BASIC OPERATIONS: 基础操作
+            PROPERTIES: 矩阵特性
+            LINEAR SYSTEMS: 线性系统
+            DECOMPOSITIONS: 矩阵分解
+            EIGEN APPLICATIONS: 特征值应用
+            AUXILIARY: 辅助功能
+            QUALITY: 质量保证
+            COMPLETE RECORD: 完整历史记录
             ABOUT: 关于
             ARCHITECTURE: 架构
             PREREQUISITE: 前置条件
@@ -243,6 +294,8 @@ extra:
 
 # Extra Configuration 
 extra_javascript:
+  - javascripts/i18n-fix.js
+  - javascripts/mathjax.js
   # - https://giscus.app/client.js
   # - javascripts/katex.js 
   # - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js  
@@ -281,7 +334,7 @@ markdown_extensions:
       normalize_issue_symbols: true
       repo_url_shorthand: true
       user: squidfunk
-      repo: mkdocs-material
+      repo: TinyAuton
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.snippets:
@@ -304,12 +357,12 @@ markdown_extensions:
 
 # Page Navigation Tree
 nav:
-  - ABOUT: 
-      "index.md"
-  - ARCHITECTURE:
-      - "ARCHITECTURE/architecture.md"
-  - PREREQUISITE:
-      - "PREREQUISITE/prerequisite.md"
+  - START HERE:
+      - HOME: "index.md"
+      - GETTING STARTED: "GETTING_STARTED/getting_started.md"
+      - PROJECTS: "PROJECTS/projects.md"
+      - PREREQUISITE: "PREREQUISITE/prerequisite.md"
+      - ARCHITECTURE: "ARCHITECTURE/architecture.md"
   - TOOLBOX:
       - TOOLBOX: "TOOLBOX/toolbox.md"
       - TIME: 
@@ -335,9 +388,26 @@ nav:
           - TINY_MAT-API: "MATH/MATRIX/tiny-mat-api.md"
           - TINY_MAT-CODE: "MATH/MATRIX/tiny-mat-code.md"
           - TINY_MAT-TEST: "MATH/MATRIX/tiny-mat-test.md"
-          - TINY_MATRIX-API: "MATH/MATRIX/tiny-matrix-api.md"
+          - TINY_MATRIX-API:
+              - OVERVIEW: "MATH/MATRIX/OVERVIEW/api.md"
+              - CORE: "MATH/MATRIX/CORE/api.md"
+              - ARITH: "MATH/MATRIX/ARITH/api.md"
+              - LINALG: "MATH/MATRIX/LINALG/api.md"
+              - DECOMP: "MATH/MATRIX/DECOMP/api.md"
+              - EIGEN: "MATH/MATRIX/EIGEN/api.md"
+              - COMPLETE REFERENCE: "MATH/MATRIX/tiny-matrix-api.md"
           - TINY_MATRIX-CODE: "MATH/MATRIX/tiny-matrix-code.md"
-          - TINY_MATRIX-TEST: "MATH/MATRIX/tiny-matrix-test.md"
+          - TINY_MATRIX-TEST:
+              - OVERVIEW: "MATH/MATRIX/TESTS/overview.md"
+              - FOUNDATION: "MATH/MATRIX/TESTS/foundation.md"
+              - BASIC OPERATIONS: "MATH/MATRIX/TESTS/basic.md"
+              - PROPERTIES: "MATH/MATRIX/TESTS/properties.md"
+              - LINEAR SYSTEMS: "MATH/MATRIX/TESTS/systems.md"
+              - DECOMPOSITIONS: "MATH/MATRIX/TESTS/decompositions.md"
+              - EIGEN APPLICATIONS: "MATH/MATRIX/TESTS/eigen.md"
+              - AUXILIARY: "MATH/MATRIX/TESTS/auxiliary.md"
+              - QUALITY: "MATH/MATRIX/TESTS/quality.md"
+              - COMPLETE RECORD: "MATH/MATRIX/tiny-matrix-test.md"
   - DSP:
       - "DSP/dsp.md"
       - USAGE: "DSP/USAGE/usage.md"

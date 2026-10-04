@@ -1,6 +1,14 @@
-# 代码
+# TinyAI · 层 · 池化层 — 实现与源码 {#_1}
 
-## tiny_pool.hpp
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+本页保留完整源码摘录，按文件展开阅读。先看[设计说明](notes.md)了解数据流、接口和算法，再核对实现；源码摘录可能属于历史版本，当前实现请以所选工程为准。
+
+## `tiny_pool.hpp` {#tiny_poolhpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_pool.hpp</code> · 82 行</summary>
 
 ```cpp
 /**
@@ -87,7 +95,12 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_pool.cpp
+</details>
+
+## `tiny_pool.cpp` {#tiny_poolcpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_pool.cpp</code> · 227 行</summary>
 
 ```cpp
 /**
@@ -318,3 +331,5 @@ Tensor AvgPool2D::backward(const Tensor &grad_out)
 
 #endif // __cplusplus
 ```
+
+</details>

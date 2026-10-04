@@ -1,11 +1,14 @@
-# VECTOR OPERATIONS TEST
+# VECTOR OPERATIONS TEST {#vector-operations-test}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Vector Operations Test"
     This test is designed to evaluate the performance of vector-related functions.
 
-## Test Code
+## Test Code {#test-code}
 
-### tiny_vec_test.h
+### tiny_vec_test.h {#tiny_vec_testh}
 
 ```c
 /**
@@ -41,7 +44,10 @@ extern "C"
 
 ```
 
-### tiny_vec_test.c
+### tiny_vec_test.c {#tiny_vec_testc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand tiny_vec_test.c · 115 lines</summary>
 
 ```c
 /**
@@ -161,7 +167,9 @@ void tiny_vec_test(void)
 }
 ```
 
-### main.cpp
+</details>
+
+### main.cpp {#maincpp}
 
 ```cpp
 /**
@@ -194,7 +202,7 @@ void app_main(void)
 
 ```
 
-## Test Output
+## Test Output {#test-output}
 
 Basic C computation results
 

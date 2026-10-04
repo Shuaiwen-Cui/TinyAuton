@@ -1,9 +1,36 @@
-# Notes
+# TinyAI · Quant · INT — Design notes {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     INT quantisation is the deployment workhorse of `tiny_ai`: a symmetric min-max calibration maps float32 weights / activations into INT8 or INT16 integer space, after which the INT8 dense kernel runs fully-integer inference. Both C and C++ APIs are provided.
 
-## CALIBRATION (min-max, symmetric)
+!!! abstract "INT8 — Quantization: Compress FP32 4×, Almost No Loss"
+    FP32 → INT8 compresses each 32-bit float into 8 bits. 4× memory savings.
+
+## Intuition {#intuition}
+
+### Quantization = Scale Mapping {#quantization-scale-mapping}
+
+`FP32 [min,max] → INT8 [-128,127]`
+
+\[x_{int8} = \text{round}(x_{fp32} / scale), \quad scale = \max(|min|, |max|) / 127\]
+
+### PTQ Flow {#ptq-flow}
+
+1. **Calibrate**: compute scale from weight min/max
+2. **Quantize**: FP32 → INT8 (4× savings)
+3. **Inference**: INT8 × INT8 with INT32 accumulation
+
+### Notes {#notes_1}
+
+- Symmetric quantization assumes roughly symmetric data
+- INT32 accumulation prevents overflow; result scaled back to FP32
+
+---
+
+## CALIBRATION (min-max, symmetric) {#calibration-min-max-symmetric}
 
 ```c
 tiny_error_t tiny_quant_calibrate_minmax(const float *data, int n,
@@ -21,7 +48,7 @@ Implementation:
 
 `Q_max = 127 (INT8) / 32767 (INT16)`. If `abs_max < TINY_MATH_MIN_DENOMINATOR`, the implementation falls back to `1.0f`.
 
-## INT8 QUANT / DEQUANT
+## INT8 QUANT / DEQUANT {#int8-quant-dequant}
 
 ```c
 tiny_error_t tiny_quant_f32_to_int8(const float *src, int8_t *dst, int n,
@@ -33,11 +60,11 @@ tiny_error_t tiny_quant_int8_to_f32(const int8_t *src, float *dst, int n,
 
 Quant: `q = clamp(round(x / scale) + zp, -128, 127)`. Dequant: `x = (q - zp) * scale`.
 
-## INT16 QUANT / DEQUANT
+## INT16 QUANT / DEQUANT {#int16-quant-dequant}
 
 Same shape with `int16_t`, range `[-32768, 32767]`. Use INT16 when precision matters (intermediate IMU stats, etc.).
 
-## INT8 DENSE FORWARD KERNEL
+## INT8 DENSE FORWARD KERNEL {#int8-dense-forward-kernel}
 
 ```c
 tiny_error_t tiny_quant_dense_forward_int8(
@@ -59,7 +86,7 @@ Input and output activations share the same `output_scale` (folded into the requ
 
 `bias` is pre-quantised INT32 (typical practice: divide the float bias by `input_scale * weight_scale` and round).
 
-## C++ WRAPPER: QuantParams + Tensor APIs
+## C++ WRAPPER: QuantParams + Tensor APIs {#c-wrapper-quantparams-tensor-apis}
 
 ```cpp
 struct QuantParams
@@ -93,7 +120,7 @@ tiny_error_t requantize_int8(const int8_t *src, int8_t *dst, int n,
 3. `tiny_quant_f32_to_int8(t.data, buf, t.size, params.to_c())`.
 4. The caller is responsible for `TINY_AI_FREE(buf)`.
 
-## PTQ EXAMPLE
+## PTQ EXAMPLE {#ptq-example}
 
 ```cpp
 using namespace tiny;
@@ -123,7 +150,7 @@ tiny_quant_dense_forward_int8(
     in_qp.scale, qp.scale, out_qp.scale);
 ```
 
-## REQUANTISE (INT8 → INT8)
+## REQUANTISE (INT8 → INT8) {#requantise-int8-int8}
 
 ```c
 tiny_error_t requantize_int8(const int8_t *src, int8_t *dst, int n,
@@ -136,7 +163,7 @@ When two quantised layers are cascaded with different `scale`s (e.g. act → lin
 q' = \mathrm{clamp}\!\big(\mathrm{round}(q \cdot s_\text{src} / s_\text{dst}),\,-128,\,127\big)
 \]
 
-## ACCURACY IMPACT
+## ACCURACY IMPACT {#accuracy-impact}
 
 - **INT8**: with values in `[-1, 1]` the symmetric error is roughly `scale ≈ 1/127 ≈ 0.0079`. Combined with ReLU / sigmoid this typically costs 1~3% accuracy.
 - **INT16**: error drops to `scale ≈ 1/32767`, virtually lossless.

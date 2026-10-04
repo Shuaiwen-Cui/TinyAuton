@@ -1,6 +1,14 @@
-# Code
+# TinyAI · Layers · Base — Implementation and source {#code}
 
-## tiny_layer.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_layer.hpp` {#tiny_layerhpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_layer.hpp</code> · 91 lines</summary>
 
 ```cpp
 /**
@@ -96,7 +104,12 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_layer.cpp
+</details>
+
+## `tiny_layer.cpp` {#tiny_layercpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_layer.cpp</code> · 95 lines</summary>
 
 ```cpp
 /**
@@ -195,3 +208,5 @@ Tensor GlobalAvgPool::backward(const Tensor &grad_out)
 
 #endif // __cplusplus
 ```
+
+</details>

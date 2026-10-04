@@ -1,6 +1,12 @@
-# TIME
+# TIME {#time}
 
-## tiny_time.h
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## tiny_time.h {#tiny_timeh}
+
+<details class="auton-source" markdown="1">
+<summary>展开 tiny_time.h · 79 行</summary>
 
 ```c
 /**
@@ -84,7 +90,9 @@ extern "C"
 #endif
 ```
 
-## 设计说明
+</details>
+
+## 设计说明 {#_1}
 
 这个模块的核心思路，是把嵌入式里经常混在一起的两类时间分开处理：一种是单调递增的运行时间，另一种是已经同步好的真实世界时间。`tiny_get_running_time()` 基于 `esp_timer_get_time()`，因此它提供的是稳定的微秒级计数器，非常适合做间隔测量、延时分析和回调耗时统计。`sync_time_with_timezone()` 负责另一半问题：先设置时区，再启动 SNTP，等待系统时间有效后把结果写入 RTC 路径，让设备完成同步后还能保留可用的本地时间。
 
@@ -95,7 +103,10 @@ extern "C"
 最能体现时间设计的是定时器精度测试。它以 2 秒为周期记录 15 个时间戳，回调里不打印日志以减少额外开销，然后再输出每次间隔、误差、累计漂移和平均间隔。如果这些间隔都接近 2,000,000 微秒，就说明模块确实保留了微秒级精度，而且回调路径足够轻量，没有被日志或额外处理掩盖真实的定时行为。换句话说，这个测试不只是证明代码能跑，而是证明精度、低开销和时间同步这些设计选择是协同生效的。
 
 
-## tiny_time.c
+## tiny_time.c {#tiny_timec}
+
+<details class="auton-source" markdown="1">
+<summary>展开 tiny_time.c · 183 行</summary>
 
 ```c
 /**
@@ -283,7 +294,12 @@ TinyDateTime_t tiny_get_current_datetime(bool print_flag)
 }
 ```
 
-## main.cpp
+</details>
+
+## main.cpp {#maincpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 main.cpp · 284 行</summary>
 
 ```cpp
 /**
@@ -572,7 +588,9 @@ void app_main(void)
 
 ```
 
-## 结果
+</details>
+
+## 结果 {#_2}
 
 ```txt
 I (25) boot: ESP-IDF v6.0-dev-1833-g758939caec 2nd stage bootloader
@@ -758,7 +776,7 @@ I (41912) tiny_time_test:   Test Complete
 I (41915) tiny_time_test: ========================================
 
 ```
-## 结果解读
+## 结果解读 {#_3}
 
 日志结果实际上把上面的设计思路一条一条印证出来了。前面的启动信息主要是平台和系统初始化，这些内容只是说明程序已经正常跑起来，并不是 TIME 模块本身的核心证据。真正关键的是后面打印的运行时间和耗时结果：这些数值都来自 `esp_timer_get_time()`，说明模块确实是以单调递增的微秒计数器作为计时基础，因此它适合做间隔测量，而不是依赖容易受时钟回调影响的普通日历时间。
 

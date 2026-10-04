@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Train · Trainer — Implementation and source {#code}
 
-## tiny_trainer.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_trainer.hpp` {#tiny_trainerhpp}
 
 ```cpp
 /**
@@ -59,7 +64,10 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_trainer.cpp
+## `tiny_trainer.cpp` {#tiny_trainercpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_trainer.cpp</code> · 136 lines</summary>
 
 ```cpp
 /**
@@ -199,3 +207,5 @@ float Trainer::evaluate_accuracy(Dataset &data, int batch_size)
 
 #endif // __cplusplus
 ```
+
+</details>

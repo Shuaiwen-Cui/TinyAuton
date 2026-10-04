@@ -1,6 +1,14 @@
-# CODE
+# TinyDSP · Signal · Convolution — Implementation and source {#code}
 
-## tiny_conv.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_conv.h` {#tiny_convh}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_conv.h</code> · 91 lines</summary>
 
 ```c
 /**
@@ -96,7 +104,12 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen, const float
 
 ```
 
-## tiny_conv.c
+</details>
+
+## `tiny_conv.c` {#tiny_convc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_conv.c</code> · 227 lines</summary>
 
 ```c
 /**
@@ -327,3 +340,5 @@ tiny_error_t tiny_conv_ex_f32(const float *Signal, const int siglen,
     return TINY_OK;
 }
 ```
+
+</details>

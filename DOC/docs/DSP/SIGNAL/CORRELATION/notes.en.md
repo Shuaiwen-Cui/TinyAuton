@@ -1,13 +1,34 @@
-# NOTES
+# TinyCorr — Principles and API {#notes}
+
+<!-- Original section links retained for compatibility. -->
+<span id="1-algorithm-principles"></span>
+<span id="11-sliding-correlation"></span>
+<span id="12-full-cross-correlation"></span>
+<span id="2-code-design-philosophy"></span>
+<span id="21-two-different-correlation-semantics"></span>
+<span id="22-length-swap-in-generic-cross-correlation"></span>
+<span id="23-const-correctness"></span>
+<span id="3-api-interface-methods"></span>
+<span id="31-tiny_corr_f32"></span>
+<span id="32-tiny_ccorr_f32"></span>
+<span id="4-function-comparison"></span>
+<span id="5-important-notes"></span>
+<span id="51-correlation-vs-convolution"></span>
+<span id="52-output-buffer-minimum-size"></span>
+<span id="53-siglen-patlen-handling"></span>
+<span id="54-platform-differences"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Note"
     Correlation is an important concept in signal processing, often used to analyze similarities or dependencies between signals. It is useful in many applications, such as pattern recognition, time series analysis, and signal detection. This library provides two levels of correlation: sliding correlation (`tiny_corr_f32`) and full cross-correlation (`tiny_ccorr_f32`).
 
 ---
 
-## 1. ALGORITHM PRINCIPLES
+## 1. ALGORITHM PRINCIPLES {#1-algorithm-principles}
 
-### 1.1 Sliding Correlation
+### 1.1 Sliding Correlation {#11-sliding-correlation}
 
 The sliding correlation (pattern matching) slides a short pattern across a longer signal, computing the dot product at each valid position where the pattern fully overlaps:
 
@@ -25,7 +46,7 @@ Where:
 
 **Unlike convolution, the pattern is NOT flipped** — it is used as-is, sliding across the signal.
 
-### 1.2 Full Cross-Correlation
+### 1.2 Full Cross-Correlation {#12-full-cross-correlation}
 
 Full cross-correlation computes the correlation between two sequences at ALL possible shift positions, including partial overlaps:
 
@@ -45,16 +66,16 @@ Like convolution, this computation naturally proceeds in three stages (warm-up, 
 
 ---
 
-## 2. CODE DESIGN PHILOSOPHY
+## 2. CODE DESIGN PHILOSOPHY {#2-code-design-philosophy}
 
-### 2.1 Two Different Correlation Semantics
+### 2.1 Two Different Correlation Semantics {#21-two-different-correlation-semantics}
 
 `tiny_corr_f32` and `tiny_ccorr_f32` serve fundamentally different purposes:
 
 - **Sliding correlation** only returns positions where the pattern is fully inside the signal — useful for template matching.
 - **Full cross-correlation** returns all possible shift alignments including partial overlaps — useful for signal alignment, time-delay estimation, and full correlation analysis.
 
-### 2.2 Length Swap in Generic Cross-Correlation
+### 2.2 Length Swap in Generic Cross-Correlation {#22-length-swap-in-generic-cross-correlation}
 
 `tiny_ccorr_f32` swaps signal and kernel so `lsig >= lkern` in the **generic fallback path only** (`#else`). This is because:
 
@@ -62,15 +83,15 @@ Like convolution, this computation naturally proceeds in three stages (warm-up, 
 - The three-stage loop indexing assumes the longer sequence is the "signal".
 - On ESP32, the caller must ensure `siglen >= kernlen` (or the backend may misbehave).
 
-### 2.3 Const Correctness
+### 2.3 Const Correctness {#23-const-correctness}
 
 In the generic paths, local pointers are declared `const float *sig`, `const float *kern`, preserving the constness of the input arrays. This is consistent with the read-only semantics and helps the compiler optimize.
 
 ---
 
-## 3. API INTERFACE — METHODS
+## 3. API INTERFACE — METHODS {#3-api-interface-methods}
 
-### 3.1 `tiny_corr_f32`
+### 3.1 `tiny_corr_f32` {#31-tiny_corr_f32}
 
 ```c
 /**
@@ -146,7 +167,7 @@ Computes the sliding correlation between a longer signal and a shorter pattern. 
 
 ---
 
-### 3.2 `tiny_ccorr_f32`
+### 3.2 `tiny_ccorr_f32` {#32-tiny_ccorr_f32}
 
 ```c
 /**
@@ -251,7 +272,7 @@ Computes the full cross-correlation between two sequences, including all partial
 
 ---
 
-## 4. FUNCTION COMPARISON
+## 4. FUNCTION COMPARISON {#4-function-comparison}
 
 | Feature | `tiny_corr_f32` | `tiny_ccorr_f32` |
 |---------|----------------|------------------|
@@ -262,14 +283,14 @@ Computes the full cross-correlation between two sequences, including all partial
 | **ESP32 External Dep.** | `dsps_corr_f32` | `dsps_ccorr_f32` |
 | **Use Case** | Pattern matching / template detection | Time delay estimation / signal alignment |
 
-### When to Use `tiny_corr_f32`
+### When to Use `tiny_corr_f32` {#when-to-use-tiny_corr_f32}
 
 - You are searching for a known pattern within a longer signal
 - You only care about positions where the pattern is fully inside
 - You want the most efficient computation (no partial overlap overhead)
 - Example: detecting a preamble in a received bitstream
 
-### When to Use `tiny_ccorr_f32`
+### When to Use `tiny_ccorr_f32` {#when-to-use-tiny_ccorr_f32}
 
 - You need cross-correlation including partial overlaps
 - You want to estimate time delay between two signals
@@ -278,27 +299,27 @@ Computes the full cross-correlation between two sequences, including all partial
 
 ---
 
-## 5. ⚠️ IMPORTANT NOTES
+## 5. ⚠️ IMPORTANT NOTES {#5-important-notes}
 
-### 5.1 Correlation vs Convolution
+### 5.1 Correlation vs Convolution {#51-correlation-vs-convolution}
 
 Correlation does NOT flip the kernel/pattern. Convolution flips. If you accidentally think you can use convolution with a reversed kernel for correlation, note that:
 - Boundary handling differs between the two implementations.
 - Use `tiny_corr_f32` or `tiny_ccorr_f32` explicitly for correlation — do not misuse the convolution functions.
 
-### 5.2 Output Buffer Minimum Size
+### 5.2 Output Buffer Minimum Size {#52-output-buffer-minimum-size}
 
 | Function | Minimum Output Buffer Size |
 |----------|---------------------------|
 | `tiny_corr_f32` | `siglen - patlen + 1` |
 | `tiny_ccorr_f32` | `siglen + kernlen - 1` |
 
-### 5.3 `siglen < patlen` Handling
+### 5.3 `siglen < patlen` Handling {#53-siglen-patlen-handling}
 
 - `tiny_corr_f32`: returns `TINY_ERR_DSP_MISMATCH` immediately (pattern must fit in signal).
 - `tiny_ccorr_f32`: in the generic path, automatically swaps operands. On ESP32, `dsps_ccorr_f32` may handle or reject this depending on its internal implementation — for portability, ensure `siglen >= kernlen` or test on your target.
 
-### 5.4 Platform Differences
+### 5.4 Platform Differences {#54-platform-differences}
 
 On ESP32, both functions delegate to the ESP-DSP library. The generic fallback is used on all other platforms. The behavioral guarantee for length ordering differs:
 

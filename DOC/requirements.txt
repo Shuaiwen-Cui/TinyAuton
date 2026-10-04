@@ -1,0 +1,6 @@
+# Versions used to build and validate this documentation update.
+mkdocs==1.6.1
+mkdocs-material==9.5.47
+mkdocs-static-i18n==1.2.3
+mkdocs-rss-plugin==1.16.0
+mkdocs-minify-plugin==0.8.0

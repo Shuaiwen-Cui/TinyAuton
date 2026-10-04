@@ -1,0 +1,3484 @@
+{
+  "reference_commit": "2d0b25ef4a9d860468cee01faaa1e04275098dc9",
+  "source": "TinyAuton working tree before documentation reorganization; line endings normalized",
+  "pages": {
+    "DOC/docs/AI/ai.en.md": [
+      "5543e392e248d831f32065dd0d4d8b0035339f4de3bd92113ea02709aa883106",
+      "817224206625b53bb607c2b101cf3b7ba8ffbc69290247a0689f6d7737388d54"
+    ],
+    "DOC/docs/AI/ai.zh.md": [
+      "5543e392e248d831f32065dd0d4d8b0035339f4de3bd92113ea02709aa883106",
+      "cb55ce93344d58084099da0d409effc2f2fff2bc7aa164ee0c116b0fc1ea12ac"
+    ],
+    "DOC/docs/AI/CORE/ACTIVATION/code.en.md": [
+      "46deae4e6866c4d349e62b5388f15a42e22edbfd9a5327d3b53ac44dad06f539",
+      "093f1782e49345cb88b1da0664c3820b2392b2936e96b4c3ee0daf364d470ff0"
+    ],
+    "DOC/docs/AI/CORE/ACTIVATION/code.zh.md": [
+      "46deae4e6866c4d349e62b5388f15a42e22edbfd9a5327d3b53ac44dad06f539",
+      "093f1782e49345cb88b1da0664c3820b2392b2936e96b4c3ee0daf364d470ff0"
+    ],
+    "DOC/docs/AI/CORE/ACTIVATION/notes.en.md": [
+      "aaed7928e4fdf3da39645ad04d27029bcd42cc96c34588935509e53fd41ea71a",
+      "74b9a48bfebc3dc7b94c0bbdfcc34fdb91a1e0775e5f4d2fceb1d8b3bc2ac75d",
+      "ee9a092dba6b8f42e2bee70146df586f1581bbb83f259a0d85e53066cb572529",
+      "fd44d839fe085dfb65e9b328543739b592b69600b2381f39b0406cdc5dc08751",
+      "0391b8bf30e77fb8fe358885c26436e2bbbe5d3b1ca38670f9b140acd49eeb1f",
+      "780158a5cdda6231a78c30b0f24de83b40331cd3d0018ca127816f5a9bb9a072"
+    ],
+    "DOC/docs/AI/CORE/ACTIVATION/notes.zh.md": [
+      "7505ef1cd17b4ead06b5547285302b9cadfb090c22b6e55bc874791c0383469d",
+      "74b9a48bfebc3dc7b94c0bbdfcc34fdb91a1e0775e5f4d2fceb1d8b3bc2ac75d",
+      "ee9a092dba6b8f42e2bee70146df586f1581bbb83f259a0d85e53066cb572529",
+      "59a270ddbaacd89d6013757755bf98dc114c2dba163f2887738444837a7b75cc",
+      "0391b8bf30e77fb8fe358885c26436e2bbbe5d3b1ca38670f9b140acd49eeb1f",
+      "aa3eef66c50fb5e1053d7a1168814aeffa7f72bf2aaf3b9e0d7f1c60a2d85db8"
+    ],
+    "DOC/docs/AI/CORE/LOSS/code.en.md": [
+      "1dbdf26f4866a932ea61aa6045281715cafdaaf5da8f52a1ad85c5a28e5ca4a3",
+      "44c91c7a3b0a98d52ff0e934eac44c6985b2c752f5759e462e26b7a696354110"
+    ],
+    "DOC/docs/AI/CORE/LOSS/code.zh.md": [
+      "1dbdf26f4866a932ea61aa6045281715cafdaaf5da8f52a1ad85c5a28e5ca4a3",
+      "44c91c7a3b0a98d52ff0e934eac44c6985b2c752f5759e462e26b7a696354110"
+    ],
+    "DOC/docs/AI/CORE/LOSS/notes.en.md": [
+      "3c4e80562f8e4fd54d082e5da965d66bb9322cd6639fe75c5aba7eb61375a139",
+      "48c485d797f727a28257e6c41d6edf71df570813a50abcaa50f7de7a67944b2a",
+      "005affc59b9cd6d03e0fe35d997aa5c029a5372875b00cc3761c2cecf8b558d1"
+    ],
+    "DOC/docs/AI/CORE/LOSS/notes.zh.md": [
+      "37504c710f2bd7a1d646743012f40a0366d0d9b3d77769f438a7095319c0b229",
+      "48c485d797f727a28257e6c41d6edf71df570813a50abcaa50f7de7a67944b2a",
+      "005affc59b9cd6d03e0fe35d997aa5c029a5372875b00cc3761c2cecf8b558d1"
+    ],
+    "DOC/docs/AI/CORE/OPTIMIZER/code.en.md": [
+      "e92175facac3821c1511a7d34500095e1120fdd8f9b3937fe256811d9850d734",
+      "f47be0a3cb8565809c95db77d4f8b6db089e937b17943338205a70d34d2cb748"
+    ],
+    "DOC/docs/AI/CORE/OPTIMIZER/code.zh.md": [
+      "e92175facac3821c1511a7d34500095e1120fdd8f9b3937fe256811d9850d734",
+      "f47be0a3cb8565809c95db77d4f8b6db089e937b17943338205a70d34d2cb748"
+    ],
+    "DOC/docs/AI/CORE/OPTIMIZER/notes.en.md": [
+      "9c96c1d15198eab48630f265635a0c10ee55767401b0542357788111d6aad42b",
+      "994912bef77b767bcff066071d0f71535fad45bc9bdf03cfd7712d2d0e649ae4",
+      "58f14cac2ee55f9e4ec7dd6afcf4d67721d4e6548e2eaa61aa769f9db8c43d5e",
+      "f2921407385342289c7d69a1b1c6a39974a30bb706bfcca99248601e0c23e5f5",
+      "3a86a69d994aeafe5f2ebf3734983df0655fbc3f50bbf728c8e465ab609ddf10",
+      "7876f1e4aa392e9748188ae2d83de98108ec51401e82a51dac5b12fbbe3a829b"
+    ],
+    "DOC/docs/AI/CORE/OPTIMIZER/notes.zh.md": [
+      "6527fa92a046d86ac67669a85ab3d603efdfed53ad2945156af7abb2472600d0",
+      "d71cd45956b3ffb77c66ed22fdf79971fb5bbe3f0441fe51254e37d5e4ba07fd",
+      "58f14cac2ee55f9e4ec7dd6afcf4d67721d4e6548e2eaa61aa769f9db8c43d5e",
+      "f2921407385342289c7d69a1b1c6a39974a30bb706bfcca99248601e0c23e5f5",
+      "3a86a69d994aeafe5f2ebf3734983df0655fbc3f50bbf728c8e465ab609ddf10",
+      "7876f1e4aa392e9748188ae2d83de98108ec51401e82a51dac5b12fbbe3a829b"
+    ],
+    "DOC/docs/AI/CORE/TENSOR/code.en.md": [
+      "392a945b6a5059b964b8624436149c9f7f09f56a3941afcd63b4e9bdf70cd816",
+      "d7a730aed732d970f29987306b3970c19b77abdc8a9a7ea5539b2c555967bafe"
+    ],
+    "DOC/docs/AI/CORE/TENSOR/code.zh.md": [
+      "392a945b6a5059b964b8624436149c9f7f09f56a3941afcd63b4e9bdf70cd816",
+      "d7a730aed732d970f29987306b3970c19b77abdc8a9a7ea5539b2c555967bafe"
+    ],
+    "DOC/docs/AI/CORE/TENSOR/notes.en.md": [
+      "936f5b5c9b6ae8eaa1d89f1fb45a6560f29c570649e01e1d02294821bf3c094d",
+      "78a19e3a1c998b62659f12e457975722d53c9ce32e319f4e534bf7613f0f9c6a",
+      "246149c7c858b26566b0ad7b7cb5fd3c48243d6ccbdddcac3cf30364edb90cdf",
+      "7b8fe4f05dd1f7416ec98167c1021de8d48d36c678e235e95f748c00424b6834",
+      "8706f6f5d2b05d80e20519e574c967be19d13e5cec2bccb99ee8ec01c7a5250d",
+      "005578c3fdc0eb580558d4794ab91dd025e8eb60e376a30cb43e50fd0378e043",
+      "c7edb31ea302a26ee3a8ed9b2a629547192a2b09c3b26be0be3212fa2e219527",
+      "1ff744d14a6088cd8c14636d3dfdeb7d931f73a32348fa78c0f83cfc653d21a0",
+      "54eef91528a499ebd1e7ff1ec53f9ac5276c0965473f3c5b622e54d6661b51d4",
+      "4eb21166baefbb37c5dedaf3e3a46d74c9d1071e0607cec3614e1f18b743d4e1",
+      "7f23392e3d3e87f0c4a2940696e0587e7d031bf590ba55e8b5f42a26a95220a7"
+    ],
+    "DOC/docs/AI/CORE/TENSOR/notes.zh.md": [
+      "4ee384cc9e50a64646c97db357942ecae5e9b3958bc9dea5d9e9fb38853c5977",
+      "78a19e3a1c998b62659f12e457975722d53c9ce32e319f4e534bf7613f0f9c6a",
+      "6cd11f4923c82ad07f6bbb8787521bd618b31acc5186b4eb690c866b60620f46",
+      "7b8fe4f05dd1f7416ec98167c1021de8d48d36c678e235e95f748c00424b6834",
+      "8706f6f5d2b05d80e20519e574c967be19d13e5cec2bccb99ee8ec01c7a5250d",
+      "005578c3fdc0eb580558d4794ab91dd025e8eb60e376a30cb43e50fd0378e043",
+      "f20ef6d34c7ab9eada6b2c1267f2cc0143065cd935eca9c604d5a252b63ba7e7",
+      "c8663f0efb8528cf40285c009a3513b66129ac33cf62d227627af983e239fdd4",
+      "54eef91528a499ebd1e7ff1ec53f9ac5276c0965473f3c5b622e54d6661b51d4",
+      "7b83bc54690954976284d2f095584b21e71eb11336088565ce1067ec371eee96",
+      "7f23392e3d3e87f0c4a2940696e0587e7d031bf590ba55e8b5f42a26a95220a7"
+    ],
+    "DOC/docs/AI/EXAMPLES/ATTENTION/code.en.md": [
+      "4eaf3e1b5fb37c8a551bee087fbd60452927d80a23620bea54d379760d27592c"
+    ],
+    "DOC/docs/AI/EXAMPLES/ATTENTION/code.zh.md": [
+      "4eaf3e1b5fb37c8a551bee087fbd60452927d80a23620bea54d379760d27592c"
+    ],
+    "DOC/docs/AI/EXAMPLES/ATTENTION/notes.en.md": [
+      "82bd34421ca639404410fbbb0d8021da198c31853fea9a4ff7ae9af0ef4f90b6",
+      "7e0f936b9f0e096dbc6fb3c483039dfd8fb04c4037cc9bd2a0c687360e1c883d",
+      "6f2b118a70f3b970f1e8b3e1263fafa319e2613e8737566e8bd28ca11eafbf48",
+      "c9964011cd56e50e2e81ad8a8843255294738f118fdf51ce9ff99068b2f21249",
+      "3ca860bca207e179b264701369965e101530e3c8eb1684ace84c7eb023290eda",
+      "3ee358aa77801d3e08d2c429613837e2335e05695bc8fe5899b1331cc3760185"
+    ],
+    "DOC/docs/AI/EXAMPLES/ATTENTION/notes.zh.md": [
+      "82bd34421ca639404410fbbb0d8021da198c31853fea9a4ff7ae9af0ef4f90b6",
+      "7e0f936b9f0e096dbc6fb3c483039dfd8fb04c4037cc9bd2a0c687360e1c883d",
+      "6f2b118a70f3b970f1e8b3e1263fafa319e2613e8737566e8bd28ca11eafbf48",
+      "c9964011cd56e50e2e81ad8a8843255294738f118fdf51ce9ff99068b2f21249",
+      "3ca860bca207e179b264701369965e101530e3c8eb1684ace84c7eb023290eda",
+      "3ee358aa77801d3e08d2c429613837e2335e05695bc8fe5899b1331cc3760185"
+    ],
+    "DOC/docs/AI/EXAMPLES/CNN/code.en.md": [
+      "253795503961d42ef79b8351fef842cfb9fed196db905bc6cd1d8ea6f09fd590",
+      "b926a0c2ae6633ef4b8d509da1702f27ba1ac22cd8fcf2119fcfe0a2f93a2eaf"
+    ],
+    "DOC/docs/AI/EXAMPLES/CNN/code.zh.md": [
+      "253795503961d42ef79b8351fef842cfb9fed196db905bc6cd1d8ea6f09fd590",
+      "e308f279b9af18e1bf3c6b911b75c21fe9fccf1d98de9d65cfe12bd81560ad00"
+    ],
+    "DOC/docs/AI/EXAMPLES/CNN/notes.en.md": [
+      "7cf20f45608dc1775d4050a073d314928bcd3ae02417e9e0998d378c5fd82429",
+      "356b00f2d6e6763c3a00dacc31197a2c4583b6decb51a86d67cfb3f6526e4841",
+      "83cffd076fa5e3b26e48270b2781bd816d6948cd90a510c6902ea8a3d3e1e7ef",
+      "feeaa5e46f098b377000af19018e918824fd99d9af962393ead284498f166c85",
+      "417f1668ca8e26cfaeddcd3de6a8fa779a1fd7e0839607f7d41130cb74692d2e",
+      "b7eb751e04ecf661c7d111774b9f45275cd4a03a2adf3929f44c1dcddd50a7b2",
+      "0ef598126d7f8bbd35fd1e49789a8e66d817d07c80e2898cf821804e5c490e95",
+      "c443d9894e0b5120da00b54fd22716f3390d24729893175944077cecae820cb1",
+      "1f01d6f2a1ec71bfcde0df339850955743c7635d756a0b116584d29d6e538e0b"
+    ],
+    "DOC/docs/AI/EXAMPLES/CNN/notes.zh.md": [
+      "7ccb08f1cf219b73fc2a0ea5f100cc1e10eba9c08a3519d54ec2357131e6be9c",
+      "356b00f2d6e6763c3a00dacc31197a2c4583b6decb51a86d67cfb3f6526e4841",
+      "83cffd076fa5e3b26e48270b2781bd816d6948cd90a510c6902ea8a3d3e1e7ef",
+      "feeaa5e46f098b377000af19018e918824fd99d9af962393ead284498f166c85",
+      "417f1668ca8e26cfaeddcd3de6a8fa779a1fd7e0839607f7d41130cb74692d2e",
+      "df706c9a19b4e79cbc226ad826f5dc54124953270a70cd2cd6e92831db7ec3a2",
+      "0ef598126d7f8bbd35fd1e49789a8e66d817d07c80e2898cf821804e5c490e95",
+      "c443d9894e0b5120da00b54fd22716f3390d24729893175944077cecae820cb1",
+      "1f01d6f2a1ec71bfcde0df339850955743c7635d756a0b116584d29d6e538e0b"
+    ],
+    "DOC/docs/AI/EXAMPLES/MLP/code.en.md": [
+      "18828b16668f4da24df4ae93ae47db57b9f28e4b5c80348bbcfc5bf18eb7d1cd",
+      "29507be4a58b284b201a68f3ecded54195a7cee3e117ee8ce57d88d61564ad3d"
+    ],
+    "DOC/docs/AI/EXAMPLES/MLP/code.zh.md": [
+      "18828b16668f4da24df4ae93ae47db57b9f28e4b5c80348bbcfc5bf18eb7d1cd",
+      "b8a8f1283d5efe32020f65fe059d9f92a733b1f3055b79d2a0bf6af992c794f1"
+    ],
+    "DOC/docs/AI/EXAMPLES/MLP/notes.en.md": [
+      "df9edf77f5bb863d02b4f0cea65c5da1996318662d2a4062e64b154979ca758c",
+      "a54d4a376547ed3752cddb0f70d70564490b632bd507e69a147f4fee399cf1ba",
+      "e12346354a64d21ead4d95b8b79abdf5ebd2a72c0b62a8527fdeef5d9f76dc7a",
+      "a579e63816b0ef8c6988826a235dbcf035fba69694daf4e16ccd5974d6c46795",
+      "897e697840d934d5e568965d480ee280ab2e4a19f13e5c46a0c608a6798e1c20",
+      "20f679f890d167ba884b56325b946cbb4a6845077458399448505bd4cf2ede7d",
+      "ee3f925892451ce3b72c3645f773492a569e1392730789237a9b2af4769e6983",
+      "ae95f1dddcba1a593022bbf8fe72ea33ec4116cad8727f2f1cd2e269c151cbf8"
+    ],
+    "DOC/docs/AI/EXAMPLES/MLP/notes.zh.md": [
+      "df9edf77f5bb863d02b4f0cea65c5da1996318662d2a4062e64b154979ca758c",
+      "a54d4a376547ed3752cddb0f70d70564490b632bd507e69a147f4fee399cf1ba",
+      "e12346354a64d21ead4d95b8b79abdf5ebd2a72c0b62a8527fdeef5d9f76dc7a",
+      "a579e63816b0ef8c6988826a235dbcf035fba69694daf4e16ccd5974d6c46795",
+      "897e697840d934d5e568965d480ee280ab2e4a19f13e5c46a0c608a6798e1c20",
+      "20f679f890d167ba884b56325b946cbb4a6845077458399448505bd4cf2ede7d",
+      "ee3f925892451ce3b72c3645f773492a569e1392730789237a9b2af4769e6983",
+      "6d3652e3c52c179b6167765eb82814cc87aa3a0e02aa34588cb9bc84a9ab0e6e"
+    ],
+    "DOC/docs/AI/HEADER-FILE/tiny_ai.en.md": [
+      "f602383ee1fd0c09e7f75d57fdeb5df0fd8c8c606e64a244ee26c4ae386c1331",
+      "c4726bc604001cb2d302b31309c78cc9a7657dbaae43e2b5704fd1eae7785c0a"
+    ],
+    "DOC/docs/AI/HEADER-FILE/tiny_ai.zh.md": [
+      "83f8e5e256c29d786258177439f5516fa1fec2663f7d2ff6ea467813d7f761ed",
+      "c4726bc604001cb2d302b31309c78cc9a7657dbaae43e2b5704fd1eae7785c0a"
+    ],
+    "DOC/docs/AI/HEADER-FILE/tiny_ai_config.en.md": [
+      "19a4395b46cdc02218680005b56d7341da8ad2f60015a9833e1022f327c18e48",
+      "4d2a28431f87fc7518e7a47de7c6761f04d574defd459366f53a948c6daf1cdf",
+      "eb384af011226e7f21e7b03bcabc3a28e3002d3190a61a276854dca56d134f2f",
+      "316814b8e682241c7636d506fdc33f2448af872996b0057ac275853e964bb1a4"
+    ],
+    "DOC/docs/AI/HEADER-FILE/tiny_ai_config.zh.md": [
+      "19a4395b46cdc02218680005b56d7341da8ad2f60015a9833e1022f327c18e48",
+      "4d2a28431f87fc7518e7a47de7c6761f04d574defd459366f53a948c6daf1cdf",
+      "7bcdc36bbd171afa91c3e1280c3e2eedfa15799eabd5323e6798b4c157cb083e",
+      "316814b8e682241c7636d506fdc33f2448af872996b0057ac275853e964bb1a4"
+    ],
+    "DOC/docs/AI/LAYERS/ATTENTION/code.en.md": [
+      "deca5390aa9f2dc3885edd3cd3e1e582bca000643692c3beb6169cb486ecbece",
+      "465b8c06221a894bbfb98d8663f62a3a02c5f5c89a8781cd8763362d8477aca3"
+    ],
+    "DOC/docs/AI/LAYERS/ATTENTION/code.zh.md": [
+      "deca5390aa9f2dc3885edd3cd3e1e582bca000643692c3beb6169cb486ecbece",
+      "465b8c06221a894bbfb98d8663f62a3a02c5f5c89a8781cd8763362d8477aca3"
+    ],
+    "DOC/docs/AI/LAYERS/ATTENTION/notes.en.md": [
+      "3f4e514f83a109398b1eb34274a59cfd5c85ccb8ada886e205703bbf9114744a",
+      "41e8d538c3f38e0f698319ca6c629232add3e011ce163874a4972ca512eea010"
+    ],
+    "DOC/docs/AI/LAYERS/ATTENTION/notes.zh.md": [
+      "b79debd592037964fa9803feaefb3f33bf53218264d78e5059b238f89fcbb506",
+      "4c739f4854ca4a856f4bc3abb004a090afd1c1ae61d876191e261bfc4b7a0eb3"
+    ],
+    "DOC/docs/AI/LAYERS/BASE/code.en.md": [
+      "0704dfb7ed11bd89c27bc9d72c086a7dcf222e006e9205047ad2504ce0c78d82",
+      "2c78513c56ca9e1a153a028cc4d648113839573846eae66454a9f858aac644de"
+    ],
+    "DOC/docs/AI/LAYERS/BASE/code.zh.md": [
+      "0704dfb7ed11bd89c27bc9d72c086a7dcf222e006e9205047ad2504ce0c78d82",
+      "2c78513c56ca9e1a153a028cc4d648113839573846eae66454a9f858aac644de"
+    ],
+    "DOC/docs/AI/LAYERS/BASE/notes.en.md": [
+      "98c3118a45cef60a4b5c0abfb687bc0a2a6c5bf7f0fc394a433fabebf036d2a8",
+      "4f5190896926d461deb947a2117845cd394c1ab73495f45bd9ab864acb36778a",
+      "f0d64c90d906fca8d4787a15050475649b66e2d6a529c1be9497033d144f6ef6",
+      "a6bdd04ca56e46a4806d3ca56eed0a48dd0525601e9a034f212fbc7fddb922c4",
+      "69c0fa9e492eeebeb863ff4a83de25b694bf39543502838b2c6c07a17585807e",
+      "3e380f37a1feba422ff521f138ee7f2ae7cc06fd99c6590a34b46de9045bf1db",
+      "675b351e4ecd5234ee38eb58ce6cf38514eb0fb48e3a750ef4512ed23f09389c",
+      "23cfa80fb9db9d71bf7eb5876b22e63b4825cdc2b2f2a589bfe51cb2a2bb6d99"
+    ],
+    "DOC/docs/AI/LAYERS/BASE/notes.zh.md": [
+      "cf1e7a5cd8460de2536a6d8266037da64baf668da00ed9e38a0fc4c9fac6b134",
+      "4f5190896926d461deb947a2117845cd394c1ab73495f45bd9ab864acb36778a",
+      "b1f7c76d8babb8eda9c914e6cc8e9a5814c744eee1067770d01a23edea55d19a",
+      "a6bdd04ca56e46a4806d3ca56eed0a48dd0525601e9a034f212fbc7fddb922c4",
+      "69c0fa9e492eeebeb863ff4a83de25b694bf39543502838b2c6c07a17585807e",
+      "3e380f37a1feba422ff521f138ee7f2ae7cc06fd99c6590a34b46de9045bf1db",
+      "675b351e4ecd5234ee38eb58ce6cf38514eb0fb48e3a750ef4512ed23f09389c",
+      "02bfdd0a42a48d60b681506901fe9b112b347f30af265e1d1c7905e17955971d"
+    ],
+    "DOC/docs/AI/LAYERS/CONV/code.en.md": [
+      "f0a3115e187cfcb51efa62878b5e1851396cc6915645cd6e8ce027ecf7adc95d",
+      "85a5dd3836f85e687e5f6c83ee472299de304821bb7372c402ee6e83e52d0cda"
+    ],
+    "DOC/docs/AI/LAYERS/CONV/code.zh.md": [
+      "f0a3115e187cfcb51efa62878b5e1851396cc6915645cd6e8ce027ecf7adc95d",
+      "85a5dd3836f85e687e5f6c83ee472299de304821bb7372c402ee6e83e52d0cda"
+    ],
+    "DOC/docs/AI/LAYERS/CONV/notes.en.md": [
+      "8c5df97f13b4d9d21ff22bd69a1cdcf44f981316a2f27c02312fe6bb89923be6",
+      "aa0d8526edfde7db8a07251cff74f6a72feacf60efa8b681961d30ea37d111a0",
+      "2a1a63078c0e02c2753ed11f8771db24e9234e618751445159e10ab1fbaaffdb",
+      "bf22e7240e995c1741c361a5bfe9f9c0a2b3adb2b4f1a8a78b490ea2b092c8ad"
+    ],
+    "DOC/docs/AI/LAYERS/CONV/notes.zh.md": [
+      "8c5df97f13b4d9d21ff22bd69a1cdcf44f981316a2f27c02312fe6bb89923be6",
+      "aa0d8526edfde7db8a07251cff74f6a72feacf60efa8b681961d30ea37d111a0",
+      "2a1a63078c0e02c2753ed11f8771db24e9234e618751445159e10ab1fbaaffdb",
+      "bf22e7240e995c1741c361a5bfe9f9c0a2b3adb2b4f1a8a78b490ea2b092c8ad"
+    ],
+    "DOC/docs/AI/LAYERS/DENSE/code.en.md": [
+      "bdd233502199de655d539180b7c010f68434e68d5ca23374e43d14f26294ce6e",
+      "e29abdd952237f8207c80b9e44f00f0a26c2c0d6f248b3be3deb5bcfc53973f8"
+    ],
+    "DOC/docs/AI/LAYERS/DENSE/code.zh.md": [
+      "bdd233502199de655d539180b7c010f68434e68d5ca23374e43d14f26294ce6e",
+      "e29abdd952237f8207c80b9e44f00f0a26c2c0d6f248b3be3deb5bcfc53973f8"
+    ],
+    "DOC/docs/AI/LAYERS/DENSE/notes.en.md": [
+      "82727df2db98931081d63a6d571218870ac3fd99ad66c58407b5303f3751f395",
+      "8b71c21d3a553df01903353fa5ae76d1b7b7d4af5ea07f60fd816c3f4112067f",
+      "08845bcd6bbd5f4a41a0f6790b1efd52793ce122cee5b5497edcaf1dcf9c027a",
+      "8e521f6a444afe2dba255f6671820c06a9cce1d158d68e4c873b98d3ec43b6ed"
+    ],
+    "DOC/docs/AI/LAYERS/DENSE/notes.zh.md": [
+      "ea4715b72d8b24fec3f35a1ca992eef7b183c58137be7f34ead2f3bd0c05bfc9",
+      "8b71c21d3a553df01903353fa5ae76d1b7b7d4af5ea07f60fd816c3f4112067f",
+      "08845bcd6bbd5f4a41a0f6790b1efd52793ce122cee5b5497edcaf1dcf9c027a",
+      "8e521f6a444afe2dba255f6671820c06a9cce1d158d68e4c873b98d3ec43b6ed"
+    ],
+    "DOC/docs/AI/LAYERS/NORM/code.en.md": [
+      "d5456fad48abf0e8a8f5e99a7439d79618b77bcbd1ad273c22997ec8e066a775",
+      "4e37813c5d12685814217cabc4821c1e9af8b236f8316743e893b714f09ce5a2"
+    ],
+    "DOC/docs/AI/LAYERS/NORM/code.zh.md": [
+      "5b15229246429f5140f1de4828a0a683898cd8f1ba554532eb60115dc837f1d5",
+      "86bb60b112f5500358196aadd1c5437e6cbbb7bb0c84ed81f3fdd0a11c8c2de9"
+    ],
+    "DOC/docs/AI/LAYERS/NORM/notes.en.md": [
+      "ce4f42bac19724fe999089234580fcb14a520842595b8eba77fb20f2de42781c",
+      "e86f6cb3bfba381e397a67c448d1e26229fe5f33bb0d08989cba247372dcb8f8"
+    ],
+    "DOC/docs/AI/LAYERS/NORM/notes.zh.md": [
+      "08e42d46931e3d6a1ca0da25db5ff94c447cc9ae525d0aed22e2398b13b09855",
+      "b0b8ccac8fad7b2eff2da3efc5241dc0c88bf55b1c7ef9dba5fa49638080c93f"
+    ],
+    "DOC/docs/AI/LAYERS/POOL/code.en.md": [
+      "2b0519e191edf85f96978e27482aa43cf45f147f20698fccb25a15e5cf3ef1e1",
+      "021ea32291a42c9af84387b35cc0b3687e9eb927fa8fc6cba2b167af9d3519c3"
+    ],
+    "DOC/docs/AI/LAYERS/POOL/code.zh.md": [
+      "2b0519e191edf85f96978e27482aa43cf45f147f20698fccb25a15e5cf3ef1e1",
+      "021ea32291a42c9af84387b35cc0b3687e9eb927fa8fc6cba2b167af9d3519c3"
+    ],
+    "DOC/docs/AI/LAYERS/POOL/notes.en.md": [
+      "4686c9cab3f2df5b4d8178b2488338633e2cac3ddb947273ceb8c6fb7926b9ea",
+      "5c5e394c0f88835dfc9e3cbedae85659490fcc573e49eb198a09263d241e2c7a",
+      "a92a422b7ab0909b4e952034067d2cef541b9ab09b0a9df6345f54e2bc532fdb",
+      "93c1c823d53a8c0ec818abac703f933b15013a364015d3adfc241971607cb861",
+      "81983185912a48515fa67896e5ad0e5e96f564e240ff31f0c987e5b2bc4fc600",
+      "316a960cc0c002d1aecfa6655f013a1910f19c5477f14641b5bd49c710e0332f"
+    ],
+    "DOC/docs/AI/LAYERS/POOL/notes.zh.md": [
+      "4686c9cab3f2df5b4d8178b2488338633e2cac3ddb947273ceb8c6fb7926b9ea",
+      "5c5e394c0f88835dfc9e3cbedae85659490fcc573e49eb198a09263d241e2c7a",
+      "a92a422b7ab0909b4e952034067d2cef541b9ab09b0a9df6345f54e2bc532fdb",
+      "93c1c823d53a8c0ec818abac703f933b15013a364015d3adfc241971607cb861",
+      "81983185912a48515fa67896e5ad0e5e96f564e240ff31f0c987e5b2bc4fc600",
+      "9505651d2043fd4aed9e66ce20acdca907f24178b00af027b836578dca9f3445"
+    ],
+    "DOC/docs/AI/MODELS/CNN/code.en.md": [
+      "13f6f776b88f75fdc79059dcfd1ef97cdfc6cbfad03985a16ebb699402532e12",
+      "03a030414226b22310caf52169f838f664d6b0e56b5658e0bb49e5532f9e6038"
+    ],
+    "DOC/docs/AI/MODELS/CNN/code.zh.md": [
+      "13f6f776b88f75fdc79059dcfd1ef97cdfc6cbfad03985a16ebb699402532e12",
+      "03a030414226b22310caf52169f838f664d6b0e56b5658e0bb49e5532f9e6038"
+    ],
+    "DOC/docs/AI/MODELS/CNN/notes.en.md": [
+      "da418f2be50f59bfe663b1f1b62401d9a1095d9c24e57374358558d0b4a8710a",
+      "971027afda4d3acb08cdbea03bbf867f01195278555c7e4651426e95448c74b4",
+      "7d5305eb156bc7a1505bf3eeeaf9fb31eaee3d37184eba1c761048e3c4f3f7c9"
+    ],
+    "DOC/docs/AI/MODELS/CNN/notes.zh.md": [
+      "a827e9c799442ead062fba24ec4b7eeb3c7b3433b24faecdf4be1318d2a6bc79",
+      "971027afda4d3acb08cdbea03bbf867f01195278555c7e4651426e95448c74b4",
+      "7d5305eb156bc7a1505bf3eeeaf9fb31eaee3d37184eba1c761048e3c4f3f7c9"
+    ],
+    "DOC/docs/AI/MODELS/MLP/code.en.md": [
+      "39ea4d4bb246b89cbd650e75d6fc4c7788d322305debc6f3609ca770353d5fad",
+      "c6c292a505a284affffce7ba2d316d1b0164dd1fcaf233cd9574d400effa5ef7"
+    ],
+    "DOC/docs/AI/MODELS/MLP/code.zh.md": [
+      "39ea4d4bb246b89cbd650e75d6fc4c7788d322305debc6f3609ca770353d5fad",
+      "c6c292a505a284affffce7ba2d316d1b0164dd1fcaf233cd9574d400effa5ef7"
+    ],
+    "DOC/docs/AI/MODELS/MLP/notes.en.md": [
+      "705a1b87e7e1846759358fae28311ea76960ec0f1b64230a96a20dc83457c5f4",
+      "4a277ec475172cde8f91451760db25c42c06c8983510726de4373b151ebb5edf"
+    ],
+    "DOC/docs/AI/MODELS/MLP/notes.zh.md": [
+      "705a1b87e7e1846759358fae28311ea76960ec0f1b64230a96a20dc83457c5f4",
+      "922eae49cf4f15a94af21792c3b5fdcf56776a2d67eee07365572d655e59ed73"
+    ],
+    "DOC/docs/AI/MODELS/SEQUENTIAL/code.en.md": [
+      "d615c9e80920f187c284ae312b9fafc60e1a2ebbb5883fa21473a9b6b46394fe",
+      "3d276312dd872aa475cba094f08236a71c78a18366806f8f49b68b96e020763f"
+    ],
+    "DOC/docs/AI/MODELS/SEQUENTIAL/code.zh.md": [
+      "d615c9e80920f187c284ae312b9fafc60e1a2ebbb5883fa21473a9b6b46394fe",
+      "3d276312dd872aa475cba094f08236a71c78a18366806f8f49b68b96e020763f"
+    ],
+    "DOC/docs/AI/MODELS/SEQUENTIAL/notes.en.md": [
+      "e17424ca2505ad75fc5844de0aaf3a4a12633f10199c029133bd91edbd6a1a4f",
+      "97bac8df03f97c6db1619c024fb37a2563aea513af31e3df801b3e3bfc911c54",
+      "a17b099bca91138356b5481043d8448b7e86bab13aa74c618df0d44c95c3130b",
+      "b9725f39e2f3ab441dff2556b14650330e7fb02f821311676122fd0e6bc1c62b",
+      "5e3f2f1e5683650dab9f06177e1b840adc6da813ca113242b885d417bcbb3725"
+    ],
+    "DOC/docs/AI/MODELS/SEQUENTIAL/notes.zh.md": [
+      "ebf94a69589617ee3fc1d95346c7d05c83c195c5378e3b9efcc944b57d450707",
+      "97bac8df03f97c6db1619c024fb37a2563aea513af31e3df801b3e3bfc911c54",
+      "a17b099bca91138356b5481043d8448b7e86bab13aa74c618df0d44c95c3130b",
+      "b9725f39e2f3ab441dff2556b14650330e7fb02f821311676122fd0e6bc1c62b",
+      "5e3f2f1e5683650dab9f06177e1b840adc6da813ca113242b885d417bcbb3725"
+    ],
+    "DOC/docs/AI/QUANT/CONFIG/code.en.md": [
+      "dbc155256dce00cb88c4b8a68e5685299902d0c0d8dd6db9da38db6b4571a302"
+    ],
+    "DOC/docs/AI/QUANT/CONFIG/code.zh.md": [
+      "dbc155256dce00cb88c4b8a68e5685299902d0c0d8dd6db9da38db6b4571a302"
+    ],
+    "DOC/docs/AI/QUANT/CONFIG/notes.en.md": [
+      "9bf4beb192d3185a46417ce3cc5ec4c1a67854670fed752e320e9399d8733335",
+      "15bcc30f6d76a9ee68789c01187fec1261860c180749a78a600740fb66d86edf",
+      "a58dc186055d02439a8495a7d12322132ab0ab1ffe2fc4f7f6d10ddbf4b27e99",
+      "6abd96cc2f33ab43556e4d46489d8c2c4a8b752b0bdb02dd50137d8d97c483cc"
+    ],
+    "DOC/docs/AI/QUANT/CONFIG/notes.zh.md": [
+      "3fbeab708ac9b776928ce866f7ad716bc215e34419bc28b28c75c6417c64c053",
+      "c51a21dac85d02064311f01c66c94ebfc3c9f0c38807714920ec169cc94e24dd",
+      "bfa0d0672ec8cd0ec49e10db197cce3ea647969ac3547a42b49789f3f2d10136",
+      "6abd96cc2f33ab43556e4d46489d8c2c4a8b752b0bdb02dd50137d8d97c483cc"
+    ],
+    "DOC/docs/AI/QUANT/FP8/code.en.md": [
+      "b2f7e6a6faef1f70d1fa6b6e90d3c020f40017fe451f6da200725f4f9a69a590",
+      "54ee119c42fd770bc3a6db7e08a18a33b6211240e46337f5a1418e47f8abab1f"
+    ],
+    "DOC/docs/AI/QUANT/FP8/code.zh.md": [
+      "b2f7e6a6faef1f70d1fa6b6e90d3c020f40017fe451f6da200725f4f9a69a590",
+      "54ee119c42fd770bc3a6db7e08a18a33b6211240e46337f5a1418e47f8abab1f"
+    ],
+    "DOC/docs/AI/QUANT/FP8/notes.en.md": [
+      "2c488a1cc4e23ee3e7df88a225fc0c905b80a4ae0941e4ab3c11667faea111bb",
+      "c9ffc5022f5b0296fa51bdcb1b27afe60d4424ae97535beecdeadfeb293841fe",
+      "45e6920c8903b7178b8f796d2443a54b6ef4f765db3dc5f3c2ff2409b698ba17",
+      "b59ca18a8ba392aac938baae0dda824237bb26ba2227c1ad03b6bd7be92987b9",
+      "826dfb57b446a8166a66197ab62781016b4c843af7eead76f5478b18327b3fd6"
+    ],
+    "DOC/docs/AI/QUANT/FP8/notes.zh.md": [
+      "2c488a1cc4e23ee3e7df88a225fc0c905b80a4ae0941e4ab3c11667faea111bb",
+      "c9ffc5022f5b0296fa51bdcb1b27afe60d4424ae97535beecdeadfeb293841fe",
+      "ba9dac8de7dd8e8f954ef83dc2cf5bf80e6ac454601ed5e2e88a70fc1e2f0230",
+      "64a663af0519a6c700a4edacc2304890461fe487458b2f576b2e9a1bb40232fd",
+      "826dfb57b446a8166a66197ab62781016b4c843af7eead76f5478b18327b3fd6"
+    ],
+    "DOC/docs/AI/QUANT/INT/code.en.md": [
+      "d47d5ab2c8aef94c09c246f75d19636ffd2cba1b693e122d5d47948f7284fce6",
+      "a9d6c6f180cdcc7455a0ee15267a33f99d0a7a97601b0029af95e43d2e99e8b2",
+      "3ff988d3a800a4d9b84e784ef1157208de8713b1293b5103400a36def6d4793d",
+      "b4456b7d8a4eb44ed1e52c60a4a8d08ee5c99d9f0cc17d079f60144708cf1033"
+    ],
+    "DOC/docs/AI/QUANT/INT/code.zh.md": [
+      "d47d5ab2c8aef94c09c246f75d19636ffd2cba1b693e122d5d47948f7284fce6",
+      "a9d6c6f180cdcc7455a0ee15267a33f99d0a7a97601b0029af95e43d2e99e8b2",
+      "3ff988d3a800a4d9b84e784ef1157208de8713b1293b5103400a36def6d4793d",
+      "b4456b7d8a4eb44ed1e52c60a4a8d08ee5c99d9f0cc17d079f60144708cf1033"
+    ],
+    "DOC/docs/AI/QUANT/INT/notes.en.md": [
+      "e7f55c713d0b1632f982aecdf1372ed9ba59f3e4f047396e5ca2febb996ffdde",
+      "a546334ed5f5becbdc4e19e0bd53f1048b2834978b08b68277d555ee1394d967",
+      "cf307c3a0ea03ef17057e9fe206bcfda87721c76792ef849f653239fd8ec017b",
+      "c536a0e98051e5d48ff6abaf12fd380c0a26cda14c1f5e3b0075ccedd83b938b",
+      "f6ef9d68e0aaf6c5e6ce9822f262eec35e2afaa861741f50d42517c52564f434",
+      "7409f8401afeb5698b7b5146c48c835eccdab52e57c3aaca1f71d588d404ed10"
+    ],
+    "DOC/docs/AI/QUANT/INT/notes.zh.md": [
+      "e7f55c713d0b1632f982aecdf1372ed9ba59f3e4f047396e5ca2febb996ffdde",
+      "a546334ed5f5becbdc4e19e0bd53f1048b2834978b08b68277d555ee1394d967",
+      "cf307c3a0ea03ef17057e9fe206bcfda87721c76792ef849f653239fd8ec017b",
+      "c536a0e98051e5d48ff6abaf12fd380c0a26cda14c1f5e3b0075ccedd83b938b",
+      "8f427df8c0c7afc28e3568f821f31c0252d3d74953e12e2575ed5cd9a4cec263",
+      "7409f8401afeb5698b7b5146c48c835eccdab52e57c3aaca1f71d588d404ed10"
+    ],
+    "DOC/docs/AI/TRAIN/DATASET/code.en.md": [
+      "9e398feee708ca30addd605ca000b18c99b75af95dad7c724c3509746c2afc91",
+      "bd8098a99b34e4e8431b546c066a65810f0fae4527688bb5bcc268b81aaa794a"
+    ],
+    "DOC/docs/AI/TRAIN/DATASET/code.zh.md": [
+      "9e398feee708ca30addd605ca000b18c99b75af95dad7c724c3509746c2afc91",
+      "bd8098a99b34e4e8431b546c066a65810f0fae4527688bb5bcc268b81aaa794a"
+    ],
+    "DOC/docs/AI/TRAIN/DATASET/notes.en.md": [
+      "b007d4adfb34ed46e9e8150a6e41030aebd14970f86843255ec6af4bfcc7fd47",
+      "ea772f8e1a6ab879c8ba0ce4450fc4d2834d1c52138da18af3fd39ae97b485c7",
+      "67248cad47eaf2f52c536a4ea32659810b0a43fa3d1ddaa9a904974ec22071c0",
+      "f0a464c284164b1b437f89c1181f21ff3e307cc8f2232a28f2f96c426ae7c888",
+      "a5834a0c377be216790b1b5ef40d737a717a3d8c124ad12098c292f1f5502950",
+      "3a9254419f4b41a0acf75aa410b98e03dbcbe6b5a0d8289b75d604cbd82922bc",
+      "1d9c89d184f7f8d94e6aaa93cbdbe90330e7199c79480304d28c37a71a4f0182"
+    ],
+    "DOC/docs/AI/TRAIN/DATASET/notes.zh.md": [
+      "b007d4adfb34ed46e9e8150a6e41030aebd14970f86843255ec6af4bfcc7fd47",
+      "ea772f8e1a6ab879c8ba0ce4450fc4d2834d1c52138da18af3fd39ae97b485c7",
+      "67248cad47eaf2f52c536a4ea32659810b0a43fa3d1ddaa9a904974ec22071c0",
+      "f0a464c284164b1b437f89c1181f21ff3e307cc8f2232a28f2f96c426ae7c888",
+      "a5834a0c377be216790b1b5ef40d737a717a3d8c124ad12098c292f1f5502950",
+      "3a9254419f4b41a0acf75aa410b98e03dbcbe6b5a0d8289b75d604cbd82922bc",
+      "1d9c89d184f7f8d94e6aaa93cbdbe90330e7199c79480304d28c37a71a4f0182"
+    ],
+    "DOC/docs/AI/TRAIN/TRAINER/code.en.md": [
+      "653cfbc315d1909e2561c45c468049c29f875f25e06ea65b8ace9e60b888f575",
+      "e91ec0b63910e6d93867266edd0c786b13a79eb84dcd9e04f560bbe77911761b"
+    ],
+    "DOC/docs/AI/TRAIN/TRAINER/code.zh.md": [
+      "653cfbc315d1909e2561c45c468049c29f875f25e06ea65b8ace9e60b888f575",
+      "e91ec0b63910e6d93867266edd0c786b13a79eb84dcd9e04f560bbe77911761b"
+    ],
+    "DOC/docs/AI/TRAIN/TRAINER/notes.en.md": [
+      "89d0ec0669cd038e120953e212f24c755ff0bee32131115df007da4b408ae1d7",
+      "cb31f05985698ae949c256c38b73d6c87fd16cce0971f815acce7d53f3dfa2f4",
+      "03057bb0b8b9558dd2369cc853118fef8ba34fa856378d86b79dd2109f45a740",
+      "b90b635d06e18c37b67238c000dbf437bc9fef8b91b7d85094915220de5bd35b",
+      "e0bcd73ae344d0c741bd21174d44922190815c6b6f9bb4649857311fb944d7bb"
+    ],
+    "DOC/docs/AI/TRAIN/TRAINER/notes.zh.md": [
+      "89d0ec0669cd038e120953e212f24c755ff0bee32131115df007da4b408ae1d7",
+      "cdb1a6d1e8b9d279a556bc93d448ae72ea3ca66b6daec6abdc3d5e658e9ab221",
+      "03057bb0b8b9558dd2369cc853118fef8ba34fa856378d86b79dd2109f45a740",
+      "b90b635d06e18c37b67238c000dbf437bc9fef8b91b7d85094915220de5bd35b",
+      "e0bcd73ae344d0c741bd21174d44922190815c6b6f9bb4649857311fb944d7bb"
+    ],
+    "DOC/docs/AI/USAGE/usage.en.md": [
+      "edfdcebb99022d3737ad263e4048c9e3ffead86ad35d659f267ccf091a2d57ab",
+      "d9fe9fc4c81845be425be233ba8bfd1e8c55de552964022ad8fce2fc34ff6de2",
+      "80257b94bf9df601f7b69c3f6eb5eba68c15ad72fab191c377ad5c5b1285ab99"
+    ],
+    "DOC/docs/AI/USAGE/usage.zh.md": [
+      "edfdcebb99022d3737ad263e4048c9e3ffead86ad35d659f267ccf091a2d57ab",
+      "e96d0ab85db0d89c9e1b1baa773520aa0de4476f5a9acfc333e9f8bea691406f",
+      "1dc253038256f6681bf0204d3e4182d8e4fb28c20e2dd0123346783287d8aa3f"
+    ],
+    "DOC/docs/ARCHITECTURE/architecture.en.md": [
+      "52f50d6fc48db6cb16426992d8c6b13da8a077fa718ed7710481d6920221029b"
+    ],
+    "DOC/docs/ARCHITECTURE/architecture.zh.md": [
+      "f1b4126fa5c50e0af94bf8d6fbc366981358280694ecf0cac17b4da169b2cd53"
+    ],
+    "DOC/docs/blog/index.md": [],
+    "DOC/docs/DSP/dsp.en.md": [
+      "624c43df441a088934d3683bce6631fce05dd2c34b1693c19fce929a87264a23",
+      "9934fef2cf692500e640e287145125d96dd4b15271d8b5ff280e8003fcc3e78f"
+    ],
+    "DOC/docs/DSP/dsp.zh.md": [
+      "624c43df441a088934d3683bce6631fce05dd2c34b1693c19fce929a87264a23",
+      "9934fef2cf692500e640e287145125d96dd4b15271d8b5ff280e8003fcc3e78f"
+    ],
+    "DOC/docs/DSP/FILTER/FIR/code.en.md": [
+      "97a250a53cc1f07e974fec4b22fd223d642978771d8034c70f92e54a2156fca0",
+      "cdaa1aa6e077c9241aa2e33e32ec2c2a42fb60da2ce475a653c494578b7f02f6"
+    ],
+    "DOC/docs/DSP/FILTER/FIR/code.zh.md": [
+      "97a250a53cc1f07e974fec4b22fd223d642978771d8034c70f92e54a2156fca0",
+      "cdaa1aa6e077c9241aa2e33e32ec2c2a42fb60da2ce475a653c494578b7f02f6"
+    ],
+    "DOC/docs/DSP/FILTER/FIR/notes.en.md": [
+      "774a122d73449071b5a485c200366b22add6964fa58c944848fbf77195696f88",
+      "b3afe87d283fbba059a809e61bf5595f52d74a1d1cc3dc97e5f09222b6af5736",
+      "f3b7276346ecedbe7d1c64f69625a41a9a3f21236be6dfb4914797e6a7bce8a6",
+      "f9f7a9ad371438bca7b51fde5bd864364f67b214547bdc62ee5c2bfc40f71917",
+      "c6b21e73aefbbec71ac27fe2b8b6a25b7f88b5fb5fb8466003572d85621f44c8",
+      "07cfa18599ef6eff28254f6257f6d2f9905502ebe830fc92a40e02f562835c54",
+      "7908c9ab4f21af8a073ff4cfdc98c31dae2ad1045113d5b2ee239c27abef4f82",
+      "46d4eee6831963432b9edce8980e43f9d74507ef115fc25bcc12231a6ad7736f",
+      "da53016422ad8f8c4ccfd2a0d94d8d4fbef8a02b7a221aaea091fee32bfa6f65",
+      "1356c2f7fdbaa60dcbfc5800dc80504292a240baf441af7e9c762c6c8155cd55",
+      "5fc1767636d623590d4233d94b6f71308c64609b200a5ee3467744ee9f9fddc9",
+      "96a7be8b87db157b0114f849a6eda691a8777537106438b3a80fad49a1e27b3c",
+      "7d7a743037fe39be008b376fcd597c36868e3429fcb0e6bb29daff9b07fa4dfe",
+      "14556e50c1c7856127d882ec2713877578a71d2069875e08aeb7cd964ebce2bc",
+      "cbb053be73a4b3205c9a4a12f991d6f23c714a190150b1b64005fbf363683b6e"
+    ],
+    "DOC/docs/DSP/FILTER/FIR/notes.zh.md": [
+      "774a122d73449071b5a485c200366b22add6964fa58c944848fbf77195696f88",
+      "b3afe87d283fbba059a809e61bf5595f52d74a1d1cc3dc97e5f09222b6af5736",
+      "f3b7276346ecedbe7d1c64f69625a41a9a3f21236be6dfb4914797e6a7bce8a6",
+      "f9f7a9ad371438bca7b51fde5bd864364f67b214547bdc62ee5c2bfc40f71917",
+      "c6b21e73aefbbec71ac27fe2b8b6a25b7f88b5fb5fb8466003572d85621f44c8",
+      "07cfa18599ef6eff28254f6257f6d2f9905502ebe830fc92a40e02f562835c54",
+      "7908c9ab4f21af8a073ff4cfdc98c31dae2ad1045113d5b2ee239c27abef4f82",
+      "46d4eee6831963432b9edce8980e43f9d74507ef115fc25bcc12231a6ad7736f",
+      "da53016422ad8f8c4ccfd2a0d94d8d4fbef8a02b7a221aaea091fee32bfa6f65",
+      "1356c2f7fdbaa60dcbfc5800dc80504292a240baf441af7e9c762c6c8155cd55",
+      "5fc1767636d623590d4233d94b6f71308c64609b200a5ee3467744ee9f9fddc9",
+      "96a7be8b87db157b0114f849a6eda691a8777537106438b3a80fad49a1e27b3c",
+      "7d7a743037fe39be008b376fcd597c36868e3429fcb0e6bb29daff9b07fa4dfe",
+      "ab96c61df79d6a82cc936e40e5e1012b946d2dcb2f93579a2b6fe5e0ac8948d5",
+      "cbb053be73a4b3205c9a4a12f991d6f23c714a190150b1b64005fbf363683b6e"
+    ],
+    "DOC/docs/DSP/FILTER/FIR/test.en.md": [
+      "216e33483c002279ca73db55862a1d637ba873b5154a983ab0b95057bc04a558",
+      "dcf9d9518009b0e788c5f3ab793d442385f94f4ee74f7e263f4fb4bd9d162b11",
+      "37bdf4aec87909644e9b93c4314f0adf13ebfff6db4aecb8ec31437573b7a692"
+    ],
+    "DOC/docs/DSP/FILTER/FIR/test.zh.md": [
+      "216e33483c002279ca73db55862a1d637ba873b5154a983ab0b95057bc04a558",
+      "dcf9d9518009b0e788c5f3ab793d442385f94f4ee74f7e263f4fb4bd9d162b11",
+      "37bdf4aec87909644e9b93c4314f0adf13ebfff6db4aecb8ec31437573b7a692"
+    ],
+    "DOC/docs/DSP/FILTER/IIR/code.en.md": [
+      "f668c3ee0eae117627f318f49d7b6eda97795002c6ca4a6599ceb7137ab51e39",
+      "2ad0e94f3a7f6a791e7d13616c36b9f93b932dc8a98e197ba232e6a08b03f041"
+    ],
+    "DOC/docs/DSP/FILTER/IIR/code.zh.md": [
+      "f668c3ee0eae117627f318f49d7b6eda97795002c6ca4a6599ceb7137ab51e39",
+      "2ad0e94f3a7f6a791e7d13616c36b9f93b932dc8a98e197ba232e6a08b03f041"
+    ],
+    "DOC/docs/DSP/FILTER/IIR/notes.en.md": [
+      "9a3edc399b043e7c752f5eaad062e717b219f3bd16ee2500a86847aa4a0b6441",
+      "65b8abee61383d03e210f6ea2cd8ef97844f05016b45d0730a7eeace2bd81247",
+      "af82da65aaa609cac5a45858c51c6ec15a2bd417bd44343dbb3e92c5e92a60dc",
+      "a3222b83f680d7a02c15f1f69da7a5bef4aab649a545450e4ed3d0fd65f9f958",
+      "6d6b62faf53021801f8c86f29c4cfa6707e297801f41a43c0c65306955705cb8",
+      "0062dd76126b70115f760163a5779a54f792e14a19fab14043dce1ddebf1ef13",
+      "520b02c328aabc4491544b404a078720f2404dce650b18592fb74dc18a69125e",
+      "46f40247f5950fd90d3c8597f2ee0d4b08f305a4612a6a7c85abd8b0fdb0b671",
+      "0cf2beebb99b74ba8e92b16be35b8e84a9ba7cc787b24a71aba38e4b547555f1",
+      "3836f7944c09919c6ed9f874571750787ad567b31fe33c2c34ac0e757a9a4a1d",
+      "3ef90103ad8da8c3cabeae1fb518d564c8beb90d5080187d59b35780ab7e6ec6",
+      "a82a7b5a69a367e3a823889bfbf9e24a0cc8f5244a8d632758b7546215937461",
+      "dd8056a14dd0e990015d2883a2c626a3c22ac8f10f48c47f365c6f040a41e867",
+      "6ca27db1768fa8110ad303e305c0cead265b9d9ccff4e2aed7efd3373ebe003e",
+      "dd8056a14dd0e990015d2883a2c626a3c22ac8f10f48c47f365c6f040a41e867",
+      "1e08f6d4b3345991eb13589896f665d2cad9965e8ba9e9052b7ad6877ea7b7dc",
+      "d434df44ec6d5daf708387b7b709a1af779fcff56bc5c3fe3a3f7a5d6f336260",
+      "b64e560ffcc78addd5fe80ae8f579a699cdf3118f80553d3af696f17300b8b6e",
+      "dd8056a14dd0e990015d2883a2c626a3c22ac8f10f48c47f365c6f040a41e867",
+      "a764f7f20c0625687066df70b95b363b992727d231d3ca25939f7e995afb2760",
+      "ced1170e73188d6ebbc037966552567de72651d7d4ec5c39a37fbb4a4515b807"
+    ],
+    "DOC/docs/DSP/FILTER/IIR/notes.zh.md": [
+      "9a3edc399b043e7c752f5eaad062e717b219f3bd16ee2500a86847aa4a0b6441",
+      "65b8abee61383d03e210f6ea2cd8ef97844f05016b45d0730a7eeace2bd81247",
+      "af82da65aaa609cac5a45858c51c6ec15a2bd417bd44343dbb3e92c5e92a60dc",
+      "a3222b83f680d7a02c15f1f69da7a5bef4aab649a545450e4ed3d0fd65f9f958",
+      "6d6b62faf53021801f8c86f29c4cfa6707e297801f41a43c0c65306955705cb8",
+      "0062dd76126b70115f760163a5779a54f792e14a19fab14043dce1ddebf1ef13",
+      "520b02c328aabc4491544b404a078720f2404dce650b18592fb74dc18a69125e",
+      "46f40247f5950fd90d3c8597f2ee0d4b08f305a4612a6a7c85abd8b0fdb0b671",
+      "0cf2beebb99b74ba8e92b16be35b8e84a9ba7cc787b24a71aba38e4b547555f1",
+      "3836f7944c09919c6ed9f874571750787ad567b31fe33c2c34ac0e757a9a4a1d",
+      "3ef90103ad8da8c3cabeae1fb518d564c8beb90d5080187d59b35780ab7e6ec6",
+      "a82a7b5a69a367e3a823889bfbf9e24a0cc8f5244a8d632758b7546215937461",
+      "dd8056a14dd0e990015d2883a2c626a3c22ac8f10f48c47f365c6f040a41e867",
+      "6ca27db1768fa8110ad303e305c0cead265b9d9ccff4e2aed7efd3373ebe003e",
+      "dd8056a14dd0e990015d2883a2c626a3c22ac8f10f48c47f365c6f040a41e867",
+      "1e08f6d4b3345991eb13589896f665d2cad9965e8ba9e9052b7ad6877ea7b7dc",
+      "ef2ffd944e54dae438b393daa3d4c31b0f309168775a26f3a33fbbcdf7d95d29",
+      "b64e560ffcc78addd5fe80ae8f579a699cdf3118f80553d3af696f17300b8b6e",
+      "dd8056a14dd0e990015d2883a2c626a3c22ac8f10f48c47f365c6f040a41e867",
+      "a764f7f20c0625687066df70b95b363b992727d231d3ca25939f7e995afb2760",
+      "8eb86af9fe5cd81dd723a857a18d34b8eb40a939dd49ac374a2d99b51064a0dc"
+    ],
+    "DOC/docs/DSP/FILTER/IIR/test.en.md": [
+      "0a970a70a5790f9ea9b8aac26f439b5e41c2d573191c61db67aefc0a950786ad",
+      "cc91f934b4b2b1eb91433757e3d8c9eb2cd8ea2e68023df9d8806aa742eea8fb",
+      "50a643947569f140ba0546dd43d451382abc5bc8b51de00787b9b44be94d56a4"
+    ],
+    "DOC/docs/DSP/FILTER/IIR/test.zh.md": [
+      "0a970a70a5790f9ea9b8aac26f439b5e41c2d573191c61db67aefc0a950786ad",
+      "cc91f934b4b2b1eb91433757e3d8c9eb2cd8ea2e68023df9d8806aa742eea8fb",
+      "50a643947569f140ba0546dd43d451382abc5bc8b51de00787b9b44be94d56a4"
+    ],
+    "DOC/docs/DSP/HEADER-FILE/tiny_dsp.en.md": [
+      "afbec305b28ae3a3198996fdf6139e1e8ea8aed47a6eb0d63889ac5a5eab07bb"
+    ],
+    "DOC/docs/DSP/HEADER-FILE/tiny_dsp.zh.md": [
+      "afbec305b28ae3a3198996fdf6139e1e8ea8aed47a6eb0d63889ac5a5eab07bb"
+    ],
+    "DOC/docs/DSP/HEADER-FILE/tiny_dsp_config.en.md": [
+      "75a0778aa720988605836ec08fbc34f3007053f2d601373e7f59a2d30959773e"
+    ],
+    "DOC/docs/DSP/HEADER-FILE/tiny_dsp_config.zh.md": [
+      "75a0778aa720988605836ec08fbc34f3007053f2d601373e7f59a2d30959773e"
+    ],
+    "DOC/docs/DSP/SIGNAL/CONVOLUTION/code.en.md": [
+      "0a8b5c79384000232585f46414ec9001a82aa924a00a27fc277dcab7c74a6085",
+      "b6c8d6005d83d21dcfe39887f1ac180c580beec1140fb200037aaad02bf004e9"
+    ],
+    "DOC/docs/DSP/SIGNAL/CONVOLUTION/code.zh.md": [
+      "0a8b5c79384000232585f46414ec9001a82aa924a00a27fc277dcab7c74a6085",
+      "b6c8d6005d83d21dcfe39887f1ac180c580beec1140fb200037aaad02bf004e9"
+    ],
+    "DOC/docs/DSP/SIGNAL/CONVOLUTION/notes.en.md": [
+      "67cabbc50b86ecd9193f5da96b9897a6ff087f45ca76a4c68c8605f108a18a17",
+      "2cd496d8203ef47cba0663e2c6b4f9da9817e394ec8643333a6add5a503ab8f0"
+    ],
+    "DOC/docs/DSP/SIGNAL/CONVOLUTION/notes.zh.md": [
+      "99213c8b7ff46cf857f019387cf3413ce901b52740a26c406c117680d37cd0b8",
+      "61e2d687bf379d3b87ccad6eeac7241a6155b22936642e90298fb6b5049041d9"
+    ],
+    "DOC/docs/DSP/SIGNAL/CONVOLUTION/test.en.md": [
+      "3efc57887cee4e92aafd9b7e485250493d95ffc302f9a270fcb2235995a15cd6",
+      "3dfba4304aef5dd5a70f5db51dbc700985e1131cb9d6c2d67cedd071fdb50297",
+      "70a86402b89d705e14f6b1a7c2daf7c1bdfb035669659b77963232611ce5b196"
+    ],
+    "DOC/docs/DSP/SIGNAL/CONVOLUTION/test.zh.md": [
+      "41b3fad6a631ba4ea281dbcabfea7fe89eb5ace15557c2eea7d5d6c76580bada",
+      "3dfba4304aef5dd5a70f5db51dbc700985e1131cb9d6c2d67cedd071fdb50297",
+      "70a86402b89d705e14f6b1a7c2daf7c1bdfb035669659b77963232611ce5b196"
+    ],
+    "DOC/docs/DSP/SIGNAL/CORRELATION/code.en.md": [
+      "5d138693060c924d8b02dbc1fc51fbfd27c40c527e86300c8324e6f92184aea4",
+      "a908d7df980844723cae4f0ccba04b8bb27e6cabbf9e0ab04639f910f548c184"
+    ],
+    "DOC/docs/DSP/SIGNAL/CORRELATION/code.zh.md": [
+      "5d138693060c924d8b02dbc1fc51fbfd27c40c527e86300c8324e6f92184aea4",
+      "a908d7df980844723cae4f0ccba04b8bb27e6cabbf9e0ab04639f910f548c184"
+    ],
+    "DOC/docs/DSP/SIGNAL/CORRELATION/notes.en.md": [
+      "bf0337210eb0cb3b42cf6756c965a1dd245e8fabc040bac9c644c50641a3a6aa",
+      "01fb7085170631c2658639b1f4f957d6f9673be6e61d685f396e6ae329e4e054"
+    ],
+    "DOC/docs/DSP/SIGNAL/CORRELATION/notes.zh.md": [
+      "bf0337210eb0cb3b42cf6756c965a1dd245e8fabc040bac9c644c50641a3a6aa",
+      "d4e2d672315bf9854b6bd254a9520f77637dd4134931c4dca7510fd147d98ad9"
+    ],
+    "DOC/docs/DSP/SIGNAL/CORRELATION/test.en.md": [
+      "0bfaa363930ecbb628d99b93265d3df1a4f299978a1477fcabadaf494bd8d958",
+      "e59c01c8dcbb24899b81b7f6fd2e65cc8f4c77d9b6197ae1fffab9c29cc9529b",
+      "62b0afb04ef058730d3a240172a840dff7a6cb976c61e11fbe3ee4c0d912851a"
+    ],
+    "DOC/docs/DSP/SIGNAL/CORRELATION/test.zh.md": [
+      "0bfaa363930ecbb628d99b93265d3df1a4f299978a1477fcabadaf494bd8d958",
+      "e59c01c8dcbb24899b81b7f6fd2e65cc8f4c77d9b6197ae1fffab9c29cc9529b",
+      "62b0afb04ef058730d3a240172a840dff7a6cb976c61e11fbe3ee4c0d912851a"
+    ],
+    "DOC/docs/DSP/SIGNAL/RESAMPLE/code.en.md": [
+      "82289fc441b1eb58ae6521e0e7367da598109d1ea239d907b60625f8306b9c36",
+      "6477b6c1bcc3de7bb8a2827370c0d9d98cc7294e177f5371b9a11af37e85ac86"
+    ],
+    "DOC/docs/DSP/SIGNAL/RESAMPLE/code.zh.md": [
+      "82289fc441b1eb58ae6521e0e7367da598109d1ea239d907b60625f8306b9c36",
+      "6477b6c1bcc3de7bb8a2827370c0d9d98cc7294e177f5371b9a11af37e85ac86"
+    ],
+    "DOC/docs/DSP/SIGNAL/RESAMPLE/notes.en.md": [
+      "5095fa232a678a7a07acf4fa5a0c382f07b4bb04aa40f97192bc1f77f68c9454",
+      "22f5322e2c39ec062cf77966d394c383cf623aaa9ac41684541b2d1c00c2074c",
+      "8e477f5c0cb28896a3ee732790a9604d413d4807268754d0de954671465f38ed",
+      "4c447536121cd310296bd9c4b66c56318c46dd2ebb04bc129393d4c915829a0c"
+    ],
+    "DOC/docs/DSP/SIGNAL/RESAMPLE/notes.zh.md": [
+      "27a21db7b7a404a844e7e9a9f9fce9083865eb39a363c168eb882830cdea2ce8",
+      "6342b8d176e81ab8c0ce00b96f94412c367d5929e47b334d96ef2521d081422b",
+      "ba7dac6f39443fb5ca9beab578f03c9132db859105ca25e5497b143739f12d5f",
+      "b50d38a740d41205572d28f0e48def12e1a318732cb119af33be755d0f2015b4"
+    ],
+    "DOC/docs/DSP/SIGNAL/RESAMPLE/test.en.md": [
+      "8cb867fb46a8f5de1e4727eff4ac60097bd997c9c1bbc0047aa981d7ecc4abd0",
+      "19b560006a2e3388695dc346640895e6eab60a07b1d9ecbfb372284f05a270d9",
+      "700755099730adb1a2daa4615c7a84686393f2a8461345b2a361ffab459a3a92"
+    ],
+    "DOC/docs/DSP/SIGNAL/RESAMPLE/test.zh.md": [
+      "8cb867fb46a8f5de1e4727eff4ac60097bd997c9c1bbc0047aa981d7ecc4abd0",
+      "19b560006a2e3388695dc346640895e6eab60a07b1d9ecbfb372284f05a270d9",
+      "700755099730adb1a2daa4615c7a84686393f2a8461345b2a361ffab459a3a92"
+    ],
+    "DOC/docs/DSP/SUPPORT/code.en.md": [
+      "6d0c9e0c4609dc6b46c0855a955827a05c143ba5b985f9cbf8d2e8520a32b574",
+      "b308645687ba6af4e1486d955c0eea2dbb87bd00b40f3cd963459cace8a92294"
+    ],
+    "DOC/docs/DSP/SUPPORT/code.zh.md": [
+      "6d0c9e0c4609dc6b46c0855a955827a05c143ba5b985f9cbf8d2e8520a32b574",
+      "b308645687ba6af4e1486d955c0eea2dbb87bd00b40f3cd963459cace8a92294"
+    ],
+    "DOC/docs/DSP/SUPPORT/notes.en.md": [
+      "1631a7d8afe956b07d5a574b5447dc574de0f842502c1ee8cd5b017224a31d18",
+      "a7289ce6f25f056df34d0f6db5b3d7f07bd7e6fb5efe70373aed883aefed3599",
+      "365a15b74d21ed09c8aa1b7c5c253c1c345dfdf7931c56fe4c44da266b2ec31b",
+      "858478074ce24b212c378eb0bfd5d19e78d178a247f777dad04a36bf43109272",
+      "d478da05a9bf341028a590a18f51ab075b04f4ee3381390e36ea1c4cfd368f84",
+      "017030b15ee74a5e7ca35b27d53bcd32dfab7aef5fc0b4e8ced24e3ceba5ae35",
+      "81b49dd0ca6983ac3fc66962ce586bac70a2867047303f4a7a1221c888a54010",
+      "670665d0783b6c6d3c4f94719995dea45da6bec98c3648d83be372f2caea001f",
+      "ee50cd8b6ccd7c11b913c13272fe0f31d4020f8efd93511e338074131ca6bb3f",
+      "224b3f750328a195e1c89e2ea2457c46926b2012b47c6cb38a983d5eac01ffc0",
+      "4f08919563462b611966ce535f183720cf2050688516bc97787796f3722ee86f"
+    ],
+    "DOC/docs/DSP/SUPPORT/notes.zh.md": [
+      "1631a7d8afe956b07d5a574b5447dc574de0f842502c1ee8cd5b017224a31d18",
+      "a7289ce6f25f056df34d0f6db5b3d7f07bd7e6fb5efe70373aed883aefed3599",
+      "365a15b74d21ed09c8aa1b7c5c253c1c345dfdf7931c56fe4c44da266b2ec31b",
+      "858478074ce24b212c378eb0bfd5d19e78d178a247f777dad04a36bf43109272",
+      "d478da05a9bf341028a590a18f51ab075b04f4ee3381390e36ea1c4cfd368f84",
+      "017030b15ee74a5e7ca35b27d53bcd32dfab7aef5fc0b4e8ced24e3ceba5ae35",
+      "81b49dd0ca6983ac3fc66962ce586bac70a2867047303f4a7a1221c888a54010",
+      "5a96010cd2086e46015910ce0ddc18da9591db3559c0f96ae09cbe012dcc1d44",
+      "c1cf0c6346f9bc4fa344dfd07a183417d165e930616b9f5b6617af1761c8a89d",
+      "8f738c83b79630e143dea3624aeeb549c7c6e69add6ae0de2345fdc19bd58753",
+      "394f69c06185e7f08c13e4835c3582672f0d5c0c3dc7a9ecdbfec2e641c79edd"
+    ],
+    "DOC/docs/DSP/SUPPORT/test.en.md": [
+      "f3a5fe0be3644bfa6bfca90155d14533377cba94af3dd51547018f99d298a312",
+      "b308645687ba6af4e1486d955c0eea2dbb87bd00b40f3cd963459cace8a92294",
+      "1df68627ba2aeb02680d4c6cf8c56f69fd39fa9fe9dec074440d8b8177c71833"
+    ],
+    "DOC/docs/DSP/SUPPORT/test.zh.md": [
+      "cf3743971be2a84c4217ce8a553ebda7b4c44a9792758f06567ee893db152d96",
+      "c18d7ab7baa6e337b1b1608bd0e77bc1789e19476e2d71b0139eff9c328a341d",
+      "1df68627ba2aeb02680d4c6cf8c56f69fd39fa9fe9dec074440d8b8177c71833"
+    ],
+    "DOC/docs/DSP/TRANSFORM/DWT/code.en.md": [
+      "06b99b4b39837eb24eaad47941cd3864bb3147b3451031c6ef587c7dc4f0d7b3",
+      "08fd98e152710740db595759c2f2975d0414c0a525f1c4e2a3475d99e8b86136"
+    ],
+    "DOC/docs/DSP/TRANSFORM/DWT/code.zh.md": [
+      "06b99b4b39837eb24eaad47941cd3864bb3147b3451031c6ef587c7dc4f0d7b3",
+      "08fd98e152710740db595759c2f2975d0414c0a525f1c4e2a3475d99e8b86136"
+    ],
+    "DOC/docs/DSP/TRANSFORM/DWT/notes.en.md": [
+      "e670655a3ca5c1126a414115d8a67fc24a95eb1f649a64f63deee6dca2ac355f",
+      "8dcb8c9e740175e7ae6a1d8d098c878448823044850d5693b4a7785f3cfc5e44",
+      "295bba54ed8d67e6d1580fb85e8b413e2bac0c727291fff22311debc00efaf45",
+      "fc8af5a322f22d2360fd01b545e2adf5bd4d8a723dae63f13ce2026323ebaf3a",
+      "14fe3b1f0c2925144bd06ebef8d891406580b9c56d64a5a97588e227d013d303",
+      "0d7e26db4e9aac15ae1732caad6ba909a57695987a766af1d46e89f93defdf23",
+      "c7b14998f93224670ff963d6f5771531ad9cdbc20c3647f7d02163aeb9334489",
+      "90fc6f707f8e4e84147f90abddf186f418ff35dd7d6508dc2ebb2589533a5032",
+      "dcbab08624156d4b339fd2c48c2ee8b409d87a7545ebc386398b7727e4432e6a",
+      "64f4abc0b3dd0045ca5453306993c3e4b6358305eab98e1c4ca2c500885a75d5",
+      "fff2c4bdbc288c5c5285566bae5195c05bafe68b0965f9ea2d3119c78561b987",
+      "b05eca95ade8eba676558de7d0d2a6b82fc0e96c9f9c2df51d80466ecaa6674c"
+    ],
+    "DOC/docs/DSP/TRANSFORM/DWT/notes.zh.md": [
+      "e670655a3ca5c1126a414115d8a67fc24a95eb1f649a64f63deee6dca2ac355f",
+      "8dcb8c9e740175e7ae6a1d8d098c878448823044850d5693b4a7785f3cfc5e44",
+      "295bba54ed8d67e6d1580fb85e8b413e2bac0c727291fff22311debc00efaf45",
+      "fc8af5a322f22d2360fd01b545e2adf5bd4d8a723dae63f13ce2026323ebaf3a",
+      "14fe3b1f0c2925144bd06ebef8d891406580b9c56d64a5a97588e227d013d303",
+      "0d7e26db4e9aac15ae1732caad6ba909a57695987a766af1d46e89f93defdf23",
+      "77df6c73f5773f292c421179a27497ee4f5b390c9d2817f0e018cc50271a9784",
+      "90fc6f707f8e4e84147f90abddf186f418ff35dd7d6508dc2ebb2589533a5032",
+      "dcbab08624156d4b339fd2c48c2ee8b409d87a7545ebc386398b7727e4432e6a",
+      "64f4abc0b3dd0045ca5453306993c3e4b6358305eab98e1c4ca2c500885a75d5",
+      "fff2c4bdbc288c5c5285566bae5195c05bafe68b0965f9ea2d3119c78561b987",
+      "b05eca95ade8eba676558de7d0d2a6b82fc0e96c9f9c2df51d80466ecaa6674c"
+    ],
+    "DOC/docs/DSP/TRANSFORM/DWT/test.en.md": [
+      "afad243cf9efc7535023f2f1bae7d826d348a732320ab4fce9ccb3b7f44b7172",
+      "efc47337d9e93fe27aa6fd93a863db4d1170c9087531a15f07ee1ae6d7474289"
+    ],
+    "DOC/docs/DSP/TRANSFORM/DWT/test.zh.md": [
+      "6548f374640abbf003820cd78d223562c6c2b6cd09cfa9dc3caef6d905a84470",
+      "efc47337d9e93fe27aa6fd93a863db4d1170c9087531a15f07ee1ae6d7474289"
+    ],
+    "DOC/docs/DSP/TRANSFORM/FFT/code.en.md": [
+      "a0d520b447e3d6d990c11fa1f12c61b480c74fa17fbc8aba36dc5121418de288",
+      "aefe51db7521f763f282bceeda6387ab5994fe2bdee4f4959cbf9700efac4c52"
+    ],
+    "DOC/docs/DSP/TRANSFORM/FFT/code.zh.md": [
+      "a0d520b447e3d6d990c11fa1f12c61b480c74fa17fbc8aba36dc5121418de288",
+      "aefe51db7521f763f282bceeda6387ab5994fe2bdee4f4959cbf9700efac4c52"
+    ],
+    "DOC/docs/DSP/TRANSFORM/FFT/notes.en.md": [
+      "c33509d8b6764bab343249445dcde5f390b7f7dbeab37feaa1259d30f66c7936",
+      "43c0f98d12a7e166c1ee2596783442f9ad5ce6dc74c209278652e829250c9f62",
+      "d52b6359291363fae45d4c9b116429bcd159002f87a8bfcb90d57cdb9e4347ac",
+      "1d8dfd6111d5b28335cc36829600058d9d1f9910d6a7dfa91a3bd28984f41a99",
+      "abd433e29bef4d438046bd4f3fd7ec21c674055cd51e45a4b520291f36678670",
+      "ff1ce5e66612e03cc05d4a3bee090a716a2c3e767929821eed8dbe55b6ba8a77",
+      "2453d3465b74403ce31aa30d05a40edf31ab7a3844cd3c8ae1db410d033202f0",
+      "e01af04374868a3bfddce48ab874b770da54ba11bb4963939b101a67ff7ef3f9",
+      "5c7503c0b72d33adaf8a87afd16a27a664ed807facb49cd6bd6509c1a8602d91",
+      "1adedc0743e9fc07195bfda639fd997121a9cca64a49b254a879bff8bddfd188",
+      "073e35eba1469747d4264f1c54bf4374f8da6d8c6a4516aae30f7dde37d1a2bc",
+      "b20264a4392c4713701c97d1bd4fe20834c4eb4f70a6a9c0b3a31ce17acf6872",
+      "f31b39f27b7c365284764a4da9f2d1f031646d2ec4f062e798618b92c9270e62"
+    ],
+    "DOC/docs/DSP/TRANSFORM/FFT/notes.zh.md": [
+      "c33509d8b6764bab343249445dcde5f390b7f7dbeab37feaa1259d30f66c7936",
+      "43c0f98d12a7e166c1ee2596783442f9ad5ce6dc74c209278652e829250c9f62",
+      "d52b6359291363fae45d4c9b116429bcd159002f87a8bfcb90d57cdb9e4347ac",
+      "1d8dfd6111d5b28335cc36829600058d9d1f9910d6a7dfa91a3bd28984f41a99",
+      "abd433e29bef4d438046bd4f3fd7ec21c674055cd51e45a4b520291f36678670",
+      "ff1ce5e66612e03cc05d4a3bee090a716a2c3e767929821eed8dbe55b6ba8a77",
+      "2453d3465b74403ce31aa30d05a40edf31ab7a3844cd3c8ae1db410d033202f0",
+      "e01af04374868a3bfddce48ab874b770da54ba11bb4963939b101a67ff7ef3f9",
+      "88ad40ce61f996ef7cbcec95ddb6c5a514a32a0ecd96d819d0c0bc0717617412",
+      "1f9727349dc5cbc77573cd9703d4f7bb3f97d2e8082ac5eac3e394b8e7983c2c",
+      "073e35eba1469747d4264f1c54bf4374f8da6d8c6a4516aae30f7dde37d1a2bc",
+      "b20264a4392c4713701c97d1bd4fe20834c4eb4f70a6a9c0b3a31ce17acf6872",
+      "f31b39f27b7c365284764a4da9f2d1f031646d2ec4f062e798618b92c9270e62"
+    ],
+    "DOC/docs/DSP/TRANSFORM/FFT/test.en.md": [
+      "5123a6caa6f3cb743789aff1d17b4e09011bfc2320394053ebf0da191314b78e",
+      "7004ba67ae110731cb3d2983154454aca295ee1552b12fada464480612ea1da3",
+      "8341577f580ab5f5eed112d6de3308cfe6089c8e4c95f653fca7813452efa100"
+    ],
+    "DOC/docs/DSP/TRANSFORM/FFT/test.zh.md": [
+      "db94099c107a6aed505c82864be3d81835f74e27a8f57cd253c37625c6b9ae17",
+      "7004ba67ae110731cb3d2983154454aca295ee1552b12fada464480612ea1da3",
+      "8341577f580ab5f5eed112d6de3308cfe6089c8e4c95f653fca7813452efa100"
+    ],
+    "DOC/docs/DSP/TRANSFORM/ICA/code.en.md": [
+      "bdf711e335985802f9b262de5b9340a543082ea91574a412868f35daf8b2ef3d",
+      "ce8d20240fcacb0bb3638050291ebc57c661ae1661853e998913946eeac9490c"
+    ],
+    "DOC/docs/DSP/TRANSFORM/ICA/code.zh.md": [
+      "bdf711e335985802f9b262de5b9340a543082ea91574a412868f35daf8b2ef3d",
+      "ce8d20240fcacb0bb3638050291ebc57c661ae1661853e998913946eeac9490c"
+    ],
+    "DOC/docs/DSP/TRANSFORM/ICA/notes.en.md": [
+      "3f8e49f78bcffb4f191ac5fabac8ff5b6fead4f91ec544a0c0ea5238c64e9da9",
+      "0fb5d35950dec5b140589f050fef53470a3c5ad4b0c6e62935c300babcace13c",
+      "92c8d2f325898cd0a2863b9e47f9f370842447b2066259789f9039d6511ab720",
+      "42dd5dd40a379d97664fe6c3d812e929fa4611ff0d0b0d1dabea59d26b82f38e",
+      "d38f652fa120b351e7211e5645c96e8efd8c0bb8e7962cfaaec397e86b19a66c",
+      "c0dee59e31d95cc35c4850cdf7011f03a09debb545d3501b47fc974ee025198b",
+      "915e40dba92a4ab740296630162a4e101ead20dd715ce269d52a453fb157e31c"
+    ],
+    "DOC/docs/DSP/TRANSFORM/ICA/notes.zh.md": [
+      "3f8e49f78bcffb4f191ac5fabac8ff5b6fead4f91ec544a0c0ea5238c64e9da9",
+      "0fb5d35950dec5b140589f050fef53470a3c5ad4b0c6e62935c300babcace13c",
+      "92c8d2f325898cd0a2863b9e47f9f370842447b2066259789f9039d6511ab720",
+      "42dd5dd40a379d97664fe6c3d812e929fa4611ff0d0b0d1dabea59d26b82f38e",
+      "d38f652fa120b351e7211e5645c96e8efd8c0bb8e7962cfaaec397e86b19a66c",
+      "08e34fe58edabe100fa41283e8265c733eb29014ac94f8e2ee3974c7485df86e",
+      "42b06a88f9dac440f531d970be938a5b8b056d50f27e15d854195169bf2d1002"
+    ],
+    "DOC/docs/DSP/TRANSFORM/ICA/test.en.md": [
+      "475069c20946e57227128ec600a3c1dad2ce4d6ca55edf3562ae886a8473ef08",
+      "9e74b873a07d8dc93df0f21378491969806dcfa97bfe525c744b046b4ecfafaf",
+      "3271896791a22f558ab8e6d658c8995f9f194fad7dcf7381f4f08ce725e14199"
+    ],
+    "DOC/docs/DSP/TRANSFORM/ICA/test.zh.md": [
+      "475069c20946e57227128ec600a3c1dad2ce4d6ca55edf3562ae886a8473ef08",
+      "475069c20946e57227128ec600a3c1dad2ce4d6ca55edf3562ae886a8473ef08",
+      "9e74b873a07d8dc93df0f21378491969806dcfa97bfe525c744b046b4ecfafaf",
+      "c05bc0223812a5b1a4eb0231a1a688583eb18ee8520b8243268c5e4562e05e19"
+    ],
+    "DOC/docs/DSP/USAGE/usage.en.md": [
+      "d4e7c44a03a37bae9de51d6f268f47e769e33d00983c6813dbb60e461dba85bd",
+      "ab886f41738c9669aa2f8acad622bc9b0bc28bb74d3e3c20748f5c7b530f5ac5"
+    ],
+    "DOC/docs/DSP/USAGE/usage.zh.md": [
+      "d4e7c44a03a37bae9de51d6f268f47e769e33d00983c6813dbb60e461dba85bd",
+      "181ef6698c09cf4c769d5e9d9b703325af72737df61c1df3912e03c791567b17"
+    ],
+    "DOC/docs/index.en.md": [
+      "816494217b99855c38818de9667fd134def699451eb60ce3437ae2755954529f"
+    ],
+    "DOC/docs/index.zh.md": [
+      "d94484522b57103d5d5070e92a4accedcccbf0d680e028b1d975fff2f11bd827"
+    ],
+    "DOC/docs/MATH/ESP-DSP/esp-dsp.en.md": [
+      "af954045ce3ce855595fec34306f06493e28b8faae300910cf7ae0d3da8451a9"
+    ],
+    "DOC/docs/MATH/ESP-DSP/esp-dsp.zh.md": [
+      "af954045ce3ce855595fec34306f06493e28b8faae300910cf7ae0d3da8451a9"
+    ],
+    "DOC/docs/MATH/ESP-DSP/examples.en.md": [],
+    "DOC/docs/MATH/ESP-DSP/examples.zh.md": [],
+    "DOC/docs/MATH/HEADER-FILE/tiny_constants.en.md": [
+      "10c10976d81b72ec0bf16febb7443e8776f6cffda79efeacd54ad3a8ee49e013"
+    ],
+    "DOC/docs/MATH/HEADER-FILE/tiny_constants.zh.md": [
+      "10c10976d81b72ec0bf16febb7443e8776f6cffda79efeacd54ad3a8ee49e013"
+    ],
+    "DOC/docs/MATH/HEADER-FILE/tiny_error_type.en.md": [
+      "d7c74efd27fc7e069707a747266908e131106e9962e5b96fa26d3912d6d84068"
+    ],
+    "DOC/docs/MATH/HEADER-FILE/tiny_error_type.zh.md": [
+      "d7c74efd27fc7e069707a747266908e131106e9962e5b96fa26d3912d6d84068"
+    ],
+    "DOC/docs/MATH/HEADER-FILE/tiny_math.en.md": [
+      "357d66613ee01d4c691dd21077a4ac901818ac3ceb02fa684a4a9f83da03b38e"
+    ],
+    "DOC/docs/MATH/HEADER-FILE/tiny_math.zh.md": [
+      "357d66613ee01d4c691dd21077a4ac901818ac3ceb02fa684a4a9f83da03b38e"
+    ],
+    "DOC/docs/MATH/HEADER-FILE/tiny_math_config.en.md": [
+      "7d7ef01ea863ae38836ca739213c8dbd8761cc6d99390b877445bb829f882b2a"
+    ],
+    "DOC/docs/MATH/HEADER-FILE/tiny_math_config.zh.md": [
+      "7d7ef01ea863ae38836ca739213c8dbd8761cc6d99390b877445bb829f882b2a"
+    ],
+    "DOC/docs/MATH/math.en.md": [
+      "e9e3c4186d3b5084a0c68ffa933dc1b20a080d45dba14a1e467fa625782fb2df",
+      "00a06a8b8b3057e4a0566d1e101210f577c1c1495970056e83d4cd62ece07343"
+    ],
+    "DOC/docs/MATH/math.zh.md": [
+      "e9e3c4186d3b5084a0c68ffa933dc1b20a080d45dba14a1e467fa625782fb2df",
+      "00a06a8b8b3057e4a0566d1e101210f577c1c1495970056e83d4cd62ece07343"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-mat-api.en.md": [
+      "896d3c6376c6774f08c7123e9b5bed07094f65fb52599e6825bc6feca7ebc845",
+      "6031399d919fed2c23ffc47360dedec74cfe3920cf86e7483b2defb41f36f2f9",
+      "a896e01bd62e74bc63aa9e440a8232ac5eca929baa8b18c541d9b41d5c3888ec",
+      "714912e512067f04cafcf1cd889654c3ef8a7dcc61856930f79cb2dc73e70a46",
+      "d69a81b0561569a78cc7fd06a9726112da6396fd03d4c7fcd681821f554a2827",
+      "1e9521ad192fa29bf0b9aad5b82de5e80649ef86a38666170d5f7229e8b4914b",
+      "2c8cdd4211770244ce22ba9cd8ec50989960c05a1c28d83b936ca6e244f6562e",
+      "68dc1e35a7f026fbed3c4b07e0699b315bfd575e6d9f657431111bef067c7aa5",
+      "e1d5011076e0074900485d6798505ce702df2ddc53b1294e0a4f481eb0ab4e9c",
+      "4ce55bc34c4d1ee5967083df620a614f6a660226e0ed827f0d9b58b2bea75187",
+      "66021b1e3c46d1a53d932b238e7524eaa45c3e70a9e9e561803940be6f7b7487",
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-mat-api.zh.md": [
+      "896d3c6376c6774f08c7123e9b5bed07094f65fb52599e6825bc6feca7ebc845",
+      "6031399d919fed2c23ffc47360dedec74cfe3920cf86e7483b2defb41f36f2f9",
+      "a896e01bd62e74bc63aa9e440a8232ac5eca929baa8b18c541d9b41d5c3888ec",
+      "714912e512067f04cafcf1cd889654c3ef8a7dcc61856930f79cb2dc73e70a46",
+      "d69a81b0561569a78cc7fd06a9726112da6396fd03d4c7fcd681821f554a2827",
+      "1e9521ad192fa29bf0b9aad5b82de5e80649ef86a38666170d5f7229e8b4914b",
+      "2c8cdd4211770244ce22ba9cd8ec50989960c05a1c28d83b936ca6e244f6562e",
+      "68dc1e35a7f026fbed3c4b07e0699b315bfd575e6d9f657431111bef067c7aa5",
+      "e1d5011076e0074900485d6798505ce702df2ddc53b1294e0a4f481eb0ab4e9c",
+      "4ce55bc34c4d1ee5967083df620a614f6a660226e0ed827f0d9b58b2bea75187",
+      "66021b1e3c46d1a53d932b238e7524eaa45c3e70a9e9e561803940be6f7b7487"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-mat-code.en.md": [
+      "4fae8f2f9b561e2bb6f88bc54f9cd8f71545ee729ed5148c26c56c7322083f41",
+      "de36a9988bf16a0983db9734784f065a6f82894e3021a29b653d55a7ad1912ff"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-mat-code.zh.md": [
+      "4fae8f2f9b561e2bb6f88bc54f9cd8f71545ee729ed5148c26c56c7322083f41",
+      "de36a9988bf16a0983db9734784f065a6f82894e3021a29b653d55a7ad1912ff"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-mat-test.en.md": [
+      "7288b47d231f84f8f46536037a5be2e3fd5c811dd89b4a9fbcc314076d82739f",
+      "c61963a83d0750c6269079ca7ba1b5ea303fb2e7008d9bf71373976ac9b8d4e9",
+      "16208fe1fc2519f5b3c6403a8936fe87780656690eb2ac45366758e231d71b6b",
+      "b984cfc91e368afd0b8de38bb4607227596a654bb2400ca8d329186d86416689"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-mat-test.zh.md": [
+      "7288b47d231f84f8f46536037a5be2e3fd5c811dd89b4a9fbcc314076d82739f",
+      "c61963a83d0750c6269079ca7ba1b5ea303fb2e7008d9bf71373976ac9b8d4e9",
+      "16208fe1fc2519f5b3c6403a8936fe87780656690eb2ac45366758e231d71b6b",
+      "b984cfc91e368afd0b8de38bb4607227596a654bb2400ca8d329186d86416689"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-matrix-api.en.md": [
+      "e1f50595e3f55c6c06ca7a8054d4ffff38341b471fe5bcd4c61fd5771c76459f",
+      "7be533f533ac5b0f738c3cb8992109e405648104a9b69688a43d40a34977bee5",
+      "372efa1708183bf59e64032b4143605a79e6bd5633108cf4a10add964feb3619",
+      "d5b1282af3d94e24c19ac51f32ef5d876817efd4f8388cf157320293aaa0fcdb",
+      "5e4186e923fed643ef8125c707a869e49962e1a8774cded5ccf260994171a8a0",
+      "0e2f84b52c422befd3ee8282a6202eacc2af217a77fa0da8d80454a5aad63f8e",
+      "9148d0fa478b59fbe2594a78d736b7d3e57a07a5b1e753509ad6916087c84b99",
+      "9c4592f203c44b5f6fdc4cffbf55ba3a9c551e9646e2fc01b359ba6fc471970a",
+      "f310281cedec7cf4e7af91b4a7996c8a3162be49cfec02614042d9ad2c53b913",
+      "95fb9f95f1cfb2a7dfc08843824f9f15ea840e227c28ff757e4ccc01b9a52e3e",
+      "17bb439dd9816ff43e11947fe080090d15263c4740a67ab51c37cd7f5335a16a",
+      "9e11fbb3857adbc61e9eb7978fb4f9dd6f42a2159ef2644272f11491df6d7a78",
+      "42fd2e3399de4584227ac7551934bf0b0c52bbe0926ffd4b2870155e45a38393",
+      "d1e1fc44a689173769f83e63b134e986e64c6d9941211126fd257a77396ab4c1",
+      "f0e9809ad5489d8818384f04e490b660b7147f2efc2a0dc4e76eb2736c0684eb",
+      "965a9e77c448b07a13963c3dfb5afcef3a0f7716eff11ebf268215cc0e35e775",
+      "41cc0ef8b3865149f2f4fcee0fd65634a1f6b2a8d194f80265662b71c6877708",
+      "113c4efc26627cfdd14f5e19d9bb7c79ccfc6d5ea1c04da49f00b547e644aa30",
+      "0764e10ebc6baf44574dc83af94367b70106d9d0e9858155fb4a084eab465423",
+      "e2b8270e97c9c77bad1209d0cb45c94ed0bc1e0b07e7a82222a0f06937eac597",
+      "3e46ba68579766e2628fd0aa36c2ee017a4c203cef3d7c5ff89510e99fefbee1",
+      "ecc14852896bcf27a607a38cfe096e21dfe2314f57781352c41be90cf41f47e9",
+      "b648962e6ce0b80b6da9fb5ba459584723fb61f14c1575f2fd5e04a82d383365",
+      "67a43aad60fb9cc1b93f103053a82f28e67d5198649737c58a3ee8ffb14db88f",
+      "2ccf4936a83ed5a8115d9b6283e4093a840fb307ba6c567b13ef53776486159b",
+      "2cb9a04a903d653e7735c6f62bd7b1e20d11b31b78da9d9f5ca4a61edf84b59e",
+      "d99dc9f49a12de536acf68888e340f26c9c63a929ae05f0d88549877a32b8325",
+      "a3253e4b8e7f62f37c531c661f3cf8902ca818d4da594552d4a2b8875a19c41d",
+      "341fc3e1133b97f01406038e5119fd010ff0fa0e9b8816021c227c51d75f5fdd",
+      "771f0a61d9dd619cc56d6eb9476a8d60849010003f26d2000df86bb972ff07be",
+      "ae6e9cf6ef69d84c4a61179a129c58e2f3fe7154e678de0786a024fbbeafa71c",
+      "4f132a653179734bbd0e45f93af5967d25afc64d865adcd31309f1d69cc92447",
+      "216cf40ecc73e3ed9f5b7e41135021e587ef8845305b85ebd02d430264055f04",
+      "e87a2f08527c6362dc249661428963da5bef4b3370c21c16481f9edf8749fd21",
+      "8cd44aafbbb8c8ee86c2bd221e11d516dc2ae961ebc62afcdf4f09059ea4b0f2",
+      "52ca83b1c672fb488891308d6373549e12f9daf33d62a6d94a1fb1a46a44bb33",
+      "8ce3989b13a217324f11e5624f446e75304a9e05a8c09f74d699c637c544f3e3",
+      "b8d2ca7798f132890f488da1e59f7065be64a955e875ef512dcf5167e6149f53",
+      "778285a682051aba5795b5e10ef883d39598effaddc7a4d73cab8882364bd510",
+      "1422bfe621d5b63fd4f0efca2a0c06a1fb9fc69ecfa5d389da0a9ddb63672ee7",
+      "118b066fecd3e0c0f8ab893557eaf836af151dfd43ffdcf6f8dd5b7a17010e9b",
+      "415c10f6b962efd1919f98004427a0bcf42a6f8850be3fe8fa0665c8f186baea",
+      "4b1af587e04f0aafaf1bf3e880fe566d16fba0f3b4d139c879288737a9d54971",
+      "eb23abb8c54fc62c00416ee5d48ae138d3ca3c4c5d8b689d2bd0f280e1e462dd",
+      "85ed3a37266f09da5f3b45b16e942392ccd8efc013497c92a1b14df6fbdc64ef",
+      "6e73d111ac758e423001f18541b5b7dbe124acf69a0e34492e6e62d3a5b84488",
+      "5d0deb8e9c5c6e948401ae4f17c5371e2ef8faf2e4209fe5335a218051cd6952",
+      "d9b54132863339cd8ed0e762dc7b6f309e25758c70498ca66151dd7dfdefb937",
+      "a438a037f72e6e132a88ee0342a8a46cffd693009c33e80a5206a92cbfe645f0",
+      "a2df2fef3ee00511de68e136c05a985ddbc0b245131d20ff2673d76b3dce0cfc",
+      "ea35d4fea4150688cd3a75a01c288cf496a4680ee600336f79010c7bc1964386",
+      "f56fd8ab5d2fa48b05926133ad136032295231b6026d0f4574fb5feab3b1d40d",
+      "83d4de309075acb96aca3bccb4b4685d965155ca5718d3ea4ba85b60d08752a5",
+      "8d73a15f8be0c4a6da456bd362325d661eae130fb39b31144abbd69c9d48811e",
+      "23f4bb1083748d3b72b0dc603161cbbb4277d69504944de57e356a811b4205c3",
+      "26a35efa4ee6961bfbad1b4ea782d353165594e140b145b4aebcdc9a8266efc5",
+      "a2205fd7b7a63e0f1e7e3c7d9d66ff3281baaa575743ed63400c0c885be8ef83",
+      "511da58895c38e3f9bcea80df599b848c501485e3492f4922a4c02506a6a721d",
+      "216ea18d5b60e5a5911bf21b61c14d2453f7821effa2e1aaf475d0765e12e26b",
+      "ca67ab2ac63ce5e7b4239002e087b1c79dcfd34e415c8b2734445e04c7787e69",
+      "e8583c1e77876ac13466843579e09c9f7826ee2e5e951a4dd4fe3271e798dd9d",
+      "acd84e639ab16b669eac7a8657d535ddc9deeec8c037126a65db60b320279adf",
+      "57d07db95848f58e38114de54d31eee83a179b58e469b3677a6386e88f047997",
+      "774c38caf9440462de8437ed7be21c485eed82e37f72f9d163bedfcc9fd3e616",
+      "7a4fdce3a3e37d6c17434193b38edef4a80a457ace54d68aef2cbc453bfb4f62",
+      "b5a7987d827e456aa1371652e2d21be8ac21356b814e476d1c343b882917a1fc",
+      "b4fef51b0e5a9d96849afb4458b904f9284407e7da3bcad9fdfaa90adcc18a9d",
+      "4cb48c658304d55aad4ca8dc565b0da9058e73ff193dae7f5ddad60e46c0a8a0",
+      "b19db9d81a81673ab0376df4544d0ad9839c3c2f6b2111c5144bb3de0fc26be7",
+      "03a402f00df5e1305d3e67c6303b6bf6aa6f9062d33e522f81f857ff2b411905",
+      "cabf2a9da6041a94f76bf26d0ece07d5fa53a5506d863ec0dd94680518fdaf7e",
+      "e2d5f8f8189b5ab14c1b1b83462797913565fb89d192697e1a61a6c910c0e1e8",
+      "fb317947983c6f684c79d380436dc22565738463173d3964490a99b10ed3a04f",
+      "fd0c110b551a922d2f28e4f6afa3307259c859c15a75e1f7034876a7f400396a",
+      "8ae28103c466f685b12584f68bf99972339885c1c138d529f3fb2b16f02c93e3",
+      "686b53b488d3d3577e42802ad27c2fc40ddf012643ecfc199fa1afb9a6883fcf",
+      "90a5943124bbc5f529e3d2e89b178a0ccaec444e812faaea34731ef5f8844934",
+      "061be11e3a8c3bacd0d7d38b4b6120ee64af5cd4e286a307c96b0c65d1c342d7",
+      "bfd1283f95c192a2f400d4791d47666a2de2b0ad6e19a177bb13f1116404f6d8",
+      "982367a5a0c64f51539ba8ff430f84d9600c197037c778a056114d3b334aecf9",
+      "569162ec704edc68cd76bb62ca42d31616a9b943b6d83fa59ffba38360d677f4",
+      "fb98080ca08c760d6c606f77339a7bec2a3ffdec558632b3e9b05ff7e5a7341b",
+      "109e4e3a2fbbd3ba6c43f7dafbb4805580a44fe2963ffcbc288c8b4115de5fa1",
+      "87345a9eec9c0903111c55ae963f8963dc13a3535e8de28dc2517df50c4236d1",
+      "6df541180a932223d1285921e71ad43006e96f88266fb714805092ebf0f01237",
+      "2d650843247d0c77a9d6d97a31569ccc058628c0cac9eaacb5ba441aa541d835",
+      "57cf83424f63ee2319c9d71b7356abfb01629166bc6de4cf75b3a448db1bdad1",
+      "5bd95e3333e72129814c0bbc3673c2f863c4701127bf47cc3e218d6301516244",
+      "c9dd18187f0fcd9ac443f17799e3be12c10c570f90bc046e9e4e3edfcac81120",
+      "02d83942c8a97aa23a3aac700ae168c79364c7d10ef0db75fee86c3c60ae6b5f",
+      "a4b3534af0d3c8cebb2e50fb88ebb8dc246df3403a729fa4d5687d4cd7c5720b",
+      "0acc4843c6b4379f58d7862bddc6d2ed0c616981c92f99494aa7f04499e14f2c",
+      "6c4307af665dec85cbf5110e98854fcab8ae1edfa5be5a43cc03336081576064",
+      "5e1f3cdb52c5cc43765d84eccb51ae73a1643c58d23f95b16322f4e0fcf3e8a4",
+      "3c7fc844c76db6108ebe02627894d3a14043581e791ef550abe60a883a818bd3",
+      "9973610cc3e2279691a4fa71caa2bd76a01bd2d4352804e9b607592b4749b7f9",
+      "32845eaba63e6bd2b5e4014aa275d2687c06c0f6ea863c90c263520b7fcd7255",
+      "535771bb6e0d3681022a2b4d2a013d5952acd3c3b3395b0f3d6793b49afeab95"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-matrix-api.zh.md": [
+      "e1f50595e3f55c6c06ca7a8054d4ffff38341b471fe5bcd4c61fd5771c76459f",
+      "7be533f533ac5b0f738c3cb8992109e405648104a9b69688a43d40a34977bee5",
+      "dd3a0f8d02433816b4a5093c461acacaec50b901e90c7811b94714e53724a0ae",
+      "98b9df8a92b454e05aadac422911daafb8cd404eb9f5e3786797daa73ac3589d",
+      "5e4186e923fed643ef8125c707a869e49962e1a8774cded5ccf260994171a8a0",
+      "0e2f84b52c422befd3ee8282a6202eacc2af217a77fa0da8d80454a5aad63f8e",
+      "9148d0fa478b59fbe2594a78d736b7d3e57a07a5b1e753509ad6916087c84b99",
+      "9c4592f203c44b5f6fdc4cffbf55ba3a9c551e9646e2fc01b359ba6fc471970a",
+      "f310281cedec7cf4e7af91b4a7996c8a3162be49cfec02614042d9ad2c53b913",
+      "95fb9f95f1cfb2a7dfc08843824f9f15ea840e227c28ff757e4ccc01b9a52e3e",
+      "17bb439dd9816ff43e11947fe080090d15263c4740a67ab51c37cd7f5335a16a",
+      "9e11fbb3857adbc61e9eb7978fb4f9dd6f42a2159ef2644272f11491df6d7a78",
+      "42fd2e3399de4584227ac7551934bf0b0c52bbe0926ffd4b2870155e45a38393",
+      "d1e1fc44a689173769f83e63b134e986e64c6d9941211126fd257a77396ab4c1",
+      "f0e9809ad5489d8818384f04e490b660b7147f2efc2a0dc4e76eb2736c0684eb",
+      "965a9e77c448b07a13963c3dfb5afcef3a0f7716eff11ebf268215cc0e35e775",
+      "41cc0ef8b3865149f2f4fcee0fd65634a1f6b2a8d194f80265662b71c6877708",
+      "113c4efc26627cfdd14f5e19d9bb7c79ccfc6d5ea1c04da49f00b547e644aa30",
+      "0764e10ebc6baf44574dc83af94367b70106d9d0e9858155fb4a084eab465423",
+      "436ffe288c2f01294271b58cc9025d113cb4bba29a84945e30748f1e1e84ed0a",
+      "6113a202c9a1142c2db21d113b080a166cc604b79fd1df42f6e4490442770f42",
+      "09026e464f3d5d413311f2c058c51c6cb2c838b84fb51a542a59ecdcc4175dff",
+      "fb895b97405b1d610f9e276813804475f58a0d732291409a3af6158ce17de2e4",
+      "2fbd92c80f43af33903fec72a2d3603f765e2599dbefe26f59ee9a66d6252abb",
+      "600dad177ecd9b9fb8c3880dce87e6f5f62701bf1d0aa6e4dcc7cff85720e9f4",
+      "56ad53dcc0c8fa02528d2a400f61208928505e2a677ab60be69f3f5861ddb53f",
+      "6cc16b41e9e95c4bd4c96d1154c62ccd011cb0b3f5230754030a287a33c90c9d",
+      "a3253e4b8e7f62f37c531c661f3cf8902ca818d4da594552d4a2b8875a19c41d",
+      "341fc3e1133b97f01406038e5119fd010ff0fa0e9b8816021c227c51d75f5fdd",
+      "771f0a61d9dd619cc56d6eb9476a8d60849010003f26d2000df86bb972ff07be",
+      "ae6e9cf6ef69d84c4a61179a129c58e2f3fe7154e678de0786a024fbbeafa71c",
+      "4f132a653179734bbd0e45f93af5967d25afc64d865adcd31309f1d69cc92447",
+      "216cf40ecc73e3ed9f5b7e41135021e587ef8845305b85ebd02d430264055f04",
+      "e87a2f08527c6362dc249661428963da5bef4b3370c21c16481f9edf8749fd21",
+      "8cd44aafbbb8c8ee86c2bd221e11d516dc2ae961ebc62afcdf4f09059ea4b0f2",
+      "52ca83b1c672fb488891308d6373549e12f9daf33d62a6d94a1fb1a46a44bb33",
+      "8ce3989b13a217324f11e5624f446e75304a9e05a8c09f74d699c637c544f3e3",
+      "b8d2ca7798f132890f488da1e59f7065be64a955e875ef512dcf5167e6149f53",
+      "778285a682051aba5795b5e10ef883d39598effaddc7a4d73cab8882364bd510",
+      "1422bfe621d5b63fd4f0efca2a0c06a1fb9fc69ecfa5d389da0a9ddb63672ee7",
+      "118b066fecd3e0c0f8ab893557eaf836af151dfd43ffdcf6f8dd5b7a17010e9b",
+      "415c10f6b962efd1919f98004427a0bcf42a6f8850be3fe8fa0665c8f186baea",
+      "4b1af587e04f0aafaf1bf3e880fe566d16fba0f3b4d139c879288737a9d54971",
+      "eb23abb8c54fc62c00416ee5d48ae138d3ca3c4c5d8b689d2bd0f280e1e462dd",
+      "85ed3a37266f09da5f3b45b16e942392ccd8efc013497c92a1b14df6fbdc64ef",
+      "6e73d111ac758e423001f18541b5b7dbe124acf69a0e34492e6e62d3a5b84488",
+      "5d0deb8e9c5c6e948401ae4f17c5371e2ef8faf2e4209fe5335a218051cd6952",
+      "d9b54132863339cd8ed0e762dc7b6f309e25758c70498ca66151dd7dfdefb937",
+      "a438a037f72e6e132a88ee0342a8a46cffd693009c33e80a5206a92cbfe645f0",
+      "a2df2fef3ee00511de68e136c05a985ddbc0b245131d20ff2673d76b3dce0cfc",
+      "ea35d4fea4150688cd3a75a01c288cf496a4680ee600336f79010c7bc1964386",
+      "f56fd8ab5d2fa48b05926133ad136032295231b6026d0f4574fb5feab3b1d40d",
+      "83d4de309075acb96aca3bccb4b4685d965155ca5718d3ea4ba85b60d08752a5",
+      "8d73a15f8be0c4a6da456bd362325d661eae130fb39b31144abbd69c9d48811e",
+      "23f4bb1083748d3b72b0dc603161cbbb4277d69504944de57e356a811b4205c3",
+      "26a35efa4ee6961bfbad1b4ea782d353165594e140b145b4aebcdc9a8266efc5",
+      "a2205fd7b7a63e0f1e7e3c7d9d66ff3281baaa575743ed63400c0c885be8ef83",
+      "511da58895c38e3f9bcea80df599b848c501485e3492f4922a4c02506a6a721d",
+      "216ea18d5b60e5a5911bf21b61c14d2453f7821effa2e1aaf475d0765e12e26b",
+      "ca67ab2ac63ce5e7b4239002e087b1c79dcfd34e415c8b2734445e04c7787e69",
+      "e8583c1e77876ac13466843579e09c9f7826ee2e5e951a4dd4fe3271e798dd9d",
+      "acd84e639ab16b669eac7a8657d535ddc9deeec8c037126a65db60b320279adf",
+      "57d07db95848f58e38114de54d31eee83a179b58e469b3677a6386e88f047997",
+      "774c38caf9440462de8437ed7be21c485eed82e37f72f9d163bedfcc9fd3e616",
+      "7a4fdce3a3e37d6c17434193b38edef4a80a457ace54d68aef2cbc453bfb4f62",
+      "b5a7987d827e456aa1371652e2d21be8ac21356b814e476d1c343b882917a1fc",
+      "19e8f6ce9c6fecb1607705bb0a72ca8de8add0edc309a0bcd74bc6d8adfade6f",
+      "81bb1a8a78c2b45aaf7099d1b7e74b90245c5cf6678d68b7b242991e2a19ce62",
+      "6189909d44042d650ad20026bb394c036760b69eca59609b8f26e66dc97c6c7d",
+      "bb4b568f663a10c1b3052b60f1d1db5816037919ebbab279bcc342e1b7b1a900",
+      "cabf2a9da6041a94f76bf26d0ece07d5fa53a5506d863ec0dd94680518fdaf7e",
+      "e2d5f8f8189b5ab14c1b1b83462797913565fb89d192697e1a61a6c910c0e1e8",
+      "fb317947983c6f684c79d380436dc22565738463173d3964490a99b10ed3a04f",
+      "fd0c110b551a922d2f28e4f6afa3307259c859c15a75e1f7034876a7f400396a",
+      "8ae28103c466f685b12584f68bf99972339885c1c138d529f3fb2b16f02c93e3",
+      "686b53b488d3d3577e42802ad27c2fc40ddf012643ecfc199fa1afb9a6883fcf",
+      "90a5943124bbc5f529e3d2e89b178a0ccaec444e812faaea34731ef5f8844934",
+      "061be11e3a8c3bacd0d7d38b4b6120ee64af5cd4e286a307c96b0c65d1c342d7",
+      "dd8391df0af2eeac4b2680e086cd6affbac946637fa9d3063f6d3e7b1b4c12a8",
+      "7a017b69bbfbc7c12e8157e3ebb106103d7e79edafd13e9c6f0b66468ac8f545",
+      "569162ec704edc68cd76bb62ca42d31616a9b943b6d83fa59ffba38360d677f4",
+      "fb98080ca08c760d6c606f77339a7bec2a3ffdec558632b3e9b05ff7e5a7341b",
+      "109e4e3a2fbbd3ba6c43f7dafbb4805580a44fe2963ffcbc288c8b4115de5fa1",
+      "87345a9eec9c0903111c55ae963f8963dc13a3535e8de28dc2517df50c4236d1",
+      "6df541180a932223d1285921e71ad43006e96f88266fb714805092ebf0f01237",
+      "2d650843247d0c77a9d6d97a31569ccc058628c0cac9eaacb5ba441aa541d835",
+      "57cf83424f63ee2319c9d71b7356abfb01629166bc6de4cf75b3a448db1bdad1",
+      "5bd95e3333e72129814c0bbc3673c2f863c4701127bf47cc3e218d6301516244",
+      "c9dd18187f0fcd9ac443f17799e3be12c10c570f90bc046e9e4e3edfcac81120",
+      "02d83942c8a97aa23a3aac700ae168c79364c7d10ef0db75fee86c3c60ae6b5f",
+      "a4b3534af0d3c8cebb2e50fb88ebb8dc246df3403a729fa4d5687d4cd7c5720b",
+      "0acc4843c6b4379f58d7862bddc6d2ed0c616981c92f99494aa7f04499e14f2c",
+      "6c4307af665dec85cbf5110e98854fcab8ae1edfa5be5a43cc03336081576064",
+      "5e1f3cdb52c5cc43765d84eccb51ae73a1643c58d23f95b16322f4e0fcf3e8a4",
+      "3c7fc844c76db6108ebe02627894d3a14043581e791ef550abe60a883a818bd3",
+      "9973610cc3e2279691a4fa71caa2bd76a01bd2d4352804e9b607592b4749b7f9",
+      "32845eaba63e6bd2b5e4014aa275d2687c06c0f6ea863c90c263520b7fcd7255",
+      "535771bb6e0d3681022a2b4d2a013d5952acd3c3b3395b0f3d6793b49afeab95"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-matrix-code.en.md": [
+      "7be533f533ac5b0f738c3cb8992109e405648104a9b69688a43d40a34977bee5",
+      "b9dc5d6ce1b6def154e06ed122df5791b5ccbfe980e0829205d783e8979a5d8c"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-matrix-code.zh.md": [
+      "7be533f533ac5b0f738c3cb8992109e405648104a9b69688a43d40a34977bee5",
+      "b9dc5d6ce1b6def154e06ed122df5791b5ccbfe980e0829205d783e8979a5d8c"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-matrix-test.en.md": [
+      "44f458fb1194aa3d154d19c4ea4e2372994bd94a9f756b70d6edf9e1d0fc0221",
+      "2df8ef62992bdf773728648dda6b29a93c7ef40faa82454ff7f4659784c93d9c",
+      "93a1cef795eac763c7ca0d3bcf2be2562957e681d9155a5767daf6089456da1d",
+      "93a1cef795eac763c7ca0d3bcf2be2562957e681d9155a5767daf6089456da1d",
+      "9055aac833b777f0921ef3d7a6b1ebc40266e01c267dc51b7986ea3499fdc94a",
+      "bc4cbe29db676b71199cef91e78deed6a08ce62f9a72f2253e4ac7ab0f4422ec",
+      "c99b7690d76f8c01649ded6b2656d6ef7268d08b0b044a84740afd1b5a24f555",
+      "cde246666ddd1f03c8dce2007faa12da0b2ae40c8030be82f244272ffd07a56f",
+      "18fab4286a8a356910a0085ddbb848d2fe153aab6fd9e86ac2505f431975197e",
+      "ba25814773b0e7e140ebb91fe46177377d354a8f3d2ea9c2cd8ff2ae2c30172a"
+    ],
+    "DOC/docs/MATH/MATRIX/tiny-matrix-test.zh.md": [
+      "44f458fb1194aa3d154d19c4ea4e2372994bd94a9f756b70d6edf9e1d0fc0221",
+      "2df8ef62992bdf773728648dda6b29a93c7ef40faa82454ff7f4659784c93d9c",
+      "93a1cef795eac763c7ca0d3bcf2be2562957e681d9155a5767daf6089456da1d",
+      "93a1cef795eac763c7ca0d3bcf2be2562957e681d9155a5767daf6089456da1d",
+      "9055aac833b777f0921ef3d7a6b1ebc40266e01c267dc51b7986ea3499fdc94a",
+      "bc4cbe29db676b71199cef91e78deed6a08ce62f9a72f2253e4ac7ab0f4422ec",
+      "c99b7690d76f8c01649ded6b2656d6ef7268d08b0b044a84740afd1b5a24f555",
+      "cde246666ddd1f03c8dce2007faa12da0b2ae40c8030be82f244272ffd07a56f",
+      "18fab4286a8a356910a0085ddbb848d2fe153aab6fd9e86ac2505f431975197e",
+      "ba25814773b0e7e140ebb91fe46177377d354a8f3d2ea9c2cd8ff2ae2c30172a"
+    ],
+    "DOC/docs/MATH/USAGE/usage.en.md": [
+      "4cbeb0c43b37df62051b34ac64b3034c4c412eee8fc0be65cf9aae2a2782a193",
+      "a6eeafc4d3ecc186eeaef89affcb34ebdf55b734e567c2aed540267d1ad1f3ba",
+      "31679dde5a636616cc1d12d69330d12d61f99666edb16635a18b87bd550e221e"
+    ],
+    "DOC/docs/MATH/USAGE/usage.zh.md": [
+      "4cbeb0c43b37df62051b34ac64b3034c4c412eee8fc0be65cf9aae2a2782a193",
+      "93476dae9810bf183ffc10bef100616cce6eb71612563630f07674fb59ab1832",
+      "be142f2263c500802c176586d1df5a202080e3123eee9f47990520c2cf0446f0"
+    ],
+    "DOC/docs/MATH/VECTOR/api.en.md": [
+      "4d8d7cfacc8c6207785b347504e760b510206dd7cc3d0b6b2b294cea9d62d51b",
+      "2caa69b0f8aa3be3ce897088f6b3e668fd4935208c4b55f406d20b9972447519",
+      "f0f01976ff99c25ced4c9ffa259f561075b0da6374bf5425404cc50af2b073a4",
+      "efc44df5c8ee9ecc2b0bce748d22c635d3b7e22852ba9f662528f49f63725986",
+      "750e89cdf9aee6b95a25c12c2bbc07593e3372d2cad6fab2c468fedf15f9bdbf",
+      "c539da12c445a44312ec72ab5012fe7dfe073d86606f7951ad848acc2184ecc0",
+      "986f1221e46de217ab55f324165cedede5d2edfdb778c51a9c84c0dd33739700",
+      "d7b492cf93583446d3452531aaa9533071e3b04bb8e96178b1875386da2900a2",
+      "2f8f3347654813ac9f77f5966b8ede6b0ce7673bc290ca6f57e36c03ebbf3859",
+      "e6d8db3b1352280b29574d472aaa9146b3d96b0d2fa6ad5055a1e5d1669df3d3",
+      "897d73df3584fb2e6dc40e354aa92bc96d7163240fd4361c6d166a835e0661d7",
+      "0ca8a5aaf608f697678a80bfeeaf35ea3451982d9b048099fee28ed44a5c1272",
+      "610052d5675c0c5e793cedd201f10ab328dff7c1f9f44977b8df38a17269d626",
+      "1b8cee1e7690220037617a5df08ff2bf5141be50bc4e79e80a9ae49519558295",
+      "d50349ca93ab5b24a9d9942bcc471121784acd1072c9d73119ee889eecea0aba"
+    ],
+    "DOC/docs/MATH/VECTOR/api.zh.md": [
+      "4d8d7cfacc8c6207785b347504e760b510206dd7cc3d0b6b2b294cea9d62d51b",
+      "2caa69b0f8aa3be3ce897088f6b3e668fd4935208c4b55f406d20b9972447519",
+      "f0f01976ff99c25ced4c9ffa259f561075b0da6374bf5425404cc50af2b073a4",
+      "efc44df5c8ee9ecc2b0bce748d22c635d3b7e22852ba9f662528f49f63725986",
+      "750e89cdf9aee6b95a25c12c2bbc07593e3372d2cad6fab2c468fedf15f9bdbf",
+      "c539da12c445a44312ec72ab5012fe7dfe073d86606f7951ad848acc2184ecc0",
+      "986f1221e46de217ab55f324165cedede5d2edfdb778c51a9c84c0dd33739700",
+      "d7b492cf93583446d3452531aaa9533071e3b04bb8e96178b1875386da2900a2",
+      "2f8f3347654813ac9f77f5966b8ede6b0ce7673bc290ca6f57e36c03ebbf3859",
+      "e6d8db3b1352280b29574d472aaa9146b3d96b0d2fa6ad5055a1e5d1669df3d3",
+      "897d73df3584fb2e6dc40e354aa92bc96d7163240fd4361c6d166a835e0661d7",
+      "0ca8a5aaf608f697678a80bfeeaf35ea3451982d9b048099fee28ed44a5c1272",
+      "610052d5675c0c5e793cedd201f10ab328dff7c1f9f44977b8df38a17269d626",
+      "1b8cee1e7690220037617a5df08ff2bf5141be50bc4e79e80a9ae49519558295",
+      "d50349ca93ab5b24a9d9942bcc471121784acd1072c9d73119ee889eecea0aba"
+    ],
+    "DOC/docs/MATH/VECTOR/code.en.md": [
+      "f501ddc3a30335ffb3ab46cd12cbdc1b2a368b7b16bdedb62658182ece343fd1",
+      "d8f5a99fbf73e56879e0daaa95b9ab98f65f3bff8a205483cffc853a427a384a"
+    ],
+    "DOC/docs/MATH/VECTOR/code.zh.md": [
+      "f501ddc3a30335ffb3ab46cd12cbdc1b2a368b7b16bdedb62658182ece343fd1",
+      "d8f5a99fbf73e56879e0daaa95b9ab98f65f3bff8a205483cffc853a427a384a"
+    ],
+    "DOC/docs/MATH/VECTOR/test.en.md": [
+      "bf2fdc61d027889a8f5689c06268e14af756994bda52991b8d66d220ea437d9a",
+      "d5eecb577a41958ad2b428d635f89ef13a3984b112508f4851518e675b18cf9f",
+      "7a26789b7c8e9ffb49ae51cdbc4238eb170242d287bf62bb883692439a83e52f"
+    ],
+    "DOC/docs/MATH/VECTOR/test.zh.md": [
+      "bf2fdc61d027889a8f5689c06268e14af756994bda52991b8d66d220ea437d9a",
+      "d5eecb577a41958ad2b428d635f89ef13a3984b112508f4851518e675b18cf9f",
+      "7a26789b7c8e9ffb49ae51cdbc4238eb170242d287bf62bb883692439a83e52f"
+    ],
+    "DOC/docs/PREREQUISITE/prerequisite.en.md": [
+      "19958b4b194ebdea59cb97fd8c90f026f0991cc8db55ef9d3375e391a80058a9"
+    ],
+    "DOC/docs/PREREQUISITE/prerequisite.zh.md": [
+      "19958b4b194ebdea59cb97fd8c90f026f0991cc8db55ef9d3375e391a80058a9"
+    ],
+    "DOC/docs/TOOLBOX/TIME/code.en.md": [
+      "9a36379856ba39423cec1d7a0e24cec14ca3b1a07825075d6d3029c6ccb50bcd",
+      "832badf679975437387fd014754cedc4bc71b531dd79a1a161916dcf942685e5",
+      "e5dae7836ed00b7b248f19c8e4f745b6f737ae0cde391c2b89623f56d4b77820",
+      "2cf23ab4a37e0a0419b688dda44f871a9500d2e997fd865abd7b2fa5655c1be2"
+    ],
+    "DOC/docs/TOOLBOX/TIME/code.zh.md": [
+      "9a36379856ba39423cec1d7a0e24cec14ca3b1a07825075d6d3029c6ccb50bcd",
+      "832badf679975437387fd014754cedc4bc71b531dd79a1a161916dcf942685e5",
+      "e5dae7836ed00b7b248f19c8e4f745b6f737ae0cde391c2b89623f56d4b77820",
+      "2cf23ab4a37e0a0419b688dda44f871a9500d2e997fd865abd7b2fa5655c1be2"
+    ],
+    "DOC/docs/TOOLBOX/TIME/log.en.md": [],
+    "DOC/docs/TOOLBOX/TIME/log.zh.md": [],
+    "DOC/docs/TOOLBOX/TIME/notes.en.md": [
+      "4730f95fbd33d9d080e52742ea7d42c6b9fc1dc9acb7965c985199c5cbbcb78d",
+      "16eba38e15962d69f9c1f68ab4bae456afc3442d95d499347b5918ead15579cb",
+      "554b4e01e3dfcea14550cb9fa087e53d7aee82916ac596c308ed51bb5644921d",
+      "415f2b0970fa11d0d700a093e36e828757e3d3094e625e04cf0d7b83e831fe7f",
+      "0e29d9e121100f47f1f8eb3c90d450e9497c939da8cb5141f8f8120d008e5a5c",
+      "818c65734948311f82c407395de26fc9cc363f7254d4f9dcd8fe44f5082c6a4f",
+      "d91d2e120094fd82b9b5f26a92eae1b5dd3a00a194f344b776ccff65943d7b4f",
+      "90f9da424d57602c3f3b0b1b12ff79cbff0620dd166a2cb5f69d228328419a51",
+      "3af6808282d25c0fe6462a3711e8ab58768ad803afe2d83810b006a1124e09f2",
+      "60b1a217d0adfa5962af192d162d14e8e50a11e46f108b3945e0f37dcbcb6b6a"
+    ],
+    "DOC/docs/TOOLBOX/TIME/notes.zh.md": [
+      "4730f95fbd33d9d080e52742ea7d42c6b9fc1dc9acb7965c985199c5cbbcb78d",
+      "16eba38e15962d69f9c1f68ab4bae456afc3442d95d499347b5918ead15579cb",
+      "554b4e01e3dfcea14550cb9fa087e53d7aee82916ac596c308ed51bb5644921d",
+      "ae758a95323cf5b46c0fcd38f336386314ad2003fdfc20a1eaabae8bea17d2bd",
+      "0e29d9e121100f47f1f8eb3c90d450e9497c939da8cb5141f8f8120d008e5a5c",
+      "818c65734948311f82c407395de26fc9cc363f7254d4f9dcd8fe44f5082c6a4f",
+      "d91d2e120094fd82b9b5f26a92eae1b5dd3a00a194f344b776ccff65943d7b4f",
+      "90f9da424d57602c3f3b0b1b12ff79cbff0620dd166a2cb5f69d228328419a51",
+      "3af6808282d25c0fe6462a3711e8ab58768ad803afe2d83810b006a1124e09f2",
+      "60b1a217d0adfa5962af192d162d14e8e50a11e46f108b3945e0f37dcbcb6b6a"
+    ],
+    "DOC/docs/TOOLBOX/toolbox.en.md": [
+      "31298d6c7991fe5f093da4291c275c16dd41481d29bb553cdcbf8830b7689e7f",
+      "72ae695264eaed6dcd77305a853c5779eab087d25f0fb16c51bcdc444f488b57",
+      "ca2f01f94623d50684ebe3a9256257604c6ec1764cdd770a031f1e716720d713"
+    ],
+    "DOC/docs/TOOLBOX/toolbox.zh.md": [
+      "31298d6c7991fe5f093da4291c275c16dd41481d29bb553cdcbf8830b7689e7f",
+      "72ae695264eaed6dcd77305a853c5779eab087d25f0fb16c51bcdc444f488b57",
+      "ca2f01f94623d50684ebe3a9256257604c6ec1764cdd770a031f1e716720d713"
+    ]
+  },
+  "assets": [
+    {
+      "path": "DOC/docs/AI/tiny_ai.png",
+      "sha256": "3d463c1272036f8c5953228a60a936d654ba634a010adf3e55c783b038c24dc0"
+    },
+    {
+      "path": "DOC/docs/cover.jpg",
+      "sha256": "d49d7a352c23698876cc06289261da92baf3e74cd63d3b4ff7939eab426632c9"
+    },
+    {
+      "path": "DOC/docs/DNESP32S3-BACK.png",
+      "sha256": "d56663b062988bd8c79a52cec16b4c05eb2ed1bd2dd74710c3b0a980a7a6ba47"
+    },
+    {
+      "path": "DOC/docs/DNESP32S3.png",
+      "sha256": "85f00017a3db9351223e569359d5493c4acf6a55911095f307ea227937d925bb"
+    },
+    {
+      "path": "DOC/docs/DNESP32S3M-BACK.png",
+      "sha256": "944b4352ee02af32eef4e6ca9e936c73ee87d5a824a6665bc9d896a99bd7e39d"
+    },
+    {
+      "path": "DOC/docs/DNESP32S3M.png",
+      "sha256": "486429fc54f92372594927f42ad448216ed50f81760f2c1ecc4bc8b58b9d9e4c"
+    },
+    {
+      "path": "DOC/docs/DSP/tiny_dsp.png",
+      "sha256": "f5d470367e08a3819a6b44ed40a8b7ef120019cddffe3cd52c27f58025ead01d"
+    },
+    {
+      "path": "DOC/docs/FK743M2-IIT6-BACK.png",
+      "sha256": "fbc12ebe497773a181d1e139cf7bfca1e327aad1234bf6e06cb9e7f06ce1e69f"
+    },
+    {
+      "path": "DOC/docs/FK743M2-IIT6.png",
+      "sha256": "e54ffef8ebf60b59ea0008f1ffc749b71e1d9fdf7cfda02450ae4a5bb533c5cf"
+    },
+    {
+      "path": "DOC/docs/MATH/MATRIX/tiny_mat_test.png",
+      "sha256": "92f2271878217c84648b7fc06db6708e71c03a6a94e3abdfcbe46f9fb34d7a3b"
+    },
+    {
+      "path": "DOC/docs/MATH/tiny_math.png",
+      "sha256": "1fffb44076ee47b57dffbce1b841db42c82fb346a0afcf64f6c5b884d055c7c1"
+    },
+    {
+      "path": "DOC/docs/MATH/VECTOR/test.png",
+      "sha256": "e8f67fc00e9ed565d3883d44812dc4c71d5bd058c29255db4c238e2f5e0d1745"
+    },
+    {
+      "path": "DOC/docs/MATH/VECTOR/test_esp.png",
+      "sha256": "cd00030c2f57de09eb8486f48dafde621b55432ceaa63ba53aaed362e9dc0461"
+    },
+    {
+      "path": "DOC/docs/MATH/VECTOR/test_generic.png",
+      "sha256": "908d79eb22f2e6bf4a86cea52a07afd53bd8ab93ad78cae187677dc2ccef602d"
+    },
+    {
+      "path": "DOC/docs/PCB.png",
+      "sha256": "cf27d3bf8d729b26234e99149b3ecb03f0047f1729488973dd660ff475fadf03"
+    },
+    {
+      "path": "DOC/docs/static/images/logo.png",
+      "sha256": "e20fe71b727f3ed848f8776b5222379d924358a29e0f0233ff09c3178f25616a"
+    },
+    {
+      "path": "DOC/docs/static/images/mainboard.png",
+      "sha256": "ae6ccb884bbb4d5697af1950427eafe83f66d2b2609211f03e3e287a60d408d7"
+    },
+    {
+      "path": "DOC/docs/TOOLBOX/TIME/SNTP.png",
+      "sha256": "4e240326c78f0b23f27ca3631c68cd3bb951351207584a48dddf428dfe167c4a"
+    },
+    {
+      "path": "DOC/docs/WSN.jpg",
+      "sha256": "d7cb65940d5fa8b3cc023a5dbc7c735faec6ecd0241713af7ce230890ff30c9d"
+    }
+  ],
+  "anchors": {
+    "AI/ai/index.html": [
+      "artificial-intelligence",
+      "component-dependencies",
+      "architecture-functionality",
+      "dependency-diagram",
+      "source-tree",
+      "feature-matrix",
+      "design-highlights"
+    ],
+    "zh/AI/ai/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7"
+    ],
+    "AI/CORE/ACTIVATION/code/index.html": [
+      "code",
+      "tiny_activationhpp",
+      "tiny_activationcpp"
+    ],
+    "zh/AI/CORE/ACTIVATION/code/index.html": [
+      "_1",
+      "tiny_activationhpp",
+      "tiny_activationcpp"
+    ],
+    "AI/CORE/ACTIVATION/notes/index.html": [
+      "notes",
+      "acttype-enum",
+      "math",
+      "api-overview",
+      "forward-returns-a-new-tensor",
+      "in-place-mutates-x",
+      "backward-compiled-only-when-tiny_ai_training_enabled",
+      "dispatch-helpers",
+      "typical-usage",
+      "when-to-use-what"
+    ],
+    "zh/AI/CORE/ACTIVATION/notes/index.html": [
+      "_1",
+      "acttype",
+      "_2",
+      "api",
+      "_3",
+      "x",
+      "tiny_ai_training_enabled",
+      "dispatch",
+      "_4",
+      "_5"
+    ],
+    "AI/CORE/LOSS/code/index.html": [
+      "code",
+      "tiny_losshpp",
+      "tiny_losscpp"
+    ],
+    "zh/AI/CORE/LOSS/code/index.html": [
+      "_1",
+      "tiny_losshpp",
+      "tiny_losscpp"
+    ],
+    "AI/CORE/LOSS/notes/index.html": [
+      "notes",
+      "losstype-enum",
+      "math",
+      "mse",
+      "mae",
+      "cross-entropy-numerically-stable-expects-logits",
+      "binary-ce",
+      "api-overview",
+      "dispatch-helpers",
+      "recommendations"
+    ],
+    "zh/AI/CORE/LOSS/notes/index.html": [
+      "_1",
+      "losstype",
+      "_2",
+      "mse",
+      "mae",
+      "cross-entropy-softmax",
+      "binary-ce",
+      "api",
+      "dispatch",
+      "_3"
+    ],
+    "AI/CORE/OPTIMIZER/code/index.html": [
+      "code",
+      "tiny_optimizerhpp",
+      "tiny_optimizercpp"
+    ],
+    "zh/AI/CORE/OPTIMIZER/code/index.html": [
+      "_1",
+      "tiny_optimizerhpp",
+      "tiny_optimizercpp"
+    ],
+    "AI/CORE/OPTIMIZER/notes/index.html": [
+      "notes",
+      "paramgroup",
+      "optimizer-abstract-base",
+      "sgd-with-momentum-l2",
+      "adam-lite",
+      "memory-psram-impact",
+      "trainer-integration"
+    ],
+    "zh/AI/CORE/OPTIMIZER/notes/index.html": [
+      "_1",
+      "paramgroup",
+      "optimizer",
+      "sgd-l2",
+      "adamlite",
+      "psram",
+      "trainer"
+    ],
+    "AI/CORE/TENSOR/code/index.html": [
+      "code",
+      "tiny_tensorhpp",
+      "tiny_tensorcpp"
+    ],
+    "zh/AI/CORE/TENSOR/code/index.html": [
+      "_1",
+      "tiny_tensorhpp",
+      "tiny_tensorcpp"
+    ],
+    "AI/CORE/TENSOR/notes/index.html": [
+      "notes",
+      "concept",
+      "shape-and-size",
+      "common-shape-conventions",
+      "constructors-named-factories",
+      "direct-construction",
+      "named-factories",
+      "element-access",
+      "shape-semantic-accessors",
+      "in-place-ops",
+      "reshape",
+      "interop-with-tinymat",
+      "shape-comparison-printing",
+      "copy-move"
+    ],
+    "zh/AI/CORE/TENSOR/notes/index.html": [
+      "_1",
+      "_2",
+      "size",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "_8",
+      "_9",
+      "_10",
+      "tinymat",
+      "_11",
+      "_12"
+    ],
+    "AI/EXAMPLES/ATTENTION/code/index.html": [
+      "code",
+      "example_attentioncpp"
+    ],
+    "zh/AI/EXAMPLES/ATTENTION/code/index.html": [
+      "_1",
+      "example_attentioncpp"
+    ],
+    "AI/EXAMPLES/ATTENTION/notes/index.html": [
+      "notes",
+      "data-source",
+      "model",
+      "training-loop",
+      "evaluation",
+      "measured-output-2026-04-30",
+      "interpretation",
+      "resource-cost",
+      "entry-point"
+    ],
+    "zh/AI/EXAMPLES/ATTENTION/notes/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "2026-04-30",
+      "_6",
+      "_7",
+      "_8"
+    ],
+    "AI/EXAMPLES/CNN/code/index.html": [
+      "code",
+      "example_cnncpp",
+      "new-snippet-batchnorm2d-demo"
+    ],
+    "zh/AI/EXAMPLES/CNN/code/index.html": [
+      "_1",
+      "example_cnncpp",
+      "batchnorm2d-demo"
+    ],
+    "AI/EXAMPLES/CNN/notes/index.html": [
+      "notes",
+      "data-source",
+      "model",
+      "custom-training-loop",
+      "evaluation",
+      "fp8-compression-demo",
+      "new-batchnorm2d-demo",
+      "measured-output-2026-04-30",
+      "interpretation",
+      "entry-point"
+    ],
+    "zh/AI/EXAMPLES/CNN/notes/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "fp8",
+      "batchnorm2d-demo",
+      "2026-04-30",
+      "_6",
+      "_7"
+    ],
+    "AI/EXAMPLES/MLP/code/index.html": [
+      "code",
+      "example_mlpcpp",
+      "new-snippet-batchnorm1d-demo"
+    ],
+    "zh/AI/EXAMPLES/MLP/code/index.html": [
+      "_1",
+      "example_mlpcpp",
+      "batchnorm1d-demo"
+    ],
+    "AI/EXAMPLES/MLP/notes/index.html": [
+      "notes",
+      "data-source",
+      "model",
+      "training-config",
+      "training-flow",
+      "int8-ptq-demo",
+      "new-batchnorm1d-demo",
+      "measured-output-2026-04-30",
+      "interpretation",
+      "entry-point"
+    ],
+    "zh/AI/EXAMPLES/MLP/notes/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "int8-ptq",
+      "batchnorm1d-demo",
+      "2026-04-30",
+      "_6",
+      "_7"
+    ],
+    "AI/HEADER-FILE/tiny_ai/index.html": [
+      "tinyai-header",
+      "include-hierarchy",
+      "full-source"
+    ],
+    "zh/AI/HEADER-FILE/tiny_ai/index.html": [
+      "tinyai",
+      "_1",
+      "_2"
+    ],
+    "AI/HEADER-FILE/tiny_ai_config/index.html": [
+      "tinyai-configuration",
+      "dependencies",
+      "feature-flags",
+      "memory-strategy",
+      "error-codes",
+      "full-source"
+    ],
+    "zh/AI/HEADER-FILE/tiny_ai_config/index.html": [
+      "tinyai",
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5"
+    ],
+    "AI/LAYERS/ATTENTION/code/index.html": [
+      "code",
+      "tiny_attentionhpp",
+      "tiny_attentioncpp"
+    ],
+    "zh/AI/LAYERS/ATTENTION/code/index.html": [
+      "_1",
+      "tiny_attentionhpp",
+      "tiny_attentioncpp"
+    ],
+    "AI/LAYERS/ATTENTION/notes/index.html": [
+      "notes",
+      "math",
+      "q-k-v-projections",
+      "multi-head-split",
+      "scaled-dot-product-attention",
+      "concat-output-projection",
+      "class-definition",
+      "training-caches",
+      "backward-steps",
+      "example",
+      "tiny-transformer-on-iris",
+      "resources"
+    ],
+    "zh/AI/LAYERS/ATTENTION/notes/index.html": [
+      "_1",
+      "_2",
+      "q-k-v",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "_8",
+      "_9",
+      "iris-transformer",
+      "_10"
+    ],
+    "AI/LAYERS/BASE/code/index.html": [
+      "code",
+      "tiny_layerhpp",
+      "tiny_layercpp"
+    ],
+    "zh/AI/LAYERS/BASE/code/index.html": [
+      "_1",
+      "tiny_layerhpp",
+      "tiny_layercpp"
+    ],
+    "AI/LAYERS/BASE/notes/index.html": [
+      "notes",
+      "layer-abstract-base",
+      "activationlayer",
+      "flatten",
+      "globalavgpool",
+      "interaction-with-sequential",
+      "custom-layer"
+    ],
+    "zh/AI/LAYERS/BASE/notes/index.html": [
+      "_1",
+      "layer",
+      "activationlayer",
+      "flatten",
+      "globalavgpool",
+      "sequential",
+      "_2"
+    ],
+    "AI/LAYERS/CONV/code/index.html": [
+      "code",
+      "tiny_convhpp",
+      "tiny_convcpp"
+    ],
+    "zh/AI/LAYERS/CONV/code/index.html": [
+      "_1",
+      "tiny_convhpp",
+      "tiny_convcpp"
+    ],
+    "AI/LAYERS/CONV/notes/index.html": [
+      "notes",
+      "shape-conventions",
+      "conv1d",
+      "class-definition",
+      "forward",
+      "backward",
+      "he-init",
+      "conv2d",
+      "class-definition_1",
+      "forward_1",
+      "backward_1",
+      "memory-performance",
+      "examples",
+      "1-d-signal-classification",
+      "image-classification",
+      "limitations"
+    ],
+    "zh/AI/LAYERS/CONV/notes/index.html": [
+      "_1",
+      "_2",
+      "conv1d",
+      "_3",
+      "_4",
+      "_5",
+      "he",
+      "conv2d",
+      "_6",
+      "_7",
+      "_8",
+      "_9",
+      "_10",
+      "_11",
+      "_12",
+      "_13"
+    ],
+    "AI/LAYERS/DENSE/code/index.html": [
+      "code",
+      "tiny_densehpp",
+      "tiny_densecpp"
+    ],
+    "zh/AI/LAYERS/DENSE/code/index.html": [
+      "_1",
+      "tiny_densehpp",
+      "tiny_densecpp"
+    ],
+    "AI/LAYERS/DENSE/notes/index.html": [
+      "notes",
+      "math",
+      "xavier-uniform-init",
+      "class-definition",
+      "backward",
+      "parameter-collection",
+      "usage",
+      "performance-memory",
+      "quantisation-hooks"
+    ],
+    "zh/AI/LAYERS/DENSE/notes/index.html": [
+      "_1",
+      "_2",
+      "xavier-uniform",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "_8"
+    ],
+    "AI/LAYERS/NORM/code/index.html": [
+      "code",
+      "tiny_normhpp-excerpt",
+      "tiny_normcpp-core-logic"
+    ],
+    "zh/AI/LAYERS/NORM/code/index.html": [
+      "_1",
+      "tiny_normhpp",
+      "tiny_normcpp"
+    ],
+    "AI/LAYERS/NORM/notes/index.html": [
+      "notes",
+      "layernorm",
+      "batchnorm1d-dense-mlp",
+      "batchnorm2d-conv-outputs",
+      "training-inference-switch",
+      "practical-guidance"
+    ],
+    "zh/AI/LAYERS/NORM/notes/index.html": [
+      "_1",
+      "layernorm",
+      "batchnorm1ddensemlp",
+      "batchnorm2dconv",
+      "_2",
+      "_3"
+    ],
+    "AI/LAYERS/POOL/code/index.html": [
+      "code",
+      "tiny_poolhpp",
+      "tiny_poolcpp"
+    ],
+    "zh/AI/LAYERS/POOL/code/index.html": [
+      "_1",
+      "tiny_poolhpp",
+      "tiny_poolcpp"
+    ],
+    "AI/LAYERS/POOL/notes/index.html": [
+      "notes",
+      "shape-conventions",
+      "maxpool1d",
+      "forward",
+      "backward",
+      "avgpool1d",
+      "forward_1",
+      "backward_1",
+      "maxpool2d",
+      "avgpool2d",
+      "notes_1",
+      "conv-pool-recipe",
+      "compute-memory"
+    ],
+    "zh/AI/LAYERS/POOL/notes/index.html": [
+      "_1",
+      "_2",
+      "maxpool1d",
+      "_3",
+      "_4",
+      "avgpool1d",
+      "_5",
+      "_6",
+      "maxpool2d",
+      "avgpool2d",
+      "_7",
+      "conv",
+      "_8"
+    ],
+    "AI/MODELS/CNN/code/index.html": [
+      "code",
+      "tiny_cnnhpp",
+      "tiny_cnncpp"
+    ],
+    "zh/AI/MODELS/CNN/code/index.html": [
+      "_1",
+      "tiny_cnnhpp",
+      "tiny_cnncpp"
+    ],
+    "AI/MODELS/CNN/notes/index.html": [
+      "notes",
+      "cnn1dconfig",
+      "construction-logic",
+      "example",
+      "compute-memory",
+      "use-cases"
+    ],
+    "zh/AI/MODELS/CNN/notes/index.html": [
+      "_1",
+      "cnn1dconfig",
+      "_2",
+      "_3",
+      "_4",
+      "_5"
+    ],
+    "AI/MODELS/MLP/code/index.html": [
+      "code",
+      "tiny_mlphpp",
+      "tiny_mlpcpp"
+    ],
+    "zh/AI/MODELS/MLP/code/index.html": [
+      "_1",
+      "tiny_mlphpp",
+      "tiny_mlpcpp"
+    ],
+    "AI/MODELS/MLP/notes/index.html": [
+      "notes",
+      "class-definition",
+      "construction-logic",
+      "example",
+      "should-i-disable-softmax",
+      "parameter-count",
+      "relation-to-sequential"
+    ],
+    "zh/AI/MODELS/MLP/notes/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "softmax",
+      "_5",
+      "sequential"
+    ],
+    "AI/MODELS/SEQUENTIAL/code/index.html": [
+      "code",
+      "tiny_sequentialhpp",
+      "tiny_sequentialcpp"
+    ],
+    "zh/AI/MODELS/SEQUENTIAL/code/index.html": [
+      "_1",
+      "tiny_sequentialhpp",
+      "tiny_sequentialcpp"
+    ],
+    "AI/MODELS/SEQUENTIAL/notes/index.html": [
+      "notes",
+      "class-definition",
+      "building-a-model",
+      "forward-backward",
+      "predict-accuracy",
+      "summary",
+      "trainer-integration",
+      "subclassing-mlp-cnn1d"
+    ],
+    "zh/AI/MODELS/SEQUENTIAL/notes/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "forward-backward",
+      "predict-accuracy",
+      "summary",
+      "trainer",
+      "mlp-cnn1d"
+    ],
+    "AI/QUANT/CONFIG/code/index.html": [
+      "code",
+      "tiny_quant_configh"
+    ],
+    "zh/AI/QUANT/CONFIG/code/index.html": [
+      "_1",
+      "tiny_quant_configh"
+    ],
+    "AI/QUANT/CONFIG/notes/index.html": [
+      "notes",
+      "tiny_dtype_t",
+      "tiny_quant_params_t",
+      "format-limits",
+      "choosing-a-dtype",
+      "namespacing"
+    ],
+    "zh/AI/QUANT/CONFIG/notes/index.html": [
+      "_1",
+      "tiny_dtype_t",
+      "tiny_quant_params_t",
+      "_2",
+      "dtype",
+      "_3"
+    ],
+    "AI/QUANT/FP8/code/index.html": [
+      "code",
+      "tiny_fp8hpp",
+      "tiny_fp8cpp"
+    ],
+    "zh/AI/QUANT/FP8/code/index.html": [
+      "_1",
+      "tiny_fp8hpp",
+      "tiny_fp8cpp"
+    ],
+    "AI/QUANT/FP8/notes/index.html": [
+      "notes",
+      "format-overview",
+      "e4m3fn",
+      "e5m2",
+      "format-dispatch",
+      "usage-patterns",
+      "weight-compression",
+      "gradient-communication-checkpointing",
+      "accuracy-trade-offs",
+      "software-implementation-cost"
+    ],
+    "zh/AI/QUANT/FP8/notes/index.html": [
+      "_1",
+      "_2",
+      "e4m3fn",
+      "e5m2",
+      "dispatch",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7"
+    ],
+    "AI/QUANT/INT/code/index.html": [
+      "code",
+      "tiny_quanthc",
+      "tiny_quantcc",
+      "tiny_quanthppc",
+      "tiny_quantcppc"
+    ],
+    "zh/AI/QUANT/INT/code/index.html": [
+      "_1",
+      "tiny_quanthc",
+      "tiny_quantcc",
+      "tiny_quanthppc",
+      "tiny_quantcppc"
+    ],
+    "AI/QUANT/INT/notes/index.html": [
+      "notes",
+      "calibration-min-max-symmetric",
+      "int8-quant-dequant",
+      "int16-quant-dequant",
+      "int8-dense-forward-kernel",
+      "c-wrapper-quantparams-tensor-apis",
+      "ptq-example",
+      "requantise-int8-int8",
+      "accuracy-impact"
+    ],
+    "zh/AI/QUANT/INT/notes/index.html": [
+      "_1",
+      "min-max",
+      "int8",
+      "int16",
+      "int8-dense-forward-kernel",
+      "c-quantparams-tensor",
+      "ptq",
+      "int8-int8",
+      "_2"
+    ],
+    "AI/TRAIN/DATASET/code/index.html": [
+      "code",
+      "tiny_datasethpp",
+      "tiny_datasetcpp"
+    ],
+    "zh/AI/TRAIN/DATASET/code/index.html": [
+      "_1",
+      "tiny_datasethpp",
+      "tiny_datasetcpp"
+    ],
+    "AI/TRAIN/DATASET/notes/index.html": [
+      "notes",
+      "class-definition",
+      "data-contract",
+      "shuffle-split",
+      "next_batch-iteration",
+      "to_tensor",
+      "memory-budget"
+    ],
+    "zh/AI/TRAIN/DATASET/notes/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "shuffle-split",
+      "next_batch",
+      "to_tensor",
+      "_4"
+    ],
+    "AI/TRAIN/TRAINER/code/index.html": [
+      "code",
+      "tiny_trainerhpp",
+      "tiny_trainercpp"
+    ],
+    "zh/AI/TRAIN/TRAINER/code/index.html": [
+      "_1",
+      "tiny_trainerhpp",
+      "tiny_trainercpp"
+    ],
+    "AI/TRAIN/TRAINER/notes/index.html": [
+      "notes",
+      "class-definition",
+      "fit-flow",
+      "evaluate_loss-evaluate_accuracy",
+      "usage-example",
+      "training-switch",
+      "custom-training-loop"
+    ],
+    "zh/AI/TRAIN/TRAINER/notes/index.html": [
+      "_1",
+      "_2",
+      "fit",
+      "evaluate_loss-evaluate_accuracy",
+      "_3",
+      "_4",
+      "_5"
+    ],
+    "AI/USAGE/usage/index.html": [
+      "usage",
+      "include-the-whole-tiny_ai",
+      "include-per-module",
+      "typical-workflow"
+    ],
+    "zh/AI/USAGE/usage/index.html": [
+      "_1",
+      "tinyai",
+      "tinyai_1",
+      "_2"
+    ],
+    "ARCHITECTURE/architecture/index.html": [
+      "architecture",
+      "layered-architecture"
+    ],
+    "zh/ARCHITECTURE/architecture/index.html": [
+      "_1",
+      "_2"
+    ],
+    "blog/index.html": [
+      "blog"
+    ],
+    "DSP/dsp/index.html": [
+      "digital-signal-processing",
+      "component-dependencies",
+      "architecture-and-directory",
+      "dependency-diagram",
+      "code-tree"
+    ],
+    "zh/DSP/dsp/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5"
+    ],
+    "DSP/FILTER/FIR/code/index.html": [
+      "code",
+      "tiny_firh",
+      "tiny_firc"
+    ],
+    "zh/DSP/FILTER/FIR/code/index.html": [
+      "_1",
+      "tiny_firh",
+      "tiny_firc"
+    ],
+    "DSP/FILTER/FIR/notes/index.html": [
+      "notes",
+      "fir-filter-overview",
+      "mathematical-principle",
+      "filter-types",
+      "bandpass-design-modulation-method",
+      "filter-design",
+      "window-method",
+      "design-parameters",
+      "filter-design-functions",
+      "tiny_fir_design_lowpass",
+      "tiny_fir_design_highpass",
+      "tiny_fir_design_bandpass",
+      "tiny_fir_design_bandstop",
+      "filter-application",
+      "batch-processing",
+      "tiny_fir_filter_f32",
+      "real-time-processing",
+      "tiny_fir_init",
+      "tiny_fir_deinit",
+      "tiny_fir_process_sample",
+      "tiny_fir_reset",
+      "usage-workflow",
+      "batch-filtering-workflow",
+      "real-time-filtering-workflow",
+      "applications",
+      "advantages-and-disadvantages",
+      "advantages",
+      "disadvantages",
+      "design-considerations",
+      "number-of-taps",
+      "window-selection",
+      "normalized-frequency",
+      "notes_1"
+    ],
+    "zh/DSP/FILTER/FIR/notes/index.html": [
+      "_1",
+      "fir",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "tiny_fir_design_lowpass",
+      "tiny_fir_design_highpass",
+      "tiny_fir_design_bandpass",
+      "tiny_fir_design_bandstop",
+      "_8",
+      "_9",
+      "tiny_fir_filter_f32",
+      "_10",
+      "tiny_fir_init",
+      "tiny_fir_deinit",
+      "tiny_fir_process_sample",
+      "tiny_fir_reset",
+      "_11",
+      "_12",
+      "_13",
+      "_14",
+      "_15",
+      "_16",
+      "_17",
+      "_18",
+      "_19",
+      "_20",
+      "_21",
+      "_22"
+    ],
+    "DSP/FILTER/FIR/test/index.html": [
+      "tests",
+      "tiny_fir_testh",
+      "tiny_fir_testc",
+      "outputs"
+    ],
+    "zh/DSP/FILTER/FIR/test/index.html": [
+      "_1",
+      "tiny_fir_testh",
+      "tiny_fir_testc",
+      "_2"
+    ],
+    "DSP/FILTER/IIR/code/index.html": [
+      "code",
+      "tiny_iirh",
+      "tiny_iirc"
+    ],
+    "zh/DSP/FILTER/IIR/code/index.html": [
+      "_1",
+      "tiny_iirh",
+      "tiny_iirc"
+    ],
+    "DSP/FILTER/IIR/notes/index.html": [
+      "notes",
+      "iir-filter-overview",
+      "mathematical-principle",
+      "filter-types",
+      "filter-design",
+      "design-methods",
+      "bilinear-transform",
+      "design-parameters",
+      "filter-design-functions",
+      "tiny_iir_design_lowpass",
+      "tiny_iir_design_highpass",
+      "tiny_iir_design_bandpass",
+      "tiny_iir_design_bandstop",
+      "filter-application",
+      "batch-processing",
+      "tiny_iir_filter_f32",
+      "real-time-processing",
+      "tiny_iir_init",
+      "tiny_iir_deinit",
+      "tiny_iir_process_sample",
+      "tiny_iir_reset",
+      "biquad-filters",
+      "tiny_iir_biquad_init",
+      "tiny_iir_biquad_process_sample",
+      "tiny_iir_biquad_reset",
+      "usage-workflow",
+      "batch-filtering-workflow",
+      "real-time-filtering-workflow",
+      "biquad-workflow",
+      "applications",
+      "advantages-and-disadvantages",
+      "advantages",
+      "disadvantages",
+      "stability-considerations",
+      "design-considerations",
+      "filter-order",
+      "normalized-frequency",
+      "coefficient-normalization",
+      "notes_1"
+    ],
+    "zh/DSP/FILTER/IIR/notes/index.html": [
+      "_1",
+      "iir",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "_8",
+      "tiny_iir_design_lowpass",
+      "tiny_iir_design_highpass",
+      "tiny_iir_design_bandpass",
+      "tiny_iir_design_bandstop",
+      "_9",
+      "_10",
+      "tiny_iir_filter_f32",
+      "_11",
+      "tiny_iir_init",
+      "tiny_iir_deinit",
+      "tiny_iir_process_sample",
+      "tiny_iir_reset",
+      "_12",
+      "tiny_iir_biquad_init",
+      "tiny_iir_biquad_process_sample",
+      "tiny_iir_biquad_reset",
+      "_13",
+      "_14",
+      "_15",
+      "_16",
+      "_17",
+      "_18",
+      "_19",
+      "_20",
+      "_21",
+      "_22",
+      "_23",
+      "_24",
+      "_25",
+      "_26"
+    ],
+    "DSP/FILTER/IIR/test/index.html": [
+      "tests",
+      "tiny_iir_testh",
+      "tiny_iir_testc",
+      "outputs"
+    ],
+    "zh/DSP/FILTER/IIR/test/index.html": [
+      "_1",
+      "tiny_iir_testh",
+      "tiny_iir_testc",
+      "_2"
+    ],
+    "DSP/HEADER-FILE/tiny_dsp/index.html": [
+      "tinydsp-header-file"
+    ],
+    "zh/DSP/HEADER-FILE/tiny_dsp/index.html": [
+      "tinydsp"
+    ],
+    "DSP/HEADER-FILE/tiny_dsp_config/index.html": [
+      "tinydsp-configuration"
+    ],
+    "zh/DSP/HEADER-FILE/tiny_dsp_config/index.html": [
+      "tinydsp"
+    ],
+    "DSP/SIGNAL/CONVOLUTION/code/index.html": [
+      "code",
+      "tiny_convh",
+      "tiny_convc"
+    ],
+    "zh/DSP/SIGNAL/CONVOLUTION/code/index.html": [
+      "_1",
+      "tiny_convh",
+      "tiny_convc"
+    ],
+    "DSP/SIGNAL/CONVOLUTION/notes/index.html": [
+      "notes",
+      "1-algorithm-principles",
+      "11-full-convolution-default-output",
+      "12-padding-modes",
+      "13-output-modes",
+      "2-code-design-philosophy",
+      "21-dual-path-architecture-esp32-vs-generic",
+      "22-three-stage-generic-convolution",
+      "23-const-correctness",
+      "24-memmove-for-result-slicing",
+      "25-dynamic-allocation-in-extended-mode",
+      "3-api-interface-methods",
+      "31-tiny_conv_f32",
+      "32-tiny_conv_ex_f32",
+      "4-function-comparison",
+      "when-to-use-tiny_conv_f32",
+      "when-to-use-tiny_conv_ex_f32",
+      "5-important-notes",
+      "51-output-buffer-minimum-size",
+      "52-esp32-signalkernel-length-ordering",
+      "53-dynamic-allocation-in-extended-mode",
+      "54-memmove-vs-memcpy",
+      "55-padding-modes-and-signal-length",
+      "56-convolution-is-not-correlation"
+    ],
+    "zh/DSP/SIGNAL/CONVOLUTION/notes/index.html": [
+      "_1",
+      "1",
+      "11",
+      "12",
+      "13",
+      "2",
+      "21-esp32-vs",
+      "22",
+      "23-const",
+      "24-memmove",
+      "25",
+      "3-api",
+      "31-tiny_conv_f32",
+      "32-tiny_conv_ex_f32",
+      "4",
+      "tiny_conv_f32",
+      "tiny_conv_ex_f32",
+      "5",
+      "51",
+      "52-esp32",
+      "53",
+      "54-memmove-vs-memcpy",
+      "55",
+      "56"
+    ],
+    "DSP/SIGNAL/CONVOLUTION/test/index.html": [
+      "tests",
+      "tiny_conv_testh",
+      "tiny_conv_testc",
+      "test-results"
+    ],
+    "zh/DSP/SIGNAL/CONVOLUTION/test/index.html": [
+      "_1",
+      "tiny_conv_testh",
+      "tiny_conv_testc",
+      "_2"
+    ],
+    "DSP/SIGNAL/CORRELATION/code/index.html": [
+      "code",
+      "tiny_corrh",
+      "tiny_corrc"
+    ],
+    "zh/DSP/SIGNAL/CORRELATION/code/index.html": [
+      "_1",
+      "tiny_corrh",
+      "tiny_corrc"
+    ],
+    "DSP/SIGNAL/CORRELATION/notes/index.html": [
+      "notes",
+      "1-algorithm-principles",
+      "11-sliding-correlation",
+      "12-full-cross-correlation",
+      "2-code-design-philosophy",
+      "21-two-different-correlation-semantics",
+      "22-length-swap-in-generic-cross-correlation",
+      "23-const-correctness",
+      "3-api-interface-methods",
+      "31-tiny_corr_f32",
+      "32-tiny_ccorr_f32",
+      "4-function-comparison",
+      "when-to-use-tiny_corr_f32",
+      "when-to-use-tiny_ccorr_f32",
+      "5-important-notes",
+      "51-correlation-vs-convolution",
+      "52-output-buffer-minimum-size",
+      "53-siglen-patlen-handling",
+      "54-platform-differences"
+    ],
+    "zh/DSP/SIGNAL/CORRELATION/notes/index.html": [
+      "_1",
+      "1",
+      "11",
+      "12",
+      "2",
+      "21",
+      "22",
+      "23-const",
+      "3-api",
+      "31-tiny_corr_f32",
+      "32-tiny_ccorr_f32",
+      "4",
+      "tiny_corr_f32",
+      "tiny_ccorr_f32",
+      "5",
+      "51-vs",
+      "52",
+      "53-siglen-patlen",
+      "54"
+    ],
+    "DSP/SIGNAL/CORRELATION/test/index.html": [
+      "tests",
+      "tiny_corr_testh",
+      "tiny_corr_testc",
+      "test-results"
+    ],
+    "zh/DSP/SIGNAL/CORRELATION/test/index.html": [
+      "_1",
+      "tiny_corr_testh",
+      "tiny_corr_testc",
+      "_2"
+    ],
+    "DSP/SIGNAL/RESAMPLE/code/index.html": [
+      "code",
+      "tiny_resampleh",
+      "tiny_resamplec"
+    ],
+    "zh/DSP/SIGNAL/RESAMPLE/code/index.html": [
+      "_1",
+      "tiny_resampleh",
+      "tiny_resamplec"
+    ],
+    "DSP/SIGNAL/RESAMPLE/notes/index.html": [
+      "notes",
+      "1-algorithm-principles",
+      "11-downsampling-by-keepskip",
+      "12-upsampling-by-zero-insertion",
+      "13-arbitrary-factor-resampling-via-linear-interpolation",
+      "2-code-design-philosophy",
+      "21-flexible-keepskip-downsampling",
+      "22-zero-insertion-as-a-building-block",
+      "23-linear-interpolation-for-simplicity",
+      "24-boundary-protection",
+      "3-api-interface-methods",
+      "31-tiny_downsample_skip_f32",
+      "32-tiny_upsample_zero_f32",
+      "33-tiny_resample_f32",
+      "4-function-comparison",
+      "when-to-use-tiny_downsample_skip_f32",
+      "when-to-use-tiny_upsample_zero_f32",
+      "when-to-use-tiny_resample_f32",
+      "5-important-notes",
+      "51-downsampling-aliasing-risk",
+      "52-upsampling-zerofilled-spectrum",
+      "53-resampling-linear-interpolation-limits",
+      "54-output-buffer-sizing",
+      "55-factor-validity",
+      "56-platform-independence"
+    ],
+    "zh/DSP/SIGNAL/RESAMPLE/notes/index.html": [
+      "_1",
+      "1",
+      "11",
+      "12",
+      "13",
+      "2",
+      "21",
+      "22",
+      "23",
+      "24",
+      "3-api",
+      "31-tiny_downsample_skip_f32",
+      "32-tiny_upsample_zero_f32",
+      "33-tiny_resample_f32",
+      "4",
+      "tiny_downsample_skip_f32",
+      "tiny_upsample_zero_f32",
+      "tiny_resample_f32",
+      "5",
+      "51",
+      "52",
+      "53",
+      "54",
+      "55",
+      "56"
+    ],
+    "DSP/SIGNAL/RESAMPLE/test/index.html": [
+      "tests",
+      "tiny_resampleh",
+      "tiny_resamplec",
+      "test-results"
+    ],
+    "zh/DSP/SIGNAL/RESAMPLE/test/index.html": [
+      "_1",
+      "tiny_resampleh",
+      "tiny_resamplec",
+      "_2"
+    ],
+    "DSP/SUPPORT/code/index.html": [
+      "code",
+      "tiny_viewh",
+      "tiny_viewc"
+    ],
+    "zh/DSP/SUPPORT/code/index.html": [
+      "_1",
+      "tiny_viewh",
+      "tiny_viewc"
+    ],
+    "DSP/SUPPORT/notes/index.html": [
+      "notes",
+      "overview",
+      "signal-visualization",
+      "tiny_view_signal_f32",
+      "-max-maximum-y-axis-value-if-min-max-the-function-will-auto-detect-the-range",
+      "spectrum-visualization",
+      "tiny_view_spectrum_f32",
+      "array-printing",
+      "tiny_view_array_f32",
+      "statistics",
+      "tiny_view_statistics_f32",
+      "usage-workflow",
+      "typical-visualization-workflow",
+      "applications",
+      "notes_1"
+    ],
+    "zh/DSP/SUPPORT/notes/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "tiny_view_signal_f32",
+      "_4",
+      "tiny_view_spectrum_f32",
+      "_5",
+      "tiny_view_array_f32",
+      "_6",
+      "tiny_view_statistics_f32",
+      "_7",
+      "_8",
+      "_9",
+      "_10"
+    ],
+    "DSP/SUPPORT/test/index.html": [
+      "tests",
+      "tiny_view_testh",
+      "tiny_view_testc",
+      "test-results"
+    ],
+    "zh/DSP/SUPPORT/test/index.html": [
+      "_1",
+      "tiny_view_testh",
+      "tiny_view_testc",
+      "_2"
+    ],
+    "DSP/TRANSFORM/DWT/code/index.html": [
+      "code",
+      "tiny_dwth",
+      "tiny_dwtc"
+    ],
+    "zh/DSP/TRANSFORM/DWT/code/index.html": [
+      "_1",
+      "tiny_dwth",
+      "tiny_dwtc"
+    ],
+    "DSP/TRANSFORM/DWT/notes/index.html": [
+      "notes",
+      "dwt-overview",
+      "mathematical-principle",
+      "wavelet-types",
+      "single-level-dwt",
+      "tiny_dwt_decompose_f32",
+      "tiny_dwt_reconstruct_f32",
+      "multi-level-dwt",
+      "tiny_dwt_multilevel_decompose_f32",
+      "tiny_dwt_multilevel_reconstruct_f32",
+      "coefficient-processing",
+      "tiny_dwt_coeffs_process",
+      "usage-workflow",
+      "single-level-dwt-workflow",
+      "multi-level-dwt-workflow",
+      "applications",
+      "boundary-effects",
+      "energy-preservation"
+    ],
+    "zh/DSP/TRANSFORM/DWT/notes/index.html": [
+      "_1",
+      "dwt",
+      "_2",
+      "_3",
+      "dwt_1",
+      "tiny_dwt_decompose_f32",
+      "tiny_dwt_reconstruct_f32",
+      "dwt_2",
+      "tiny_dwt_multilevel_decompose_f32",
+      "tiny_dwt_multilevel_reconstruct_f32",
+      "_4",
+      "tiny_dwt_coeffs_process",
+      "_5",
+      "dwt_3",
+      "dwt_4",
+      "_6",
+      "_7",
+      "_8"
+    ],
+    "DSP/TRANSFORM/DWT/test/index.html": [
+      "tests",
+      "tiny_dwt_testh",
+      "tiny_dwt_testc"
+    ],
+    "zh/DSP/TRANSFORM/DWT/test/index.html": [
+      "_1",
+      "tiny_dwt_testh",
+      "tiny_dwt_testc"
+    ],
+    "DSP/TRANSFORM/FFT/code/index.html": [
+      "code",
+      "tiny_ffth",
+      "tiny_fftc"
+    ],
+    "zh/DSP/TRANSFORM/FFT/code/index.html": [
+      "_1",
+      "tiny_ffth",
+      "tiny_fftc"
+    ],
+    "DSP/TRANSFORM/FFT/notes/index.html": [
+      "notes",
+      "fft-overview",
+      "mathematical-principle",
+      "window-functions",
+      "initialization-and-deinitialization",
+      "tiny_fft_init",
+      "tiny_fft_deinit",
+      "forward-fft",
+      "tiny_fft_f32",
+      "inverse-fft",
+      "tiny_fft_ifft_f32",
+      "spectrum-analysis",
+      "tiny_fft_magnitude_f32",
+      "tiny_fft_power_spectrum_f32",
+      "frequency-detection",
+      "tiny_fft_find_peak_frequency",
+      "tiny_fft_find_top_frequencies",
+      "usage-workflow",
+      "typical-fft-analysis-workflow",
+      "applications"
+    ],
+    "zh/DSP/TRANSFORM/FFT/notes/index.html": [
+      "_1",
+      "fft",
+      "_2",
+      "_3",
+      "_4",
+      "tiny_fft_init",
+      "tiny_fft_deinit",
+      "fft_1",
+      "tiny_fft_f32",
+      "fft_2",
+      "tiny_fft_ifft_f32",
+      "_5",
+      "tiny_fft_magnitude_f32",
+      "tiny_fft_power_spectrum_f32",
+      "_6",
+      "tiny_fft_find_peak_frequency",
+      "tiny_fft_find_top_frequencies",
+      "_7",
+      "fft_3",
+      "_8"
+    ],
+    "DSP/TRANSFORM/FFT/test/index.html": [
+      "tests",
+      "tiny_fft_testh",
+      "tiny_fft_testc",
+      "test-results"
+    ],
+    "zh/DSP/TRANSFORM/FFT/test/index.html": [
+      "_1",
+      "tiny_fft_testh",
+      "tiny_fft_testc",
+      "_2"
+    ],
+    "DSP/TRANSFORM/ICA/code/index.html": [
+      "code",
+      "tiny_icahpp",
+      "tiny_icacpp"
+    ],
+    "zh/DSP/TRANSFORM/ICA/code/index.html": [
+      "_1",
+      "tiny_icahpp",
+      "tiny_icacpp"
+    ],
+    "DSP/TRANSFORM/ICA/notes/index.html": [
+      "notes",
+      "ica-overview",
+      "mathematical-principle",
+      "ica-vs-pca",
+      "algorithms",
+      "fastica",
+      "preprocessing",
+      "centering",
+      "whitening",
+      "functions",
+      "tiny_ica_separate_f32",
+      "tiny_ica_init",
+      "tiny_ica_fit",
+      "tiny_ica_transform",
+      "tiny_ica_deinit",
+      "usage-workflow",
+      "simple-one-shot-separation",
+      "repeated-separations-structure-api",
+      "applications",
+      "advantages",
+      "disadvantages",
+      "design-considerations",
+      "number-of-sources-vs-observations",
+      "nonlinearity-selection",
+      "convergence-parameters",
+      "data-requirements",
+      "notes_1"
+    ],
+    "zh/DSP/TRANSFORM/ICA/notes/index.html": [
+      "_1",
+      "ica",
+      "_2",
+      "ica-vs-pca",
+      "_3",
+      "fastica",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "tiny_ica_separate_f32",
+      "tiny_ica_init",
+      "tiny_ica_fit",
+      "tiny_ica_transform",
+      "tiny_ica_deinit",
+      "_8",
+      "_9",
+      "api",
+      "_10",
+      "_11",
+      "_12",
+      "_13",
+      "_14",
+      "vs",
+      "_15",
+      "_16",
+      "_17",
+      "_18"
+    ],
+    "DSP/TRANSFORM/ICA/test/index.html": [
+      "tests",
+      "tiny_ica_testhpp",
+      "tiny_ica_testcpp",
+      "outputs"
+    ],
+    "zh/DSP/TRANSFORM/ICA/test/index.html": [
+      "_1",
+      "tiny_ica_testhpp",
+      "tiny_ica_testcpp",
+      "tiny_ica_testcpp_1"
+    ],
+    "DSP/USAGE/usage/index.html": [
+      "usage-instructions",
+      "import-tinydsp-as-a-whole",
+      "import-tinydsp-by-module"
+    ],
+    "zh/DSP/USAGE/usage/index.html": [
+      "_1",
+      "tinydsp",
+      "tinydsp_1"
+    ],
+    "index.html": [
+      "tinyauton-microcontroller-oriented-distributed-intelligence-framework",
+      "about-this-project",
+      "target-hardware",
+      "scope",
+      "host-devkits",
+      "project-architecture"
+    ],
+    "zh/index.html": [
+      "tinyauton",
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5"
+    ],
+    "MATH/ESP-DSP/esp-dsp/index.html": [
+      "esp-dsp",
+      "function-naming",
+      "data-domain",
+      "name",
+      "data-types",
+      "data-type-suffices",
+      "data-type-extensions",
+      "data-type-bits-resolution",
+      "implementation-type",
+      "implementation-extensions"
+    ],
+    "zh/MATH/ESP-DSP/esp-dsp/index.html": [
+      "esp-dsp",
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "_8",
+      "_9"
+    ],
+    "MATH/ESP-DSP/examples/index.html": [
+      "esp-dsp-examples",
+      "list-of-esp-dsp-examples",
+      "basic-math",
+      "dot-product",
+      "fft",
+      "fft-window",
+      "fft-4-real",
+      "iir",
+      "fir",
+      "kalman-filter",
+      "matrix"
+    ],
+    "zh/MATH/ESP-DSP/examples/index.html": [
+      "esp-dsp",
+      "esp-dsp_1",
+      "_1",
+      "_2",
+      "fft",
+      "fft_1",
+      "fft-4-real",
+      "iir",
+      "fir",
+      "_3",
+      "_4"
+    ],
+    "MATH/HEADER-FILE/tiny_constants/index.html": [
+      "constants"
+    ],
+    "zh/MATH/HEADER-FILE/tiny_constants/index.html": [
+      "_1"
+    ],
+    "MATH/HEADER-FILE/tiny_error_type/index.html": [
+      "error-types-definition"
+    ],
+    "zh/MATH/HEADER-FILE/tiny_error_type/index.html": [
+      "_1"
+    ],
+    "MATH/HEADER-FILE/tiny_math/index.html": [
+      "tinymath-header-file"
+    ],
+    "zh/MATH/HEADER-FILE/tiny_math/index.html": [
+      "tinymath"
+    ],
+    "MATH/HEADER-FILE/tiny_math_config/index.html": [
+      "tinymath-configuration"
+    ],
+    "zh/MATH/HEADER-FILE/tiny_math_config/index.html": [
+      "tinymath"
+    ],
+    "MATH/math/index.html": [
+      "math-operations",
+      "component-dependencies",
+      "architecture-and-directory",
+      "dependency-diagram",
+      "code-tree"
+    ],
+    "zh/MATH/math/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5"
+    ],
+    "MATH/MATRIX/tiny-mat-api/index.html": [
+      "matrix-operations-tiny_mat",
+      "list-of-functions",
+      "utility-functions",
+      "print-matrix",
+      "print-padded-matrix",
+      "addition",
+      "matrix-addition",
+      "matrix-addition-with-constant",
+      "subtraction",
+      "matrix-subtraction",
+      "matrix-subtraction-with-constant",
+      "multiplication",
+      "matrix-multiplication",
+      "extended-matrix-multiplication",
+      "matrix-multiplication-with-constant"
+    ],
+    "zh/MATH/MATRIX/tiny-mat-api/index.html": [
+      "-tiny_mat",
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "_8",
+      "_9",
+      "_10",
+      "_11"
+    ],
+    "MATH/MATRIX/tiny-mat-code/index.html": [
+      "code",
+      "tiny_math",
+      "tiny_matc"
+    ],
+    "zh/MATH/MATRIX/tiny-mat-code/index.html": [
+      "_1",
+      "tiny_math",
+      "tiny_matc"
+    ],
+    "MATH/MATRIX/tiny-mat-test/index.html": [
+      "tiny_mat-test",
+      "test-code",
+      "tiny_mat_testh",
+      "tiny_mat_testc",
+      "maincpp",
+      "test-results"
+    ],
+    "zh/MATH/MATRIX/tiny-mat-test/index.html": [
+      "tiny_mat",
+      "_1",
+      "tiny_mat_testh",
+      "tiny_mat_testc",
+      "maincpp",
+      "_2"
+    ],
+    "MATH/MATRIX/tiny-matrix-api/index.html": [
+      "matrix-operations-tiny_matrix",
+      "list-of-functions",
+      "matrix-metadata",
+      "core-dimensions",
+      "memory-layout",
+      "data-pointers",
+      "memory-management-flags",
+      "roi-structure",
+      "roi-metadata",
+      "roi-constructor",
+      "roi-resize",
+      "area-roi",
+      "printing-functions",
+      "print-matrix-information",
+      "print-matrix-elements",
+      "constructors-destructor",
+      "memory-allocation",
+      "default-constructor",
+      "constructor-matint-rows-int-cols",
+      "constructor-matint-rows-int-cols-int-step",
+      "constructor-matfloat-data-int-rows-int-cols",
+      "constructor-matfloat-data-int-rows-int-cols-int-step",
+      "copy-constructor-matconst-mat-src",
+      "destructor",
+      "element-access",
+      "access-matrix-elements-non-const",
+      "access-matrix-elements-const",
+      "data-manipulation",
+      "copy-other-matrix-into-this-matrix-as-a-sub-matrix",
+      "copy-header-of-other-matrix-to-this-matrix",
+      "get-a-view-shallow-copy-of-sub-matrix-roi-from-this-matrix",
+      "get-a-view-shallow-copy-of-sub-matrix-roi-from-this-matrix-using-roi-structure",
+      "get-a-replica-deep-copy-of-sub-matrix-roi",
+      "get-a-replica-deep-copy-of-sub-matrix-roi-using-roi-structure",
+      "get-a-block-of-matrix",
+      "swap-rows",
+      "swap-columns",
+      "clear-matrix",
+      "arithmetic-operators",
+      "copy-assignment",
+      "add-matrix",
+      "add-constant",
+      "subtract-matrix",
+      "subtract-constant",
+      "multiply-matrix",
+      "multiply-constant",
+      "divide-matrix-element-wise",
+      "divide-constant",
+      "exponentiation",
+      "linear-algebra",
+      "transpose",
+      "minor-matrix",
+      "cofactor-matrix",
+      "determinant-auto-select-method",
+      "determinant-laplace-expansion",
+      "determinant-lu-decomposition",
+      "determinant-gaussian-elimination",
+      "adjoint",
+      "normalize",
+      "norm",
+      "inverse-using-adjoint",
+      "identity-matrix",
+      "augmentation-matrix-horizontal-concatenation",
+      "vertical-stack",
+      "gram-schmidt-orthogonalization",
+      "all-ones-matrix-rectangular",
+      "all-ones-matrix-square",
+      "gaussian-elimination",
+      "row-reduce-from-gaussian",
+      "inverse-using-gaussian-jordan-elimination",
+      "dot-product",
+      "solve-linear-system",
+      "band-solve",
+      "roots",
+      "matrix-properties-decompositions",
+      "matrix-property-checks",
+      "check-symmetry",
+      "check-positive-definiteness",
+      "matrix-decomposition-structures",
+      "lu-decomposition-structure",
+      "cholesky-decomposition-structure",
+      "qr-decomposition-structure",
+      "svd-decomposition-structure",
+      "matrix-decomposition-methods",
+      "lu-decomposition",
+      "cholesky-decomposition",
+      "qr-decomposition",
+      "svd-decomposition",
+      "solving-linear-systems-using-decompositions",
+      "solve-using-lu-decomposition",
+      "solve-using-cholesky-decomposition",
+      "solve-using-qr-decomposition-least-squares",
+      "pseudo-inverse",
+      "linear-algebra-eigenvalues-eigenvectors",
+      "struct-mateigenpair",
+      "struct-mateigendecomposition",
+      "power-iteration-dominant-eigenpair",
+      "inverse-power-iteration-smallest-eigenpair",
+      "jacobi-eigendecomposition-symmetric-matrices",
+      "qr-eigendecomposition-general-matrices",
+      "automatic-eigendecomposition",
+      "stream-operators",
+      "matrix-output-stream-operator",
+      "roi-output-stream-operator",
+      "matrix-input-stream-operator",
+      "global-arithmetic-operators",
+      "add-matrix_1",
+      "add-constant_1",
+      "subtract-matrix_1",
+      "subtract-constant_1",
+      "multiply-matrix_1",
+      "multiply-constant_1",
+      "multiply-constant-left-side",
+      "divide-matrix-by-constant",
+      "divide-matrix-element-wise_1",
+      "equality-check"
+    ],
+    "zh/MATH/MATRIX/tiny-matrix-api/index.html": [
+      "-tiny_matrix",
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "roi",
+      "roi_1",
+      "roi_2",
+      "roi_3",
+      "roi_4",
+      "_7",
+      "_8",
+      "_9",
+      "_10",
+      "_11",
+      "_12",
+      "-matint-rows-int-cols",
+      "-matint-rows-int-cols-int-step",
+      "-matfloat-data-int-rows-int-cols",
+      "-matfloat-data-int-rows-int-cols-int-step",
+      "-matconst-mat-src",
+      "_13",
+      "_14",
+      "_15",
+      "_16",
+      "_17",
+      "_18",
+      "_19",
+      "_20",
+      "-roi",
+      "_21",
+      "-roi_1",
+      "_22",
+      "_23",
+      "_24",
+      "_25",
+      "_26",
+      "_27",
+      "_28",
+      "-",
+      "_29",
+      "-_1",
+      "_30",
+      "-_2",
+      "_31",
+      "-_3",
+      "_32",
+      "_33",
+      "_34",
+      "_35",
+      "_36",
+      "_37",
+      "-_4",
+      "-lu",
+      "-_5",
+      "_38",
+      "_39",
+      "_40",
+      "-_6",
+      "_41",
+      "_42",
+      "_43",
+      "gram-schmidt",
+      "1",
+      "1_1",
+      "_44",
+      "_45",
+      "-_7",
+      "_46",
+      "_47",
+      "_48",
+      "_49",
+      "_50",
+      "_51",
+      "_52",
+      "_53",
+      "_54",
+      "lu",
+      "cholesky",
+      "qr",
+      "svd",
+      "_55",
+      "lu_1",
+      "cholesky_1",
+      "qr_1",
+      "svd_1",
+      "_56",
+      "lu_2",
+      "cholesky_2",
+      "qr_2",
+      "_57",
+      "-_8",
+      "mateigenpair",
+      "mateigendecomposition",
+      "_58",
+      "_59",
+      "jacobi",
+      "qr_3",
+      "_60",
+      "_61",
+      "_62",
+      "roi_5",
+      "_63",
+      "_64",
+      "_65",
+      "-_9",
+      "_66",
+      "-_10",
+      "_67",
+      "-_11",
+      "-_12",
+      "_68",
+      "-_13",
+      "_69"
+    ],
+    "MATH/MATRIX/tiny-matrix-code/index.html": [
+      "code",
+      "tiny_matrixhpp",
+      "tiny_matrixcpp"
+    ],
+    "zh/MATH/MATRIX/tiny-matrix-code/index.html": [
+      "_1",
+      "tiny_matrixhpp",
+      "tiny_matrixcpp"
+    ],
+    "MATH/MATRIX/tiny-matrix-test/index.html": [
+      "tests",
+      "tiny_matrix_testhpp",
+      "tiny_matrix_testcpp",
+      "test-outputs",
+      "phase-1-object-foundation-a",
+      "phase-2-basic-operations-b",
+      "phase-3-matrix-properties-c",
+      "phase-4-linear-system-solving-d",
+      "phase-5-advanced-linear-algebra-e12",
+      "phase-6-system-identification-applications-e3",
+      "phase-7-auxiliary-functions-f",
+      "phase-8-quality-assurance-g"
+    ],
+    "zh/MATH/MATRIX/tiny-matrix-test/index.html": [
+      "_1",
+      "tiny_matrix_testhpp",
+      "tiny_matrix_testcpp",
+      "_2",
+      "a",
+      "b",
+      "c",
+      "d",
+      "e12",
+      "e3",
+      "f",
+      "g"
+    ],
+    "MATH/USAGE/usage/index.html": [
+      "usage-instructions",
+      "import-tinymath-as-a-whole",
+      "import-tinymath-by-module"
+    ],
+    "zh/MATH/USAGE/usage/index.html": [
+      "_1",
+      "tinymath",
+      "tinymath_1"
+    ],
+    "MATH/VECTOR/api/index.html": [
+      "vector-operations",
+      "list-of-functions",
+      "addition",
+      "addition-of-two-vectors",
+      "addition-of-a-vector-and-a-constant",
+      "subtraction",
+      "subtraction-of-two-vectors",
+      "subtraction-of-a-vector-and-a-constant",
+      "multiplication",
+      "multiplication-of-two-vectors",
+      "multiplication-of-a-vector-and-a-constant",
+      "division",
+      "division-of-two-vectors",
+      "division-of-a-vector-and-a-constant",
+      "square-root",
+      "square-root-of-a-vector",
+      "square-root-of-a-vector-fast",
+      "inverse-square-root-of-a-vector",
+      "inverse-square-root-of-a-vector-fast",
+      "dot-product",
+      "dot-product-of-two-vectors",
+      "dot-product-of-two-vectors-with-different-strides"
+    ],
+    "zh/MATH/VECTOR/api/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "_5",
+      "_6",
+      "_7",
+      "_8",
+      "_9",
+      "_10",
+      "_11",
+      "_12",
+      "_13",
+      "_14",
+      "_15",
+      "_16",
+      "_17",
+      "_18",
+      "_19",
+      "_20",
+      "_21",
+      "_22"
+    ],
+    "MATH/VECTOR/code/index.html": [
+      "code",
+      "tiny_vech",
+      "tiny_vecc"
+    ],
+    "zh/MATH/VECTOR/code/index.html": [
+      "_1",
+      "tiny_vech",
+      "tiny_vecc"
+    ],
+    "MATH/VECTOR/test/index.html": [
+      "vector-operations-test",
+      "test-code",
+      "tiny_vec_testh",
+      "tiny_vec_testc",
+      "maincpp",
+      "test-output"
+    ],
+    "zh/MATH/VECTOR/test/index.html": [
+      "_1",
+      "_2",
+      "tiny_vec_testh",
+      "tiny_vec_testc",
+      "maincpp",
+      "_3"
+    ],
+    "PREREQUISITE/prerequisite/index.html": [
+      "prerequisites",
+      "hardware-and-software-requirements",
+      "dependency-components"
+    ],
+    "zh/PREREQUISITE/prerequisite/index.html": [
+      "_1",
+      "_2",
+      "_3"
+    ],
+    "TOOLBOX/TIME/code/index.html": [
+      "time",
+      "tiny_timeh",
+      "design-notes",
+      "tiny_timec",
+      "maincpp",
+      "output",
+      "result-interpretation"
+    ],
+    "zh/TOOLBOX/TIME/code/index.html": [
+      "time",
+      "tiny_timeh",
+      "_1",
+      "tiny_timec",
+      "maincpp",
+      "_2",
+      "_3"
+    ],
+    "TOOLBOX/TIME/log/index.html": [
+      "log"
+    ],
+    "zh/TOOLBOX/TIME/log/index.html": [
+      "log"
+    ],
+    "TOOLBOX/TIME/notes/index.html": [
+      "time",
+      "running-time",
+      "world-time",
+      "ntp-time-synchronization",
+      "world-time-getting"
+    ],
+    "zh/TOOLBOX/TIME/notes/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "ntp",
+      "_4"
+    ],
+    "TOOLBOX/toolbox/index.html": [
+      "toolbox",
+      "architecture-and-function-directory",
+      "time",
+      "code",
+      "cmakeliststxt",
+      "tiny_toolboxh"
+    ],
+    "zh/TOOLBOX/toolbox/index.html": [
+      "_1",
+      "_2",
+      "_3",
+      "_4",
+      "cmakeliststxt",
+      "tiny_toolboxh"
+    ]
+  }
+}

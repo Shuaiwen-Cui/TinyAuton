@@ -1,13 +1,40 @@
-# Notes
+# TinyAI · Layers · Attention — Design notes {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     `Attention` implements multi-head self-attention — the heart of the Transformer architecture. The implementation supports any `embed_dim` / `num_heads` (must divide evenly) and ships with a complete backward pass, enabling on-device fine-tuning.
 
-## MATH
+!!! abstract "Attention — Multi-Head Self-Attention: Looking from Multiple Angles"
+    Each position "attends to" others to gather context.
+
+## Intuition {#intuition}
+
+### Q, K, V Roles (Library Analogy) {#q-k-v-roles-library-analogy}
+
+| Role | Symbol | Meaning | Library analogy |
+|------|--------|---------|-----------------|
+| **Query** | Q | "What am I looking for" | Book title you want |
+| **Key** | K | "What do I have" | Labels on every book |
+| **Value** | V | "What content" | Content inside books |
+
+**Process**: Query matches each Key (dot product) → Softmax → weighted sum of Values.
+
+### Multi-Head {#multi-head}
+
+Different heads learn different attention patterns: local context, long-range dependencies, specific patterns.
+
+!!! tip "Self-attention = each position interacts with all others"
+    Q, K, V all come from the same input. Shape preserved: `[B, seq_len, embed_dim] → [B, seq_len, embed_dim]`.
+
+---
+
+## MATH {#math}
 
 Input `x` of shape `[batch, seq_len, embed_dim]`, denoted `B / S / E`. Per-head dimension `D = E / H`.
 
-### Q / K / V projections
+### Q / K / V projections {#q-k-v-projections}
 
 \[
 Q = x W_q^\top + b_q,\quad
@@ -17,11 +44,11 @@ V = x W_v^\top + b_v
 
 Shapes: all `[B, S, E]`.
 
-### Multi-head split
+### Multi-head split {#multi-head-split}
 
 For each head `h = 0..H-1`, slice Q / K / V along the last dim into `[B, S, D]`.
 
-### Scaled dot-product attention
+### Scaled dot-product attention {#scaled-dot-product-attention}
 
 Per head:
 
@@ -37,7 +64,7 @@ A = \mathrm{softmax}_{s_2}(A)
 \mathrm{ctx}_{b, s_1, :} = \sum_{s_2} A_{b, s_1, s_2}\,V_{b, s_2, :}
 \]
 
-### Concat + output projection
+### Concat + output projection {#concat-output-projection}
 
 Write each head's `ctx_h` back to `ctx[:, :, h*D : (h+1)*D]`, then apply the final linear:
 
@@ -47,7 +74,7 @@ y = \mathrm{ctx}\,W_o^\top + b_o
 
 Output shape `[B, S, E]` matches the input.
 
-## CLASS DEFINITION
+## CLASS DEFINITION {#class-definition}
 
 ```cpp
 class Attention : public Layer
@@ -70,14 +97,14 @@ public:
 
 `embed_dim % num_heads == 0` is required; `head_dim = embed_dim / num_heads`.
 
-## TRAINING CACHES
+## TRAINING CACHES {#training-caches}
 
 - `x_cache_`: the original input, used in backward to compute `dWq/k/v` and `dx`.
 - `Q_cache_ / K_cache_ / V_cache_`: full projection outputs, sliced per head in backward.
 - `A_cache_`: attention weights of shape `[B*H, S, S]`, required by the softmax backward.
 - `ctx_cache_`: concatenated context, used by `Wo` backward.
 
-## BACKWARD STEPS
+## BACKWARD STEPS {#backward-steps}
 
 1. **Wo backward**
     - `dWo += ctx^T @ grad_out` (accumulated over batch×seq).
@@ -90,9 +117,9 @@ public:
 3. **Wq / Wk / Wv backward**
     - For each weight: `dW += x^T @ dProj`, `dx += dProj @ W`.
 
-## EXAMPLE
+## EXAMPLE {#example}
 
-### Tiny Transformer on Iris
+### Tiny Transformer on Iris {#tiny-transformer-on-iris}
 
 ```cpp
 const int SEQ_LEN = 4;       // treat 4 features as 4 tokens
@@ -116,7 +143,7 @@ Tensor logits = classifier.forward(p0);      // [B, 3]
 
 Full source under [EXAMPLES/ATTENTION](../../EXAMPLES/ATTENTION/notes.md).
 
-## RESOURCES
+## RESOURCES {#resources}
 
 - **Parameters**: `4 * E^2 + 4 * E` (with biases).
 - **Activation memory**: `A_cache_` size `B * H * S^2` — quadratic in sequence length.

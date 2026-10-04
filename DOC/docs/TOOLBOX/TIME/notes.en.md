@@ -1,4 +1,7 @@
-# TIME
+# TIME {#time}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! info "Time"
     Time related functions are of vital importance for MCU devices. This section provides a series of time related definitions and functions for developers to use.
@@ -9,7 +12,7 @@ In MCU, time can be divided into the following types:
 
 - **World Time:** The time of the time zone where the MCU is located. World time can be represented by standard year, month, day, hour, minute, and second, or it can be represented as a UNIX timestamp.
 
-## RUNNING TIME
+## RUNNING TIME {#running-time}
 
 ESP has its own function to get the running time, `esp_timer_get_time`, which depends on the `esp_timer` library. This function returns the time from power-on to now, in microseconds.
 
@@ -42,12 +45,12 @@ void app_main(void)
 
 
 
-## WORLD TIME
+## WORLD TIME {#world-time}
 
 !!! warning 
     Note that obtaining world time requires a successful network connection. In other words, the function to obtain world time needs to be called after the network connection is successfully established.
 
-### NTP TIME SYNCHRONIZATION
+### NTP TIME SYNCHRONIZATION {#ntp-time-synchronization}
 !!! note "NTP Time Synchronization"
     NTP (Network Time Protocol) is a protocol used to synchronize time in computer networks. It can obtain accurate time information through the Internet or local area network.
     NTP protocol uses UDP for communication, with the default port being 123. NTP servers periodically send time information to clients, and clients adjust their system time based on this information.
@@ -189,7 +192,7 @@ void sync_time_with_timezone(const char *timezone_str)
 
 ```
 
-### WORLD TIME GETTING
+### WORLD TIME GETTING {#world-time-getting}
 
 In order to facilitate the acquisition of world time, we first define a data structure `DateTime_t` to store information such as year, month, day, hour, minute, and second. Then we define a function `tiny_get_current_datetime` to obtain the current world time. This function returns a `DateTime_t` structure, which contains the current year, month, day, hour, minute, and second information. When using it, pass in a Boolean value `print_flag` to control whether to print the current time.
 

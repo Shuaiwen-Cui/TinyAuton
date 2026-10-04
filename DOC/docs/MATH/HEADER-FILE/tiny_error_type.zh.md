@@ -1,7 +1,13 @@
-# 错误类型定义
+# 错误类型定义 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! INFO
     该文件定义了一些计算中常见的错误类型，用于辅助判断错误原因。文档更新速度较慢，可能与实际代码不符，请以代码为准。
+
+<details class="auton-source" markdown="1">
+<summary>展开 历史摘录 · 74 行</summary>
 
 ```c
 /**
@@ -79,3 +85,4 @@ extern "C"
 #endif
 
 ```
+</details>

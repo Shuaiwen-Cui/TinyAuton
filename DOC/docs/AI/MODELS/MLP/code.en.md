@@ -1,6 +1,9 @@
-# Code
+# TinyAI · Models · MLP — Implementation and source {#code}
 
-## tiny_mlp.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## `tiny_mlp.hpp` {#tiny_mlphpp}
 
 ```cpp
 /**
@@ -41,7 +44,7 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_mlp.cpp
+## `tiny_mlp.cpp` {#tiny_mlpcpp}
 
 ```cpp
 /**

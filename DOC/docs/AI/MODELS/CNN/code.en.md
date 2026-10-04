@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Models · CNN — Implementation and source {#code}
 
-## tiny_cnn.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_cnn.hpp` {#tiny_cnnhpp}
 
 ```cpp
 /**
@@ -52,7 +57,7 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_cnn.cpp
+## `tiny_cnn.cpp` {#tiny_cnncpp}
 
 ```cpp
 /**

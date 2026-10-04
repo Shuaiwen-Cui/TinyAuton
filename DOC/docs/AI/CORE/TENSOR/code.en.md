@@ -1,6 +1,14 @@
-# Code
+# TinyAI · Core · Tensor — Implementation and source {#code}
 
-## tiny_tensor.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_tensor.hpp` {#tiny_tensorhpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_tensor.hpp</code> · 91 lines</summary>
 
 ```cpp
 /**
@@ -96,7 +104,12 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_tensor.cpp
+</details>
+
+## `tiny_tensor.cpp` {#tiny_tensorcpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_tensor.cpp</code> · 194 lines</summary>
 
 ```cpp
 /**
@@ -294,3 +307,5 @@ void Tensor::print(const char *name) const
 
 #endif // __cplusplus
 ```
+
+</details>

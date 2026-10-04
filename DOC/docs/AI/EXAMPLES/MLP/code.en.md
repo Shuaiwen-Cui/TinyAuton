@@ -1,6 +1,14 @@
-# Code
+# TinyAI · Examples · MLP — Implementation and source {#code}
 
-## example_mlp.cpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `example_mlp.cpp` {#example_mlpcpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>example_mlp.cpp</code> · 117 lines</summary>
 
 ```cpp
 /**
@@ -122,7 +130,9 @@ void example_mlp(void)
 #endif // __cplusplus
 ```
 
-## New snippet: BatchNorm1D demo
+</details>
+
+## New snippet: BatchNorm1D demo {#new-snippet-batchnorm1d-demo}
 
 ```cpp
 #if TINY_AI_TRAINING_ENABLED

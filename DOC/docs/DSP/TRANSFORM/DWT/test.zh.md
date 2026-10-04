@@ -1,6 +1,13 @@
-# 测试
+# TinyDSP · 变换 · DWT — 测试与结果 {#_1}
 
-## tiny_dwt_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_dwt_testc"></span>
+<span id="tiny_dwt_testh"></span>
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## `tiny_dwt_test.h` {#tinydwttesth}
 
 ```c
 /**
@@ -53,7 +60,10 @@ void tiny_dwt_test_all(void);
 
 ```
 
-## tiny_dwt_test.c
+## `tiny_dwt_test.c` {#tinydwttestc}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_dwt_test.c</code> · 609 行</summary>
 
 ```c
 /**
@@ -666,3 +676,5 @@ void tiny_dwt_test_all(void)
     printf("╚══════════════════════════════════════════════════════════╝\n");
 }
 ```
+
+</details>

@@ -1,6 +1,14 @@
-# CODE
+# TinyDSP · Transform · DWT — Implementation and source {#code}
 
-## tiny_dwt.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_dwt.h` {#tiny_dwth}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_dwt.h</code> · 108 lines</summary>
 
 ```c
 /**
@@ -113,7 +121,12 @@ extern "C"
 
 ```
 
-## tiny_dwt.c
+</details>
+
+## `tiny_dwt.c` {#tiny_dwtc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_dwt.c</code> · 505 lines</summary>
 
 ```c
 /**
@@ -622,3 +635,5 @@ tiny_error_t tiny_dwt_multilevel_reconstruct_f32(const float *cA_init, const flo
     return TINY_OK;
 }
 ```
+
+</details>

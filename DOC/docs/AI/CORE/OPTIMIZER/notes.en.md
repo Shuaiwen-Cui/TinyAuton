@@ -1,9 +1,39 @@
-# Notes
+# TinyAI · Core · Optimizer — Design notes {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     `tiny_optimizer` exposes two gradient-descent optimisers tuned for the ESP32-S3 memory budget: SGD (momentum + L2) and Adam (lite). All optimisers consume a `std::vector<ParamGroup>` populated by the model layers.
 
-## ParamGroup
+!!! abstract "Optimizer — Walking Downhill Along the Gradient"
+    The gradient tells the optimizer which direction to go. The optimizer decides **how big a step to take and how to take it**.
+
+## Intuition {#intuition}
+
+### Gradient Descent = Blindfolded Hiking {#gradient-descent-blindfolded-hiking}
+
+Imagine you're blindfolded on a mountain, trying to reach the valley. Each step: feel the steepest direction (gradient), take a step that way (update parameters). That's gradient descent.
+
+### Three Optimizers {#three-optimizers}
+
+| Optimizer | Intuition | Characteristic | Best for |
+|-----------|-----------|----------------|----------|
+| **SGD** | \(\text{param} = \text{param} - \text{lr} \cdot \text{grad}\) | Pure gradient descent | Simple problems, small data |
+| **SGD+Momentum** | Adds "inertia": retains previous direction, gradient corrects it | Reduces oscillation | **Default for most tasks** |
+| **Adam** | Per-parameter adaptive LR + momentum | Each param has its own step | Complex networks, hard to tune |
+
+!!! tip "Hyperparameter tuning"
+    - **lr**: too large → diverges; too small → extremely slow. Typical: 0.01 ~ 0.0001
+    - **momentum**: 0.9 is classic. Higher = more inertia
+    - **weight_decay**: L2 regularization, prevents overfitting
+
+!!! warning "Learning rate is THE most important hyperparameter"
+    Debug sequence: try lr=0.01. If loss doesn't decrease (or oscillates), try 0.001. If too slow, try 0.1.
+
+---
+
+## ParamGroup {#paramgroup}
 
 ```cpp
 struct ParamGroup
@@ -15,7 +45,7 @@ struct ParamGroup
 
 Each trainable layer (`Dense`, `Conv1D`, `Conv2D`, `LayerNorm`, `Attention`) overrides `Layer::collect_params()` and pushes its `(weight, dweight)`, `(bias, dbias)` pairs onto a `std::vector<ParamGroup>`. `Sequential::collect_params()` collects from the whole network.
 
-## Optimizer Abstract Base
+## Optimizer Abstract Base {#optimizer-abstract-base}
 
 ```cpp
 class Optimizer
@@ -34,7 +64,7 @@ Required call order:
 3. **Init**: `opt.init(params)` — only here are momentum / Adam moment buffers allocated to match each parameter's shape.
 4. **Training loop**: per batch run `opt.zero_grad(params)` → forward → backward → `opt.step(params)`.
 
-## SGD with momentum & L2
+## SGD with momentum & L2 {#sgd-with-momentum-l2}
 
 ```cpp
 SGD(float lr = 0.01f, float momentum = 0.0f, float weight_decay = 0.0f);
@@ -62,7 +92,7 @@ Params:
 
 `init()` allocates one velocity tensor per parameter; `zero_grad()` is provided by the base class.
 
-## Adam (lite)
+## Adam (lite) {#adam-lite}
 
 ```cpp
 Adam(float lr     = 1e-3f,
@@ -100,14 +130,14 @@ Bias correction is applied to the LR (cheaper than per-element):
     - For sparse / large-batch training: SGD with `lr` ~0.1 and `momentum=0.9`.
     - `weight_decay > 0` matches PyTorch L2 regularisation; do not over-decay biases (the implementation does decay them but their magnitude is small).
 
-## Memory / PSRAM impact
+## Memory / PSRAM impact {#memory-psram-impact}
 
 - **SGD**: +1 velocity tensor per parameter → ~2× memory.
 - **Adam**: +2 moment tensors per parameter → ~3× memory.
 
 If you place model weights in PSRAM, you typically want optimiser buffers in PSRAM too. `Tensor` defaults to `TINY_AI_MALLOC`; replace weight tensors with `Tensor::from_data(psram_buf, ...)` views when the budget is tight.
 
-## Trainer Integration
+## Trainer Integration {#trainer-integration}
 
 `Trainer::ensure_params_collected()` runs lazily on the first `fit()` call:
 

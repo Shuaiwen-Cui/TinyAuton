@@ -1,6 +1,9 @@
-# 代码
+# TinyAI · 模型 · MLP — 实现与源码 {#_1}
 
-## tiny_mlp.hpp
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+## `tiny_mlp.hpp` {#tiny_mlphpp}
 
 ```cpp
 /**
@@ -41,7 +44,7 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_mlp.cpp
+## `tiny_mlp.cpp` {#tiny_mlpcpp}
 
 ```cpp
 /**

@@ -3,3 +3,9 @@
 ._*
 /venv
 /DOC/site
+
+# ESP-IDF build output - MUST stay untracked:
+# a committed build/ carries a CMakeCache.txt with absolute paths
+# from this machine, which makes every CI build fail at configure time.
+build/
+sdkconfig.old

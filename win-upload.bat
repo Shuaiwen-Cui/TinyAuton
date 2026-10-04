@@ -1,35 +1,74 @@
-@REM try "sh upload.sh" or "bash upload.sh" or ".\upload.sh" or "./upload.sh" to run this script
+@echo off
+REM Safe upload: stage -> review -> commit -> rebase onto remote -> push
+REM
+REM   win-upload.bat                  commit message defaults to "auto update"
+REM   win-upload.bat "your message"
+REM
+REM Deliberately NOT using `git push -f`: a force push silently discards
+REM commits made from another machine (the server, another laptop).
+setlocal
 
-echo '--------upload files start--------'
-@REM enter the target folder
-cd ./
+set "MSG=%~1"
+if "%MSG%"=="" set "MSG=auto update"
 
-@REM git init
-git add .
-git status
-@REM git commit -m "auto commit by win-upload.ba"
-git commit -m "auto commit by win-upload.bat"
-echo '--------commit successfully--------'
+for /f "delims=" %%b in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set "BRANCH=%%b"
+if "%BRANCH%"=="" goto :notrepo
 
-@REM git push -f https://github.com/Shuaiwen-Cui/TinyAuton.git main
-git push -f https://github.com/Shuaiwen-Cui/TinyAuton.git main
-@REM git remote add origin https://github.com/Shuaiwen-Cui/TinyAuton.git
-@REM git push -u origin main
-echo '--------push to GitHub successfully--------'
+echo ======== branch: %BRANCH% ========
+git add -A
+if errorlevel 1 goto :fail
 
-cd ./DOC/
-mkdocs gh-deploy
-echo '--------deployed to Github Pages sucessfully--------'
+git status --short
+echo.
 
-@REM git push -f <url> master
-@REM git push -u <url> master
-@REM git remote add origin <url>
-@REM git push -u origin master
-@REM echo '--------push to Gitee successfully--------'
+git diff --cached --quiet
+if not errorlevel 1 goto :nothing
 
-@REM if to deploy to https://<USERNAME>.github.io/<REPO>
-@REM git push -f git@github.com:<USERNAME>/<REPO>.git master:gh-pages
-@REM done
+set "OK="
+set /p "OK=Commit the above? [y/N] "
+if /i not "%OK%"=="y" goto :aborted
 
-@REM if authentication required, username is your GitHub username and password is your GitHub password (deprecated) or personal access token (recommended).
+git commit -m "%MSG%"
+if errorlevel 1 goto :fail
+goto :sync
 
+:nothing
+echo Nothing staged - working tree is clean.
+
+:sync
+echo.
+echo ======== syncing with origin/%BRANCH% ========
+git pull --rebase origin %BRANCH%
+if errorlevel 1 goto :conflict
+
+echo.
+echo ======== pushing ========
+git push origin %BRANCH%
+if errorlevel 1 goto :fail
+
+echo.
+echo ======== done ========
+goto :end
+
+:aborted
+echo Aborted. Nothing committed.
+goto :end
+
+:conflict
+echo.
+echo Rebase stopped - most likely a conflict.
+echo   fix the files, then:  git add ^<file^> ^&^& git rebase --continue
+echo   to undo everything:   git rebase --abort
+goto :end
+
+:notrepo
+echo Not a git repository (or git is not on PATH).
+goto :end
+
+:fail
+echo.
+echo FAILED - see the error above. Nothing was force-pushed.
+
+:end
+endlocal
+pause

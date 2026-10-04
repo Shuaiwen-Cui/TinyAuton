@@ -1,9 +1,12 @@
-# TinyAI 配置
+# TinyAI 配置 {#tinyai}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! info
     `tiny_ai_config.h` 是 `tiny_ai` 中间件的全局配置文件，集中定义了平台宏、特性开关、内存策略以及 AI 专用的错误码。文档更新速度较慢，可能与实际代码不一致，请以实际代码为准。
 
-## 依赖
+## 依赖 {#_1}
 
 `tiny_ai_config.h` 依赖 `tiny_math.h` 和 `tiny_dsp.h`，因此自动获得来自 `tiny_math` 的平台宏（`MCU_PLATFORM_SELECTED`、`MCU_PLATFORM_ESP32`、`TINY_PI`、`TINY_MATH_MIN_DENOMINATOR` 等）。
 
@@ -12,7 +15,7 @@
 #include "tiny_dsp.h"
 ```
 
-## 特性开关
+## 特性开关 {#_2}
 
 | 宏 | 默认值 | 含义 |
 | --- | --- | --- |
@@ -24,7 +27,7 @@
 !!! note
     ESP32-S3 没有 FP8 硬件，FP8 全部以软件方式实现。E4M3FN 适合权重 / 激活，E5M2 适合梯度。
 
-## 内存策略
+## 内存策略 {#_3}
 
 ESP32-S3 WROOM-1U 大约具有 390 KB 内部 SRAM 与 8 MB Octal PSRAM (80 MHz)。`tiny_ai` 通过两组分配宏区分热路径与大数据：
 
@@ -53,7 +56,7 @@ ESP32-S3 WROOM-1U 大约具有 390 KB 内部 SRAM 与 8 MB Octal PSRAM (80 MHz)�
 
 `Tensor` 类内部默认使用 `TINY_AI_MALLOC`，因此中等规模的 MLP / CNN 默认全部驻留 SRAM。当模型超过 SRAM 容量时，可以将权重张量替换为 `TINY_AI_MALLOC_PSRAM` 分配的缓冲区，再通过 `Tensor::from_data()` 包装为非拥有视图。
 
-## 错误码
+## 错误码 {#_4}
 
 错误码与 `tiny_math` / `tiny_dsp` 同样基于 `tiny_error_t` 枚举，AI 专属错误码段从 `0x90000` 开始：
 
@@ -71,7 +74,7 @@ ESP32-S3 WROOM-1U 大约具有 390 KB 内部 SRAM 与 8 MB Octal PSRAM (80 MHz)�
 #define TINY_ERR_AI_NO_CACHE           (TINY_ERR_AI_BASE + 10) // 在 forward 之前调用了 backward
 ```
 
-## 完整源码
+## 完整源码 {#_5}
 
 ```c
 /**

@@ -1,6 +1,89 @@
-# TESTS
+# TinyFFT — Tests and results {#tests}
 
-## tiny_fft_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_fft_testc"></span>
+<span id="tiny_fft_testh"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+!!! abstract "Validation target"
+    This example validates FFT, spectral peak search and IFFT reconstruction for a synthetic 15 / 70 / 120 Hz signal. The original output and complete test sources remain below.
+
+## Historical result summary {#doc-historical-result-summary}
+
+Run date, device and firmware revision were not recorded; source-file dates do not establish the run date. Values below come from the original output.
+
+| Item | Reference | Historical output | Interpretation |
+|---|---|---|---|
+| Peak 1 | 15 Hz | 15.61 Hz | Absolute error 0.61 Hz |
+| Peak 2 | 70 Hz | 70.32 Hz | Absolute error 0.32 Hz |
+| Peak 3 | 120 Hz | 120.99 Hz | Absolute error 0.99 Hz |
+| IFFT | Original signal | Max difference `0.000002` | Reconstruction error in this run |
+| Hann peak | 15 Hz | 15.29 Hz | Absolute error 0.29 Hz |
+| Status | Test criteria | `PASS` | Applies to this run and these criteria |
+
+## Configuration, criteria and interpretation {#doc-configuration-criteria-and-interpretation}
+
+The sample rate is `fs = 1000 Hz`, with `N = 256` and bin spacing `fs/N = 3.90625 Hz`. Quadratic interpolation between neighboring spectral points produces fractional peak frequencies; two decimal places do not establish 0.01 Hz measurement accuracy.
+
+The no-window peak check is `|peak - 15| <= 5 Hz`, the first two returned frequencies must be positive, and IFFT maximum error must be `<= 1e-3`. `PASS` does not mean all three peaks received strict error checks. The Hann window reduces leakage and this run's dominant peak is closer to the input. The original log's resolution claim is retained as history; it does not establish that the same transform length always resolves more closely spaced tones.
+
+To reproduce, call `tiny_fft_test()` from `middleware/tiny_dsp/transform/tiny_fft_test.c` in the selected project. Confirm the startup path reaches it and retain configuration with complete serial output.
+
+## TEST RESULTS {#test-results}
+
+```
+========== TinyFFT Test ==========
+
+1. FFT Initialization:
+  ✓ FFT initialized (max size: 256)
+
+2. Test Signal Generation:
+  Input: Signal with frequencies 15 Hz, 70 Hz, and 120 Hz
+  Sample rate: 1000.0 Hz
+  Signal length: 256 samples
+  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
+
+3. FFT (No Window):
+  Input: Test signal (length=256)
+  ✓ FFT completed
+  Output: FFT result (complex, length=256)
+  Magnitude spectrum: First 10 values: 4.801 5.603 8.669 20.017 111.409 16.176 9.060 6.401 4.987 4.095 
+
+4. Peak Frequency Detection:
+  Input: Power spectrum (length=256)
+  Output: Peak frequency = 15.61 Hz (power = 48.484)
+  Expected: strongest peak near ~15 Hz
+
+5. Top Frequencies Detection:
+  Input: Power spectrum (length=256)
+  Output: Top 3 frequencies:
+    [1] 15.61 Hz (power = 48.484)
+    [2] 70.32 Hz (power = 10.440)
+    [3] 120.99 Hz (power = 1.998)
+  Expected: top frequencies should include ~15 Hz and ~70 Hz
+
+6. IFFT (Signal Reconstruction):
+  Input: FFT result (complex, length=256)
+  Output: Reconstructed signal (length=256)
+  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
+  Max difference from original: 0.000002
+  ✓ IFFT reconstruction completed
+
+7. FFT with Hanning Window:
+  Input: Test signal (length=256) with Hanning window
+  Output: Peak frequency = 15.29 Hz (power = 12.439)
+  Note: Window reduces spectral leakage, improving frequency resolution
+
+8. FFT Deinitialization:
+  ✓ FFT deinitialized
+  Result: PASS
+
+========================================
+```
+
+## `tiny_fft_test.h` {#tinyffttesth}
 
 ```c
 /**
@@ -32,7 +115,10 @@ void tiny_fft_test(void);
 
 ```
 
-## tiny_fft_test.c
+## `tiny_fft_test.c` {#tinyffttestc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_fft_test.c</code> · 241 lines</summary>
 
 ```c
 /**
@@ -278,55 +364,4 @@ cleanup:
 
 ```
 
-
-## TEST RESULTS
-
-```
-========== TinyFFT Test ==========
-
-1. FFT Initialization:
-  ✓ FFT initialized (max size: 256)
-
-2. Test Signal Generation:
-  Input: Signal with frequencies 15 Hz, 70 Hz, and 120 Hz
-  Sample rate: 1000.0 Hz
-  Signal length: 256 samples
-  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
-
-3. FFT (No Window):
-  Input: Test signal (length=256)
-  ✓ FFT completed
-  Output: FFT result (complex, length=256)
-  Magnitude spectrum: First 10 values: 4.801 5.603 8.669 20.017 111.409 16.176 9.060 6.401 4.987 4.095 
-
-4. Peak Frequency Detection:
-  Input: Power spectrum (length=256)
-  Output: Peak frequency = 15.61 Hz (power = 48.484)
-  Expected: strongest peak near ~15 Hz
-
-5. Top Frequencies Detection:
-  Input: Power spectrum (length=256)
-  Output: Top 3 frequencies:
-    [1] 15.61 Hz (power = 48.484)
-    [2] 70.32 Hz (power = 10.440)
-    [3] 120.99 Hz (power = 1.998)
-  Expected: top frequencies should include ~15 Hz and ~70 Hz
-
-6. IFFT (Signal Reconstruction):
-  Input: FFT result (complex, length=256)
-  Output: Reconstructed signal (length=256)
-  First 10 samples: 0.400 0.584 0.623 0.505 0.281 0.056 -0.065 -0.016 0.194 0.498 
-  Max difference from original: 0.000002
-  ✓ IFFT reconstruction completed
-
-7. FFT with Hanning Window:
-  Input: Test signal (length=256) with Hanning window
-  Output: Peak frequency = 15.29 Hz (power = 12.439)
-  Note: Window reduces spectral leakage, improving frequency resolution
-
-8. FFT Deinitialization:
-  ✓ FFT deinitialized
-  Result: PASS
-
-========================================
-```
+</details>

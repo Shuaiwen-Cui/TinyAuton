@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Quant · INT — Implementation and source {#code}
 
-## tiny_quant.h（C 接口）
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## tiny_quant.h（C 接口） {#tiny_quanthc}
 
 ```c
 /**
@@ -48,7 +53,10 @@ tiny_error_t tiny_quant_dense_forward_int8(
 #endif
 ```
 
-## tiny_quant.c（C 实现）
+## tiny_quant.c（C 实现） {#tiny_quantcc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_quant.c</code> · 118 lines</summary>
 
 ```c
 /**
@@ -171,7 +179,9 @@ tiny_error_t tiny_quant_dense_forward_int8(
 }
 ```
 
-## tiny_quant.hpp（C++ 接口）
+</details>
+
+## tiny_quant.hpp（C++ 接口） {#tiny_quanthppc}
 
 ```cpp
 /**
@@ -228,7 +238,10 @@ tiny_error_t requantize_int8(const int8_t *src, int8_t *dst, int n,
 #endif // __cplusplus
 ```
 
-## tiny_quant.cpp（C++ 实现）
+## tiny_quant.cpp（C++ 实现） {#tiny_quantcppc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_quant.cpp</code> · 121 lines</summary>
 
 ```cpp
 /**
@@ -353,3 +366,5 @@ tiny_error_t requantize_int8(const int8_t *src, int8_t *dst, int n,
 
 #endif // __cplusplus
 ```
+
+</details>

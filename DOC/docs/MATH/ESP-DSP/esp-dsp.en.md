@@ -1,4 +1,7 @@
-# ESP-DSP
+# ESP-DSP {#esp-dsp}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 <div class="grid cards" markdown>
 
@@ -13,7 +16,7 @@
 </div>
 
 
-## Function Naming
+## Function Naming {#function-naming}
 
 Naming conventions for the Library functions are similar for all covered domains. You can distinguish signal processing functions by the dsps prefix, while image and video processing functions have dspi prefix, and functions that are specific for operations on small matrices have dspm prefix in their names. Function names in Library have the following general format:
 
@@ -40,7 +43,7 @@ Where:
 -   `<parameters>` are the parameters of the function.
 
 
-## Data Domain
+## Data Domain {#data-domain}
 
 The data-domain is a single character that expresses the subset of functionality to which a given function belongs. The Library designed to supports the following data-domains:
 
@@ -56,17 +59,17 @@ The data-domain is a single character that expresses the subset of functionality
 
 For example, function names that begin with dspi signify that respective functions are used for image or video processing.
 
-## Name
+## Name {#name}
 
 The name is an abbreviation for the core operation that the function really does, for example Add, Sqrt, followed in some cases by a function-specific modifier: = [_modifier]
 
 This modifier, if present, denotes a slight modification or variation of the given function.
 
-## Data Types
+## Data Types {#data-types}
 
 The library supports two main data types – int16 for fixed point arithmetic and float for floating point arithmetic. The datatype described as:
 
-### Data type suffices:
+### Data type suffices: {#data-type-suffices}
 
 - s - signed
 
@@ -74,11 +77,11 @@ The library supports two main data types – int16 for fixed point arithmetic an
 
 - f - float
 
-### Data type extensions:
+### Data type extensions: {#data-type-extensions}
 
 - c - complex
 
-### Data type Bits resolution:
+### Data type Bits resolution: {#data-type-bits-resolution}
 
 - 16
 
@@ -86,11 +89,11 @@ The library supports two main data types – int16 for fixed point arithmetic an
 
 For example: dsps_mac_sc16 defines that mac operation with 1d array will be made with 16 bit signed complex data.
 
-## Implementation Type
+## Implementation Type {#implementation-type}
 
 Each function could be implemented different for different platform and could use different style and resources. That’s why every implemented function will have name extension <_impl> that will define which kind of implementation it is. User can use universal function without extension.
 
-### Implementation extensions:
+### Implementation extensions: {#implementation-extensions}
 
 By default all functions could be used without extensions. The option that select optimized/ansi can be chosen in menuconfig.
 

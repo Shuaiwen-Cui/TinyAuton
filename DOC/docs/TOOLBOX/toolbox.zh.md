@@ -1,4 +1,7 @@
-# 工具箱
+# 工具箱 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! info "tiny_toolbox"
     工具箱tiny_toolbox定位是用于 **平台适配与优化** 并提供 **各种实用工具** 的库，服务于边缘计算与应用开发。**注意，之所以将适配和工具放在一个库里面，是因为很多工具底层利用的是平台提供的功能，所以将平台适配和各类工具放在同一个库里面，便于使用和维护。**
@@ -7,7 +10,7 @@
     目前开发以ESP32为基础，向STM32等平台的迁移需要对适配层进行一定的修改。
 
 
-## 架构与功能目录
+## 架构与功能目录 {#_2}
 
 ```txt
     tiny_toolbox
@@ -20,7 +23,7 @@
     └── ...
 ```
 
-### [时间](./TIME/notes.zh.md)
+### [时间](./TIME/notes.zh.md) {#_3}
 
 - 获取运行时间： `tiny_get_running_time()`
 - SNTP对时： `sync_time_with_timezone("CST-8")`
@@ -30,12 +33,12 @@
 
 - 无线传感器网络本地对时-微秒级别
 
-## 代码
+## 代码 {#_4}
 
 !!! tip
     tiny_toolbox.h 只是作为一个目录，集成了所有的子模块，具体的功能在各个子模块中实现。tiny_toolbox.c 只是形式上的源文件，没有具体的功能。
 
-### CMakeLists.txt
+### CMakeLists.txt {#cmakeliststxt}
 
 ```cmake
 set(src_dirs
@@ -61,7 +64,7 @@ idf_component_register(SRC_DIRS ${src_dirs} INCLUDE_DIRS ${include_dirs} REQUIRE
 
 ```
 
-### tiny_toolbox.h
+### tiny_toolbox.h {#tiny_toolboxh}
 
 ```c
 /**

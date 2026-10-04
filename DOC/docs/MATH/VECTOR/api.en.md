@@ -1,6 +1,9 @@
-# VECTOR OPERATIONS
+# VECTOR OPERATIONS {#vector-operations}
 
-## LIST OF FUNCTIONS
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## LIST OF FUNCTIONS {#list-of-functions}
 
 ```c
 tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
@@ -19,9 +22,9 @@ tiny_error_t tiny_vec_dotprod_f32(const float *src1, const float *src2, float *d
 tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *dest, int len, int stride1, int stride2);
 ```
 
-## ADDITION
+## ADDITION {#addition}
 
-### Addition of Two Vectors
+### Addition of Two Vectors {#addition-of-two-vectors}
 
 ```c
 tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
@@ -41,7 +44,7 @@ tiny_error_t tiny_vec_add_f32(const float *input1, const float *input2, float *o
   
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-### Addition of a Vector and a Constant
+### Addition of a Vector and a Constant {#addition-of-a-vector-and-a-constant}
 
 ```c
 tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
@@ -60,9 +63,9 @@ tiny_error_t tiny_vec_addc_f32(const float *input, float *output, int len, float
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-## SUBTRACTION
+## SUBTRACTION {#subtraction}
 
-### Subtraction of Two Vectors
+### Subtraction of Two Vectors {#subtraction-of-two-vectors}
 
 ```c
 tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
@@ -82,7 +85,7 @@ tiny_error_t tiny_vec_sub_f32(const float *input1, const float *input2, float *o
   
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-### Subtraction of a Vector and a Constant
+### Subtraction of a Vector and a Constant {#subtraction-of-a-vector-and-a-constant}
 
 ```c
 tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
@@ -101,9 +104,9 @@ tiny_error_t tiny_vec_subc_f32(const float *input, float *output, int len, float
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-## MULTIPLICATION
+## MULTIPLICATION {#multiplication}
 
-### Multiplication of Two Vectors
+### Multiplication of Two Vectors {#multiplication-of-two-vectors}
 
 ```c
 tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out);
@@ -123,7 +126,7 @@ tiny_error_t tiny_vec_mul_f32(const float *input1, const float *input2, float *o
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-### Multiplication of a Vector and a Constant
+### Multiplication of a Vector and a Constant {#multiplication-of-a-vector-and-a-constant}
 
 ```c
 tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out);
@@ -142,9 +145,9 @@ tiny_error_t tiny_vec_mulc_f32(const float *input, float *output, int len, float
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-## DIVISION
+## DIVISION {#division}
 
-### Division of Two Vectors
+### Division of Two Vectors {#division-of-two-vectors}
 
 ```c
 tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *output, int len, int stride1, int stride2, int stride_out, bool allow_divide_by_zero);
@@ -165,7 +168,7 @@ tiny_error_t tiny_vec_div_f32(const float *input1, const float *input2, float *o
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-### Division of a Vector and a Constant
+### Division of a Vector and a Constant {#division-of-a-vector-and-a-constant}
 
 ```c
 tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float C, int stride_in, int stride_out, bool allow_divide_by_zero);
@@ -185,9 +188,9 @@ tiny_error_t tiny_vec_divc_f32(const float *input, float *output, int len, float
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-## SQUARE ROOT
+## SQUARE ROOT {#square-root}
 
-### Square Root of a Vector
+### Square Root of a Vector {#square-root-of-a-vector}
 
 ```c
 tiny_error_t tiny_vec_sqrt_f32(const float *input, float *output, int len);
@@ -203,7 +206,7 @@ tiny_error_t tiny_vec_sqrt_f32(const float *input, float *output, int len);
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-### Square Root of a Vector (Fast)
+### Square Root of a Vector (Fast) {#square-root-of-a-vector-fast}
 
 ```c
 tiny_error_t tiny_vec_sqrtf_f32(const float *input, float *output, int len);
@@ -219,7 +222,7 @@ tiny_error_t tiny_vec_sqrtf_f32(const float *input, float *output, int len);
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-### Inverse Square Root of a Vector
+### Inverse Square Root of a Vector {#inverse-square-root-of-a-vector}
 
 ```c
 tiny_error_t tiny_vec_inv_sqrt_f32(const float *input, float *output, int len);
@@ -235,7 +238,7 @@ tiny_error_t tiny_vec_inv_sqrt_f32(const float *input, float *output, int len);
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-### Inverse Square Root of a Vector (Fast)
+### Inverse Square Root of a Vector (Fast) {#inverse-square-root-of-a-vector-fast}
 
 ```c
 tiny_error_t tiny_vec_inv_sqrtf_f32(const float *input, float *output, int len);
@@ -251,9 +254,9 @@ tiny_error_t tiny_vec_inv_sqrtf_f32(const float *input, float *output, int len);
 
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
-## DOT PRODUCT
+## DOT PRODUCT {#dot-product}
 
-### Dot Product of Two Vectors
+### Dot Product of Two Vectors {#dot-product-of-two-vectors}
 
 ```c
 tiny_error_t tiny_vec_dotprod_f32(const float *src1, const float *src2, float *dest, int len);
@@ -271,7 +274,7 @@ tiny_error_t tiny_vec_dotprod_f32(const float *src1, const float *src2, float *d
 **Returns:** Returns a `tiny_error_t` type error code indicating whether the operation was successful.
 
 
-### Dot Product of Two Vectors with Different Strides
+### Dot Product of Two Vectors with Different Strides {#dot-product-of-two-vectors-with-different-strides}
 
 ```c
 tiny_error_t tiny_vec_dotprode_f32(const float *src1, const float *src2, float *dest, int len, int stride1, int stride2);

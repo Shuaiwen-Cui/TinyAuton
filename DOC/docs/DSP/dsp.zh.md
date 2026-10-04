@@ -1,13 +1,22 @@
-# 数字信号处理
+# 数字信号处理 {#_1}
+
+## 阅读入口 {#auton-dsp-guide}
+
+[使用方法](USAGE/usage.md) · [卷积](SIGNAL/CONVOLUTION/notes.md) · [互相关](SIGNAL/CORRELATION/notes.md) · [重采样](SIGNAL/RESAMPLE/notes.md) · [FIR](FILTER/FIR/notes.md) · [IIR](FILTER/IIR/notes.md) · [FFT](TRANSFORM/FFT/notes.md) · [DWT](TRANSFORM/DWT/notes.md) · [ICA](TRANSFORM/ICA/notes.md)。
+
+DSP 工程默认启用变换组，其他组需在入口切换。MATH 工程中的 DSP 副本较旧，尤其不能混用 DWT 多级接口。[FFT 测试](TRANSFORM/FFT/test.md)提供完整验证示范。
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note
     该组件用于旨在为边缘设备提供信号处理的一系列函数，设计主旨为轻量高效，范围为常用重要的信号处理算法。
 
 !!! note
-    该组件基于ESP32官方数字信号处理库 [ESP-DSP](https://docs.espressif.com/projects/esp-dsp/en/latest/esp32/index.html) 进行封装和扩展，提供了更高层次的API接口。先前TinyMath已经对应了ESP-DSP中的Math, Matrix, DotProduct模块，ESP-DSP中的其余模块对应本组件TinyDSP库。除此以外，TinyDSP还提供了ESP-DSP中未曾提供的一些功能，重点覆盖结构健康监测等场景。
+    该组件基于ESP32官方数字信号处理库 [ESP-DSP](https://docs.espressif.com/projects/esp-dsp/en/latest/esp32/index.html) 进行封装和扩展，提供了更高层次的API接口。先前TinyMath已经对应了ESP-DSP中的Math, Matrix, DotProduct模块，ESP-DSP中的其余模块对应本组件TinyDSP库。除此以外，TinyDSP还提供了ESP-DSP中未曾提供的一些功能，用于传感信号预处理、特征提取与边缘计算。
 
 
-## 组件依赖
+## 组件依赖 {#_2}
 
 ```c
 set(src_dirs
@@ -36,13 +45,13 @@ idf_component_register(SRC_DIRS ${src_dirs} INCLUDE_DIRS ${include_dirs} REQUIRE
 
 ```
 
-## 架构与功能目录
+## 架构与功能目录 {#_3}
 
-### 依赖关系示意图
+### 依赖关系示意图 {#_4}
 
 ![](tiny_dsp.png)
 
-### 代码树
+### 代码树 {#_5}
 
 ```txt
 tiny_dsp/

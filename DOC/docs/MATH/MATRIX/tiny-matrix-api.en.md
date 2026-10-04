@@ -1,4 +1,9 @@
-# MATRIX OPERATIONS - TINY_MATRIX
+# MATRIX OPERATIONS - TINY_MATRIX {#matrix-operations-tiny_matrix}
+
+[Read APIs by function](OVERVIEW/api.md). This page preserves the complete original reference and section addresses; the long header is folded.
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-MATH/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! INFO "TINY_MATRIX Library"
     - This library is a lightweight matrix computation library implemented in C++, providing basic matrix operations and linear algebra functions.
@@ -9,7 +14,7 @@
 
 This page documents the full `tiny::Mat` interface, including core matrix storage, element access, ROI helpers, arithmetic operators, linear-system solvers, matrix decompositions, and eigenvalue routines.
 
-## LIST OF FUNCTIONS
+## LIST OF FUNCTIONS {#list-of-functions}
 
 ```c
 TinyMath
@@ -18,6 +23,9 @@ TinyMath
         ├── tiny_mat (c)
         └── tiny_matrix (c++) <---
 ```
+
+<details class="auton-source" markdown="1">
+<summary>Expand Historical excerpt · 442 lines</summary>
 
 ```cpp
 /**
@@ -464,12 +472,14 @@ namespace tiny
 
 ```
 
-## MATRIX METADATA
+</details>
+
+## MATRIX METADATA {#matrix-metadata}
 
 !!! INFO "Matrix Structure"
     The Mat class uses a row-major storage layout with support for padding and step. In this class, `stride` is a backward-compatible alias of `step`. This design enables efficient memory access patterns and compatibility with DSP libraries.
 
-### Core Dimensions
+### Core Dimensions {#core-dimensions}
 
 - **`int row`** : Number of rows in the matrix.
 
@@ -477,7 +487,7 @@ namespace tiny
 
 - **`int element`** : Total number of elements = rows × cols.
 
-### Memory Layout
+### Memory Layout {#memory-layout}
 
 - **`int step` / `int stride`** : Total elements per row (logical columns + padding). In this class they are equivalent, and `stride` is an alias of `step`.
 
@@ -485,13 +495,13 @@ namespace tiny
 
 - **`int memory`** : Size of the data buffer = rows × step (in number of float elements).
 
-### Data Pointers
+### Data Pointers {#data-pointers}
 
 - **`float *data`** : Pointer to the data buffer containing matrix elements. Elements are stored in row-major order: element at (i, j) is at `data[i * step + j]`.
 
 - **`float *temp`** : Pointer to the temporary data buffer (if allocated). Used internally for certain operations.
 
-### Memory Management Flags
+### Memory Management Flags {#memory-management-flags}
 
 - **`bool ext_buff`** : Flag indicating that the matrix uses an external buffer. When `true`, the destructor will not free the memory (caller is responsible).
 
@@ -512,12 +522,12 @@ namespace tiny
     [i j k l _ _]   row 2: data[2*6+0] to data[2*6+3], padding at data[2*6+4,5]
     ```
 
-## ROI STRUCTURE
+## ROI STRUCTURE {#roi-structure}
 
 !!! INFO "Region of Interest"
     The ROI (Region of Interest) structure represents a rectangular subregion of a matrix. It's used with `view_roi()` and `copy_roi()` functions to extract or reference submatrices efficiently.
 
-### ROI Metadata
+### ROI Metadata {#roi-metadata}
 
 - **`int pos_x`** : Starting column index (x-coordinate of the top-left corner).
 
@@ -527,7 +537,7 @@ namespace tiny
 
 - **`int height`** : Height of the ROI in rows.
 
-### ROI Constructor
+### ROI Constructor {#roi-constructor}
 
 ```cpp
 Mat::ROI::ROI(int pos_x = 0, int pos_y = 0, int width = 0, int height = 0);
@@ -547,7 +557,7 @@ ROI constructor initializes the ROI with the specified position and size.
 
 - `int height` : Height of the ROI (rows).
 
-### ROI RESIZE
+### ROI RESIZE {#roi-resize}
 
 ```cpp
 void Mat::ROI::resize_roi(int pos_x, int pos_y, int width, int height);
@@ -571,7 +581,7 @@ Resizes the ROI to the specified position and size.
 
 void
 
-### AREA ROI
+### AREA ROI {#area-roi}
 
 ```cpp
 int Mat::ROI::area_roi(void) const;
@@ -589,12 +599,12 @@ void
 
 int - Area of the ROI.
 
-## PRINTING FUNCTIONS
+## PRINTING FUNCTIONS {#printing-functions}
 
 !!! TIP "Debugging Tools"
     These functions are essential for debugging and understanding matrix state. Use them to verify matrix dimensions, memory layout, and data values during development.
 
-### Print Matrix Information
+### Print Matrix Information {#print-matrix-information}
 
 ```cpp
 void Mat::print_info() const;
@@ -630,7 +640,7 @@ void
 
 - **Sub-Matrix Detection**: Clearly indicates if a matrix is a view, which affects memory management.
 
-### Print Matrix Elements
+### Print Matrix Elements {#print-matrix-elements}
 
 ```cpp
    void Mat::print_matrix(bool show_padding) const;
@@ -656,12 +666,12 @@ void
 
 - **Large Matrices**: For very large matrices, consider using `view_roi()` to print specific regions.
 
-## CONSTRUCTORS & DESTRUCTOR
+## CONSTRUCTORS & DESTRUCTOR {#constructors-destructor}
 
 !!! INFO "Memory Management"
     Constructors handle memory allocation automatically. The destructor safely frees memory only if it was internally allocated (not external buffers or views). Always check the `data` pointer after construction to ensure successful allocation.
 
-### Memory Allocation
+### Memory Allocation {#memory-allocation}
 
 ```cpp
 void Mat::alloc_mem();
@@ -687,7 +697,7 @@ void
 
 - **Error Handling**: If allocation fails, `data` remains `nullptr`. Always check `data` after construction.
 
-### Default Constructor
+### Default Constructor {#default-constructor}
 
 ```cpp
 Mat::Mat();
@@ -709,7 +719,7 @@ void
 
 Mat - A 1×1 matrix with element = 0.
 
-### Constructor - Mat(int rows, int cols)
+### Constructor - Mat(int rows, int cols) {#constructor-matint-rows-int-cols}
 
 ```cpp
 Mat::Mat(int rows, int cols);
@@ -737,7 +747,7 @@ Mat - A rows×cols matrix with all elements initialized to 0.
 
 - **Error Handling**: If memory allocation fails, `data` will be `nullptr`. Always verify allocation success.
 
-### Constructor - Mat(int rows, int cols, int step)
+### Constructor - Mat(int rows, int cols, int step) {#constructor-matint-rows-int-cols-int-step}
 
 ```cpp
 Mat::Mat(int rows, int cols, int step);
@@ -767,7 +777,7 @@ Mat - A rows×cols matrix with step, all elements initialized to 0.
 
 - **Compatibility**: Enables compatibility with external libraries that use strided memory layouts.
 
-### Constructor - Mat(float *data, int rows, int cols)
+### Constructor - Mat(float *data, int rows, int cols) {#constructor-matfloat-data-int-rows-int-cols}
 
 ```cpp
 Mat::Mat(float *data, int rows, int cols);
@@ -805,7 +815,7 @@ Mat - A matrix view with `ext_buff = true`.
 
   - Avoiding unnecessary copies
 
-### Constructor - Mat(float *data, int rows, int cols, int step)
+### Constructor - Mat(float *data, int rows, int cols, int step) {#constructor-matfloat-data-int-rows-int-cols-int-step}
 
 ```cpp
 Mat::Mat(float *data, int rows, int cols, int step);
@@ -837,7 +847,7 @@ Mat - A matrix view with `ext_buff = true` and specified step.
 
 - **Padding Support**: Can handle buffers with padding between rows.
 
-### Copy Constructor - Mat(const Mat &src)
+### Copy Constructor - Mat(const Mat &src) {#copy-constructor-matconst-mat-src}
 
 ```cpp
 Mat::Mat(const Mat &src);
@@ -869,7 +879,7 @@ Mat - A new matrix with copied or shared data depending on source type.
 
 - **Independence**: Deep copies are independent; modifications don't affect the source.
 
-### Destructor
+### Destructor {#destructor}
 
 ```cpp
 Mat::~Mat();
@@ -901,12 +911,12 @@ void
     - The destructor is automatically called when the object goes out of scope
     - Always check `data != nullptr` after construction to verify successful allocation
 
-## ELEMENT ACCESS
+## ELEMENT ACCESS {#element-access}
 
 !!! INFO "Matrix Indexing"
     The Mat class uses operator overloading to provide intuitive matrix element access. The `operator()` allows natural syntax like `A(i, j)` instead of `A.data[i * step + j]`. The implementation automatically handles step and padding.
 
-### Access Matrix Elements (Non-Const)
+### Access Matrix Elements (Non-Const) {#access-matrix-elements-non-const}
 
 ```cpp
 inline float &operator()(int row, int col);
@@ -940,7 +950,7 @@ Element at position (row, col) is accessed as `data[row * step + col]`, where st
 
 - **Example**: `A(2, 3) = 5.0f;` sets element at row 2, column 3 to 5.0.
 
-### Access Matrix Elements (Const)
+### Access Matrix Elements (Const) {#access-matrix-elements-const}
 
 ```cpp
 inline const float &operator()(int row, int col) const;
@@ -976,9 +986,9 @@ Accesses matrix elements in read-only mode. Returns a const reference, preventin
     float val2 = B(1, 2);   // Read-only access (uses const version)
     ```
 
-## DATA MANIPULATION
+## DATA MANIPULATION {#data-manipulation}
 
-### Copy other matrix into this matrix as a sub-matrix
+### Copy other matrix into this matrix as a sub-matrix {#copy-other-matrix-into-this-matrix-as-a-sub-matrix}
 ```cpp
 tiny_error_t Mat::copy_paste(const Mat &src, int row_pos, int col_pos);
 ```
@@ -999,7 +1009,7 @@ Copies the specified source matrix into this matrix as a sub-matrix starting fro
 
 tiny_error_t - Error code (TINY_OK on success).
 
-### Copy header of other matrix to this matrix
+### Copy header of other matrix to this matrix {#copy-header-of-other-matrix-to-this-matrix}
 ```cpp
 tiny_error_t Mat::copy_head(const Mat &src);
 ```
@@ -1016,7 +1026,7 @@ Copies the header of the specified source matrix to this matrix, sharing the dat
 
 tiny_error_t - Error code.
 
-### Get a view (shallow copy) of sub-matrix (ROI) from this matrix
+### Get a view (shallow copy) of sub-matrix (ROI) from this matrix {#get-a-view-shallow-copy-of-sub-matrix-roi-from-this-matrix}
 ```cpp
 Mat Mat::view_roi(int start_row, int start_col, int roi_rows, int roi_cols) const;
 ```
@@ -1038,7 +1048,7 @@ Gets a view (shallow copy) of the sub-matrix (ROI) from this matrix starting fro
 !!! warning
     Unlike ESP-DSP, view_roi does not allow to setup stride as it will automatically calculate the stride based on the number of columns and paddings. The function will also refuse illegal requests, i.e., out of bound requests. 
 
-### Get a view (shallow copy) of sub-matrix (ROI) from this matrix using ROI structure
+### Get a view (shallow copy) of sub-matrix (ROI) from this matrix using ROI structure {#get-a-view-shallow-copy-of-sub-matrix-roi-from-this-matrix-using-roi-structure}
 ```cpp
 Mat Mat::view_roi(const Mat::ROI &roi) const;
 ```
@@ -1051,7 +1061,7 @@ Gets a view (shallow copy) of the sub-matrix (ROI) from this matrix using the sp
 
 - `const Mat::ROI &roi` : ROI structure.
 
-### Get a replica (deep copy) of sub-matrix (ROI)
+### Get a replica (deep copy) of sub-matrix (ROI) {#get-a-replica-deep-copy-of-sub-matrix-roi}
 ```cpp
 Mat Mat::copy_roi(int start_row, int start_col, int height, int width);
 ```
@@ -1070,7 +1080,7 @@ Gets a replica (deep copy) of the sub-matrix (ROI) from this matrix starting fro
 
 - `int width` : Number of columns in the ROI.
 
-### Get a replica (deep copy) of sub-matrix (ROI) using ROI structure
+### Get a replica (deep copy) of sub-matrix (ROI) using ROI structure {#get-a-replica-deep-copy-of-sub-matrix-roi-using-roi-structure}
 ```cpp
 Mat Mat::copy_roi(const Mat::ROI &roi);
 ```
@@ -1083,7 +1093,7 @@ Gets a replica (deep copy) of the sub-matrix (ROI) from this matrix using the sp
 
 - `const Mat::ROI &roi` : ROI structure.
 
-### Get a block of matrix
+### Get a block of matrix {#get-a-block-of-matrix}
 ```cpp
 Mat Mat::block(int start_row, int start_col, int block_rows, int block_cols);
 ```
@@ -1110,7 +1120,7 @@ Gets a block of the matrix starting from the specified row and column positions.
 
     - `block` : Deep copy of the block from this matrix. Flexible and slower.
 
-### Swap rows
+### Swap rows {#swap-rows}
 
 ```cpp
 void Mat::swap_rows(int row1, int row2);
@@ -1130,7 +1140,7 @@ Swaps the specified rows in the matrix.
 
 void
 
-### Swap columns
+### Swap columns {#swap-columns}
 
 ```cpp
 void Mat::swap_cols(int col1, int col2);
@@ -1150,7 +1160,7 @@ Swaps the specified columns in the matrix.
 
 void
 
-### Clear matrix
+### Clear matrix {#clear-matrix}
 
 ```cpp
 void Mat::clear(void);
@@ -1168,12 +1178,12 @@ void
 
 void
 
-## ARITHMETIC OPERATORS
+## ARITHMETIC OPERATORS {#arithmetic-operators}
 
 !!! INFO "In-Place Operations"
     This section defines the arithmetic operators that act on the current matrix itself (in-place operations). These operators modify the matrix and return a reference to it, enabling chained operations like `A += B += C`. The operators are optimized to handle padding and use DSP-accelerated functions when available.
 
-### Copy assignment
+### Copy assignment {#copy-assignment}
 ```cpp
 Mat &operator=(const Mat &src);
 ```
@@ -1204,7 +1214,7 @@ Mat& - Reference to the current matrix (enables chaining).
 
 - **Performance**: O(n²) for n×n matrices. For large matrices, consider if a view would suffice.
 
-### Add matrix
+### Add matrix {#add-matrix}
 ```cpp
 Mat &operator+=(const Mat &A);
 ```
@@ -1217,7 +1227,7 @@ Adds the specified matrix to this matrix.
 
 - `const Mat &A` : Matrix to be added.
 
-### Add constant
+### Add constant {#add-constant}
 ```cpp
 Mat &operator+=(float C);
 ```
@@ -1234,7 +1244,7 @@ Element-wise addition of a constant to this matrix.
 
 Mat& - Reference to the current matrix.
 
-### Subtract matrix
+### Subtract matrix {#subtract-matrix}
 ```cpp
 Mat &operator-=(const Mat &A);
 ```
@@ -1247,7 +1257,7 @@ Subtracts the specified matrix from this matrix.
 
 - `const Mat &A` : Matrix to be subtracted.
 
-### Subtract constant
+### Subtract constant {#subtract-constant}
 ```cpp
 Mat &operator-=(float C);
 ```
@@ -1264,7 +1274,7 @@ Element-wise subtraction of a constant from this matrix.
 
 Mat& - Reference to the current matrix.
 
-### Multiply matrix
+### Multiply matrix {#multiply-matrix}
 ```cpp
 Mat &operator*=(const Mat &A);
 ```
@@ -1302,7 +1312,7 @@ Mat& - Reference to the current matrix.
 
 - **Common Mistake**: This is matrix multiplication, not element-wise. For element-wise, use a loop with `operator()()`.
 
-### Multiply constant
+### Multiply constant {#multiply-constant}
 ```cpp
 Mat &operator*=(float C);
 ```
@@ -1319,7 +1329,7 @@ Element-wise multiplication by a constant.
 
 Mat& - Reference to the current matrix.
 
-### Divide matrix (element-wise)
+### Divide matrix (element-wise) {#divide-matrix-element-wise}
 ```cpp
 Mat &operator/=(const Mat &B);
 ```
@@ -1336,7 +1346,7 @@ Element-wise division: this = this / B.
 
 Mat& - Reference to the current matrix.
 
-### Divide constant
+### Divide constant {#divide-constant}
 ```cpp
 Mat &operator/=(float C);
 ```
@@ -1353,7 +1363,7 @@ Element-wise division of this matrix by a constant.
 
 Mat& - Reference to the current matrix.
 
-### Exponentiation
+### Exponentiation {#exponentiation}
 ```cpp
 Mat operator^(int C);
 ```
@@ -1371,9 +1381,9 @@ Element-wise integer exponentiation. Returns a new matrix where each element is 
 Mat - New matrix after exponentiation.
 
 
-## LINEAR ALGEBRA
+## LINEAR ALGEBRA {#linear-algebra}
 
-### Transpose
+### Transpose {#transpose}
 
 ```cpp
 Mat Mat::transpose();
@@ -1414,7 +1424,7 @@ Mat - Transposed matrix (col × row).
 
   - Matrix equations: A^T * A (normal equations)
 
-### Minor matrix
+### Minor matrix {#minor-matrix}
 
 ```cpp
 Mat Mat::minor(int target_row, int target_col);
@@ -1434,7 +1444,7 @@ Calculates the minor matrix by removing the specified row and column. The minor 
 
 Mat - The (n-1)x(n-1) minor matrix.
 
-### Cofactor matrix
+### Cofactor matrix {#cofactor-matrix}
 
 ```cpp
 Mat Mat::cofactor(int target_row, int target_col);
@@ -1454,7 +1464,7 @@ Calculates the cofactor matrix (same as minor matrix). The cofactor matrix is th
 
 Mat - The (n-1)x(n-1) cofactor matrix (same as minor matrix).
 
-### Determinant (Auto-select Method)
+### Determinant (Auto-select Method) {#determinant-auto-select-method}
 
 ```cpp
 float Mat::determinant();
@@ -1498,7 +1508,7 @@ float - The determinant value.
 
 - **Precision Requirements**: For small matrices, `determinant_laplace()` may provide better numerical precision
 
-### Determinant - Laplace Expansion
+### Determinant - Laplace Expansion {#determinant-laplace-expansion}
 
 ```cpp
 float Mat::determinant_laplace();
@@ -1531,7 +1541,7 @@ float - The determinant value.
 !!! warning "Performance Warning"
     Time complexity is O(n!), suitable only for small matrices (n ≤ 4). For large matrices, use `determinant_lu()` or `determinant_gaussian()`.
 
-### Determinant - LU Decomposition
+### Determinant - LU Decomposition {#determinant-lu-decomposition}
 
 ```cpp
 float Mat::determinant_lu();
@@ -1584,7 +1594,7 @@ float - The determinant value. Returns 0.0 if the matrix is singular or near-sin
 
 - **Singular Matrices**: If the matrix is singular, LU decomposition fails and the function returns 0.0
 
-### Determinant - Gaussian Elimination
+### Determinant - Gaussian Elimination {#determinant-gaussian-elimination}
 
 ```cpp
 float Mat::determinant_gaussian();
@@ -1629,7 +1639,7 @@ float - The determinant value. Returns 0.0 if the matrix is singular.
 
   - System solvability: det(A) = 0 indicates singular system
 
-### Adjoint
+### Adjoint {#adjoint}
 
 ```cpp
 Mat Mat::adjoint();
@@ -1647,7 +1657,7 @@ None.
 
 Mat - Adjoint matrix.
 
-### Normalize
+### Normalize {#normalize}
 
 ```cpp
 void Mat::normalize();
@@ -1665,7 +1675,7 @@ None.
 
 void
 
-### Norm
+### Norm {#norm}
 
 ```cpp
 float Mat::norm() const;
@@ -1701,7 +1711,7 @@ float - The computed matrix norm.
 
 - **Comparison**: For vectors, this is equivalent to the standard Euclidean norm ||v||₂.
 
-### Inverse using Adjoint
+### Inverse using Adjoint {#inverse-using-adjoint}
 
 ```cpp
 Mat Mat::inverse_adjoint();
@@ -1719,7 +1729,7 @@ None.
 
 Mat - The inverse matrix. If singular, returns a zero matrix.
 
-### Identity Matrix
+### Identity Matrix {#identity-matrix}
 
 ```cpp
 static Mat Mat::eye(int size);
@@ -1738,7 +1748,7 @@ Generates an identity matrix of given size.
 Mat - Identity matrix (size x size).
 
 
-### Augmentation Matrix (Horizontal Concatenation)
+### Augmentation Matrix (Horizontal Concatenation) {#augmentation-matrix-horizontal-concatenation}
 
 ```cpp
 static Mat Mat::augment(const Mat &A, const Mat &B);
@@ -1758,7 +1768,7 @@ Creates an augmented matrix by horizontally concatenating two matrices [A | B]. 
 
 Mat - Augmented matrix [A B].
 
-### Vertical Stack
+### Vertical Stack {#vertical-stack}
 
 ```cpp
 static Mat Mat::vstack(const Mat &A, const Mat &B);
@@ -1778,7 +1788,7 @@ Vertically stacks two matrices [A; B]. The column counts of A and B must match.
 
 Mat - Vertically stacked matrix [A; B].
 
-### Gram-Schmidt Orthogonalization
+### Gram-Schmidt Orthogonalization {#gram-schmidt-orthogonalization}
 
 ```cpp
 static bool Mat::gram_schmidt_orthogonalize(const Mat &vectors, Mat &orthogonal_vectors, 
@@ -1823,7 +1833,7 @@ The modified version subtracts projections immediately, which improves numerical
 
 - **Performance**: For large matrices, consider the computational cost. The complexity is O(mn²) for m-dimensional vectors and n vectors.
 
-### All-Ones Matrix (Rectangular)
+### All-Ones Matrix (Rectangular) {#all-ones-matrix-rectangular}
 
 ```cpp
 static Mat Mat::ones(int rows, int cols);
@@ -1843,7 +1853,7 @@ Creates a matrix of specified size filled with ones.
 
 Mat - Matrix [rows x cols] with all elements = 1.
 
-### All-Ones Matrix (Square)
+### All-Ones Matrix (Square) {#all-ones-matrix-square}
 
 ```cpp
 static Mat Mat::ones(int size);
@@ -1862,7 +1872,7 @@ Creates a square matrix filled with ones of the specified size.
 Mat - Square matrix [size x size] with all elements = 1.
 
 
-### Gaussian Elimination
+### Gaussian Elimination {#gaussian-elimination}
 
 ```cpp
 Mat Mat::gaussian_eliminate() const;
@@ -1920,7 +1930,7 @@ Mat - The upper triangular matrix (REF form).
 
 - **In-place mental model**: The algorithm mutates an equivalent working copy, not the mathematical object you started with. Do not assume the original row order survives.
 
-### Row Reduce from Gaussian
+### Row Reduce from Gaussian {#row-reduce-from-gaussian}
 
 ```cpp
 Mat Mat::row_reduce_from_gaussian() const;
@@ -1956,7 +1966,7 @@ None.
 
 Mat - The matrix in RREF form.
 
-### Inverse using Gaussian-Jordan Elimination
+### Inverse using Gaussian-Jordan Elimination {#inverse-using-gaussian-jordan-elimination}
 
 ```cpp
 Mat Mat::inverse_gje() const;
@@ -1994,7 +2004,7 @@ None.
 
 Mat - The inverse matrix if invertible, otherwise returns empty matrix.
 
-### Dot Product
+### Dot Product {#dot-product}
 
 ```cpp
 float Mat::dotprod(const Mat &A, const Mat &B);
@@ -2014,7 +2024,7 @@ Calculates the dot product of two vectors (Nx1).
 
 float - The computed dot product value.
 
-### Solve Linear System
+### Solve Linear System {#solve-linear-system}
 
 ```cpp
 Mat Mat::solve(const Mat &A, const Mat &b) const;
@@ -2076,7 +2086,7 @@ Mat - Solution vector (N×1) containing the roots of the equation Ax = b. Return
 
 - **No inverse shortcut**: Forming A⁻¹ and multiplying by b is less stable and usually slower than direct solve.
 
-### Band Solve
+### Band Solve {#band-solve}
 
 ```cpp
 Mat Mat::band_solve(Mat A, Mat b, int k) const;
@@ -2120,7 +2130,7 @@ Mat - Solution vector (Nx1) containing the roots of the equation Ax = b.
 
 
 
-### Roots
+### Roots {#roots}
 
 ```cpp
 Mat Mat::roots(Mat A, Mat y) const;
@@ -2150,14 +2160,14 @@ Solves the matrix using a different method. Another implementation of the 'solve
 
 Mat - Matrix [N]x[1] with roots.
 
-## MATRIX PROPERTIES & DECOMPOSITIONS
+## MATRIX PROPERTIES & DECOMPOSITIONS {#matrix-properties-decompositions}
 
 !!! INFO "Matrix Decompositions Overview"
     Matrix decompositions are fundamental tools in numerical linear algebra. They break down a matrix into simpler components that reveal its structure and enable efficient computations. Different decompositions are suited for different types of matrices and applications.
 
-### Matrix Property Checks
+### Matrix Property Checks {#matrix-property-checks}
 
-#### Check Symmetry
+#### Check Symmetry {#check-symmetry}
 
 ```cpp
 bool Mat::is_symmetric(float tolerance = 1e-6f) const;
@@ -2187,7 +2197,7 @@ For a symmetric matrix, all eigenvalues are real, and eigenvectors can be chosen
 
 - **Structural Dynamics**: Stiffness and mass matrices in structural analysis are typically symmetric.
 
-#### Check Positive Definiteness
+#### Check Positive Definiteness {#check-positive-definiteness}
 
 ```cpp
 bool Mat::is_positive_definite(float tolerance = 1e-6f, int max_minors_to_check = -1) const;
@@ -2218,9 +2228,9 @@ Sylvester's criterion states that a symmetric matrix is positive definite if and
 
 - **Stability Analysis**: In control systems, positive definiteness of certain matrices ensures system stability.
 
-### Matrix Decomposition Structures
+### Matrix Decomposition Structures {#matrix-decomposition-structures}
 
-#### LU Decomposition Structure
+#### LU Decomposition Structure {#lu-decomposition-structure}
 
 ```cpp
 struct Mat::LUDecomposition
@@ -2243,7 +2253,7 @@ Container for LU decomposition results. The decomposition A = P * L * U (with pi
 
 LU decomposition factors a matrix into lower and upper triangular matrices, enabling efficient solution of linear systems. With pivoting, it handles near-singular matrices better.
 
-#### Cholesky Decomposition Structure
+#### Cholesky Decomposition Structure {#cholesky-decomposition-structure}
 
 ```cpp
 struct Mat::CholeskyDecomposition
@@ -2263,7 +2273,7 @@ Container for Cholesky decomposition results. For symmetric positive definite ma
 
 Cholesky decomposition is a specialized LU decomposition for symmetric positive definite matrices. It requires only half the storage and computation of LU decomposition.
 
-#### QR Decomposition Structure
+#### QR Decomposition Structure {#qr-decomposition-structure}
 
 ```cpp
 struct Mat::QRDecomposition
@@ -2284,7 +2294,7 @@ Container for QR decomposition results. A = Q * R, where Q is orthogonal (Q^T * 
 
 QR decomposition expresses a matrix as the product of an orthogonal matrix and an upper triangular matrix. It's numerically stable and fundamental for least squares problems.
 
-#### SVD Decomposition Structure
+#### SVD Decomposition Structure {#svd-decomposition-structure}
 
 ```cpp
 struct Mat::SVDDecomposition
@@ -2308,9 +2318,9 @@ Container for SVD decomposition results. A = U * S * V^T, where U and V are orth
 
 SVD is the most general matrix decomposition. The singular values reveal the matrix's rank, condition number, and enable computation of pseudo-inverse for rank-deficient matrices.
 
-### Matrix Decomposition Methods
+### Matrix Decomposition Methods {#matrix-decomposition-methods}
 
-#### LU Decomposition
+#### LU Decomposition {#lu-decomposition}
 
 ```cpp
 Mat::LUDecomposition Mat::lu_decompose(bool use_pivoting = true) const;
@@ -2354,7 +2364,7 @@ The decomposition enables solving Ax = b by solving Ly = Pb (forward substitutio
 
 - **Sign matters for determinants**: Every row permutation changes the determinant sign through `P`.
 
-#### Cholesky Decomposition
+#### Cholesky Decomposition {#cholesky-decomposition}
 
 ```cpp
 Mat::CholeskyDecomposition Mat::cholesky_decompose() const;
@@ -2400,7 +2410,7 @@ None (matrix must be symmetric positive definite).
 
 - **Best when structure is known**: If you already know the matrix is SPD, this is the right solver family; otherwise check first with `is_symmetric()` and `is_positive_definite()`.
 
-#### QR Decomposition
+#### QR Decomposition {#qr-decomposition}
 
 ```cpp
 Mat::QRDecomposition Mat::qr_decompose() const;
@@ -2440,7 +2450,7 @@ None.
 
 - **Rank deficiency**: Small diagonal values in `R` usually mean near-dependence. Treat them with tolerance, not exact comparisons.
 
-#### SVD Decomposition
+#### SVD Decomposition {#svd-decomposition}
 
 ```cpp
 Mat::SVDDecomposition Mat::svd_decompose(int max_iter = 100, float tolerance = 1e-6f) const;
@@ -2501,9 +2511,9 @@ The singular values reveal the matrix's fundamental properties: rank, condition 
 
 - **Interpretation**: Singular values tell you conditioning and energy concentration, but they do not by themselves solve a model-selection problem.
 
-### Solving Linear Systems Using Decompositions
+### Solving Linear Systems Using Decompositions {#solving-linear-systems-using-decompositions}
 
-#### Solve using LU Decomposition
+#### Solve using LU Decomposition {#solve-using-lu-decomposition}
 
 ```cpp
 static Mat Mat::solve_lu(const LUDecomposition &lu, const Mat &b);
@@ -2543,7 +2553,7 @@ Mat - Solution vector (N×1).
 
 - **Pivot information matters**: The permutation matrix is part of the solve; ignoring it gives the wrong answer.
 
-#### Solve using Cholesky Decomposition
+#### Solve using Cholesky Decomposition {#solve-using-cholesky-decomposition}
 
 ```cpp
 static Mat Mat::solve_cholesky(const CholeskyDecomposition &chol, const Mat &b);
@@ -2583,7 +2593,7 @@ Mat - Solution vector (N×1).
 
 - **Check before decomposing**: A quick symmetry/positive-definite check is cheaper than debugging a failed factorization later.
 
-#### Solve using QR Decomposition (Least Squares)
+#### Solve using QR Decomposition (Least Squares) {#solve-using-qr-decomposition-least-squares}
 
 ```cpp
 static Mat Mat::solve_qr(const QRDecomposition &qr, const Mat &b);
@@ -2630,7 +2640,7 @@ Mat - Least squares solution vector (N×1).
 
 - **Still needs rank awareness**: Very small diagonal values in `R` mean the fit may be ill-conditioned or underdetermined.
 
-### Pseudo-Inverse
+### Pseudo-Inverse {#pseudo-inverse}
 
 ```cpp
 static Mat Mat::pseudo_inverse(const SVDDecomposition &svd, float tolerance = 1e-6f);
@@ -2688,9 +2698,9 @@ Mat - Pseudo-inverse matrix.
 
 - **Prefer solve when possible**: If the system is square and well-conditioned, direct solving is usually cheaper.
 
-## LINEAR ALGEBRA - Eigenvalues & Eigenvectors
+## LINEAR ALGEBRA - Eigenvalues & Eigenvectors {#linear-algebra-eigenvalues-eigenvectors}
 
-### Struct: `Mat::EigenPair`
+### Struct: `Mat::EigenPair` {#struct-mateigenpair}
 
 ```cpp
 Mat::EigenPair::EigenPair();
@@ -2709,7 +2719,7 @@ Container for a single eigenvalue/eigenvector result and related metadata. Typic
 
 The pair is intentionally minimal: one eigenvalue, one eigenvector, and convergence metadata. That makes it practical for iterative methods where you care about one mode, not the full spectrum.
 
-### Struct: `Mat::EigenDecomposition`
+### Struct: `Mat::EigenDecomposition` {#struct-mateigendecomposition}
 
 ```cpp
 Mat::EigenDecomposition::EigenDecomposition();
@@ -2728,7 +2738,7 @@ Container for a full eigendecomposition result (all eigenvalues and eigenvectors
 
 This is a full spectral snapshot. It is valuable when the matrix is small enough that the cost and memory are acceptable, and when you need more than one mode or a basis change.
 
-### Power Iteration (dominant eigenpair)
+### Power Iteration (dominant eigenpair) {#power-iteration-dominant-eigenpair}
 
 ```cpp
 Mat::EigenPair Mat::power_iteration(int max_iter, float tolerance) const;
@@ -2798,7 +2808,7 @@ The method converges to the dominant eigenvalue if:
 
 - **Scaling matters**: Poorly scaled matrices can slow convergence or worsen the eigenvector estimate.
 
-### Inverse Power Iteration (smallest eigenpair)
+### Inverse Power Iteration (smallest eigenpair) {#inverse-power-iteration-smallest-eigenpair}
 
 ```cpp
 Mat::EigenPair Mat::inverse_power_iteration(int max_iter, float tolerance) const;
@@ -2892,7 +2902,7 @@ Converges to the smallest eigenvalue if:
 
 - **Smallest magnitude is not always smallest numeric value**: For signed spectra, “minimum magnitude” and “most negative” are different concepts.
 
-### Jacobi Eigendecomposition (symmetric matrices)
+### Jacobi Eigendecomposition (symmetric matrices) {#jacobi-eigendecomposition-symmetric-matrices}
 
 ```cpp
 Mat::EigenDecomposition Mat::eigendecompose_jacobi(float tolerance, int max_iter) const;
@@ -2960,7 +2970,7 @@ If the matrix is not approximately symmetric the function will warn, though it m
 
 - **Off-diagonal noise**: Floating-point cleanup can leave tiny residuals. Treat the result as approximate diagonalization.
 
-### QR Eigendecomposition (general matrices)
+### QR Eigendecomposition (general matrices) {#qr-eigendecomposition-general-matrices}
 
 ```cpp
 Mat::EigenDecomposition Mat::eigendecompose_qr(int max_iter, float tolerance) const;
@@ -3026,7 +3036,7 @@ QR uses Gram–Schmidt for Q/R in this implementation; it can be less stable for
 
 - **Orthogonalization quality matters**: Because Q is built through Gram-Schmidt, ill-conditioned inputs can degrade the iteration.
 
-### Automatic Eigendecomposition
+### Automatic Eigendecomposition {#automatic-eigendecomposition}
 
 ```cpp
 Mat::EigenDecomposition Mat::eigendecompose(float tolerance = 1e-6f, int max_iter = 100) const;
@@ -3080,9 +3090,9 @@ Convenience interface that automatically selects the optimal algorithm based on 
 
 - **Large matrices**: For embedded use, full eigendecomposition can dominate both compute time and RAM.
 
-## STREAM OPERATORS
+## STREAM OPERATORS {#stream-operators}
 
-### Matrix output stream operator
+### Matrix output stream operator {#matrix-output-stream-operator}
 ```cpp
 std::ostream &operator<<(std::ostream &os, const Mat &m);
 ```
@@ -3097,7 +3107,7 @@ Overloaded output stream operator for the matrix.
 
 - `const Mat &m` : Matrix to be output.
 
-### ROI output stream operator
+### ROI output stream operator {#roi-output-stream-operator}
 ```cpp
 std::ostream &operator<<(std::ostream &os, const Mat::ROI &roi);
 ```
@@ -3112,7 +3122,7 @@ Overloaded output stream operator for the ROI structure.
 
 - `const Mat::ROI &roi` : ROI structure.
 
-### Matrix input stream operator
+### Matrix input stream operator {#matrix-input-stream-operator}
 ```cpp
 std::istream &operator>>(std::istream &is, Mat &m);
 ```
@@ -3130,7 +3140,7 @@ Overloaded input stream operator for the matrix.
 !!! tip 
     This section is actually kind of overlapping with print function in terms of showing the matrix.
 
-## GLOBAL ARITHMETIC OPERATORS
+## GLOBAL ARITHMETIC OPERATORS {#global-arithmetic-operators}
 
 !!! INFO "Non-Modifying Operations"
     The operators in this section return a new matrix object, which is the result of the operation. The original matrices remain unchanged. These are functional-style operations that don't modify their operands, making them safe for use with const references and temporary objects.
@@ -3140,7 +3150,7 @@ Overloaded input stream operator for the matrix.
     - Use member operators (A += B) when you want to modify the matrix in-place (more memory efficient)
 
 
-### Add matrix
+### Add matrix {#add-matrix_1}
 ```cpp
 Mat operator+(const Mat &A, const Mat &B);
 ```
@@ -3159,7 +3169,7 @@ Adds two matrices element-wise.
 
 Mat - Result matrix A+B.
 
-### Add constant
+### Add constant {#add-constant_1}
 ```cpp
 Mat operator+(const Mat &A, float C);
 ```
@@ -3178,7 +3188,7 @@ Adds a constant to a matrix element-wise.
 
 Mat - Result matrix A+C.
 
-### Subtract matrix
+### Subtract matrix {#subtract-matrix_1}
 ```cpp
 Mat operator-(const Mat &A, const Mat &B);
 ```
@@ -3197,7 +3207,7 @@ Subtracts two matrices element-wise.
 
 Mat - Result matrix A-B.
 
-### Subtract constant
+### Subtract constant {#subtract-constant_1}
 ```cpp
 Mat operator-(const Mat &A, float C);
 ```
@@ -3216,7 +3226,7 @@ Subtracts a constant from a matrix element-wise.
 
 Mat - Result matrix A-C.
 
-### Multiply matrix
+### Multiply matrix {#multiply-matrix_1}
 ```cpp
 Mat operator*(const Mat &A, const Mat &B);
 ```
@@ -3235,7 +3245,7 @@ Multiplies two matrices (matrix multiplication).
 
 Mat - Result matrix A*B.
 
-### Multiply constant
+### Multiply constant {#multiply-constant_1}
 ```cpp
 Mat operator*(const Mat &A, float C);
 ```
@@ -3254,7 +3264,7 @@ Multiplies a matrix by a constant element-wise.
 
 Mat - Result matrix A*C.
 
-### Multiply constant (left side)
+### Multiply constant (left side) {#multiply-constant-left-side}
 ```cpp
 Mat operator*(float C, const Mat &A);
 ```
@@ -3274,7 +3284,7 @@ Multiplies a constant by a matrix element-wise.
 Mat - Result matrix C*A.
 
 
-### Divide matrix (by constant)
+### Divide matrix (by constant) {#divide-matrix-by-constant}
 ```cpp
 Mat operator/(const Mat &A, float C);
 ```
@@ -3293,7 +3303,7 @@ Divides a matrix by a constant element-wise.
 
 Mat - Result matrix A/C.
 
-### Divide matrix (element-wise)
+### Divide matrix (element-wise) {#divide-matrix-element-wise_1}
 ```cpp
 Mat operator/(const Mat &A, const Mat &B);
 ```
@@ -3312,7 +3322,7 @@ Divides matrix A by matrix B element-wise.
 
 Mat - Result matrix C, where C[i,j] = A[i,j]/B[i,j].
 
-### Equality check
+### Equality check {#equality-check}
 ```cpp
 bool operator==(const Mat &A, const Mat &B);
 ```
@@ -3330,4 +3340,3 @@ Checks if the specified matrices are equal.
 **Returns**:
 
 bool - true if equal, false otherwise.
-

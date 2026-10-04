@@ -1,11 +1,49 @@
-# NOTES
+# TinyDWT — Principles and API {#notes}
+
+## Current multilevel interface {#auton-current-dwt}
+
+In DSP/AI, input length must be even at every level; one level halves coefficient length. This uses 128 samples and three levels. Decomposition allocates `cA/cD/cD_lens`; the caller frees them and retains per-level lengths for reconstruction.
+
+```c
+#include "tiny_dwt.h"
+#include <stdlib.h>
+
+void dwt_demo(void)
+{
+    float input[128] = {0}, output[128] = {0};
+    float *cA = NULL, *cD = NULL;
+    int cA_len = 0, cD_total = 0;
+    int *cD_lens = NULL;
+    tiny_error_t status = tiny_dwt_multilevel_decompose_f32(
+        input, 128, TINY_WAVELET_DB4, 3,
+        &cA, &cD, &cA_len, &cD_lens, &cD_total);
+    if (status == TINY_OK) {
+        status = tiny_dwt_multilevel_reconstruct_f32(
+            cA, cD, cA_len, TINY_WAVELET_DB4, cD_lens, 3, output);
+    }
+    free(cA);
+    free(cD);
+    free(cD_lens);
+    if (status != TINY_OK) return;
+}
+```
+
+[Header and implementation](code.md) · [Historical tests](test.md)
+
+## Principles and historical interface excerpts {#auton-historical-dwt}
+
+The older multilevel signatures and examples below cannot be used with the DSP/AI version. Historical rounded-length formulas do not establish support for odd inputs. Use the current call above and check the selected project's headers.
+
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Note"
     Discrete Wavelet Transform (DWT) is a powerful signal processing technique that decomposes signals into different frequency components at multiple resolution levels. Unlike FFT which provides global frequency information, DWT provides both time and frequency localization, making it ideal for analyzing non-stationary signals, denoising, compression, and feature extraction.
 
-## DWT OVERVIEW
+## DWT OVERVIEW {#dwt-overview}
 
-### Mathematical Principle
+### Mathematical Principle {#mathematical-principle}
 
 The Discrete Wavelet Transform decomposes a signal into approximation (low-frequency) and detail (high-frequency) coefficients using a pair of filters: a low-pass filter (scaling function) and a high-pass filter (wavelet function).
 
@@ -49,7 +87,7 @@ Where:
 
 - \( g_1 \) is the high-pass reconstruction filter
 
-## WAVELET TYPES
+## WAVELET TYPES {#wavelet-types}
 
 The library supports Daubechies wavelets (DB1 through DB10):
 
@@ -67,9 +105,9 @@ L_{filter} = 2 \times N
 
 Where \( N \) is the wavelet order (DB1: N=1, DB2: N=2, ..., DB10: N=10).
 
-## SINGLE-LEVEL DWT
+## SINGLE-LEVEL DWT {#single-level-dwt}
 
-### tiny_dwt_decompose_f32
+### tiny_dwt_decompose_f32 {#tiny_dwt_decompose_f32}
 
 ```c
 /**
@@ -129,7 +167,7 @@ Returns success or error code.
 
 The output coefficient arrays are approximately half the length of the input signal. Boundary effects may occur near the signal edges due to convolution operations.
 
-### tiny_dwt_reconstruct_f32
+### tiny_dwt_reconstruct_f32 {#tiny_dwt_reconstruct_f32}
 
 ```c
 /**
@@ -184,9 +222,9 @@ Returns success or error code.
 
 The reconstructed signal length is `coeff_len * 2`. Boundary effects may occur, especially near signal edges. The center region typically has very high reconstruction accuracy.
 
-## MULTI-LEVEL DWT
+## MULTI-LEVEL DWT {#multi-level-dwt}
 
-### tiny_dwt_multilevel_decompose_f32
+### tiny_dwt_multilevel_decompose_f32 {#tiny_dwt_multilevel_decompose_f32}
 
 ```c
 /**
@@ -258,7 +296,7 @@ For N-level decomposition:
 
 The `cD_out` array contains: [cD1, cD2, ..., cDN] concatenated.
 
-### tiny_dwt_multilevel_reconstruct_f32
+### tiny_dwt_multilevel_reconstruct_f32 {#tiny_dwt_multilevel_reconstruct_f32}
 
 ```c
 /**
@@ -313,9 +351,9 @@ Returns success or error code.
 
 The `cD_all` array should contain detail coefficients in order: [cD_level1, cD_level2, ..., cD_levelN]. Boundary effects become more pronounced with increasing decomposition levels.
 
-## COEFFICIENT PROCESSING
+## COEFFICIENT PROCESSING {#coefficient-processing}
 
-### tiny_dwt_coeffs_process
+### tiny_dwt_coeffs_process {#tiny_dwt_coeffs_process}
 
 ```c
 /**
@@ -358,9 +396,9 @@ Currently this function does nothing. Users can modify it to implement custom pr
 
 - Anomaly detection
 
-## USAGE WORKFLOW
+## USAGE WORKFLOW {#usage-workflow}
 
-### Single-Level DWT Workflow
+### Single-Level DWT Workflow {#single-level-dwt-workflow}
 
 1. **Decompose Signal**:
    ```c
@@ -382,7 +420,7 @@ Currently this function does nothing. Users can modify it to implement custom pr
    tiny_dwt_reconstruct_f32(cA, cD, cA_len, TINY_WAVELET_DB4, output, &output_len);
    ```
 
-### Multi-Level DWT Workflow
+### Multi-Level DWT Workflow {#multi-level-dwt-workflow}
 
 1. **Multi-Level Decomposition**:
    ```c
@@ -408,7 +446,7 @@ Currently this function does nothing. Users can modify it to implement custom pr
    free(cD);
    ```
 
-## APPLICATIONS
+## APPLICATIONS {#applications}
 
 DWT is widely used in various applications:
 
@@ -420,7 +458,7 @@ DWT is widely used in various applications:
 - **Structural Health Monitoring**: Vibration analysis, damage detection
 - **Time-Frequency Analysis**: Localize events in both time and frequency
 
-## BOUNDARY EFFECTS
+## BOUNDARY EFFECTS {#boundary-effects}
 
 DWT operations use symmetric padding to handle signal boundaries. However, boundary effects may still occur:
 
@@ -429,7 +467,7 @@ DWT operations use symmetric padding to handle signal boundaries. However, bound
 - **Center Region**: Typically has very high reconstruction accuracy
 - **Recommendation**: Use signals longer than 2 × filter_length × levels for best results
 
-## ENERGY PRESERVATION
+## ENERGY PRESERVATION {#energy-preservation}
 
 For perfect reconstruction wavelets (like Daubechies), energy should be approximately preserved:
 

@@ -1,13 +1,39 @@
-# NOTES
+# TinyResample — Principles and API {#notes}
+
+<!-- Original section links retained for compatibility. -->
+<span id="1-algorithm-principles"></span>
+<span id="11-downsampling-by-keepskip"></span>
+<span id="12-upsampling-by-zero-insertion"></span>
+<span id="13-arbitrary-factor-resampling-via-linear-interpolation"></span>
+<span id="2-code-design-philosophy"></span>
+<span id="21-flexible-keepskip-downsampling"></span>
+<span id="22-zero-insertion-as-a-building-block"></span>
+<span id="23-linear-interpolation-for-simplicity"></span>
+<span id="24-boundary-protection"></span>
+<span id="3-api-interface-methods"></span>
+<span id="31-tiny_downsample_skip_f32"></span>
+<span id="32-tiny_upsample_zero_f32"></span>
+<span id="33-tiny_resample_f32"></span>
+<span id="4-function-comparison"></span>
+<span id="5-important-notes"></span>
+<span id="51-downsampling-aliasing-risk"></span>
+<span id="52-upsampling-zerofilled-spectrum"></span>
+<span id="53-resampling-linear-interpolation-limits"></span>
+<span id="54-output-buffer-sizing"></span>
+<span id="55-factor-validity"></span>
+<span id="56-platform-independence"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Note"
     Resampling is an important step in signal processing, typically used to change the sampling rate of a signal. It can be used in audio, video, and other types of signal processing. This library provides three levels of resampling: downsampling via keep/skip patterns, upsampling via zero-insertion, and arbitrary-factor resampling via linear interpolation.
 
 ---
 
-## 1. ALGORITHM PRINCIPLES
+## 1. ALGORITHM PRINCIPLES {#1-algorithm-principles}
 
-### 1.1 Downsampling by Keep/Skip
+### 1.1 Downsampling by Keep/Skip {#11-downsampling-by-keepskip}
 
 Instead of simple stride-based decimation (keep 1, skip N), the library implements a **keep‑skip pattern**: the user specifies how many consecutive samples to keep (`keep`) and how many to skip (`skip`) in each cycle.
 
@@ -27,7 +53,7 @@ This design subsumes simple decimation (`keep=1`) while allowing grouped retenti
 L_{out} \\approx \\left\\lceil L_{in} \\cdot \\frac{keep}{keep + skip} \\right\\rceil
 \\]
 
-### 1.2 Upsampling by Zero-Insertion
+### 1.2 Upsampling by Zero-Insertion {#12-upsampling-by-zero-insertion}
 
 Given an integer expansion factor \\(F = target\\_len / input\\_len\\), the output is formed by placing the original samples at positions that are multiples of \\(F\\) and zero elsewhere:
 
@@ -40,7 +66,7 @@ input[i / F] & \\text{if } i \\bmod F = 0 \\text{ and } i/F < input\\_len \\\\
 
 When `target_len` is not an exact multiple of `input_len`, trailing positions beyond the last valid source sample are zero-filled.
 
-### 1.3 Arbitrary-Factor Resampling via Linear Interpolation
+### 1.3 Arbitrary-Factor Resampling via Linear Interpolation {#13-arbitrary-factor-resampling-via-linear-interpolation}
 
 For arbitrary up/down‑sampling (non‑integer ratios), the library uses **linear interpolation**:
 
@@ -60,30 +86,30 @@ This is a lightweight, O(N) method. It does **not** include anti‑aliasing filt
 
 ---
 
-## 2. CODE DESIGN PHILOSOPHY
+## 2. CODE DESIGN PHILOSOPHY {#2-code-design-philosophy}
 
-### 2.1 Flexible Keep/Skip Downsampling
+### 2.1 Flexible Keep/Skip Downsampling {#21-flexible-keepskip-downsampling}
 
 Simple stride‑based decimation (`keep=1`) drops entire blocks of samples regardless of signal structure. The keep‑skip pattern allows the user to retain consecutive groups, which is useful when:
 - Each "chunk" of the signal carries meaning (e.g., packetized data).
 - You want to mimic non‑rectangular windowing before decimation.
 - You need to control the preservation of short‑duration events.
 
-### 2.2 Zero-Insertion as a Building Block
+### 2.2 Zero-Insertion as a Building Block {#22-zero-insertion-as-a-building-block}
 
 Zero‑insertion is intentionally separated from interpolation filtering. This gives the user control over:
 - Which interpolation filter to apply afterwards (e.g., a low‑pass FIR kernel).
 - Whether to cascade with `tiny_conv_f32` for proper interpolation.
 - Keeping the upsampling step itself allocation-free and fast.
 
-### 2.3 Linear Interpolation for Simplicity
+### 2.3 Linear Interpolation for Simplicity {#23-linear-interpolation-for-simplicity}
 
 On resource‑constrained MCUs, full polyphase resampling is expensive. Linear interpolation provides:
 - O(target_len) time, O(1) auxiliary memory.
 - Acceptable quality when the input is well‑oversampled relative to its bandwidth.
 - A predictable performance profile (no dynamic allocation).
 
-### 2.4 Boundary Protection
+### 2.4 Boundary Protection {#24-boundary-protection}
 
 All three functions include guard logic for under/overflow:
 - `tiny_downsample_skip_f32`: `copy_n = min(keep, input_len - in_idx)` prevents over-reading.
@@ -92,9 +118,9 @@ All three functions include guard logic for under/overflow:
 
 ---
 
-## 3. API INTERFACE — METHODS
+## 3. API INTERFACE — METHODS {#3-api-interface-methods}
 
-### 3.1 `tiny_downsample_skip_f32`
+### 3.1 `tiny_downsample_skip_f32` {#31-tiny_downsample_skip_f32}
 
 ```c
 /**
@@ -176,7 +202,7 @@ Downsamples a signal by alternately copying `keep` consecutive samples and skipp
 
 ---
 
-### 3.2 `tiny_upsample_zero_f32`
+### 3.2 `tiny_upsample_zero_f32` {#32-tiny_upsample_zero_f32}
 
 ```c
 /**
@@ -251,7 +277,7 @@ Upsamples a signal by inserting zeros between the original samples. The expansio
 
 ---
 
-### 3.3 `tiny_resample_f32`
+### 3.3 `tiny_resample_f32` {#33-tiny_resample_f32}
 
 ```c
 /**
@@ -323,7 +349,7 @@ Resamples a signal to a target length using linear interpolation. Supports arbit
 
 ---
 
-## 4. FUNCTION COMPARISON
+## 4. FUNCTION COMPARISON {#4-function-comparison}
 
 | Feature | `tiny_downsample_skip_f32` | `tiny_upsample_zero_f32` | `tiny_resample_f32` |
 |---------|---------------------------|-------------------------|---------------------|
@@ -336,19 +362,19 @@ Resamples a signal to a target length using linear interpolation. Supports arbit
 | **Boundary Handling** | Truncates incomplete cycles | Zero‑fills trailing | Clamps at end |
 | **Use When** | You know the keep/skip pattern | You need a zero‑filled upsampled version for further filtering | You need a quick resample to any length |
 
-### When to Use `tiny_downsample_skip_f32`
+### When to Use `tiny_downsample_skip_f32` {#when-to-use-tiny_downsample_skip_f32}
 
 - You need to reduce sample rate while retaining blocks of samples
 - You want a non‑uniform decimation pattern (e.g., keep 2 of every 3)
 - The keep‑skip pattern aligns with your data's structure
 
-### When to Use `tiny_upsample_zero_f32`
+### When to Use `tiny_upsample_zero_f32` {#when-to-use-tiny_upsample_zero_f32}
 
 - You need to increase sample rate as a first step in interpolation
 - You plan to apply a reconstruction filter afterwards
 - The expansion factor is an integer
 
-### When to Use `tiny_resample_f32`
+### When to Use `tiny_resample_f32` {#when-to-use-tiny_resample_f32}
 
 - The ratio is non‑integer
 - You need a one‑step resample without external filtering
@@ -356,17 +382,17 @@ Resamples a signal to a target length using linear interpolation. Supports arbit
 
 ---
 
-## 5. ⚠️ IMPORTANT NOTES
+## 5. ⚠️ IMPORTANT NOTES {#5-important-notes}
 
-### 5.1 Downsampling — Aliasing Risk
+### 5.1 Downsampling — Aliasing Risk {#51-downsampling-aliasing-risk}
 
 `tiny_downsample_skip_f32` performs **pure selection** without anti‑aliasing filtering. If the input signal contains frequency components above the new Nyquist frequency (\\(f_s' / 2 = f_s / (2 \\cdot stride)\\)), aliasing will occur. **Pre‑filter the signal with a low‑pass filter** (e.g., `tiny_fir_filter_f32`) before calling this function if your signal has significant high‑frequency content.
 
-### 5.2 Upsampling — Zero‑Filled Spectrum
+### 5.2 Upsampling — Zero‑Filled Spectrum {#52-upsampling-zerofilled-spectrum}
 
 `tiny_upsample_zero_f32` inserts zeros, creating spectral images. A reconstruction low‑pass filter (interpolation filter) is typically required afterwards. This function is intended as a building block; pair it with `tiny_conv_f32` or `tiny_fir_filter_f32` for complete interpolation.
 
-### 5.3 Resampling — Linear Interpolation Limits
+### 5.3 Resampling — Linear Interpolation Limits {#53-resampling-linear-interpolation-limits}
 
 `tiny_resample_f32` uses pure linear interpolation:
 
@@ -375,7 +401,7 @@ Resamples a signal to a target length using linear interpolation. Supports arbit
 - Quality is acceptable when the signal is heavily oversampled (e.g., 10× the Nyquist rate).
 - For high‑quality resampling, pre‑filter (for down) or post‑filter (for up) with a proper FIR/IIR low‑pass filter.
 
-### 5.4 Output Buffer Sizing
+### 5.4 Output Buffer Sizing {#54-output-buffer-sizing}
 
 | Function | Minimum Output Buffer Size |
 |----------|---------------------------|
@@ -385,15 +411,12 @@ Resamples a signal to a target length using linear interpolation. Supports arbit
 
 For `tiny_downsample_skip_f32`, the exact output length is returned via `*output_len`.
 
-### 5.5 Factor Validity
+### 5.5 Factor Validity {#55-factor-validity}
 
 - `tiny_downsample_skip_f32`: both `keep ≥ 1` and `skip ≥ 1`.
 - `tiny_upsample_zero_f32`: `target_len / input_len ≥ 1` (must be ≥ 1; zero‑insertion only, shrinking is not supported here).
 - `tiny_resample_f32`: any `target_len > 0` (up or down).
 
-### 5.6 Platform Independence
+### 5.6 Platform Independence {#56-platform-independence}
 
 All three functions are **platform‑independent** — they are pure C implementations with no `#if ESP32` branches. They operate identically on all supported MCU platforms.
-
-
-

@@ -1,6 +1,14 @@
-# 代码
+# TinyAI · 示例 · MLP — 实现与源码 {#_1}
 
-## example_mlp.cpp
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+本页保留完整源码摘录，按文件展开阅读。先看[设计说明](notes.md)了解数据流、接口和算法，再核对实现；源码摘录可能属于历史版本，当前实现请以所选工程为准。
+
+## `example_mlp.cpp` {#example_mlpcpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>example_mlp.cpp</code> · 117 行</summary>
 
 ```cpp
 /**
@@ -122,7 +130,9 @@ void example_mlp(void)
 #endif // __cplusplus
 ```
 
-## 新增片段：BatchNorm1D Demo
+</details>
+
+## 新增片段：BatchNorm1D Demo {#batchnorm1d-demo}
 
 ```cpp
 #if TINY_AI_TRAINING_ENABLED

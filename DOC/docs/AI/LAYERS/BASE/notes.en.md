@@ -1,9 +1,42 @@
-# Notes
+# TinyAI · Layers · Base — Design notes {#notes}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! note "Notes"
     `tiny_layer` defines the abstract base class `Layer` shared by every neural-network layer, plus three parameter-free utility layers: `ActivationLayer`, `Flatten`, and `GlobalAvgPool`. These utilities expose the same `Layer` interface so they can be stacked directly inside a `Sequential` model.
 
-## Layer ABSTRACT BASE
+!!! abstract "Layer — The Foundation of Every Neural Network Layer"
+    `tiny::Layer` is the abstract base class. Understand it, and you understand how the entire network connects.
+
+## Intuition {#intuition}
+
+### Forward Pass = Data Flowing Through the Network {#forward-pass-data-flowing-through-the-network}
+
+`forward()` takes an input tensor, applies the layer's computation, and outputs the tensor for the next layer.
+
+Think of an assembly line: sensor reading → normalization → feature extraction → classifier → result. Each station is a layer.
+
+### Backward Pass (Training) {#backward-pass-training}
+
+`backward()` receives the loss gradient w.r.t. the output, computes:
+- gradient w.r.t. the input (to pass to the previous layer)
+- gradient w.r.t. the layer's parameters (to update weights)
+
+!!! tip "Gradients flow backward through the network"
+    The last layer receives the gradient from the loss function and passes it forward (backward) layer by layer. Each layer first computes param gradients (to update itself), then passes the input gradient to the previous layer.
+
+### Built-in Utility Layers {#built-in-utility-layers}
+
+| Layer | Function | Shape change |
+|-------|----------|-------------|
+| **ActivationLayer** | Wraps activation function | No change |
+| **Flatten** | Flattens multidim to 1D | `[B,C,L]→[B, C*L]` |
+| **GlobalAvgPool** | Average over spatial dims | `[B,C,L]→[B,C]` |
+
+---
+
+## Layer ABSTRACT BASE {#layer-abstract-base}
 
 ```cpp
 class Layer
@@ -33,7 +66,7 @@ Contract:
 - **`collect_params()`**: only trainable layers override it to push `(param, grad)` pairs.
 - **`trainable`**: lets `Sequential::collect_params()` skip parameter-free layers (e.g. `Flatten`).
 
-## ActivationLayer
+## ActivationLayer {#activationlayer}
 
 Wraps a stateless activation as a `Layer` so it stacks naturally inside `Sequential`.
 
@@ -54,7 +87,7 @@ Implementation notes:
     - ReLU / LeakyReLU / GELU → cache the input `x`.
 - **alpha** defaults to 0.01, applies only to LeakyReLU.
 
-## Flatten
+## Flatten {#flatten}
 
 Reshapes `[batch, ...]` into `[batch, flat]`:
 
@@ -78,7 +111,7 @@ Conv1D + ReLU + MaxPool1D × N → Flatten → Dense → Softmax
 
 `tiny_cnn.cpp` plugs `Flatten` in right after the conv blocks.
 
-## GlobalAvgPool
+## GlobalAvgPool {#globalavgpool}
 
 Mean over the sequence axis, common for Transformer-style outputs (`[B, S, F]` → `[B, F]`):
 
@@ -99,7 +132,7 @@ The Attention example chains it:
 Attention([B, S, E]) → GlobalAvgPool([B, E]) → Dense([B, num_classes])
 ```
 
-## Interaction with Sequential
+## Interaction with Sequential {#interaction-with-sequential}
 
 ```cpp
 Sequential m;
@@ -113,7 +146,7 @@ m.add(new ActivationLayer(ActType::SOFTMAX));
 - `forward(x)` calls each `forward` in order; `backward(grad_out)` calls each `backward` in reverse.
 - Only `trainable == true` layers are visited by `Sequential::collect_params()`.
 
-## Custom Layer
+## Custom Layer {#custom-layer}
 
 Subclass `Layer`, implement `forward / backward / collect_params`. Example:
 

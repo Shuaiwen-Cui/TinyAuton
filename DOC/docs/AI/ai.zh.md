@@ -1,4 +1,13 @@
-# 人工智能
+# 人工智能 {#_1}
+
+## 阅读入口 {#auton-ai-guide}
+
+[当前调用示例](USAGE/usage.md) → [张量](CORE/TENSOR/notes.md) → [网络层](LAYERS/BASE/notes.md) → [训练器](TRAIN/TRAINER/notes.md)。完整示例：[MLP](EXAMPLES/MLP/notes.md)、[CNN1D](EXAMPLES/CNN/notes.md)、[Attention](EXAMPLES/ATTENTION/notes.md)。
+
+INT8/FP8 表示、量化 API 演示与整个模型的低精度执行分别说明。MLP 历史日志中的 8.67% 不能作为 INT8 准确率结论。
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note
     该组件旨在为边缘设备提供轻量级的神经网络推理与训练能力，主打 **on-device learning**。整个库以 C++17 编写，保持极小的依赖面，专门针对 ESP32-S3 (WROOM-1U) 等具备 PSRAM 的微控制器优化。
@@ -6,7 +15,7 @@
 !!! note
     `tiny_ai` 处于 TinyAuton 中间件依赖链 `tiny_toolbox → tiny_math → tiny_dsp → tiny_ai` 的最上层，复用 `tiny_math` 提供的张量/矩阵原语和 `tiny_dsp` 提供的频域 / 滤波 / 重采样能力，从信号采集到模型推理形成完整的端侧链路。
 
-## 组件依赖
+## 组件依赖 {#_2}
 
 ```c
 # tiny_ai component CMakeLists.txt
@@ -43,13 +52,13 @@ idf_component_register(
 )
 ```
 
-## 架构与功能目录
+## 架构与功能目录 {#_3}
 
-### 依赖关系示意图
+### 依赖关系示意图 {#_4}
 
 ![](tiny_ai.png)
 
-### 代码树
+### 代码树 {#_5}
 
 ```txt
 tiny_ai/
@@ -94,7 +103,7 @@ tiny_ai/
     └── example_attention.cpp        # 小型 Transformer (Iris)
 ```
 
-## 特性矩阵
+## 特性矩阵 {#_6}
 
 | 特性 | 配置宏 / 接口 | 说明 |
 | --- | --- | --- |
@@ -104,7 +113,7 @@ tiny_ai/
 | INT16 量化 | `TINY_AI_QUANT_INT16` | 对称量化，更高精度备份 |
 | FP8 量化 | `TINY_AI_QUANT_FP8` | 软件实现 OCP 规范的 E4M3FN（权重/激活）与 E5M2（梯度） |
 
-## 设计要点
+## 设计要点 {#_7}
 
 - **C++17 + 命名空间 `tiny`**：所有 C++ 类与函数都在 `namespace tiny` 内；C 接口（`tiny_quant.h`、错误码）保留于全局空间。
 - **形状约定**：`Tensor` 最多 4D；常见排布为 `[batch, ...]` 行主序，Conv1D 输入 `[B, C, L]`、Conv2D 输入 `[B, C, H, W]`、Attention 输入 `[B, S, E]`。

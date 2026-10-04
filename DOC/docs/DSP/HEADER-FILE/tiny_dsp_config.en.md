@@ -1,4 +1,7 @@
-# TinyDSP CONFIGURATION
+# TinyDSP CONFIGURATION {#tinydsp-configuration}
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
 
 !!! INFO
     This header file configures the entire TinyDSP module, and each submodule includes this header file. It defines the configuration options and macros for TinyDSP, allowing users to customize settings as needed. By modifying the configuration options in this header file, users can easily adjust the behavior and functionality of TinyDSP to meet specific requirements. The documentation update speed is slow and may not be consistent with the actual code, please refer to the actual code.

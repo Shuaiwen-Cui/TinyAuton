@@ -1,4 +1,7 @@
-# ESP-DSP 数字信号处理库
+# ESP-DSP 数字信号处理库 {#esp-dsp}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 <div class="grid cards" markdown>
 
@@ -12,7 +15,7 @@
 
 </div>
 
-## 函数命名
+## 函数命名 {#_1}
 
 命名约定适用于所有覆盖的领域。您可以通过 dsps 前缀区分信号处理函数，而图像和视频处理函数具有 dspi 前缀，特定于小矩阵操作的函数在其名称中具有 dspm 前缀。库中的函数名称具有以下通用格式：
 
@@ -38,7 +41,7 @@ dsp<data-domain>_<name>_<datatype1><datatype_ext>_<datatype2><datatype_ext>[_<de
 
 -   `<parameters>` 是函数的参数。
 
-## 数据域
+## 数据域 {#_2}
 
 数据域是一个单字符，表示给定函数所属的功能子集。库设计为支持以下数据域：
 
@@ -54,17 +57,17 @@ dsp<data-domain>_<name>_<datatype1><datatype_ext>_<datatype2><datatype_ext>[_<de
 
 例如，以 dspi 开头的函数名称表示相应的函数用于图像或视频处理。
 
-## 名称
+## 名称 {#_3}
 
 函数名称是函数实际执行的核心操作的缩写，例如 Add、Sqrt，在某些情况下会后跟函数特定的修饰符：= [_modifier]
 
 如果存在此修饰符，则表示对给定函数进行了细微的修改或变体。
 
-## 数据类型
+## 数据类型 {#_4}
 
 该库支持两种主要数据类型：用于定点运算的 int16 和用于浮点运算的 float。数据类型描述如下：
 
-### 数据类型后缀
+### 数据类型后缀 {#_5}
 
 - s - 有符号
 
@@ -72,11 +75,11 @@ dsp<data-domain>_<name>_<datatype1><datatype_ext>_<datatype2><datatype_ext>[_<de
 
 - f - 浮点数
 
-### 数据类型扩展
+### 数据类型扩展 {#_6}
 
 - c - 复数
 
-### 数据类型比特分辨率
+### 数据类型比特分辨率 {#_7}
 
 - 16
 
@@ -84,11 +87,11 @@ dsp<data-domain>_<name>_<datatype1><datatype_ext>_<datatype2><datatype_ext>[_<de
 
 例如：dsps_mac_sc16 定义将使用 16 位有符号复数数据对 1d 数组进行 m​​ac 运算。
 
-## 实现方式类型
+## 实现方式类型 {#_8}
 
 每个函数可以针对不同的平台进行不同的实现，并且可以使用不同的样式和资源。因此，每个实现的函数都会有一个扩展名 <_impl>，用于定义其实现类型。用户无需扩展名即可使用通用函数。
 
-### 实现方式类型后缀
+### 实现方式类型后缀 {#_9}
 
 默认情况下，所有函数无需扩展即可使用。您可以在 menuconfig 中选择“optimized/ansi”选项。
 

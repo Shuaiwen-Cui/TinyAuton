@@ -1,6 +1,13 @@
-# TESTS
+# TinyDSP · Filter · Iir — Tests and results {#tests}
 
-## tiny_iir_test.h
+<!-- Original section links retained for compatibility. -->
+<span id="tiny_iir_testc"></span>
+<span id="tiny_iir_testh"></span>
+
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+## `tiny_iir_test.h` {#tinyiirtesth}
 
 ```c
 /**
@@ -32,7 +39,10 @@ void tiny_iir_test(void);
 
 ```
 
-## tiny_iir_test.c
+## `tiny_iir_test.c` {#tinyiirtestc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_iir_test.c</code> · 416 lines</summary>
 
 ```c
 /**
@@ -453,7 +463,9 @@ void tiny_iir_test(void)
 
 ```
 
-## OUTPUTS
+</details>
+
+## OUTPUTS {#outputs}
 
 ```c
 ==========================================

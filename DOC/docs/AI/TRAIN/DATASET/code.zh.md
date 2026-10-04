@@ -1,6 +1,14 @@
-# 代码
+# TinyAI · 训练 · 数据集 — 实现与源码 {#_1}
 
-## tiny_dataset.hpp
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
+
+本页保留完整源码摘录，按文件展开阅读。先看[设计说明](notes.md)了解数据流、接口和算法，再核对实现；源码摘录可能属于历史版本，当前实现请以所选工程为准。
+
+## `tiny_dataset.hpp` {#tiny_datasethpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_dataset.hpp</code> · 61 行</summary>
 
 ```cpp
 /**
@@ -66,7 +74,12 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_dataset.cpp
+</details>
+
+## `tiny_dataset.cpp` {#tiny_datasetcpp}
+
+<details class="auton-source" markdown="1">
+<summary>展开 <code>tiny_dataset.cpp</code> · 167 行</summary>
 
 ```cpp
 /**
@@ -237,3 +250,5 @@ Tensor Dataset::to_tensor() const
 
 #endif // __cplusplus
 ```
+
+</details>

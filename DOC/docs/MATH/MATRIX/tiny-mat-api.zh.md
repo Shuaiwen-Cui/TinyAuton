@@ -1,13 +1,16 @@
-# 矩阵操作 - TINY_MAT
+# 矩阵操作 - TINY_MAT {#-tiny_mat}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-MATH/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! INFO "关于tiny_mat库"
     tiny_mat是一个C语言实现的矩阵库，提供了基本的矩阵操作函数。它支持浮点数矩阵的加法、减法和乘法等操作。该库适用于需要进行矩阵计算的嵌入式系统和实时应用。该库基于ANSIC C标准，具有良好的可移植性和性能,同时又支持在配置文件中进行配置从而支持平台加速（ESP32）。
 
 !!! TIP "关于tiny_mat库的使用"
-    tiny_mat的功能被tiny_matrix完全覆盖，也就是说在tiny_matrix中的功能包含了tiny_mat的所有功能。对于简单的矩阵操作，可以仅引入tiny_mat库；对于复杂的矩阵操作，建议使用tiny_matrix库。tiny_matrix库是一个C++实现的矩阵库，提供了更丰富的功能和更好的性能。它支持浮点数和整数矩阵的加法、减法、乘法、转置、求逆等操作。
+    `tiny_mat` 接受 float 数组、尺寸及 padding/stride 参数；`tiny::Mat` 提供对象、ROI、运算符和高级线性代数接口。应按语言、所有权和布局选择，而不是将两个接口机械替换。
 
 
-## 目录
+## 目录 {#_1}
 
 ```c
 TinyMath
@@ -34,9 +37,9 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
 tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
 
-## 工具函数
+## 工具函数 {#_2}
 
-### 打印矩阵
+### 打印矩阵 {#_3}
 ```c
 void print_matrix(const char *name, const float *mat, int rows, int cols);
 ```
@@ -55,7 +58,7 @@ void print_matrix(const char *name, const float *mat, int rows, int cols);
 
 **返回:** 无。
 
-### 打印带填充的矩阵
+### 打印带填充的矩阵 {#_4}
 ```c
 void print_matrix_padded(const char *name, const float *mat, int rows, int cols, int step);
 ```
@@ -76,7 +79,7 @@ void print_matrix_padded(const char *name, const float *mat, int rows, int cols,
 
 **返回:** 无。
 
-### 矩阵加法
+### 矩阵加法 {#_5}
 ```c
 tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
 ```
@@ -109,7 +112,7 @@ tiny_error_t tiny_mat_add_f32(const float *input1, const float *input2, float *o
 
 **返回:** 错误码。
 
-### 矩阵加常数
+### 矩阵加常数 {#_6}
 ```c
 tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
@@ -138,7 +141,7 @@ tiny_error_t tiny_mat_addc_f32(const float *input, float *output, float C, int r
 
 **返回:** 错误码。
 
-### 矩阵减法
+### 矩阵减法 {#_7}
 ```c
 tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *output, int rows, int cols, int padd1, int padd2, int padd_out, int stride1, int stride2, int stride_out);
 ```
@@ -171,7 +174,7 @@ tiny_error_t tiny_mat_sub_f32(const float *input1, const float *input2, float *o
 
 **返回:** 错误码。
 
-### 矩阵减常数
+### 矩阵减常数 {#_8}
 ```c
 tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```
@@ -200,7 +203,7 @@ tiny_error_t tiny_mat_subc_f32(const float *input, float *output, float C, int r
 
 **返回:** 错误码。
 
-### 矩阵乘法
+### 矩阵乘法 {#_9}
 ```c
 tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, int n, int k);
 ```
@@ -224,7 +227,7 @@ tiny_error_t tiny_mat_mult_f32(const float *A, const float *B, float *C, int m, 
 **返回:** 错误码。
 
 
-### 扩展矩阵乘法
+### 扩展矩阵乘法 {#_10}
 ```c
 tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int A_rows, int A_cols, int B_cols, int A_padding, int B_padding, int C_padding);
 ```
@@ -253,7 +256,7 @@ tiny_error_t tiny_mat_mult_ex_f32(const float *A, const float *B, float *C, int 
 
 **返回:** 错误码。
 
-### 矩阵乘常数
+### 矩阵乘常数 {#_11}
 ```c
 tiny_error_t tiny_mat_multc_f32(const float *input, float *output, float C, int rows, int cols, int padd_in, int padd_out, int stride_in, int stride_out);
 ```

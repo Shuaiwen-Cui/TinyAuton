@@ -1,6 +1,11 @@
-# Code
+# TinyAI · Layers · Attention — Implementation and source {#code}
 
-## tiny_attention.hpp
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-AI/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_attention.hpp` {#tiny_attentionhpp}
 
 ```cpp
 /**
@@ -63,7 +68,10 @@ private:
 #endif // __cplusplus
 ```
 
-## tiny_attention.cpp
+## `tiny_attention.cpp` {#tiny_attentioncpp}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_attention.cpp</code> · 321 lines</summary>
 
 ```cpp
 /**
@@ -388,3 +396,5 @@ void Attention::collect_params(std::vector<ParamGroup> &groups)
 
 #endif // __cplusplus
 ```
+
+</details>

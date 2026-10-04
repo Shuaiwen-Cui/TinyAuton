@@ -1,11 +1,14 @@
-# 说明
+# TinyFIR — 原理与接口 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-DSP/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     有限脉冲响应（FIR）滤波器是没有反馈的数字滤波器，因此始终稳定。FIR 滤波器可以实现线性相位响应，这对于需要保持相位的应用很重要。它们通过卷积实现，广泛应用于音频处理、通信和信号调理。
 
-## FIR 滤波器概述
+## FIR 滤波器概述 {#fir}
 
-### 数学原理
+### 数学原理 {#_2}
 
 FIR 滤波器由其有限长度的脉冲响应 \( h[n] \) 定义。输出 \( y[n] \) 计算为：
 
@@ -39,7 +42,7 @@ H(z) = \sum_{k=0}^{M-1} h[k] \cdot z^{-k}
 
 - **无反馈**：输出仅依赖于输入
 
-## 滤波器类型
+## 滤波器类型 {#_3}
 
 库支持四种基本滤波器类型：
 
@@ -48,9 +51,9 @@ H(z) = \sum_{k=0}^{M-1} h[k] \cdot z^{-k}
 - **带通**：通过频带内的频率，衰减外部频率
 - **带阻（陷波）**：衰减频带内的频率，通过外部频率
 
-## 滤波器设计
+## 滤波器设计 {#_4}
 
-### 窗函数法
+### 窗函数法 {#_5}
 
 库使用窗函数法进行 FIR 滤波器设计：
 
@@ -78,7 +81,7 @@ H(z) = \sum_{k=0}^{M-1} h[k] \cdot z^{-k}
 
 - **矩形**：仅用于非常简单的应用
 
-### 设计参数
+### 设计参数 {#_6}
 
 - **截止频率**：归一化频率（0.0 到 0.5，其中 0.5 = 奈奎斯特频率）
 - **抽头数**：应为奇数以实现线性相位（I 型滤波器）
@@ -92,9 +95,9 @@ f_{norm} = \frac{f_{cutoff}}{f_s / 2}
 
 其中 \( f_s \) 是采样率。
 
-## 滤波器设计函数
+## 滤波器设计函数 {#_7}
 
-### tiny_fir_design_lowpass
+### tiny_fir_design_lowpass {#tiny_fir_design_lowpass}
 
 ```c
 /**
@@ -133,7 +136,7 @@ tiny_error_t tiny_fir_design_lowpass(float cutoff_freq, int num_taps,
 
 截止频率已归一化：`cutoff_freq = actual_freq / (sample_rate / 2)`。例如，在 1 kHz 采样率下 100 Hz 截止频率将为 `0.2`（100 / 500）。
 
-### tiny_fir_design_highpass
+### tiny_fir_design_highpass {#tiny_fir_design_highpass}
 
 ```c
 /**
@@ -168,7 +171,7 @@ tiny_error_t tiny_fir_design_highpass(float cutoff_freq, int num_taps,
 
 返回成功或错误代码。
 
-### tiny_fir_design_bandpass
+### tiny_fir_design_bandpass {#tiny_fir_design_bandpass}
 
 ```c
 /**
@@ -207,7 +210,7 @@ tiny_error_t tiny_fir_design_bandpass(float low_freq, float high_freq,
 
 返回成功或错误代码。
 
-### tiny_fir_design_bandstop
+### tiny_fir_design_bandstop {#tiny_fir_design_bandstop}
 
 ```c
 /**
@@ -246,11 +249,11 @@ tiny_error_t tiny_fir_design_bandstop(float low_freq, float high_freq,
 
 返回成功或错误代码。
 
-## 滤波器应用
+## 滤波器应用 {#_8}
 
-### 批处理
+### 批处理 {#_9}
 
-### tiny_fir_filter_f32
+### tiny_fir_filter_f32 {#tiny_fir_filter_f32}
 
 ```c
 /**
@@ -300,9 +303,9 @@ tiny_error_t tiny_fir_filter_f32(const float *input, int input_len,
 
 返回成功或错误代码。
 
-### 实时处理
+### 实时处理 {#_10}
 
-### tiny_fir_init
+### tiny_fir_init {#tiny_fir_init}
 
 ```c
 /**
@@ -337,7 +340,7 @@ tiny_error_t tiny_fir_init(tiny_fir_filter_t *filter,
 
 函数在内部分配内存。使用 `tiny_fir_deinit()` 释放它。
 
-### tiny_fir_deinit
+### tiny_fir_deinit {#tiny_fir_deinit}
 
 ```c
 /**
@@ -361,7 +364,7 @@ tiny_error_t tiny_fir_deinit(tiny_fir_filter_t *filter);
 
 返回成功或错误代码。
 
-### tiny_fir_process_sample
+### tiny_fir_process_sample {#tiny_fir_process_sample}
 
 ```c
 /**
@@ -392,7 +395,7 @@ float tiny_fir_process_sample(tiny_fir_filter_t *filter, float input);
 
 滤波器在调用之间维护内部状态（延迟线）。使用 `tiny_fir_reset()` 清除状态。
 
-### tiny_fir_reset
+### tiny_fir_reset {#tiny_fir_reset}
 
 ```c
 /**
@@ -416,9 +419,9 @@ tiny_error_t tiny_fir_reset(tiny_fir_filter_t *filter);
 
 返回成功或错误代码。
 
-## 使用流程
+## 使用流程 {#_11}
 
-### 批处理滤波流程
+### 批处理滤波流程 {#_12}
 
 1. **设计滤波器**:
    ```c
@@ -432,7 +435,7 @@ tiny_error_t tiny_fir_reset(tiny_fir_filter_t *filter);
    tiny_fir_filter_f32(input, 256, coeffs, 51, output, TINY_PADDING_SYMMETRIC);
    ```
 
-### 实时滤波流程
+### 实时滤波流程 {#_13}
 
 1. **设计滤波器**:
    ```c
@@ -459,7 +462,7 @@ tiny_error_t tiny_fir_reset(tiny_fir_filter_t *filter);
    tiny_fir_deinit(&filter);
    ```
 
-## 应用场景
+## 应用场景 {#_14}
 
 FIR 滤波器广泛应用于：
 
@@ -470,37 +473,37 @@ FIR 滤波器广泛应用于：
 - **图像处理**：边缘检测、平滑、锐化
 - **传感器信号处理**：降噪、信号调理
 
-## 优缺点
+## 优缺点 {#_15}
 
-### 优点
+### 优点 {#_16}
 
 - **始终稳定**：无反馈，保证稳定性
 - **线性相位**：可以实现精确的线性相位响应
 - **设计简单**：窗函数法简单直接
 - **无极限环**：无量化引起的振荡
 
-### 缺点
+### 缺点 {#_17}
 
 - **计算成本较高**：相同规格下比 IIR 需要更多抽头
 - **延迟更长**：群延迟与滤波器长度成正比
 - **内存需求**：需要存储所有滤波器抽头
 
-## 设计考虑
+## 设计考虑 {#_18}
 
-### 抽头数
+### 抽头数 {#_19}
 
 - **更多抽头**：更陡的过渡，更好的阻带衰减，但计算量更大
 - **更少抽头**：计算更快，但过渡带更宽
 - **经验法则**：过渡带宽 ≈ 4 / num_taps（对于汉明窗）
 
-### 窗函数选择
+### 窗函数选择 {#_20}
 
 - **汉明**：良好的通用选择
 - **汉宁**：旁瓣抑制优于汉明
 - **布莱克曼**：最佳旁瓣抑制，过渡带更宽
 - **矩形**：仅用于非常简单的应用（不推荐）
 
-### 归一化频率
+### 归一化频率 {#_21}
 
 记住要归一化频率：
 
@@ -508,11 +511,10 @@ FIR 滤波器广泛应用于：
 
 - 在 10 kHz 采样率下 1 kHz 截止：`0.2`（1000 / 5000）
 
-## 注意事项
+## 注意事项 {#_22}
 
 - FIR 滤波器始终稳定（无极点）
 - 线性相位需要奇数个抽头和对称系数
 - 窗函数法简单，但可能不是所有应用的最佳选择
 - 对于实时应用，使用 `tiny_fir_init()` 和 `tiny_fir_process_sample()`
 - 对于批处理，使用 `tiny_fir_filter_f32()`
-

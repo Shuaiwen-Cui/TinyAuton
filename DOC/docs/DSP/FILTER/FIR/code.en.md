@@ -1,6 +1,14 @@
-# CODE
+# TinyDSP · Filter · Fir — Implementation and source {#code}
 
-## tiny_fir.h
+!!! info "Implementation and records"
+    APIs in this section are based on `CODE/AIoTNode-TinyAuton-DSP/middleware/`. Source excerpts and serial output include historical records; check the project entry and enabled selectors before reproducing a test.
+
+Expand each file to inspect the complete source excerpt. Start with the [design notes](notes.md) for data flow, interfaces and algorithms. Excerpts may reflect an earlier revision; check the selected project for its current implementation.
+
+## `tiny_fir.h` {#tiny_firh}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_fir.h</code> · 224 lines</summary>
 
 ```c
 /**
@@ -229,7 +237,12 @@ extern "C"
 
 ```
 
-## tiny_fir.c
+</details>
+
+## `tiny_fir.c` {#tiny_firc}
+
+<details class="auton-source" markdown="1">
+<summary>Expand <code>tiny_fir.c</code> · 386 lines</summary>
 
 ```c
 /**
@@ -620,3 +633,4 @@ tiny_error_t tiny_fir_reset(tiny_fir_filter_t *filter)
 
 ```
 
+</details>

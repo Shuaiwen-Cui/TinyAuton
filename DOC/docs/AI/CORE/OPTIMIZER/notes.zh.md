@@ -1,9 +1,39 @@
-# 说明
+# TinyAI · 核心 · 优化器 — 设计说明 {#_1}
+
+!!! info "实现依据与记录"
+    本节接口以 `CODE/AIoTNode-TinyAuton-AI/middleware/` 为依据。源码摘录与串口输出包含历史记录；是否运行某项测试，请核对工程入口和启用开关。
 
 !!! note "说明"
     `tiny_optimizer` 提供两种针对 ESP32-S3 内存预算优化的梯度下降优化器：带动量与 L2 正则的 SGD，以及 Adam（lite 版）。所有优化器都通过 `ParamGroup` 组成的 `std::vector` 与各层的可学习参数 / 梯度对接。
 
-## ParamGroup
+!!! abstract "Optimizer — 沿着梯度下山"
+    损失函数的梯度告诉优化器参数该往哪个方向调。优化器决定**走多大步、怎么走**。
+
+## 算法直觉 {#_2}
+
+### 梯度下降 = 蒙眼下山 {#_3}
+
+想象你被蒙住眼睛站在山上，目标是走到谷底。每次用脚探一下哪边最陡（梯度方向），朝那个方向迈一步（更新参数）。这就是梯度下降。
+
+### 三种优化器 {#_4}
+
+| 优化器 | 更新公式直觉 | 特点 | 适用场景 |
+|--------|--------------|------|----------|
+| **SGD** | \(\text{param} = \text{param} - \text{lr} \cdot \text{grad}\) | 原始梯度下降，只按当前梯度走 | 简单问题、小数据集 |
+| **SGD + Momentum** | 加入"惯性"：保留上次方向，当前梯度做修正 | 减少震荡，加速收敛 | **大多数场景默认** |
+| **Adam** | 自适应学习率 + 动量 | 每个参数有自己的步长 | 调参困难、复杂网络 |
+
+!!! tip "动手调参"
+    - **学习率 lr**：太大→震荡不收敛；太小→训练极慢。常用 0.01 ~ 0.0001
+    - **momentum**：0.9 是经典值。越大惯性越强
+    - **weight_decay**：L2 正则化，防止过拟合
+
+!!! warning "学习率是最重要的超参数"
+    一个常见调试顺序：先用 lr=0.01 看看损失是否下降。如果不下降（或震荡），调成 0.001。如果太慢，调成 0.1。
+
+---
+
+## ParamGroup {#paramgroup}
 
 ```cpp
 struct ParamGroup
@@ -15,7 +45,7 @@ struct ParamGroup
 
 每个可训练层（`Dense`、`Conv1D`、`Conv2D`、`LayerNorm`、`Attention`）都重载 `Layer::collect_params()`，把自己的 `(weight, dweight)`、`(bias, dbias)` 等成对压入 `std::vector<ParamGroup>`。`Sequential::collect_params()` 自动汇总整个网络。
 
-## Optimizer 抽象基类
+## Optimizer 抽象基类 {#optimizer}
 
 ```cpp
 class Optimizer
@@ -34,7 +64,7 @@ public:
 3. **初始化**：`opt.init(params)`。仅在此时根据 `params.size()` 与每个张量形状分配动量 / 一二阶矩缓冲。
 4. **训练循环**：每个 batch 执行 `opt.zero_grad(params)` → forward → backward → `opt.step(params)`。
 
-## SGD（带动量与 L2）
+## SGD（带动量与 L2） {#sgd-l2}
 
 ```cpp
 SGD(float lr = 0.01f, float momentum = 0.0f, float weight_decay = 0.0f);
@@ -62,7 +92,7 @@ v \leftarrow \mu\,v + g\quad(\text{若}~\mu > 0)
 
 `init()` 会为每个参数分配同形状的 velocity 张量；`zero_grad()` 默认实现已经在基类提供。
 
-## Adam（lite 版）
+## Adam（lite 版） {#adamlite}
 
 ```cpp
 Adam(float lr     = 1e-3f,
@@ -100,14 +130,14 @@ v \leftarrow \beta_2 v + (1-\beta_2) g^2
     - 对高度稀疏 / 大 batch 训练，可试 SGD + 较大 lr + 动量 0.9。
     - `weight_decay > 0` 等价于 PyTorch 的 L2 正则；只对权重生效，建议不要把 bias 一起 decay（`tiny_ai` 中 bias 也参与，但量级可忽略）。
 
-## 显存与 PSRAM 影响
+## 显存与 PSRAM 影响 {#psram}
 
 - **SGD**：每个参数额外一份 velocity → 内存约 ×2。
 - **Adam**：每个参数额外两份 (m, v) → 内存约 ×3。
 
 如果模型权重已经放进 PSRAM，建议同步把动量缓冲也放 PSRAM。`Tensor` 默认走 `TINY_AI_MALLOC`，需要时可在外层把权重张量替换为 `Tensor::from_data(psram_buf, ...)` 视图。
 
-## 与 Trainer 的协作
+## 与 Trainer 的协作 {#trainer}
 
 `Trainer::ensure_params_collected()` 在第一次 `fit()` 时执行：
 
